@@ -1,0 +1,226 @@
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  margin: 32px;
+  background: #f6f7f9;
+}
+
+h1 { margin-bottom: 24px; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  margin-bottom: 32px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+th, td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+
+th {
+  background: #fafafa;
+  font-weight: 600;
+}
+
+.private { color: #888; }
+
+.search-section {
+  display: flex;
+  gap: 8px;
+  max-width: 480px;
+}
+
+.search-section input {
+  flex: 1;
+  padding: 10px 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.search-section button {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.search-block {
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+    background: #f8f9fa;
+  padding: 16px;
+  border-radius: 12px;
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.result {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: 10px 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 24px;
+  border-radius: 8px;
+  width: 360px;
+}
+
+.modal-buttons {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.ratings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 720px;
+}
+
+.rating-card {
+  background: white;
+  padding: 16px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.rating-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.rating-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: #555;
+}
+
+.rating-card.private {
+  opacity: 0.6;
+}
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.dropdown {
+  position: relative;
+}
+
+.dropdown-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 32px;
+  left: 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  overflow: hidden;
+  min-width: 180px;
+}
+
+.dropdown-item {
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background: #f0f2f5;
+}
+
+.dropdown:hover .dropdown-menu {
+  display: block;
+}
+
+.settings-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+.btn {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  background: #1a73e8;       /* Google-ish blue */
+  color: white;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.btn:hover {
+  background: #1558b0;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.btn.secondary {
+  background: #f1f3f4;
+  color: #202124;
+}
+
+.btn.secondary:hover {
+  background: #e0e0e0;
+}
+
+.btn.ghost {
+  background: transparent;
+  color: #1a73e8;
+}
+
+.btn.ghost:hover {
+  background: rgba(26,115,232,0.1);
+}
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+.footer {
+text-align: center;
+padding: 16px;
+font-size: 0.85em;
+color: #666;
+}
