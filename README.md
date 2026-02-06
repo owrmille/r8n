@@ -1,4 +1,14 @@
-PREPARATION:
+## Project status
+
+This repository contains an educational prototype created as part of the 42 school curriculum.
+
+- The code is open-source under the Mozilla Public License 2.0.
+- This repository is **not** a production system.
+- No real user data, networks, or datasets are included.
+- The project may be reimplemented independently in the future.
+
+## CLIENT WORKFLOW
+PREPARATION
 - register in the main website (see login.html), get a cookie
 - install tampermonkey and the script
 
@@ -60,7 +70,7 @@ Absolutely no access for crawlers of any kind!!!
 OTHER USAGES
 Politicians' approval? Factchecks? Separate marks for the doctor and for their receptionists?
 
-SUBJECT POINTS REQUIREMENTS
+## SUBJECT POINTS REQUIREMENTS
 Web:
 - Major: Use a framework for both the frontend and backend.
 - Major: Allow users to interact with other users.
@@ -92,3 +102,10 @@ Data & Analytics:
 - Minor: GDPR compliance features.
 
 15 so far (?+10)
+
+## DEVELOPER ONBOARDING
+- VSCode + extensions:
+	- Kotlin Language by mathiasflohlich
+	- Extension Pack for Java by Microsoft
+	- Spring Boot Extension Pack by VMWare
+- terminal: java --version (JDK 21 minimum, 25 is fine; you should have gotten an installation advice earlier during extension installation)
