@@ -7,25 +7,24 @@
             - install for user only (mkdir -p ~/jdk && tar -xzf OpenJDK21U-jdk_x64_linux_hotspot_21.0.10_7.tar.gz -C ~/jdk)
         - campus:
 		    - mkdir -p /sgoinfre/goinfre/Perso/$USER/jdk && tar -xzf OpenJDK21U-jdk_x64_linux_hotspot_21.0.10_7.tar.gz -C /sgoinfre/goinfre/Perso/$USER/jdk (using this in examples below)
-	- VSCode: 'add Java runtime' in action menu, select /sgoinfre/goinfre/Perso/$USER/jdk/jdk-25.0.2+10
-	- (below: select the configuration file for your preferred terminal that you use in VSCode and independently; important if you want to run Gradle commands related to building the project from it; pay attention to different quotes; IDEA uses sh by default)
+	- (below: select the configuration file for your preferred terminal that you use in IDEA and independently; important if you want to run Gradle commands related to building the project from it; pay attention to different quotes; IDEA uses sh by default)
 	- echo "export JAVA_HOME=/sgoinfre/goinfre/Perso/$USER/jdk/21.0.10+7" >> ~/.bashrc
 	- echo 'export PATH=$JAVA_HOME/bin:$PATH' >> ~/.bashrc
 	- check again (see above)
 	- cd backend && ./gradlew javaToolchains: should display your JDK and 'is JDK: true'
-- campus: moving gradle to sgoinfre, cache is too big
+- campus: moving Gradle to sgoinfre, cache is too big
 	- mkdir -p /sgoinfre/goinfre/Perso/$USER/gradle
 	- mv ~/.gradle /sgoinfre/goinfre/Perso/$USER/gradle
 	- ln -s /sgoinfre/goinfre/Perso/$USER/gradle ~/.gradle
 	- echo "export GRADLE_USER_HOME=/sgoinfre/goinfre/Perso/$USER/gradle" >> ~/.zshrc (or your terminal config)
 	- IDEA: File - Settings - Build, Execution, Deployment - Build Tools - Gradle - Gradle user home: /sgoinfre/goinfre/Perso/$USER/gradle (substitute by yourself)
-- running 
+- running backend in IDEA
 	- open Gradle panel on the right 
 		- if it's not there, open backend/settings.gradle.kts and agree to import the Gradle project
 	- r8n-backend - gateway - Tasks - application - bootRun
 	- another terminal or broswer: 'curl localhost:8080?id=723b8c60-bbbb-4814-90b8-2e6a1594102e' (random valid UUID), get a stub response
 	- IDEA: open bottom left Run panel, select Stop for the service
-- running in an external terminal
+- running backend in an external terminal
     - cd backend
     - ./gradlew :gateway:bootRun
     - another terminal or broswer: 'curl localhost:8080?id=723b8c60-bbbb-4814-90b8-2e6a1594102e', get a stub response

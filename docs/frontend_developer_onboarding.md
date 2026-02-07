@@ -1,6 +1,3 @@
-- VSCode extensions:
-	- Kotlin Language by mathiasflohlich
-	- Extension Pack for Java by Microsoft
 - Java
 	- 'java --version', 'javac --version' in terminal should show same version 21. if not:
 		- during extension installation you get a suggestion to install a new JDK, or you can open this window later by selecting 'install new JDK' in the action menu
@@ -10,8 +7,7 @@
             - install for user only (mkdir -p ~/jdk && tar -xzf OpenJDK21U-jdk_x64_linux_hotspot_21.0.10_7.tar.gz -C ~/jdk)
         - campus:
 		    - mkdir -p /sgoinfre/goinfre/Perso/$USER/jdk && tar -xzf OpenJDK21U-jdk_x64_linux_hotspot_21.0.10_7.tar.gz -C /sgoinfre/goinfre/Perso/$USER/jdk (using this in examples below)
-	- VSCode: 'add Java runtime' in action menu, select /sgoinfre/goinfre/Perso/$USER/jdk/jdk-25.0.2+10
-	- (below: select the configuration file for your preferred terminal that you use in VSCode and independently; important if you want to run Gradle commands related to building the project from it; pay attention to different quotes)
+	- (below: select the configuration file for your preferred terminal that you use to run the backend build; pay attention to different quotes)
 	- echo "export JAVA_HOME=/sgoinfre/goinfre/Perso/$USER/jdk/21.0.10+7" >> ~/.bashrc
 	- echo 'export PATH=$JAVA_HOME/bin:$PATH' >> ~/.bashrc
 	- check again (see above)
@@ -21,22 +17,8 @@
 	- mv ~/.gradle /sgoinfre/goinfre/Perso/$USER/gradle
 	- ln -s /sgoinfre/goinfre/Perso/$USER/gradle ~/.gradle
 	- echo "export GRADLE_USER_HOME=/sgoinfre/goinfre/Perso/$USER/gradle" >> ~/.zshrc (or your terminal config)
-- editing backend
-    - open backend.code-workspace
-    - agree to use repository from parent level
-    - edit code
-- running backend in VSCode
-    - Ctrl-Shift-P (open action panel)
-    - type/select 'Run task', Enter
-    - select 'bootRun gateway' on top
-    - VSCode terminal opens automatically
-    - as soon as you see 'Started GatewayApplicationKt in X seconds' in the logs in the terminal - the app is running
-    - another terminal or broswer: 'curl localhost:8080?id=723b8c60-bbbb-4814-90b8-2e6a1594102e' (random valid UUID), get a stub response
-    - return to running terminal, Ctrl-C and press any key to terminate
-- running backend in an external terminal
+- running backend
     - cd backend
     - ./gradlew :gateway:bootRun
     - another terminal or broswer: 'curl localhost:8080?id=723b8c60-bbbb-4814-90b8-2e6a1594102e', get a stub response
     - return to running terminal, Ctrl-C to terminate
-    
-for expanded development experience (better code navigation, code suggestions) try IntelliJ IDEA onboarding guide
