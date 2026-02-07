@@ -1,0 +1,34 @@
+- VSCode extensions:
+	- Kotlin Language by mathiasflohlich
+	- Extension Pack for Java by Microsoft
+- Java
+	- 'java --version', 'javac --version' in terminal should show same version 21+. if not:
+		- during extension installation you get a suggestion to install a new JDK, or you can open this window later by selecting 'install new JDK' in the action menu
+		- download an archive, 21+ (25 recommended, used in examples below)
+		- (you can install this system-wide, but below is user-only installation so that you can use it on campus)
+		- mkdir -p ~/jdk && tar -xzf OpenJDK25U-jdk_x64_linux_hotspot_25.0.2_10.tar.gz -C ~/jdk
+		- VSCode: 'add Java runtime' in action menu, select ~/jdk/jdk-25.0.2+10
+		- (select your terminal below, that you use in VSCode and independently; important if you want to run Gradle commands related to building the project from it)
+		- echo "export JAVA_HOME=$HOME/jdk/jdk-25.0.2+10" >> ~/.bashrc
+		- echo "export PATH=$JAVA_HOME/bin:$PATH" >> ~/.bashrc
+		- check again (see above)
+	- cd backend && ./gradlew javaToolchains: should display your JDK and 'is JDK: true'
+- editing
+    - open backend.code-workspace
+    - agree to use repository from parent level
+    - edit code
+- running in VSCode
+    - Ctrl-Shift-P (open action panel)
+    - type/select 'Run task', Enter
+    - select 'bootRun gateway' on top
+    - VSCode terminal opens automatically
+    - as soon as you see 'Started GatewayApplicationKt in X seconds' in the logs in the terminal - the app is running
+    - another terminal: 'curl localhost:8080', get a stub response
+    - return to running terminal, Ctrl-C and press any key to terminate
+- running in an external terminal
+    - cd backend
+    - ./gradlew :gateway:bootRun
+    - another terminal: 'curl localhost:8080', get a stub response
+    - return to running terminal, Ctrl-C to terminate
+    
+for expanded development experience (bette code navigation, code suggestions) try IntelliJ IDEA onboarding guide
