@@ -2,17 +2,25 @@
 	- Kotlin Language by mathiasflohlich
 	- Extension Pack for Java by Microsoft
 - Java
-	- 'java --version', 'javac --version' in terminal should show same version 21+. if not:
+	- 'java --version', 'javac --version' in terminal should show same version 21. if not:
 		- during extension installation you get a suggestion to install a new JDK, or you can open this window later by selecting 'install new JDK' in the action menu
-		- download an archive, 21+ (25 recommended, used in examples below)
-		- (you can install this system-wide, but below is user-only installation so that you can use it on campus)
-		- mkdir -p ~/jdk && tar -xzf OpenJDK25U-jdk_x64_linux_hotspot_25.0.2_10.tar.gz -C ~/jdk
-		- VSCode: 'add Java runtime' in action menu, select ~/jdk/jdk-25.0.2+10
-		- (select your terminal below, that you use in VSCode and independently; important if you want to run Gradle commands related to building the project from it)
-		- echo "export JAVA_HOME=$HOME/jdk/jdk-25.0.2+10" >> ~/.bashrc
-		- echo "export PATH=$JAVA_HOME/bin:$PATH" >> ~/.bashrc
-		- check again (see above)
+		- download an archive for JDK 21
+		- personal machine: 
+            - install system-wide (mkdir -p /opt/jdk && tar -xzf OpenJDK21U-jdk_x64_linux_hotspot_21.0.10_7.tar.gz -C /opt/jdk) or
+            - install for user only (mkdir -p ~/jdk && tar -xzf OpenJDK21U-jdk_x64_linux_hotspot_21.0.10_7.tar.gz -C ~/jdk)
+        - campus:
+		    - mkdir -p /sgoinfre/goinfre/Perso/$USER/jdk && tar -xzf OpenJDK21U-jdk_x64_linux_hotspot_21.0.10_7.tar.gz -C /sgoinfre/goinfre/Perso/$USER/jdk (using this in examples below)
+	- VSCode: 'add Java runtime' in action menu, select /sgoinfre/goinfre/Perso/$USER/jdk/jdk-25.0.2+10
+	- (below: select the configuration file for your preferred terminal that you use in VSCode and independently; important if you want to run Gradle commands related to building the project from it; pay attention to different quotes)
+	- echo "export JAVA_HOME=/sgoinfre/goinfre/Perso/$USER/jdk/21.0.10+7" >> ~/.bashrc
+	- echo 'export PATH=$JAVA_HOME/bin:$PATH' >> ~/.bashrc
+	- check again (see above)
 	- cd backend && ./gradlew javaToolchains: should display your JDK and 'is JDK: true'
+- campus: moving gradle to sgoinfre, cache is too big
+	- mkdir -p /sgoinfre/goinfre/Perso/$USER/gradle
+	- mv ~/.gradle /sgoinfre/goinfre/Perso/$USER/gradle
+	- ln -s /sgoinfre/goinfre/Perso/$USER/gradle ~/.gradle
+	- echo "export GRADLE_USER_HOME=/sgoinfre/goinfre/Perso/$USER/gradle" >> ~/.zshrc (or your terminal config)
 - editing
     - open backend.code-workspace
     - agree to use repository from parent level
@@ -31,4 +39,4 @@
     - another terminal: 'curl localhost:8080', get a stub response
     - return to running terminal, Ctrl-C to terminate
     
-for expanded development experience (bette code navigation, code suggestions) try IntelliJ IDEA onboarding guide
+for expanded development experience (better code navigation, code suggestions) try IntelliJ IDEA onboarding guide
