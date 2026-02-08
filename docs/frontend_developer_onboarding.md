@@ -17,6 +17,7 @@
   - `pkill -f GradleDaemon`
   - reload terminal (close all instances and open)
   - check `java --version` and `javac --version` again
+  - `export BACKEND=~/PROJECTS/r8n`
   - `cd $BACKEND && ./gradlew javaToolchains`: should display your JDK and 'is JDK: true'
 - campus: moving Gradle to sgoinfre, cache is too big
   - `mkdir -p /sgoinfre/goinfre/Perso/$USER/gradle`
@@ -27,6 +28,7 @@
   - `pkill -f GradleDaemon`
   - reload terminal (close all instances and open)
 - running backend
+  - `export BACKEND=~/PROJECTS/r8n`
   - `cd $BACKEND && ./gradlew :gateway:bootRun`
   - another terminal or browser: `curl "localhost:8080?id=723b8c60-bbbb-4814-90b8-2e6a1594102e"` (random valid UUID), get a stub response
   - return to running terminal, Ctrl-C to terminate
