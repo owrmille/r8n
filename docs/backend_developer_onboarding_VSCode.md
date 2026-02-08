@@ -1,30 +1,37 @@
+- `export BACKEND=~/PROJECTS/r8n` adjust to your setup, just for this guide
 - if you have gone through another onboarding guide, some steps can be simplified. watch out for items that start with an exclamation mark (!) though.
 - VSCode extensions:
   - Kotlin Language by mathiasflohlich
   - Extension Pack for Java by Microsoft
-- Java
-  - `java --version`, `javac --version` in terminal should show same version 21. if not:
-    - during extension installation you get a suggestion to install a new JDK, or you can open this window later by selecting 'install new JDK' in the action menu
-    - download an archive for JDK 21
-      - personal machine:
-        - install system-wide (`mkdir -p /opt/jdk && tar -xzf ~/Downloads/OpenJDK21U-jdk_x64_linux_hotspot_21.0.10_7.tar.gz -C /opt/jdk`) THEN YOUR JAVA INSTALLATION IS COMPLETE AND YOU CAN SKIP TO THE NEXT MAJOR SECTION OF THIS GUIDE or
-        - install for user only (`mkdir -p ~/jdk && tar -xzf ~/Downloads/OpenJDK21U-jdk_x64_linux_hotspot_21.0.10_7.tar.gz -C ~/jdk`)
-      - campus:
-        - `mkdir -p /sgoinfre/goinfre/Perso/$USER/jdk && tar -xzf ~/Downloads/OpenJDK21U-jdk_x64_linux_hotspot_21.0.10_7.tar.gz -C /sgoinfre/goinfre/Perso/$USER/jdk` (using this in examples below)
-  - ! VSCode: 'add Java runtime' in action palette (Ctrl-Shift-P), select /sgoinfre/goinfre/Perso/$USER/jdk/jdk-25.0.2+10
-  - (below: select the configuration file for your preferred terminal that you use in IDEA and independently; important if you want to run Gradle commands related to building the project from it; pay attention to different quotes; IDEA uses sh by default)
-  - `echo "export JAVA_HOME=/sgoinfre/goinfre/Perso/$USER/jdk/jdk21.0.10+7" >> ~/.zshrc` (.bashrc etc., also adjust path if you're doing this not in campus)
+- Java: `java --version`, `javac --version` in terminal should show same version 21. if not:
+  - during extension installation you get a suggestion to install a new JDK, or you can open this window later by selecting 'install new JDK' in the action palette (Ctrl-Shift-P)
+  - download an archive for JDK 21
+  - campus:
+    - `mkdir -p /sgoinfre/goinfre/Perso/$USER/jdk && tar -xzf ~/Downloads/OpenJDK21U-jdk_x64_linux_hotspot_21.0.10_7.tar.gz -C /sgoinfre/goinfre/Perso/$USER/jdk` (using this in examples below)
+    - `export JAVA_HOME=/sgoinfre/goinfre/Perso/$USER/jdk/jdk21.0.10+7`
+  - personal machine if you're ready for a system-wide installation:
+    - `mkdir -p /opt/jdk && tar -xzf ~/Downloads/OpenJDK21U-jdk_x64_linux_hotspot_21.0.10_7.tar.gz -C /opt/jdk`
+    - `export JAVA_HOME=/opt/jdk/jdk21.0.10+7`
+  - personal machine with a single-user installation:
+    - `mkdir -p ~/jdk && tar -xzf ~/Downloads/OpenJDK21U-jdk_x64_linux_hotspot_21.0.10_7.tar.gz -C ~/jdk`
+    - `export JAVA_HOME=~/jdk/jdk21.0.10+7`
+  - ! VSCode: 'add Java runtime' in action palette (Ctrl-Shift-P), select $JAVA_HOME
+  - (below: select the configuration file for your preferred terminal that you use in VSCode and independently; important if you want to run Gradle commands related to building the project from it; pay attention to different quotes)
+  - `echo "export JAVA_HOME=$JAVA_HOME" >> ~/.zshrc` (.bashrc etc.)
   - `echo 'export PATH=$JAVA_HOME/bin:$PATH' >> ~/.zshrc`
-  - `cd backend && ./gradlew --stop`
+  - `cd $BACKEND && ./gradlew --stop`
   - `pkill -f GradleDaemon`
   - reload terminal (close all instances and open)
   - check `java --version` and `javac --version` again
-  - `cd backend && ./gradlew javaToolchains`: should display your JDK and 'is JDK: true'
+  - `cd $BACKEND && ./gradlew javaToolchains`: should display your JDK and 'is JDK: true'
 - campus: moving Gradle to sgoinfre, cache is too big
   - `mkdir -p /sgoinfre/goinfre/Perso/$USER/gradle`
-  - `mv ~/.gradle /sgoinfre/goinfre/Perso/$USER/gradle`
+  - `rm -rf ~/.gradle`
   - `ln -s /sgoinfre/goinfre/Perso/$USER/gradle ~/.gradle`
   - `echo "export GRADLE_USER_HOME=/sgoinfre/goinfre/Perso/$USER/gradle" >> ~/.zshrc` (or your terminal config)
+  - `cd $BACKEND && ./gradlew --stop`
+  - `pkill -f GradleDaemon`
+  - reload terminal (close all instances and open)
 - editing backend
   - open backend.code-workspace
   - agree to use repository from parent level
@@ -38,8 +45,7 @@
   - another terminal or browser: `curl "localhost:8080?id=723b8c60-bbbb-4814-90b8-2e6a1594102e"` (random valid UUID), get a stub response
   - return to running terminal, Ctrl-C and press any key to terminate
 - running backend in an external terminal
-  - `cd backend`
-  - `./gradlew :gateway:bootRun`
+  - `cd $BACKEND && ./gradlew :gateway:bootRun`
   - another terminal or browser: `curl "localhost:8080?id=723b8c60-bbbb-4814-90b8-2e6a1594102e"`, get a stub response
   - return to running terminal, Ctrl-C to terminate
     
