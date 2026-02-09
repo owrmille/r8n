@@ -1,1 +1,0 @@
-package com.r8n.backend.gateway.api

@@ -1,0 +1,11 @@
+package com.r8n.backend.gateway.api.dto.about
+
+import java.util.UUID
+
+class SelectorDto(
+    val id: UUID,
+    val referentId: UUID,
+    val urlRegex: String,
+    val urlHumanReadable: String,
+    val selector: String,
+)

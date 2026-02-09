@@ -1,4 +1,4 @@
-package com.r8n.backend.gateway.api.dto
+package com.r8n.backend.gateway.api.dto.opinion
 
 enum class OpinionStatusEnumDto {
 	DRAFT,

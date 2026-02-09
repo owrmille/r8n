@@ -1,6 +1,5 @@
-package com.r8n.backend.gateway.api.dto
+package com.r8n.backend.gateway.api.dto.opinion
 
-import com.r8n.backend.gateway.api.dto.OpinionStatusEnumDto
 import java.time.Instant
 import java.util.UUID
 
@@ -13,13 +12,13 @@ class OpinionDto(
 	val subjective: List<String>,
 	val objective: List<String>,
 	val mark: Double?,
-	val componentWeightedMark: Double,
-	val components: List<WeightedOpinionDto>,
+	val componentMark: Double,
+	val components: List<WeightedOpinionReferenceDto>,
 	val status: OpinionStatusEnumDto,
 	val timestamp: Instant,
 )
 
-class WeightedOpinionDto(
+class WeightedOpinionReferenceDto(
 	val id: UUID,
 	val opinion: UUID,
 	val weight: Double,

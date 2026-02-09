@@ -1,8 +1,8 @@
 package com.r8n.backend.gateway.controller
 
 import com.r8n.backend.gateway.api.OpinionApi
-import com.r8n.backend.gateway.api.dto.OpinionDto
-import com.r8n.backend.gateway.api.dto.OpinionStatusEnumDto
+import com.r8n.backend.gateway.api.dto.opinion.OpinionDto
+import com.r8n.backend.gateway.api.dto.opinion.OpinionStatusEnumDto
 import java.util.UUID
 import java.time.Instant
 import org.springframework.web.bind.annotation.GetMapping
