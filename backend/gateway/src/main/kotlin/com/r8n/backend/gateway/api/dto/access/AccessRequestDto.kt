@@ -1,6 +1,5 @@
 package com.r8n.backend.gateway.api.dto.access
 
-import com.r8n.backend.gateway.api.dto.access.RequestStatusEnumDto
 import java.time.Instant
 import java.util.UUID
 
