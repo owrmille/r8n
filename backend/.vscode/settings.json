@@ -1,0 +1,21 @@
+{
+	"java.import.gradle.enabled": true,
+	"java.import.gradle.wrapper.enabled": true,
+    "gradle.autoDetect": "all",
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "kotlin.languageServer.enabled": true,
+    "kotlin.languageServer.verboseLogging": true,
+    "kotlin.languageServer.experimental.workspaceSymbols": true,
+    "org.gradle.java.installations.auto-download": false,
+    "java.compile.nullAnalysis.mode": "automatic",
+    "editor.suggest.snippetsPreventQuickSuggestions": false,
+    "editor.quickSuggestions": {
+        "other": true,
+        "comments": false,
+        "strings": true
+    },
+    "java.completion.filteredTypes": [
+        "com.sun.*", "jdk.*"
+    ],
+    "java.autobuild.enabled": true
+}
