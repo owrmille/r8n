@@ -1,5 +1,5 @@
 - if you have gone through another onboarding guide, some steps can be simplified. watch out for items that start with an exclamation mark (!) though.
-- most environment variables here are used only for the guide process convenience, they are not needed later when IDEA is set up. Exceptions will be marked explicitly. Theoretically you can skip most of those unexceptional envvars if you're ready to type the full texts instead.
+- most environment variables here are used only for the guide process convenience, they are not needed later when VSCode is set up. Exceptions will be marked explicitly. Theoretically you can skip most of those unexceptional envvars if you're ready to type the full texts instead.
 - `export BACKEND=~/PROJECTS/r8n` adjust to your setup
 
 # VSCode extensions

@@ -1,4 +1,4 @@
-- most environment variables here are used only for the guide process convenience, they are not needed later when IDEA is set up. Exceptions will be marked explicitly. Theoretically you can skip most of those unexceptional envvars if you're ready to type the full texts instead.
+- most environment variables here are used only for the guide process convenience, they are not needed later when your machine is set up. Exceptions will be marked explicitly. Theoretically you can skip most of those unexceptional envvars if you're ready to type the full texts instead.
 - `export BACKEND=~/PROJECTS/r8n` adjust to your setup
 
 # Java Development Kit
