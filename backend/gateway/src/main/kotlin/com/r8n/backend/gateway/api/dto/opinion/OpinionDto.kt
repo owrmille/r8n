@@ -12,7 +12,7 @@ class OpinionDto(
 	val subjective: List<String>,
 	val objective: List<String>,
 	val mark: Double?,
-	val componentMark: Double,
+	val componentMark: Double?,
 	val components: List<WeightedOpinionReferenceDto>,
 	val status: OpinionStatusEnumDto,
 	val timestamp: Instant,

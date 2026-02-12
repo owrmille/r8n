@@ -9,7 +9,7 @@ interface OpinionApi {
     fun addOpinion(subjectId: UUID, subjective: List<String>, objective: List<String>, mark: Double?): OpinionDto
     fun updateOpinion(opinionId: UUID, subjective: List<String>, objective: List<String>, mark: Double?): OpinionDto
     fun deleteOpinion(opinionId: UUID)
-    fun linkComponent(subjectId: UUID, componentId: UUID, weight: Double): OpinionDto
-    fun unlinkComponent(subjectId: UUID, componentId: UUID): OpinionDto
-    fun adjustComponentWeight(componentId: UUID, weight: Double): OpinionDto
+    fun linkComponent(parentOpinionId: UUID, childOpinionId: UUID, weight: Double): OpinionDto
+    fun unlinkComponent(linkId: UUID): OpinionDto
+    fun adjustComponentWeight(linkId: UUID, weight: Double): OpinionDto
 }

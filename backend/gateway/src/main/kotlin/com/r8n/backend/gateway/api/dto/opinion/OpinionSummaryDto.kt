@@ -9,5 +9,5 @@ class OpinionSummaryDto(
     val ownMark: Double?,
     val synchronizedMark: Double,
     val componentMark: Double,
-    val opinions: List<OpinionDto>,
+    val opinions: List<WeightedOpinionReferenceDto>,
 )
