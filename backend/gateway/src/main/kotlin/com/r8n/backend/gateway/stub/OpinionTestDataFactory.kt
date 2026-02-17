@@ -2,65 +2,29 @@ package com.r8n.backend.gateway.stub
 
 import com.r8n.backend.gateway.api.dto.opinion.OpinionDto
 import com.r8n.backend.gateway.api.dto.opinion.OpinionStatusEnumDto
-import com.r8n.backend.gateway.api.dto.opinion.OpinionSummaryDto
 import com.r8n.backend.gateway.api.dto.opinion.WeightedOpinionReferenceDto
+import com.r8n.backend.gateway.stub.OpinionSubjectTestDataFactory.alexanderReferent
+import com.r8n.backend.gateway.stub.OpinionSubjectTestDataFactory.bernardReferent
+import com.r8n.backend.gateway.stub.OpinionSubjectTestDataFactory.brokenTrust
+import com.r8n.backend.gateway.stub.OpinionSubjectTestDataFactory.canadaTariffs
+import com.r8n.backend.gateway.stub.OpinionSubjectTestDataFactory.cappuccino1A
+import com.r8n.backend.gateway.stub.OpinionSubjectTestDataFactory.cappuccino2
+import com.r8n.backend.gateway.stub.OpinionSubjectTestDataFactory.cappuccino3
+import com.r8n.backend.gateway.stub.OpinionSubjectTestDataFactory.donaldReferent
+import com.r8n.backend.gateway.stub.OpinionSubjectTestDataFactory.moreMoney
+import com.r8n.backend.gateway.stub.OpinionSubjectTestDataFactory.president
+import com.r8n.backend.gateway.stub.OpinionSubjectTestDataFactory.venezuelaInvasion
 import java.time.Instant
 import java.util.UUID
 
 object OpinionTestDataFactory {
-    data class Identifiable(val id: UUID, val name: String)
-
-    val alexander = Identifiable(
-        UUID.fromString("00000000-0000-0000-0000-000000000000"),
-        "Alexander",
-    )
-    val bernard = Identifiable(
-        UUID.fromString("01010101-0101-0101-0101-010101010101"),
-        "Bernard",
-    )
-    val cappuccino1 = Identifiable(
-        UUID.fromString("02020202-0202-0202-0202-020202020202"),
-        "cappuccino @ Cafe Eins",
-    )
-    val cappuccino2 = Identifiable(
-        UUID.fromString("03030303-0303-0303-0303-030303030303"),
-        "cappuccino extra thicc @ Cafe Eins",
-    )
-    val cappuccino3 = Identifiable(
-        UUID.fromString("04040404-0404-0404-0404-040404040404"),
-        "cappuccino @ Cafe Zwei",
-    )
-    val donald = Identifiable(
-        UUID.fromString("05050505-0505-0505-0505-050505050505"),
-        "Donald",
-    )
-    val cafeEins = Identifiable(
-        UUID.fromString("06060606-0606-0606-0606-060606060606"),
-        "Cafe Eins",
-    )
-    val venezuelaInvasion = Identifiable(
-        UUID.fromString("07070707-0707-0707-0707-070707070707"),
-        "ordered Nicholas Maduro to be kidnapped",
-    )
-    val canadaTariffs = Identifiable(
-        UUID.fromString("08080808-0808-0808-0808-080808080808"),
-        "imposed trade tariffs on Canada",
-    )
-    val moreMoney = Identifiable(
-        UUID.fromString("09090909-0909-0909-0909-090909090909"),
-        "USA gets more money from Canada",
-    )
-    val brokenTrust = Identifiable(
-        UUID.fromString("10101010-1010-1010-1010-101010101010"),
-        "nobody wants to trade with USA anymore",
-    )
 
     fun alexanderOnDonald(id: UUID = UUID.randomUUID()) = OpinionDto(
         id,
-        alexander.id,
-        alexander.name,
-        donald.id,
-        donald.name,
+        alexanderReferent.id,
+        alexanderReferent.name,
+        president.id,
+        president.name,
         listOf(),
         listOf("born 1946"),
         mark = 1.07,
@@ -75,8 +39,8 @@ object OpinionTestDataFactory {
 
     fun alexanderOnVenezuela(id: UUID = UUID.randomUUID()) = OpinionDto(
         id,
-        alexander.id,
-        alexander.name,
+        alexanderReferent.id,
+        alexanderReferent.name,
         venezuelaInvasion.id,
         venezuelaInvasion.name,
         listOf("you can't just kidnap people"),
@@ -90,8 +54,8 @@ object OpinionTestDataFactory {
 
     fun alexanderOnTariffs(id: UUID = UUID.randomUUID()) = OpinionDto(
         id,
-        alexander.id,
-        alexander.name,
+        alexanderReferent.id,
+        alexanderReferent.name,
         canadaTariffs.id,
         canadaTariffs.name,
         emptyList(),
@@ -108,8 +72,8 @@ object OpinionTestDataFactory {
 
     fun alexanderOnMoney(id: UUID = UUID.randomUUID()) = OpinionDto(
         id,
-        alexander.id,
-        alexander.name,
+        alexanderReferent.id,
+        alexanderReferent.name,
         moreMoney.id,
         moreMoney.name,
         emptyList(),
@@ -123,8 +87,8 @@ object OpinionTestDataFactory {
 
     fun alexanderOnTrust(id: UUID = UUID.randomUUID()) = OpinionDto(
         id,
-        alexander.id,
-        alexander.name,
+        alexanderReferent.id,
+        alexanderReferent.name,
         brokenTrust.id,
         brokenTrust.name,
         emptyList(),
@@ -138,10 +102,10 @@ object OpinionTestDataFactory {
 
     fun bernardOnCap1(id: UUID = UUID.randomUUID()) = OpinionDto(
         id,
-        bernard.id,
-        bernard.name,
-        cappuccino1.id,
-        cappuccino1.name,
+        bernardReferent.id,
+        bernardReferent.name,
+        cappuccino1A.id,
+        cappuccino1A.name,
         listOf("reminds of grandma's home coffee"),
         listOf("5.50€", "lactose-free milk"),
         4.23,
@@ -153,8 +117,8 @@ object OpinionTestDataFactory {
 
     fun bernardOnCap2(id: UUID = UUID.randomUUID()) = OpinionDto(
         id,
-        bernard.id,
-        bernard.name,
+        bernardReferent.id,
+        bernardReferent.name,
         cappuccino2.id,
         cappuccino2.name,
         listOf("so thiccccccc"),
@@ -168,8 +132,8 @@ object OpinionTestDataFactory {
 
     fun bernardOnCap3(id: UUID = UUID.randomUUID()) = OpinionDto(
         id,
-        bernard.id,
-        bernard.name,
+        bernardReferent.id,
+        bernardReferent.name,
         cappuccino3.id,
         cappuccino3.name,
         listOf("my favorite"),
@@ -183,10 +147,10 @@ object OpinionTestDataFactory {
 
     fun alexanderOnCap1(id: UUID = UUID.randomUUID()) = OpinionDto(
         id,
-        alexander.id,
-        alexander.name,
-        cappuccino1.id,
-        cappuccino1.name,
+        alexanderReferent.id,
+        alexanderReferent.name,
+        cappuccino1A.id,
+        cappuccino1A.name,
         emptyList(),
         listOf("how the hell do you call this coffee? this is piss"),
         1.0,
@@ -198,10 +162,10 @@ object OpinionTestDataFactory {
 
     fun donaldOnCap1(id: UUID = UUID.randomUUID()) = OpinionDto(
         id,
-        donald.id,
-        donald.name,
-        cappuccino1.id,
-        cappuccino1.name,
+        donaldReferent.id,
+        donaldReferent.name,
+        cappuccino1A.id,
+        cappuccino1A.name,
         emptyList(),
         listOf(
             "nobody knows more about cappuccino than I do",
@@ -217,8 +181,8 @@ object OpinionTestDataFactory {
 
     fun donaldOnCap3(id: UUID = UUID.randomUUID()) = OpinionDto(
         id,
-        donald.id,
-        donald.name,
+        donaldReferent.id,
+        donaldReferent.name,
         cappuccino3.id,
         cappuccino3.name,
         emptyList(),

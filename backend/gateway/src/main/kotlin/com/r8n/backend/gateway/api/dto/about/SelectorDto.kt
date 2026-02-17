@@ -2,7 +2,7 @@ package com.r8n.backend.gateway.api.dto.about
 
 import java.util.UUID
 
-class SelectorDto(
+data class SelectorDto(
     val id: UUID,
     val referentId: UUID,
     val urlRegex: String,

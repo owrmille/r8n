@@ -3,7 +3,7 @@ package com.r8n.backend.gateway.api.dto.access
 import java.time.Instant
 import java.util.UUID
 
-class AccessRequestDto(
+data class AccessRequestDto(
     val id: UUID,
     val opinionListId: UUID,
     val opinionListName: String,

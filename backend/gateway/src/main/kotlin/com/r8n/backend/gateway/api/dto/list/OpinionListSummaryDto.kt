@@ -2,7 +2,7 @@ package com.r8n.backend.gateway.api.dto.list
 
 import java.util.UUID
 
-class OpinionListSummaryDto(
+data class OpinionListSummaryDto(
     val id: UUID,
     val listName: String,
     val owner: UUID,

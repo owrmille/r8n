@@ -3,7 +3,7 @@ package com.r8n.backend.gateway.api.dto.opinion
 import java.time.Instant
 import java.util.UUID
 
-class OpinionDto(
+data class OpinionDto(
 	val id: UUID,
 	val owner: UUID,
 	val ownerName: String,
@@ -18,7 +18,7 @@ class OpinionDto(
 	val timestamp: Instant,
 )
 
-class WeightedOpinionReferenceDto(
+data class WeightedOpinionReferenceDto(
 	val id: UUID,
 	val opinion: UUID,
 	val weight: Double,
