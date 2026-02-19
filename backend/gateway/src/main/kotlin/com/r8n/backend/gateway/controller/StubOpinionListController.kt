@@ -67,7 +67,7 @@ class StubOpinionListController : OpinionListApi {
     @GetMapping("/search")
     override fun search(
         @RequestParam(required = false)
-        name: String?,
+        nameSubstring: String?,
         @RequestParam(required = false)
         authorId: UUID?,
         @RequestParam(required = false)
@@ -76,4 +76,23 @@ class StubOpinionListController : OpinionListApi {
     ) = PageImpl(
         listOf(OpinionListTestDataFactory.getListSummary()),
     ).toResponse()
+
+    @PostMapping("/sync")
+    override fun syncWithOpinionList(
+        @RequestParam(required = true)
+        existingList: UUID,
+        @RequestParam(required = true)
+        addedList: UUID,
+    ) = OpinionListTestDataFactory.getList(existingList)
+
+    @PostMapping("/unsync")
+    override fun unsyncWithOpinionList(
+        @RequestParam(required = true)
+        existingList: UUID,
+        @RequestParam(required = true)
+        removedList: UUID,
+    ) = OpinionListTestDataFactory.getList(existingList)
+
+    @GetMapping("/mine")
+    override fun getMine(pageable: Pageable) = search(null, null, null, pageable)
 }

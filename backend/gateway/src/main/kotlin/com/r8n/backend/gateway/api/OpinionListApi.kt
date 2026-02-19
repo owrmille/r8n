@@ -15,9 +15,12 @@ interface OpinionListApi {
     fun linkOpinion(listId: UUID, opinionId: UUID): OpinionListDto
     fun unlinkOpinion(listId: UUID, opinionId: UUID): OpinionListDto
     fun search(
-        name: String?,
+        nameSubstring: String?,
         authorId: UUID?,
         authorNameSubstring: String?,
         pageable: Pageable,
     ): PageResponse<OpinionListSummaryDto>
+    fun syncWithOpinionList(existingList: UUID, addedList: UUID): OpinionListDto
+    fun unsyncWithOpinionList(existingList: UUID, removedList: UUID): OpinionListDto
+    fun getMine(pageable: Pageable): PageResponse<OpinionListSummaryDto>
 }

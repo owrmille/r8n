@@ -29,7 +29,7 @@ class StubOpinionController : OpinionApi {
     ) = OpinionTestDataFactory.getOpinion(subjectId)
 
     @PostMapping("/add")
-    override fun addOpinion(
+    override fun createOpinion(
         @RequestParam(required = true)
         subjectId: UUID,
         @RequestParam(required = false)

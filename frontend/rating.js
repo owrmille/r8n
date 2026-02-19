@@ -1,3 +1,4 @@
+
 const details = document.getElementById('details');
 let detailsOpen = false;
 
