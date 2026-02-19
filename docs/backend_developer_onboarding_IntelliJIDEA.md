@@ -38,7 +38,7 @@ Build and dependency management system for backend. Runs every time you build ba
 - `cd $BACKEND && ./gradlew --stop`
 - `pkill -f GradleDaemon`
 - close all terminal instances and open a new one
-- ! IDEA: File - Settings - Build, Execution, Deployment - Build Tools - Gradle - Gradle user home: /sgoinfre/goinfre/Perso/$USER/gradle (substitute by yourself)
+- ! IDEA: File - Settings - Build, Execution, Deployment - Build Tools - Gradle - Gradle user home: /sgoinfre/goinfre/Perso/$USER/gradle (substitute by yourself). Don't open the navigation window, just type the address right in the main settings window.
 
 # Editing backend
 - IDEA - File - Open - select $BACKEND
@@ -51,11 +51,13 @@ Build and dependency management system for backend. Runs every time you build ba
 - as soon as you see 'Started GatewayApplicationKt in X seconds' in the logs in the terminal - the app is running
 - if you see something about wrong Java version, return to JDK installation/setup
 - if you see something about Gradle not having enough space, return to moving Gradle cache to another partition
-- another terminal or browser: `curl "localhost:8080?id=723b8c60-bbbb-4814-90b8-2e6a1594102e"` (random valid UUID), get a stub response
+- (optional) `curl -X POST http://localhost:8080/auth/login -H "Content-Type: application/json" -d '{"login": "test","password": "1234"}' -i` - get the stub authentication token as a response
+- `curl "http://localhost:8080/opinions/id?id=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"` (random valid UUID plus actual stub authentication token that you could have got from the previous step), get a stub response
 - IDEA: open bottom left Run panel, select Stop for the service
 
 # Running backend in an external terminal
 - `export BACKEND=~/PROJECTS/r8n`
 - `cd $BACKEND && ./gradlew :gateway:bootRun`
-- another terminal or browser: `curl "localhost:8080?id=723b8c60-bbbb-4814-90b8-2e6a1594102e"`, get a stub response
+- (optional) `curl -X POST http://localhost:8080/auth/login -H "Content-Type: application/json" -d '{"login": "test","password": "1234"}' -i` - get the stub authentication token as a response
+- `curl "http://localhost:8080/opinions/id?id=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"` (random valid UUID plus actual stub authentication token that you could have got from the previous step), get a stub response
 - return to running terminal, Ctrl-C to terminate
