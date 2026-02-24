@@ -1,0 +1,13 @@
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: opinions
+              uri: http://opinions-sv:8081
+              predicates:
+                - Path=/reviews/**

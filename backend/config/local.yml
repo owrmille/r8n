@@ -1,0 +1,8 @@
+gateway.host: localhost
+gateway.port: 8080
+
+services.mock.host: localhost
+services.mock.port: 8090
+
+services.opinions.host: localhost
+services.opinions.port: 8081
