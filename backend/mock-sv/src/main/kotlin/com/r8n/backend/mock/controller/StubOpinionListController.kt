@@ -3,7 +3,7 @@ package com.r8n.backend.mock.controller
 import com.r8n.backend.mock.api.OpinionListApi
 import com.r8n.backend.mock.api.dto.list.OpinionListPrivacyEnumDto
 import com.r8n.backend.mock.api.dto.list.OpinionListSummaryDto
-import com.r8n.backend.opinions.api.dto.toResponse
+import com.r8n.backend.mock.api.dto.toResponse
 import com.r8n.backend.mock.stub.OpinionListTestDataFactory
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable

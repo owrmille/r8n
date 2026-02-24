@@ -2,7 +2,7 @@ package com.r8n.backend.mock.controller
 
 import com.r8n.backend.mock.api.OutgoingAccessRequestsApi
 import com.r8n.backend.mock.api.dto.access.RequestStatusEnumDto
-import com.r8n.backend.opinions.api.dto.toResponse
+import com.r8n.backend.mock.api.dto.toResponse
 import com.r8n.backend.mock.stub.AccessRequestsTestDataFactory
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable

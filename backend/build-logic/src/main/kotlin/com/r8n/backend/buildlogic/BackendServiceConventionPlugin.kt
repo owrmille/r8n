@@ -13,7 +13,7 @@ class BackendServiceConventionPlugin : Plugin<Project> {
             dependencies.apply {
                 add("implementation", "org.springframework.boot:spring-boot-starter")
                 add("implementation", "org.springframework.boot:spring-boot-starter-web")
-                add("implementation", "org.springdoc:springdoc-openapi-starter-webmvc-ui")
+                add("implementation", "org.springdoc:springdoc-openapi-starter-webflux-ui")
                 add("implementation", "org.springframework.data:spring-data-commons")
                 add("implementation", project(":core:security"))
 

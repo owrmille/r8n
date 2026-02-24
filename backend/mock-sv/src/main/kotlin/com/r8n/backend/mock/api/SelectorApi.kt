@@ -1,6 +1,6 @@
 package com.r8n.backend.mock.api
 
-import com.r8n.backend.opinions.api.dto.PageResponse
+import com.r8n.backend.mock.api.dto.PageResponse
 import com.r8n.backend.mock.api.dto.SupportThreadDto
 import com.r8n.backend.opinions.api.dto.about.SelectorDto
 import org.springframework.data.domain.Pageable

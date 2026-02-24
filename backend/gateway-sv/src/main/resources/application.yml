@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${GATEWAY_PORT}
 
 spring:
   cloud:
@@ -8,6 +8,10 @@ spring:
         webflux:
           routes:
             - id: opinions
-              uri: http://opinions-sv:8081
+              uri: http://${SERVICES_OPINIONS_HOST}:${SERVICES_OPINIONS_PORT}
               predicates:
-                - Path=/reviews/**
+                - Path=/opinions/**
+            - id: mock
+              uri: http://${SERVICES_MOCK_HOST}:${SERVICES_MOCK_PORT}
+              predicates:
+                - Path=/auth/**,/accessRequests/**,/opinionLists/**,/selectors/**

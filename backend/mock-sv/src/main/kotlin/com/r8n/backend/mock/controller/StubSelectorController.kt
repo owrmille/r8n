@@ -1,7 +1,7 @@
 package com.r8n.backend.mock.controller
 
 import com.r8n.backend.mock.api.SelectorApi
-import com.r8n.backend.opinions.api.dto.toResponse
+import com.r8n.backend.mock.api.dto.toResponse
 import com.r8n.backend.mock.stub.MiscTestFactory
 import com.r8n.backend.mock.stub.SelectorTestDataFactory
 import org.springframework.data.domain.PageImpl
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
 @RestController
-@RequestMapping("/selector")
+@RequestMapping("/selectors")
 class StubSelectorController : SelectorApi {
     @GetMapping("/forUrl")
     override fun getForURL(
