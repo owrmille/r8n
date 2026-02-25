@@ -17,7 +17,6 @@ dependencies {
         api(libs.spring.boot.starter)
         api(libs.spring.boot.starter.security)
         api(libs.spring.boot.starter.test)
-//        api(libs.spring.boot.starter.web)
         api(libs.spring.data)
         api(libs.spring.swagger)
         api(libs.testcontainers.junit)

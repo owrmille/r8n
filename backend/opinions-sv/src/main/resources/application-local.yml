@@ -1,8 +1,0 @@
-spring:
-  config:
-    activate:
-      on-profile: local
-    import: "optional:file:../../../config/local.yml"
-
-server:
-  port: ${services.opinions.port:8082}
