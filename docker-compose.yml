@@ -1,0 +1,64 @@
+services:
+  opinions:
+    image: opinions
+    build:
+      context: ./deployment/opinions
+      dockerfile: Dockerfile
+    env_file:
+      - ./backend/config/local.env
+    environment:
+      SERVICES_OPINIONS_PORT: ${SERVICES_OPINIONS_PORT:-8081}
+      LOGGING_FILE_NAME: /var/log/r8n/app.log
+    expose:
+      - "8081"
+    networks:
+      - r8n_net
+    volumes:
+      - ./deployment/opinions/logs:/var/log/r8n
+
+  mock:
+    image: mock
+    build:
+      context: ./deployment/mock
+      dockerfile: Dockerfile
+    env_file:
+      - ./backend/config/local.env
+    environment:
+      SERVICES_MOCK_PORT: ${SERVICES_MOCK_PORT:-8090}
+      LOGGING_FILE_NAME: /var/log/r8n/app.log
+    expose:
+      - "8090"
+    networks:
+      - r8n_net
+    volumes:
+      - ./deployment/mock/logs:/var/log/r8n
+
+  gateway:
+    image: gateway
+    build:
+      context: ./deployment/gateway
+      dockerfile: Dockerfile
+    env_file:
+      - ./backend/config/local.env
+    environment:
+      GATEWAY_PORT: ${GATEWAY_PORT:-8080}
+      INTERSERVICE_PROTOCOL: http
+      SERVICES_OPINIONS_HOST: opinions
+      SERVICES_OPINIONS_PORT: ${SERVICES_OPINIONS_PORT:-8081}
+      SERVICES_MOCK_HOST: mock
+      SERVICES_MOCK_PORT: ${SERVICES_MOCK_PORT:-8090}
+      LOGGING_FILE_NAME: /var/log/r8n/app.log
+    ports:
+      - "${GATEWAY_PORT:-8080}:8080"
+    depends_on:
+      - opinions
+      - mock
+    networks:
+      - r8n_net
+    volumes:
+      - ./deployment/gateway/logs:/var/log/r8n
+
+networks:
+  r8n_net:
+    name: r8n_net
+    driver: bridge
