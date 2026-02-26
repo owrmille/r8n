@@ -4,6 +4,6 @@ plugins {
 
 dependencies {
     implementation(platform(project(":platform")))
-    implementation(libs.spring.boot.webflux)
+    implementation(libs.spring.boot.web)
     implementation(libs.spring.cloud.gateway)
 }
