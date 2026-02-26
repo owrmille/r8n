@@ -1,0 +1,17 @@
+server:
+  port: ${GATEWAY_PORT}
+
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: opinions
+              uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_OPINIONS_HOST}:${SERVICES_OPINIONS_PORT}
+              predicates:
+                - Path=/opinions/**
+            - id: mock
+              uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_MOCK_HOST}:${SERVICES_MOCK_PORT}
+              predicates:
+                - Path=/auth/**,/accessRequests/**,/opinionLists/**,/selectors/**

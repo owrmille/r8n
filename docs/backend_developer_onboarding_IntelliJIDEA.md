@@ -18,8 +18,8 @@ Execution engine for backend. Used every time to build and run the backend.
   - `mkdir -p ~/jdk && tar -xzf ~/Downloads/OpenJDK21U-jdk_x64_linux_hotspot_21.0.10_7.tar.gz -C ~/jdk`
   - `export JAVA_HOME=~/jdk/jdk21.0.10+7`
 - (below: select the configuration file for your preferred terminal that you use in IDEA and independently; important if you want to run Gradle commands related to building the project from it; IDEA uses sh by default; pay attention to different quotes)
-- `echo "export JAVA_HOME=$JAVA_HOME" >> ~/.zshrc` (.bashrc etc.) (this export is not global, it works only for your selected terminal, but this envvar is unskippable, it tells the terminal where to look for java)
-- `echo 'export PATH=$JAVA_HOME/bin:$PATH' >> ~/.zshrc` (same as above)
+- `echo "export JAVA_HOME=$JAVA_HOME" >> ~/.bashrc` (zsh on the campus is bugged; sh and bash definitely work in IDEA, the rest is up to you to set up) (this export is not global, it works only for your selected terminal, but this envvar is unskippable, it tells the terminal where to look for java)
+- `echo 'export PATH=$JAVA_HOME/bin:$PATH' >> ~/.bashrc` (same as above)
 - (reloading Gradle and terminal to make sure all changes are picked up)
 - `cd $BACKEND && ./gradlew --stop`
 - `pkill -f GradleDaemon`
@@ -33,7 +33,7 @@ Build and dependency management system for backend. Runs every time you build ba
 - `mkdir -p /sgoinfre/goinfre/Perso/$USER/gradle`
 - `rm -rf ~/.gradle`
 - `ln -s /sgoinfre/goinfre/Perso/$USER/gradle ~/.gradle` (now ~/.gradle is not a Gradle cache folder, rather a link to an actual cache folder in sgoinfre)
-- `echo "export GRADLE_USER_HOME=/sgoinfre/goinfre/Perso/$USER/gradle" >> ~/.zshrc` (or your terminal config) (this export is not global, it works only for your selected terminal, but this envvar is unskippable, it tells your Gradle where its cache actually is in case it decides to not follow the symlink ~/.gradle)
+- `echo "export GRADLE_USER_HOME=/sgoinfre/goinfre/Perso/$USER/gradle" >> ~/.bashrc` (or your terminal config) (this export is not global, it works only for your selected terminal, but this envvar is unskippable, it tells your Gradle where its cache actually is in case it decides to not follow the symlink ~/.gradle)
 - (reloading Gradle and terminal to make sure all changes are picked up)
 - `cd $BACKEND && ./gradlew --stop`
 - `pkill -f GradleDaemon`
@@ -61,3 +61,10 @@ Build and dependency management system for backend. Runs every time you build ba
 - (optional) `curl -X POST http://localhost:8080/auth/login -H "Content-Type: application/json" -d '{"login": "test","password": "1234"}' -i` - get the stub authentication token as a response
 - `curl "http://localhost:8080/opinions/id?id=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"` (random valid UUID plus actual stub authentication token that you could have got from the previous step), get a stub response
 - return to running terminal, Ctrl-C to terminate
+
+# IDEA troubleshooting
+- `com.intellij.platform.ide.bootstrap.DirectoryLock$CannotActivateException: Process "/app/bin/idea" (2) is still running and does not respond.`
+  - reason: if you were automatically logged out in the campus, IDEA didn't shut down properly
+  - solution: `rm ~/.var/app/com.jetbrains.IntelliJ-IDEA-Community/config/JetBrains/IdeaIC2025.3/.lock`
+- not enough space
+  - clean up as much as possible. delete all unused projects, evals, downloads, clear browser cache, clear trash. Home folder is only 5G, this is to be expected. Alternatively you can try downloading IDEA separately and installing it to sgoinfre.

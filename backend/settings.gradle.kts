@@ -3,4 +3,13 @@ plugins {
 }
 
 rootProject.name = "r8n-backend"
-include("gateway")
+
+includeBuild("build-logic")
+include("platform")
+include("core")
+
+include("gateway-sv")
+include("mock-sv")
+include("opinions-sv")
+
+include("core:security")
