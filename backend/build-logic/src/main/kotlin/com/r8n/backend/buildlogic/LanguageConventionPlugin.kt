@@ -1,0 +1,48 @@
+package com.r8n.backend.buildlogic
+
+import org.gradle.api.Plugin
+import org.gradle.api.Project
+import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.api.tasks.testing.Test
+import org.gradle.jvm.toolchain.JavaLanguageVersion
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import kotlin.jvm.java
+
+@Suppress("unused") // used through reflection in :build-logic:build.gradle.kts
+class LanguageConventionPlugin : Plugin<Project> {
+    override fun apply(project: Project) {
+        with(project) {
+            pluginManager.apply("org.springframework.boot")
+            pluginManager.apply("io.spring.dependency-management")
+            pluginManager.apply("org.jetbrains.kotlin.jvm")
+            pluginManager.apply("org.jetbrains.kotlin.plugin.spring")
+
+            extensions.configure(JavaPluginExtension::class.java) {
+                toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+                withSourcesJar()
+            }
+
+            extensions.configure(KotlinJvmProjectExtension::class.java) {
+                jvmToolchain(21)
+            }
+
+            tasks.withType(KotlinCompile::class.java).configureEach {
+                compilerOptions.freeCompilerArgs.addAll(
+                    "-Xjsr305=strict",
+                    "-Xannotation-default-target=param-property",
+                )
+            }
+
+            tasks.withType(Test::class.java).configureEach {
+                useJUnitPlatform()
+            }
+
+            dependencies.apply {
+                add("implementation", enforcedPlatform(project(":platform")))
+
+                add("implementation", "org.jetbrains.kotlin:kotlin-reflect")
+            }
+        }
+    }
+}

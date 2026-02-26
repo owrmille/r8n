@@ -1,0 +1,3 @@
+spring.application.name: opinions-sv
+server:
+  port: ${SERVICES_OPINIONS_PORT:8081}
