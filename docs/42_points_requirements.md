@@ -5,6 +5,7 @@ Web:
 - Minor: Custom-made design system with reusable components, including a proper color palette, typography, and icons (minimum: 10 reusable components)
 - Minor: Implement advanced search functionality with filters, sorting, and pagination.
 - Minor: File upload and management system.
+- ? Minor: Progressive Web App (PWA) with offline support and installability.
 
 Accessibility:
 - ? Minor: Support for multiple languages (at least 3 languages).
