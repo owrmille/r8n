@@ -7,11 +7,11 @@ data class Opinion(
     val id: UUID,
     val owner: UUID,
     val subject: UUID,
+    val subjectName: String,
     val subjective: List<String>,
     val objective: List<String>,
     val mark: Double?,
-    val componentMark: Double?,
-    val components: List<WeightedOpinionReference>,
+    val componentSection: ComponentSection,
     val status: OpinionStatusEnum,
     val timestamp: Instant,
 )

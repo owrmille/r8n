@@ -2,6 +2,7 @@ package com.r8n.backend.opinions.controller
 
 import com.r8n.backend.opinions.api.OpinionApi
 import com.r8n.backend.opinions.api.dto.opinion.OpinionDto
+import com.r8n.backend.opinions.facade.OpinionFacade
 import com.r8n.backend.opinions.stub.OpinionTestDataFactory
 import org.springframework.web.bind.annotation.DeleteMapping
 import java.util.UUID
@@ -14,13 +15,15 @@ import org.springframework.web.bind.annotation.RequestParam
 
 @RestController
 @RequestMapping("/opinions")
-class StubOpinionController : OpinionApi {
+class StubOpinionController(
+    private val opinionFacade: OpinionFacade,
+) : OpinionApi {
 
     @GetMapping("/id")
     override fun getOpinionById(
         @RequestParam(required = true)
         id: UUID,
-    ) = OpinionTestDataFactory.getOpinion(id)
+    ) = opinionFacade.getOpinionDto(id)
 
     @GetMapping("/for")
     override fun getOpinionFor(

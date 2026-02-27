@@ -23,8 +23,13 @@ class BackendServiceConventionPlugin : Plugin<Project> {
                 add("implementation", libs.findLibrary("postgresql").get())
                 add("implementation", libs.findLibrary("spring-boot-data-jpa").get())
                 add("implementation", libs.findLibrary("spring-boot-starter").get())
-                add("testImplementation", libs.findLibrary("spring-boot-starter-test").get())
                 add("implementation", libs.findLibrary("spring-swagger").get())
+
+                add("testImplementation", libs.findLibrary("mockito").get())
+                add("testImplementation", libs.findLibrary("spring-boot-starter-test").get())
+                add("testImplementation", libs.findLibrary("spring-boot-testcontainers").get())
+                add("testImplementation", libs.findLibrary("testcontainers-junit").get())
+                add("testImplementation", libs.findLibrary("testcontainers-postgresql").get())
             }
         }
     }

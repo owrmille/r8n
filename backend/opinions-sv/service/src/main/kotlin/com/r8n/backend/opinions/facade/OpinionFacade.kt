@@ -2,7 +2,10 @@ package com.r8n.backend.opinions.facade
 
 import com.r8n.backend.mock.integration.UserClient
 import com.r8n.backend.opinions.api.dto.opinion.OpinionDto
+import com.r8n.backend.opinions.domain.WeightedOpinionReference
+import com.r8n.backend.opinions.domain.toDto
 import com.r8n.backend.opinions.service.OpinionService
+import com.r8n.backend.opinions.service.SubjectService
 import java.util.UUID
 
 class OpinionFacade(
@@ -14,9 +17,16 @@ class OpinionFacade(
         return OpinionDto(
             opinion.id,
             opinion.owner,
-            userClient.getUserSummary(opinion.owner).name,
+            userClient.getUserName(opinion.owner),
             opinion.subject,
-
+            opinion.subjectName,
+            opinion.subjective,
+            opinion.objective,
+            opinion.mark,
+            opinion.componentSection.componentMark,
+            opinion.componentSection.components.map { it.toDto() }.toList(),
+            opinion.status.toDto(),
+            opinion.timestamp,
         )
     }
 }
