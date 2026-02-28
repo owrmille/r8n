@@ -1,12 +1,10 @@
-ENV_FILE := config/local.env
+LOCAL_ENV_FILE := config/local.env
 DOCKER_ENV_FILE := config/docker.env
+LOAD_LOCAL_ENV = set -a; [ -f "$(LOCAL_ENV_FILE)" ] && . "$(LOCAL_ENV_FILE)"; set +a;
 
-# ifneq (,$(wildcard $(ENV_FILE)))
-# 	include $(ENV_FILE)
-# 	export
-# endif
-
-.PHONY: run-all run-opinions run-mock run-gateway stop-all prebuild-jars prepare-artifacts docker-build docker-up docker-down docker-logs docker-health clean-artifacts ensure-log-dirs clean-logs
+.PHONY: run-all run-opinions run-mock run-gateway stop-all \
+    prebuild-jars prepare-artifacts docker-build docker-up \
+    docker-down docker-logs clean-artifacts ensure-log-dirs clean-logs
 
 docker-up: docker-build ensure-log-dirs
 	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml up -d
@@ -38,22 +36,25 @@ clean-logs:
 clean-artifacts:
 	rm -f deployment/gateway/app.jar deployment/opinions/app.jar deployment/mock/app.jar
 
-run-all: run-opinions run-mock run-gateway
+local-run-all: run-opinions run-mock run-gateway
 
 run-opinions:
 	@echo "Starting opinions-sv..."
-	@cd backend && ./gradlew :opinions-sv:bootRun > opinions.log 2>&1 & \
-	echo $$! > /tmp/opinions.pid
+	@$(LOAD_LOCAL_ENV) \
+	cd backend && (./gradlew :opinions-sv:bootRun > opinions.log 2>&1 & \
+	echo $$! > /tmp/opinions.pid)
 
 run-mock:
 	@echo "Starting mock-sv..."
-	@cd backend && ./gradlew :mock-sv:bootRun > mock.log 2>&1 & \
-	echo $$! > /tmp/mock.pid
+	@$(LOAD_LOCAL_ENV) \
+	cd backend && (./gradlew :mock-sv:bootRun > mock.log 2>&1 & \
+	echo $$! > /tmp/mock.pid)
 
 run-gateway:
 	@echo "Starting gateway-sv..."
-	@cd backend && ./gradlew :gateway-sv:bootRun > gateway.log 2>&1 & \
-	echo $$! > /tmp/gateway.pid
+	@$(LOAD_LOCAL_ENV) \
+	cd backend && (./gradlew :gateway-sv:bootRun > gateway.log 2>&1 & \
+	echo $$! > /tmp/gateway.pid)
 
 stop-all:
 	-@kill $$(cat /tmp/opinions.pid) 2>/dev/null || true
