@@ -13,6 +13,7 @@ import HelloWorld from '@/widgets/demo-welcome/ui/HelloWorld.vue'
       <nav>
         <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/about">About</RouterLink>
+        <RouterLink to="/api-debug">API Debug</RouterLink>
       </nav>
     </div>
   </header>
