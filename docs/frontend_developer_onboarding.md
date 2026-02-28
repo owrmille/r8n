@@ -144,12 +144,12 @@ If `Vetur` is installed, disable it for this workspace (Volar should be used ins
 
 ### Frontend stack
 
-- `Vue 3` + `TypeScript`
-- `Vite` (dev server and build)
-- `Vue Router`
-- `Pinia`
-- `Tailwind CSS v4`
-- `shadcn-vue` (UI primitives)
+- [`Vue 3`](https://vuejs.org/) + [`TypeScript`](https://www.typescriptlang.org/docs/)
+- [`Vite`](https://vite.dev/guide/) (dev server and build)
+- [`Vue Router`](https://router.vuejs.org/)
+- [`Pinia`](https://pinia.vuejs.org/)
+- [`Tailwind CSS v4`](https://tailwindcss.com/docs/installation/using-vite)
+- [`shadcn-vue`](https://www.shadcn-vue.com/docs)
 
 ### Architecture (FSD-lite)
 
