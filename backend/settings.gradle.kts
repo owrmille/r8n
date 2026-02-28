@@ -18,6 +18,8 @@ include("opinions-api", "opinions-sv/api")
 include("opinions-sv", "opinions-sv/service")
 
 include("core:security")
+include("core:api")
+include("core:utils")
 
 fun include(name: String, projectDir: String) {
     include(name)

@@ -1,14 +1,14 @@
 package com.r8n.backend.mock.api
 
-import com.r8n.backend.mock.api.dto.PageResponse
+import com.r8n.backend.core.api.PageRequestDto
+import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.mock.api.dto.SupportThreadDto
-import com.r8n.backend.opinions.api.dto.about.SelectorDto
-import org.springframework.data.domain.Pageable
+import com.r8n.backend.mock.api.dto.about.SelectorDto
 import java.util.UUID
 
 interface SelectorApi {
-    fun getForURL(url: String, pageable: Pageable): PageResponse<SelectorDto>
-    fun getForSubject(id: UUID, pageable: Pageable): PageResponse<SelectorDto>
+    fun getForURL(url: String, pageable: PageRequestDto): PageResponseDto<SelectorDto>
+    fun getForSubject(id: UUID, pageable: PageRequestDto): PageResponseDto<SelectorDto>
     fun suggest(subjectId: UUID, selector: String): SelectorDto
     fun disagree(selectorId: UUID, comment: String?): SupportThreadDto
 }

@@ -1,11 +1,12 @@
 package com.r8n.backend.mock.controller
 
+import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.mock.api.SelectorApi
-import com.r8n.backend.mock.api.dto.toResponse
+import com.r8n.backend.core.utils.toResponse
+import com.r8n.backend.mock.api.dto.about.SelectorDto
 import com.r8n.backend.mock.stub.MiscTestFactory
 import com.r8n.backend.mock.stub.SelectorTestDataFactory
 import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.Pageable
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -21,15 +22,15 @@ class StubSelectorController : SelectorApi {
     override fun getForURL(
         @RequestParam(required = true)
         url: String,
-        pageable: Pageable,
-    ) = PageImpl(listOf(SelectorTestDataFactory.getSelector())).toResponse()
+        pageable: PageRequestDto,
+    ) = PageImpl<SelectorDto>(listOf(SelectorTestDataFactory.getSelector())).toResponse()
 
     @GetMapping("/forSubject")
     override fun getForSubject(
         @RequestParam(required = true)
         id: UUID,
-        pageable: Pageable,
-    ) = PageImpl(listOf(SelectorTestDataFactory.getSelector())).toResponse()
+        pageable: PageRequestDto,
+    ) = PageImpl<SelectorDto>(listOf(SelectorTestDataFactory.getSelector())).toResponse()
 
     @PostMapping("/suggest")
     override fun suggest(
@@ -37,7 +38,7 @@ class StubSelectorController : SelectorApi {
         subjectId: UUID,
         @RequestParam(required = true)
         selector: String,
-    ) = SelectorTestDataFactory.getSelector()
+    ): SelectorDto = SelectorTestDataFactory.getSelector()
 
     @PatchMapping("/disagree")
     override fun disagree(

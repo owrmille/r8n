@@ -48,8 +48,6 @@ class LanguageConventionPlugin : Plugin<Project> {
                 add("implementation", enforcedPlatform(project(":platform")))
 
                 add("implementation", libs.findLibrary("kotlin-reflect").get())
-                add("implementation", libs.findLibrary("spring-data").get())
-                add("implementation", libs.findLibrary("spring-web").get())
             }
         }
     }

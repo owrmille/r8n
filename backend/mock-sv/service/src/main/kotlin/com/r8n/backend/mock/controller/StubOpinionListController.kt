@@ -1,12 +1,12 @@
 package com.r8n.backend.mock.controller
 
+import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.mock.api.OpinionListApi
 import com.r8n.backend.mock.api.dto.list.OpinionListPrivacyEnumDto
 import com.r8n.backend.mock.api.dto.list.OpinionListSummaryDto
-import com.r8n.backend.mock.api.dto.toResponse
 import com.r8n.backend.mock.stub.OpinionListTestDataFactory
+import com.r8n.backend.core.utils.toResponse
 import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.Pageable
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -72,7 +72,7 @@ class StubOpinionListController : OpinionListApi {
         authorId: UUID?,
         @RequestParam(required = false)
         authorNameSubstring: String?,
-        pageable: Pageable,
+        pageable: PageRequestDto,
     ) = PageImpl(
         listOf(OpinionListTestDataFactory.getListSummary()),
     ).toResponse()
@@ -94,5 +94,5 @@ class StubOpinionListController : OpinionListApi {
     ) = OpinionListTestDataFactory.getList(existingList)
 
     @GetMapping("/mine")
-    override fun getMine(pageable: Pageable) = search(null, null, null, pageable)
+    override fun getMine(pageable: PageRequestDto) = search(null, null, null, pageable)
 }

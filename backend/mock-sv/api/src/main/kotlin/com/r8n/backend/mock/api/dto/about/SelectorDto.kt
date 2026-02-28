@@ -1,4 +1,4 @@
-package com.r8n.backend.opinions.api.dto.about
+package com.r8n.backend.mock.api.dto.about
 
 import java.util.UUID
 

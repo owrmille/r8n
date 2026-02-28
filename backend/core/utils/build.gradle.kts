@@ -2,11 +2,11 @@ plugins {
     id("convention-language")
 }
 
-group = "com.r8n.backend.mock"
+group = "com.r8n.backend"
 version = "0.0.1-SNAPSHOT"
-description = "mock service API"
+description = "misc stuff for backend"
 
 dependencies {
-    implementation(project(":opinions-api"))
     implementation(project(":core:api"))
+    implementation(libs.spring.data)
 }

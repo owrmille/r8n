@@ -1,12 +1,12 @@
 package com.r8n.backend.mock.controller
 
+import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.mock.api.RecommendationApi
-import com.r8n.backend.mock.api.dto.toResponse
+import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.mock.stub.OpinionListTestDataFactory.getListSummary
 import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.cappuccino2
 import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.cappuccino3
 import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.Pageable
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -21,7 +21,7 @@ class StubRecommendationController : RecommendationApi {
     override fun getRecommendedSubjects(
         @RequestParam(required = true)
         lookingAtSubjectId: UUID,
-        pageable: Pageable,
+        pageable: PageRequestDto,
     ) = PageImpl(
         listOf(
             cappuccino2,
@@ -33,7 +33,7 @@ class StubRecommendationController : RecommendationApi {
     override fun getRecommendedOpinionLists(
         @RequestParam(required = true)
         lookingAtListId: UUID,
-        pageable: Pageable,
+        pageable: PageRequestDto,
     ) = PageImpl(
         listOf(getListSummary()),
     ).toResponse()
@@ -45,10 +45,10 @@ class StubRecommendationController : RecommendationApi {
     override fun hideRecommendedOpinionList(id: UUID) = Unit
 
     @GetMapping("/hidden/subjects")
-    override fun getHiddenSubjects(pageable: Pageable) = PageImpl(listOf(cappuccino3)).toResponse()
+    override fun getHiddenSubjects(pageable: PageRequestDto) = PageImpl(listOf(cappuccino3)).toResponse()
 
     @GetMapping("/hidden/opinionList")
-    override fun getHiddenOpinionLists(pageable: Pageable) = PageImpl(listOf(getListSummary())).toResponse()
+    override fun getHiddenOpinionLists(pageable: PageRequestDto) = PageImpl(listOf(getListSummary())).toResponse()
 
     @PatchMapping("/unhide/subject")
     override fun unhideSubject(

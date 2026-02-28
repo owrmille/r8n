@@ -1,6 +1,6 @@
 package com.r8n.backend.mock.stub
 
-import com.r8n.backend.opinions.api.dto.about.SelectorDto
+import com.r8n.backend.mock.api.dto.about.SelectorDto
 import java.util.UUID
 
 object SelectorTestDataFactory {

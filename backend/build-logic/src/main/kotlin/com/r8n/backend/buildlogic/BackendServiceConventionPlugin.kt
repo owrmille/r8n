@@ -19,11 +19,16 @@ class BackendServiceConventionPlugin : Plugin<Project> {
 
             dependencies.apply {
                 add("implementation", project(":core:security"))
+                add("implementation", project(":core:api"))
+                add("implementation", project(":core:utils"))
 
                 add("implementation", libs.findLibrary("postgresql").get())
-                add("implementation", libs.findLibrary("spring-boot-data-jpa").get())
+                add("implementation", libs.findLibrary("spring-boot-starter-data-jpa").get())
                 add("implementation", libs.findLibrary("spring-boot-starter").get())
+                add("implementation", libs.findLibrary("spring-boot-starter-web").get())
+                //add("implementation", libs.findLibrary("spring-data").get())
                 add("implementation", libs.findLibrary("spring-swagger").get())
+                //add("implementation", libs.findLibrary("spring-web").get())
 
                 add("testImplementation", libs.findLibrary("mockito").get())
                 add("testImplementation", libs.findLibrary("spring-boot-starter-test").get())
