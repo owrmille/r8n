@@ -5,12 +5,10 @@ services:
       context: ./deployment/opinions
       dockerfile: Dockerfile
     env_file:
-      - ./backend/config/local.env
+      - ./config/docker.env
     environment:
-      SERVICES_OPINIONS_PORT: ${SERVICES_OPINIONS_PORT:-8081}
-      LOGGING_FILE_NAME: /var/log/r8n/app.log
-    expose:
-      - "8081"
+      SERVICES_OPINIONS_PORT: ${SERVICES_OPINIONS_PORT:?}
+      LOGGING_FILE_NAME: ${LOGGING_FILE_NAME:?}
     networks:
       - r8n_net
     volumes:
@@ -22,12 +20,10 @@ services:
       context: ./deployment/mock
       dockerfile: Dockerfile
     env_file:
-      - ./backend/config/local.env
+      - ./config/docker.env
     environment:
-      SERVICES_MOCK_PORT: ${SERVICES_MOCK_PORT:-8090}
-      LOGGING_FILE_NAME: /var/log/r8n/app.log
-    expose:
-      - "8090"
+      SERVICES_MOCK_PORT: ${SERVICES_MOCK_PORT:?}
+      LOGGING_FILE_NAME: ${LOGGING_FILE_NAME:?}
     networks:
       - r8n_net
     volumes:
@@ -39,17 +35,17 @@ services:
       context: ./deployment/gateway
       dockerfile: Dockerfile
     env_file:
-      - ./backend/config/local.env
+      - ./config/docker.env
     environment:
-      GATEWAY_PORT: ${GATEWAY_PORT:-8080}
-      INTERSERVICE_PROTOCOL: http
-      SERVICES_OPINIONS_HOST: opinions
-      SERVICES_OPINIONS_PORT: ${SERVICES_OPINIONS_PORT:-8081}
-      SERVICES_MOCK_HOST: mock
-      SERVICES_MOCK_PORT: ${SERVICES_MOCK_PORT:-8090}
-      LOGGING_FILE_NAME: /var/log/r8n/app.log
+      GATEWAY_PORT: ${GATEWAY_PORT:?}
+      INTERSERVICE_PROTOCOL: ${INTERSERVICE_PROTOCOL:?}
+      SERVICES_OPINIONS_HOST: ${SERVICES_OPINIONS_HOST:?}
+      SERVICES_OPINIONS_PORT: ${SERVICES_OPINIONS_PORT:?}
+      SERVICES_MOCK_HOST: ${SERVICES_MOCK_HOST:?}
+      SERVICES_MOCK_PORT: ${SERVICES_MOCK_PORT:?}
+      LOGGING_FILE_NAME: ${LOGGING_FILE_NAME:?}
     ports:
-      - "${GATEWAY_PORT:-8080}:8080"
+      - "${GATEWAY_PORT}:8080"
     depends_on:
       - opinions
       - mock

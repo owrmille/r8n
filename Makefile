@@ -1,17 +1,18 @@
-ENV_FILE := backend/config/local.env
+ENV_FILE := config/local.env
+DOCKER_ENV_FILE := config/docker.env
 
-ifneq (,$(wildcard $(ENV_FILE)))
-	include $(ENV_FILE)
-	export
-endif
+# ifneq (,$(wildcard $(ENV_FILE)))
+# 	include $(ENV_FILE)
+# 	export
+# endif
 
 .PHONY: run-all run-opinions run-mock run-gateway stop-all prebuild-jars prepare-artifacts docker-build docker-up docker-down docker-logs docker-health clean-artifacts ensure-log-dirs clean-logs
 
 docker-up: docker-build ensure-log-dirs
-	docker compose -f docker-compose.yml up -d
+	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml up -d
 
 docker-build: prepare-artifacts
-	docker compose -f docker-compose.yml build
+	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml build
 
 prepare-artifacts: prebuild-jars
 	mkdir -p deployment/gateway deployment/opinions deployment/mock
@@ -26,10 +27,10 @@ ensure-log-dirs:
 	mkdir -p deployment/gateway/logs deployment/opinions/logs deployment/mock/logs
 
 docker-down:
-	docker compose -f docker-compose.yml down
+	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml down
 
 docker-logs:
-	docker compose -f docker-compose.yml logs -f gateway opinions mock
+	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml logs -f gateway opinions mock
 
 clean-logs:
 	rm -rf deployment/gateway/logs/* deployment/opinions/logs/* deployment/mock/logs/*
