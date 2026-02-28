@@ -1,6 +1,5 @@
 .gradle
 build
 .idea
-*/*.log
-deployment/**/logs/
+*.log
 deployment/**/app.jar
