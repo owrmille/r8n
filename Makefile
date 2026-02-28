@@ -1,6 +1,7 @@
 LOCAL_ENV_FILE := config/local.env
 DOCKER_ENV_FILE := config/docker.env
 LOAD_LOCAL_ENV = set -a; [ -f "$(LOCAL_ENV_FILE)" ] && . "$(LOCAL_ENV_FILE)"; set +a;
+SERVICES := gateway opinions mock
 
 .PHONY: run-all run-opinions run-mock run-gateway stop-all \
     prebuild-jars prepare-artifacts docker-build docker-up \
@@ -13,10 +14,11 @@ docker-build: prepare-artifacts
 	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml build
 
 prepare-artifacts: prebuild-jars
-	mkdir -p deployment/gateway deployment/opinions deployment/mock
-	cp "$$(ls backend/gateway-sv/build/libs/*.jar | grep -v -- '-plain\.jar$$' | head -n1)" deployment/gateway/app.jar
-	cp "$$(ls backend/opinions-sv/build/libs/*.jar | grep -v -- '-plain\.jar$$' | head -n1)" deployment/opinions/app.jar
-	cp "$$(ls backend/mock-sv/build/libs/*.jar | grep -v -- '-plain\.jar$$' | head -n1)" deployment/mock/app.jar
+	@set -e; \
+	for svc in $(SERVICES); do \
+		mkdir -p "deployment/$$svc"; \
+		cp "$$(ls backend/$$svc-sv/build/libs/*.jar | grep -v -- '-plain\.jar$$' | head -n1)" "deployment/$$svc/app.jar"; \
+	done
 
 prebuild-jars:
 	cd backend && ./gradlew :gateway-sv:bootJar :opinions-sv:bootJar :mock-sv:bootJar
