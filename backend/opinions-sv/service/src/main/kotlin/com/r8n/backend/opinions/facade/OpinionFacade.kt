@@ -2,12 +2,12 @@ package com.r8n.backend.opinions.facade
 
 import com.r8n.backend.mock.integration.UserClient
 import com.r8n.backend.opinions.api.dto.opinion.OpinionDto
-import com.r8n.backend.opinions.domain.WeightedOpinionReference
 import com.r8n.backend.opinions.domain.toDto
 import com.r8n.backend.opinions.service.OpinionService
-import com.r8n.backend.opinions.service.SubjectService
+import org.springframework.stereotype.Component
 import java.util.UUID
 
+@Component
 class OpinionFacade(
     private val opinionService: OpinionService,
     private val userClient: UserClient,
