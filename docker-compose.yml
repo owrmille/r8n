@@ -1,11 +1,10 @@
 services:
   opinions:
-    image: opinions
     build:
       context: ./deployment/opinions
       dockerfile: Dockerfile
     env_file:
-      - ./config/docker.env
+      - ./deployment/config/docker.env
     environment:
       SERVICES_OPINIONS_PORT: ${SERVICES_OPINIONS_PORT:?}
       LOGGING_FILE_NAME: ${LOGGING_FILE_NAME:?}
@@ -15,12 +14,11 @@ services:
       - ./deployment/opinions/logs:/var/log/r8n
 
   mock:
-    image: mock
     build:
       context: ./deployment/mock
       dockerfile: Dockerfile
     env_file:
-      - ./config/docker.env
+      - ./deployment/config/docker.env
     environment:
       SERVICES_MOCK_PORT: ${SERVICES_MOCK_PORT:?}
       LOGGING_FILE_NAME: ${LOGGING_FILE_NAME:?}
@@ -30,14 +28,14 @@ services:
       - ./deployment/mock/logs:/var/log/r8n
 
   gateway:
-    image: gateway
     build:
       context: ./deployment/gateway
       dockerfile: Dockerfile
     env_file:
-      - ./config/docker.env
+      - ./deployment/config/docker.env
     environment:
-      GATEWAY_PORT: ${GATEWAY_PORT:?}
+      GATEWAY_PORT: ${GATEWAY_CONTAINER_PORT:?}
+      GATEWAY_HOST_PORT: ${GATEWAY_HOST_PORT:?}
       INTERSERVICE_PROTOCOL: ${INTERSERVICE_PROTOCOL:?}
       SERVICES_OPINIONS_HOST: ${SERVICES_OPINIONS_HOST:?}
       SERVICES_OPINIONS_PORT: ${SERVICES_OPINIONS_PORT:?}
@@ -45,7 +43,7 @@ services:
       SERVICES_MOCK_PORT: ${SERVICES_MOCK_PORT:?}
       LOGGING_FILE_NAME: ${LOGGING_FILE_NAME:?}
     ports:
-      - "${GATEWAY_PORT:?}:8080"
+      - "${GATEWAY_HOST_PORT:?}:${GATEWAY_CONTAINER_PORT:?}"
     depends_on:
       - opinions
       - mock
