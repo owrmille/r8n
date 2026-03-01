@@ -45,7 +45,7 @@ services:
       SERVICES_MOCK_PORT: ${SERVICES_MOCK_PORT:?}
       LOGGING_FILE_NAME: ${LOGGING_FILE_NAME:?}
     ports:
-      - "${GATEWAY_PORT}:8080"
+      - "${GATEWAY_PORT:?}:8080"
     depends_on:
       - opinions
       - mock

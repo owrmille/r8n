@@ -4,11 +4,14 @@ LOAD_LOCAL_ENV = set -a; [ -f "$(LOCAL_ENV_FILE)" ] && . "$(LOCAL_ENV_FILE)"; se
 SERVICES := gateway opinions mock
 BOOT_JAR_TASKS := $(addprefix :,$(addsuffix -sv:bootJar,$(SERVICES)))
 
-.PHONY: local-run-all stop-all \
-    $(addprefix run-,$(SERVICES)) \
-    $(addprefix stop-,$(SERVICES)) \
+.PHONY: local-run-all local-stop-all \
+    $(addprefix local-run-,$(SERVICES)) \
+    $(addprefix local-stop-,$(SERVICES)) \
+    $(addprefix docker-logs-,$(SERVICES)) \
     prebuild-jars prepare-artifacts docker-build docker-up \
-    docker-down docker-logs clean-artifacts ensure-log-dirs clean-logs
+    docker-down docker-logs clean-artifacts ensure-log-dirs clean-logs \
+    routed-request-opinion routed-request-mock \
+    direct-request-opinion direct-request-mock
 
 docker-up: docker-build ensure-log-dirs
 	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml up -d
@@ -37,6 +40,9 @@ docker-down:
 docker-logs:
 	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml logs -f $(SERVICES)
 
+$(addprefix docker-logs-,$(SERVICES)): docker-logs-%:
+	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml logs -f $*
+
 clean-logs:
 	find deployment -type f -name '*.log' -delete
 
@@ -45,17 +51,17 @@ clean-artifacts:
 		rm -f "deployment/$$svc/app.jar"; \
 	done
 
-local-run-all: $(addprefix run-,$(SERVICES))
+local-run-all: $(addprefix local-run-,$(SERVICES))
 
-$(addprefix run-,$(SERVICES)): run-%:
+$(addprefix local-run-,$(SERVICES)): local-run-%:
 	@echo "Starting $*-sv..."
 	@$(LOAD_LOCAL_ENV) \
 	cd backend && (./gradlew :$*-sv:bootRun > $*.log 2>&1 & \
 	echo $$! > /tmp/$*.pid)
 
-stop-all: $(addprefix stop-,$(SERVICES))
+local-stop-all: $(addprefix local-stop-,$(SERVICES))
 
-$(addprefix stop-,$(SERVICES)): stop-%:
+$(addprefix local-stop-,$(SERVICES)): local-stop-%:
 	-@kill $$(cat /tmp/$*.pid) 2>/dev/null || true
 
 routed-request-opinion:
