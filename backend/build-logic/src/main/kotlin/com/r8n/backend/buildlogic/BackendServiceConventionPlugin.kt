@@ -32,7 +32,10 @@ class BackendServiceConventionPlugin : Plugin<Project> {
 
                 add("testImplementation", libs.findLibrary("mockito").get())
                 add("testImplementation", libs.findLibrary("spring-boot-starter-test").get())
+                add("testImplementation", libs.findLibrary("spring-boot-test-autoconfigure").get())
                 add("testImplementation", libs.findLibrary("spring-boot-testcontainers").get())
+                add("testImplementation", libs.findLibrary("spring-boot-starter-webmvc-test").get())
+                add("testImplementation", libs.findLibrary("spring-boot-webmvc-test").get())
                 add("testImplementation", libs.findLibrary("testcontainers-junit").get())
                 add("testImplementation", libs.findLibrary("testcontainers-postgresql").get())
             }
