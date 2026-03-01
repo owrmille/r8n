@@ -1,5 +1,10 @@
 .gradle
 build
 .idea
+<<<<<<< HEAD
 *.log
 *.jar
+=======
+*/*.log
+frontend/node_modules
+>>>>>>> origin/3-frontend-framework-init-2

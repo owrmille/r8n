@@ -62,6 +62,25 @@ Build and dependency management system for backend. Runs every time you build ba
 - `curl "http://localhost:8080/opinions/id?id=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"` (random valid UUID plus actual stub authentication token that you could have got from the previous step), get a stub response
 - return to running terminal, Ctrl-C to terminate
 
+# Frontend prerequisites
+- install `Node.js` version `^20.19.0 || >=22.12.0`
+- install `npm` (recommended `npm 10+`)
+- check versions:
+  - `node --version`
+  - `npm --version`
+
+# Running frontend
+- open a new terminal (backend can keep running in another one)
+- install Node.js and npm (if missing):
+  - `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash`
+  - restart terminal
+  - `nvm install 22`
+  - `nvm use 22`
+- `cd ~/PROJECTS/r8n/frontend`
+- `npm install` (or `npm ci` for lockfile-clean setup)
+- `npm run dev`
+- open `http://localhost:5173`
+
 # IDEA troubleshooting
 - `com.intellij.platform.ide.bootstrap.DirectoryLock$CannotActivateException: Process "/app/bin/idea" (2) is still running and does not respond.`
   - reason: if you were automatically logged out in the campus, IDEA didn't shut down properly
