@@ -2,8 +2,11 @@ LOCAL_ENV_FILE := config/local.env
 DOCKER_ENV_FILE := config/docker.env
 LOAD_LOCAL_ENV = set -a; [ -f "$(LOCAL_ENV_FILE)" ] && . "$(LOCAL_ENV_FILE)"; set +a;
 SERVICES := gateway opinions mock
+BOOT_JAR_TASKS := $(addprefix :,$(addsuffix -sv:bootJar,$(SERVICES)))
 
-.PHONY: run-all run-opinions run-mock run-gateway stop-all \
+.PHONY: local-run-all stop-all \
+    $(addprefix run-,$(SERVICES)) \
+    $(addprefix stop-,$(SERVICES)) \
     prebuild-jars prepare-artifacts docker-build docker-up \
     docker-down docker-logs clean-artifacts ensure-log-dirs clean-logs
 
@@ -21,47 +24,39 @@ prepare-artifacts: prebuild-jars
 	done
 
 prebuild-jars:
-	cd backend && ./gradlew :gateway-sv:bootJar :opinions-sv:bootJar :mock-sv:bootJar
+	cd backend && ./gradlew $(BOOT_JAR_TASKS)
 
 ensure-log-dirs:
-	mkdir -p deployment/gateway/logs deployment/opinions/logs deployment/mock/logs
+	@for svc in $(SERVICES); do \
+		mkdir -p "deployment/$$svc/logs"; \
+	done
 
 docker-down:
 	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml down
 
 docker-logs:
-	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml logs -f gateway opinions mock
+	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml logs -f $(SERVICES)
 
 clean-logs:
-	rm -rf deployment/gateway/logs/* deployment/opinions/logs/* deployment/mock/logs/*
+	find deployment -type f -name '*.log' -delete
 
 clean-artifacts:
-	rm -f deployment/gateway/app.jar deployment/opinions/app.jar deployment/mock/app.jar
+	@for svc in $(SERVICES); do \
+		rm -f "deployment/$$svc/app.jar"; \
+	done
 
-local-run-all: run-opinions run-mock run-gateway
+local-run-all: $(addprefix run-,$(SERVICES))
 
-run-opinions:
-	@echo "Starting opinions-sv..."
+$(addprefix run-,$(SERVICES)): run-%:
+	@echo "Starting $*-sv..."
 	@$(LOAD_LOCAL_ENV) \
-	cd backend && (./gradlew :opinions-sv:bootRun > opinions.log 2>&1 & \
-	echo $$! > /tmp/opinions.pid)
+	cd backend && (./gradlew :$*-sv:bootRun > $*.log 2>&1 & \
+	echo $$! > /tmp/$*.pid)
 
-run-mock:
-	@echo "Starting mock-sv..."
-	@$(LOAD_LOCAL_ENV) \
-	cd backend && (./gradlew :mock-sv:bootRun > mock.log 2>&1 & \
-	echo $$! > /tmp/mock.pid)
+stop-all: $(addprefix stop-,$(SERVICES))
 
-run-gateway:
-	@echo "Starting gateway-sv..."
-	@$(LOAD_LOCAL_ENV) \
-	cd backend && (./gradlew :gateway-sv:bootRun > gateway.log 2>&1 & \
-	echo $$! > /tmp/gateway.pid)
-
-stop-all:
-	-@kill $$(cat /tmp/opinions.pid) 2>/dev/null || true
-	-@kill $$(cat /tmp/mock.pid) 2>/dev/null || true
-	-@kill $$(cat /tmp/gateway.pid) 2>/dev/null || true
+$(addprefix stop-,$(SERVICES)): stop-%:
+	-@kill $$(cat /tmp/$*.pid) 2>/dev/null || true
 
 routed-request-opinion:
 	curl "http://localhost:8080/opinions/id?id=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
