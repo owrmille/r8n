@@ -57,7 +57,7 @@ Useful context:
 
 Install these tools before running frontend locally:
 
-- `Node.js` `^20.19.0 || >=22.12.0`
+- `Node.js` `>=22.12.0`
 - `npm` (comes with Node.js, recommended `npm 10+`)
 
 Install command examples:
@@ -70,9 +70,8 @@ Recommended (`nvm`):
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
 
 # restart terminal, then:
-nvm install 22
-nvm use 22
-nvm alias default 22
+nvm install
+nvm use
 ```
 
 Alternative (Homebrew):
@@ -89,9 +88,8 @@ Recommended (`nvm`):
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
 
 # restart terminal, then:
-nvm install 22
-nvm use 22
-nvm alias default 22
+nvm install
+nvm use
 ```
 
 Alternative (APT, Ubuntu 22.04+):
