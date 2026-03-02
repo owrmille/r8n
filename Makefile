@@ -3,6 +3,9 @@ DOCKER_ENV_FILE := deployment/config/docker.env
 LOAD_LOCAL_ENV = set -a; [ -f "$(LOCAL_ENV_FILE)" ] && . "$(LOCAL_ENV_FILE)"; set +a;
 SERVICES := gateway opinions mock
 BOOT_JAR_TASKS := $(addprefix :,$(addsuffix -sv:bootJar,$(SERVICES)))
+FRONTEND_CERT_DIR := deployment/certs
+FRONTEND_CERT_KEY := $(FRONTEND_CERT_DIR)/localhost.key
+FRONTEND_CERT_CRT := $(FRONTEND_CERT_DIR)/localhost.crt
 
 .PHONY: local-run-all local-stop-all \
     $(addprefix local-run-,$(SERVICES)) \
@@ -11,9 +14,10 @@ BOOT_JAR_TASKS := $(addprefix :,$(addsuffix -sv:bootJar,$(SERVICES)))
     prebuild-jars prepare-artifacts docker-build docker-up \
     docker-down docker-logs clean-artifacts ensure-log-dirs clean-logs \
     routed-request-opinion routed-request-mock \
-    direct-request-opinion direct-request-mock
+    direct-request-opinion direct-request-mock \
+    frontend-install frontend-dev frontend-build frontend-clean frontend-cert
 
-docker-up: docker-build ensure-log-dirs
+docker-up: frontend-cert docker-build ensure-log-dirs
 	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml up -d
 
 docker-build: prepare-artifacts
@@ -75,3 +79,18 @@ direct-request-opinion:
 
 direct-request-mock:
 	curl "http://localhost:8090/opinionLists/summary?listId=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
+
+frontend-install:
+	cd frontend && npm ci
+
+frontend-dev:
+	cd frontend && npm run dev
+
+frontend-build:
+	cd frontend && npm run build
+
+frontend-clean:
+	rm -rf frontend/dist frontend/node_modules/.vite
+
+frontend-cert:
+	@./scripts/gen-frontend-cert.sh
