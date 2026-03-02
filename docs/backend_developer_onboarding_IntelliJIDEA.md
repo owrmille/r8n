@@ -81,7 +81,12 @@ Build and dependency management system for backend. Runs every time you build ba
     - `npm ci`
 - start dev server:
     - `npm run dev`
-- open `http://localhost:5173`
+    - as soon as you see something like:
+      `VITE vX.X.X ready in X ms`
+      `Local: http://localhost:5173/`
+      the dev server is running
+- open `http://localhost:5173` in browser
+    - the main page should load
 
 # IDEA troubleshooting
 - `com.intellij.platform.ide.bootstrap.DirectoryLock$CannotActivateException: Process "/app/bin/idea" (2) is still running and does not respond.`
