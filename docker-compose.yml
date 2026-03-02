@@ -1,0 +1,58 @@
+services:
+  opinions:
+    build:
+      context: ./deployment/opinions
+      dockerfile: Dockerfile
+    env_file:
+      - ./deployment/config/docker.env
+    environment:
+      SERVICES_OPINIONS_PORT: ${SERVICES_OPINIONS_PORT:?}
+      LOGGING_FILE_NAME: ${LOGGING_FILE_NAME:?}
+    networks:
+      - r8n_net
+    volumes:
+      - ./deployment/opinions/logs:/var/log/r8n
+
+  mock:
+    build:
+      context: ./deployment/mock
+      dockerfile: Dockerfile
+    env_file:
+      - ./deployment/config/docker.env
+    environment:
+      SERVICES_MOCK_PORT: ${SERVICES_MOCK_PORT:?}
+      LOGGING_FILE_NAME: ${LOGGING_FILE_NAME:?}
+    networks:
+      - r8n_net
+    volumes:
+      - ./deployment/mock/logs:/var/log/r8n
+
+  gateway:
+    build:
+      context: ./deployment/gateway
+      dockerfile: Dockerfile
+    env_file:
+      - ./deployment/config/docker.env
+    environment:
+      GATEWAY_PORT: ${GATEWAY_CONTAINER_PORT:?}
+      GATEWAY_HOST_PORT: ${GATEWAY_HOST_PORT:?}
+      INTERSERVICE_PROTOCOL: ${INTERSERVICE_PROTOCOL:?}
+      SERVICES_OPINIONS_HOST: ${SERVICES_OPINIONS_HOST:?}
+      SERVICES_OPINIONS_PORT: ${SERVICES_OPINIONS_PORT:?}
+      SERVICES_MOCK_HOST: ${SERVICES_MOCK_HOST:?}
+      SERVICES_MOCK_PORT: ${SERVICES_MOCK_PORT:?}
+      LOGGING_FILE_NAME: ${LOGGING_FILE_NAME:?}
+    ports:
+      - "${GATEWAY_HOST_PORT:?}:${GATEWAY_CONTAINER_PORT:?}"
+    depends_on:
+      - opinions
+      - mock
+    networks:
+      - r8n_net
+    volumes:
+      - ./deployment/gateway/logs:/var/log/r8n
+
+networks:
+  r8n_net:
+    name: r8n_net
+    driver: bridge
