@@ -7,7 +7,7 @@ FRONTEND_CERT_DIR := deployment/certs
 FRONTEND_CERT_KEY := $(FRONTEND_CERT_DIR)/localhost.key
 FRONTEND_CERT_CRT := $(FRONTEND_CERT_DIR)/localhost.crt
 
-.PHONY: local-run-all local-stop-all \
+.PHONY: help local-run-all local-stop-all \
     $(addprefix local-run-,$(SERVICES)) \
     $(addprefix local-stop-,$(SERVICES)) \
     $(addprefix docker-logs-,$(SERVICES)) \
@@ -15,7 +15,12 @@ FRONTEND_CERT_CRT := $(FRONTEND_CERT_DIR)/localhost.crt
     docker-down docker-logs clean-artifacts ensure-log-dirs clean-logs \
     routed-request-opinion routed-request-mock \
     direct-request-opinion direct-request-mock \
-    frontend-install frontend-dev frontend-build frontend-clean frontend-cert
+    frontend-install frontend-dev frontend-build frontend-clean frontend-clean-all frontend-cert frontend-cert-clean \
+    frontend-check-node \
+    frontend-test-unit frontend-test-e2e
+
+help:
+	@cat docs/make-help.md
 
 docker-up: frontend-cert docker-build ensure-log-dirs
 	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml up -d
@@ -83,14 +88,30 @@ direct-request-mock:
 frontend-install:
 	cd frontend && npm ci
 
+frontend-check-node:
+	@node -v | awk 'BEGIN{min=22} {gsub("v",""); split($$0,a,"."); if (a[1]<min) {print "Node >=22.12.0 required. Run: cd frontend && nvm install && nvm use"; exit 1}}'
+	@echo "Node version OK: $$(node -v)"
+
 frontend-dev:
 	cd frontend && npm run dev
 
 frontend-build:
 	cd frontend && npm run build
 
+frontend-test-unit:
+	cd frontend && npm run test:unit
+
+frontend-test-e2e:
+	cd frontend && npm run test:e2e
+
 frontend-clean:
 	rm -rf frontend/dist frontend/node_modules/.vite
 
+frontend-clean-all: frontend-clean frontend-cert-clean
+	rm -rf frontend/node_modules
+
 frontend-cert:
 	@./scripts/gen-frontend-cert.sh
+
+frontend-cert-clean:
+	rm -rf deployment/certs
