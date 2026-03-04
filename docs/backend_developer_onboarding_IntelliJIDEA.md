@@ -77,6 +77,9 @@ Build and dependency management system for backend. Runs every time you build ba
 - verify correct Node version:
     - `node -v`
     - should be `>= 22.12.0`
+- if you run frontend on a campus machine, move npm cache to sgoinfre:
+    - `npm config set cache /sgoinfre/goinfre/Perso/$USER/.npm-cache --global`
+    - `npm config get cache` it should print `/sgoinfre/goinfre/Perso/$USER/.npm-cache`
 - install dependencies:
     - `npm ci`
 - start dev server:
