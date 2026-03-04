@@ -105,6 +105,17 @@ If your `npm` is older than required, update it:
 npm install -g npm@latest
 ```
 
+### Campus machine: move npm cache to sgoinfre
+
+If you run frontend on a campus machine, move npm cache before installing dependencies:
+
+```bash
+npm config set cache /sgoinfre/goinfre/Perso/$USER/.npm-cache --global
+npm config get cache #it should print /sgoinfre/goinfre/Perso/$USER/.npm-cache
+```
+
+`npm config get cache` should print the new cache path: `/sgoinfre/goinfre/Perso/$USER/.npm-cache`.
+
 Check your versions:
 
 ```bash
