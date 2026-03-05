@@ -33,6 +33,10 @@ Node version check:
 - `make frontend-check-node`
 - If the version is too old, it prints a fix command using `nvm`
 
+Frontend install (with Playwright browsers):
+
+- `make frontend-install-all`
+
 ## Build (Production Bundle)
 
 - Command: `make frontend-build`
@@ -110,6 +114,14 @@ Unit tests:
 E2E tests:
 
 - `make frontend-test-e2e`
+
+E2E meaning:
+
+- End-to-end tests run the app in a real browser and verify full user flows.
+- They cover UI + API integration and catch issues that unit tests cannot.
+
+Note: E2E tests require Playwright browsers. `make frontend-install-all` downloads them.
+On macOS 13 (arm64), Playwright does not support WebKit. In that case, run only Chromium/Firefox or disable the WebKit project.
 
 ## What to Test and Expected Results
 

@@ -15,7 +15,7 @@ FRONTEND_CERT_CRT := $(FRONTEND_CERT_DIR)/localhost.crt
     docker-down docker-logs clean-artifacts ensure-log-dirs clean-logs \
     routed-request-opinion routed-request-mock \
     direct-request-opinion direct-request-mock \
-    frontend-install frontend-dev frontend-build frontend-clean frontend-clean-all frontend-cert frontend-cert-clean \
+    frontend-install frontend-install-all frontend-dev frontend-build frontend-clean frontend-clean-all frontend-cert frontend-cert-clean \
     frontend-check-node \
     frontend-test-unit frontend-test-e2e
 
@@ -87,6 +87,9 @@ direct-request-mock:
 
 frontend-install:
 	cd frontend && npm ci
+
+frontend-install-all: frontend-install
+	cd frontend && npx playwright install
 
 frontend-check-node:
 	@node -v | awk 'BEGIN{min=22} {gsub("v",""); split($$0,a,"."); if (a[1]<min) {print "Node >=22.12.0 required. Run: cd frontend && nvm install && nvm use"; exit 1}}'

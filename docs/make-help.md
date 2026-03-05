@@ -17,6 +17,7 @@ Backend (dev only):
 Frontend (dev only):
 
 - `make frontend-install` install frontend dependencies
+- `make frontend-install-all` install deps and Playwright browsers
 - `make frontend-dev` start Vite dev server
 - `make frontend-test-unit` run unit tests (Vitest)
 - `make frontend-test-e2e` run E2E tests (Playwright)
