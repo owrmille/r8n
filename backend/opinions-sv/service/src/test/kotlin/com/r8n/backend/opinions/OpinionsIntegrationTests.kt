@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.r8n.backend.mock.integration.UserClient
 import com.r8n.backend.opinions.api.dto.opinion.OpinionDto
-import com.r8n.backend.security.SecurityAutoConfiguration
 import com.r8n.backend.opinions.stub.OpinionTestDataFactory
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
@@ -12,9 +11,11 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.json.AutoConfigureJsonTesters
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
+import org.springframework.context.annotation.Import
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
@@ -26,8 +27,12 @@ import org.testcontainers.junit.jupiter.Testcontainers
 import java.util.UUID
 
 @Testcontainers
+@AutoConfigureJsonTesters
 @AutoConfigureMockMvc
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.MOCK,
+    )
+@Import(TestObjectMapperConfiguration::class)
 class OpinionsIntegrationTests {
 
     private companion object {
@@ -59,7 +64,7 @@ lateinit var objectMapper: ObjectMapper
         val requestedId = "00000000-0000-0000-0000-000000000000"
         val result = mockMvc.perform(
             get("/opinions/id?id=$requestedId")
-                .header("Authorization", "Bearer ${SecurityAutoConfiguration.STUB_ACCESS_TOKEN}"),
+                .header("Authorization", "Bearer stub-access-token-123"),
         )
             .andExpect(status().isOk).andReturn()
 
