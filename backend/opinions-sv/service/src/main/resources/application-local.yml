@@ -1,0 +1,7 @@
+spring.application.name: opinions-sv
+server:
+  port: ${SERVICES_OPINIONS_PORT:8081}
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update

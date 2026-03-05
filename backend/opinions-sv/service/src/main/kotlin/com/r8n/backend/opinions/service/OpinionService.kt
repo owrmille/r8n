@@ -1,8 +1,7 @@
 package com.r8n.backend.opinions.service
 
 import com.r8n.backend.opinions.domain.Opinion
-import com.r8n.backend.opinions.domain.fromDto
-import com.r8n.backend.opinions.stub.OpinionTestDataFactory
+import com.r8n.backend.opinions.provider.database.OpinionRepository
 import org.springframework.stereotype.Service
 import java.util.UUID
 
@@ -11,20 +10,21 @@ class OpinionService(
     private val subjectService: SubjectService,
     private val noteService: OpinionNoteService,
     private val componentService: ComponentService,
+    private val opinionRepository: OpinionRepository,
 ) {
     fun getOpinion(id: UUID): Opinion {
-        val stub = OpinionTestDataFactory.getOpinion(id)
+        val opinion = opinionRepository.getReferenceById(id)
         return Opinion(
-            stub.id,
-            stub.owner,
-            stub.subject,
-            subjectService.getSubjectName(stub.subject),
-            noteService.getSubjective(stub.id),
-            noteService.getObjective(stub.id),
-            stub.mark,
+            opinion.id!!,
+            opinion.owner,
+            opinion.subject,
+            subjectService.getSubjectName(opinion.subject),
+            noteService.getSubjective(opinion.id!!),
+            noteService.getObjective(opinion.id!!),
+            opinion.mark,
             componentService.getComponentSection(id),
-            stub.status.fromDto(),
-            stub.timestamp,
+            opinion.status,
+            opinion.timestamp,
         )
     }
 }
