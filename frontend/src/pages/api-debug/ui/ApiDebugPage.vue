@@ -11,7 +11,7 @@ import { unlinkComponent } from '@/features/opinion/link-component/api/unlinkCom
 import { adjustComponentWeight } from '@/features/opinion/adjust-component-weight/api/adjustComponentWeight'
 import { useAuthSession } from '@/features/auth/model/useAuthSession'
 import { HttpError } from '@/shared/api/http'
-import { Button } from '@/shared/ui/button'
+import { AppButton } from '@/shared/ui/button'
 
 const auth = useAuthSession()
 
@@ -162,23 +162,23 @@ const onAdjustWeight = () =>
       </div>
 
       <div class="actions">
-        <Button :disabled="loading" @click="onLogin">Auth Login</Button>
-        <Button :disabled="loading" variant="outline" @click="onRefresh">Auth Refresh</Button>
-        <Button :disabled="loading" variant="outline" @click="onClearAuth">Auth Clear</Button>
+        <AppButton :disabled="loading" @click="onLogin">Auth Login</AppButton>
+        <AppButton :disabled="loading" variant="outline" @click="onRefresh">Auth Refresh</AppButton>
+        <AppButton :disabled="loading" variant="outline" @click="onClearAuth">Auth Clear</AppButton>
       </div>
 
       <div class="actions">
-        <Button :disabled="loading" @click="onGetById">Opinion Get By Id</Button>
-        <Button :disabled="loading" @click="onGetForSubject">Opinion Get For Subject</Button>
-        <Button :disabled="loading" @click="onCreate">Opinion Create</Button>
-        <Button :disabled="loading" @click="onUpdate">Opinion Update</Button>
-        <Button :disabled="loading" variant="destructive" @click="onDelete">Opinion Delete</Button>
+        <AppButton :disabled="loading" @click="onGetById">Opinion Get By Id</AppButton>
+        <AppButton :disabled="loading" @click="onGetForSubject">Opinion Get For Subject</AppButton>
+        <AppButton :disabled="loading" @click="onCreate">Opinion Create</AppButton>
+        <AppButton :disabled="loading" @click="onUpdate">Opinion Update</AppButton>
+        <AppButton :disabled="loading" variant="destructive" @click="onDelete">Opinion Delete</AppButton>
       </div>
 
       <div class="actions">
-        <Button :disabled="loading" @click="onLink">Opinion Link Component</Button>
-        <Button :disabled="loading" @click="onUnlink">Opinion Unlink Component</Button>
-        <Button :disabled="loading" @click="onAdjustWeight">Opinion Adjust Weight</Button>
+        <AppButton :disabled="loading" @click="onLink">Opinion Link Component</AppButton>
+        <AppButton :disabled="loading" @click="onUnlink">Opinion Unlink Component</AppButton>
+        <AppButton :disabled="loading" @click="onAdjustWeight">Opinion Adjust Weight</AppButton>
       </div>
 
       <p class="state">
@@ -263,4 +263,3 @@ const onAdjustWeight = () =>
   max-height: 320px;
 }
 </style>
-
