@@ -2,12 +2,21 @@ server.port: ${SERVICES_OPINIONS_PORT}
 spring:
   application.name: opinions-sv
   liquibase:
-    change-log: classpath:db/changelog/db.changelog-master.sql
+    enabled: true
+    change-log: db/changelog/db.changelog-master.sql
     contexts: local
-  jpa:
-    hibernate:
-      ddl-auto: update
-
-
   datasource:
     driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DATABASE_OPINIONS_HOST}:${DATABASE_OPINIONS_PORT}/opinions
+    username: ${DATABASE_OPINIONS_USERNAME}
+    password: ${DATABASE_OPINIONS_PASSWORD}
+  jpa:
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: none
+  sql:
+    init:
+      mode: never
+logging:
+  level:
+    liquibase: DEBUG

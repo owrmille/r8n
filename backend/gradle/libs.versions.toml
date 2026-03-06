@@ -2,7 +2,7 @@
 guava = "33.4.6-jre"
 jackson = "2.21.1"
 kotlin = "2.2.21"
-liquibase = "4.23.1"
+liquibase = "4.27.0"
 mockito = "5.2.1"
 postgresql = "42.6.0"
 spring = "6.5.8"
@@ -31,7 +31,6 @@ postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" 
 spring-boot-starter-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa", version.ref = "spring-boot" }
 spring-boot-dependencies = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
 spring-boot-starter = { module = "org.springframework.boot:spring-boot-starter", version.ref = "spring-boot" }
-spring-boot-starter-liquibase = { module = "org.springframework.boot:spring-boot-starter-liquibase", version.ref = "spring-boot" }
 spring-boot-starter-security = { module = "org.springframework.boot:spring-boot-starter-security", version.ref = "spring-boot" }
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test", version.ref = "spring-boot" }
 spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web", version.ref = "spring-boot" }

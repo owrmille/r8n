@@ -28,8 +28,8 @@ class BackendServiceConventionPlugin : Plugin<Project> {
                 add("implementation", libs.findLibrary("jackson-datatype").get())
                 add("implementation", libs.findLibrary("jackson-module-kotlin").get())
                 add("implementation", libs.findLibrary("postgresql").get())
-                add("implementation", libs.findLibrary("spring-boot-starter-data-jpa").get())
                 add("implementation", libs.findLibrary("spring-boot-starter").get())
+                add("implementation", libs.findLibrary("spring-boot-starter-data-jpa").get())
 
                 add("implementation", libs.findLibrary("spring-boot-starter-web").get())
                 //add("implementation", libs.findLibrary("spring-data").get())
@@ -37,6 +37,8 @@ class BackendServiceConventionPlugin : Plugin<Project> {
                 add("implementation", libs.findLibrary("spring-boot-testcontainers").get())
                 //add("implementation", libs.findLibrary("spring-web").get())
                 add("implementation", libs.findLibrary("testcontainers-postgresql").get())
+
+                add("runtimeOnly", libs.findLibrary("liquibase").get())
 
                 add("testImplementation", libs.findLibrary("mockito").get())
                 add("testImplementation", libs.findLibrary("spring-boot-starter-test").get())
