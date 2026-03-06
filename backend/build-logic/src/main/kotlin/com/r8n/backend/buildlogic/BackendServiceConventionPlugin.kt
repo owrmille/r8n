@@ -25,13 +25,11 @@ class BackendServiceConventionPlugin : Plugin<Project> {
                 add("implementation", project(":core:api"))
                 add("implementation", project(":core:utils"))
 
-                add("implementation", libs.findLibrary("flyway-core").get())
                 add("implementation", libs.findLibrary("jackson-datatype").get())
                 add("implementation", libs.findLibrary("jackson-module-kotlin").get())
                 add("implementation", libs.findLibrary("postgresql").get())
                 add("implementation", libs.findLibrary("spring-boot-starter-data-jpa").get())
                 add("implementation", libs.findLibrary("spring-boot-starter").get())
-                add("implementation", libs.findLibrary("spring-boot-starter-flyway").get())
 
                 add("implementation", libs.findLibrary("spring-boot-starter-web").get())
                 //add("implementation", libs.findLibrary("spring-data").get())

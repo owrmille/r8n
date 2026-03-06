@@ -65,7 +65,6 @@ build-opinions:
 local-stop-all: $(addprefix local-stop-,$(SERVICES))
 
 local-opinions-db:
-	@docker rm -f opinions-db
 	@$(LOAD_LOCAL_ENV) \
 	docker exec -it opinions-db psql -U $$DATABASE_OPINIONS_USERNAME -d $$DATABASE_OPINIONS_SCHEMA
 

@@ -1,15 +1,16 @@
+
 spring:
-  flyway:
-    clean-disabled: false
-  lifecycle:
-    timeout-per-shutdown-phase: 1s
+  application.name: opinions-sv
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.sql
+    contexts: test
   jpa:
     hibernate:
       ddl-auto: validate
+  lifecycle:
+    timeout-per-shutdown-phase: 1s
   datasource:
-    url: jdbc:postgresql://localhost:5432/opinions
-    username: test
-    password: test
+    driver-class-name: org.postgresql.Driver
     hikari:
       minimumIdle: 0
       idleTimeout: 10000

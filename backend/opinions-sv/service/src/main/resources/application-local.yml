@@ -1,11 +1,13 @@
+server.port: ${SERVICES_OPINIONS_PORT}
 spring:
   application.name: opinions-sv
-  flyway:
-    locations:
-      - classpath:db/migration
-      - classpath:db/local
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.sql
+    contexts: local
   jpa:
     hibernate:
       ddl-auto: update
-server:
-  port: ${SERVICES_OPINIONS_PORT:8081}
+
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
