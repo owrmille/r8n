@@ -31,25 +31,26 @@ import java.util.UUID
 @AutoConfigureMockMvc
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.MOCK,
-    properties = ["spring.jpa.hibernate.ddl-auto=create-drop"]
-    )
+    properties = ["spring.jpa.hibernate.ddl-auto=create-drop"],
+)
 @Import(TestObjectMapperConfiguration::class)
 class OpinionsIntegrationTests {
 
     private companion object {
         @Container
         @ServiceConnection
-        val postgres = PostgreSQLContainer("postgres:16")
+        val postgres = PostgreSQLContainer("postgres:15")
             .withDatabaseName("opinions")
             .withUsername("test")
             .withPassword("test")
+            .withReuse(true)
     }
 
     @Autowired
     lateinit var mockMvc: MockMvc
 
     @Autowired
-lateinit var objectMapper: ObjectMapper
+    lateinit var objectMapper: ObjectMapper
 
     @MockitoBean
     lateinit var userClient: UserClient

@@ -1,9 +1,11 @@
 spring:
+  flyway:
+    clean-disabled: false
   lifecycle:
     timeout-per-shutdown-phase: 1s
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
   datasource:
     url: jdbc:postgresql://localhost:5432/opinions
     username: test

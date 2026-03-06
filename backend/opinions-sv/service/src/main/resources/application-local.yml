@@ -1,7 +1,11 @@
-spring.application.name: opinions-sv
-server:
-  port: ${SERVICES_OPINIONS_PORT:8081}
 spring:
+  application.name: opinions-sv
+  flyway:
+    locations:
+      - classpath:db/migration
+      - classpath:db/local
   jpa:
     hibernate:
       ddl-auto: update
+server:
+  port: ${SERVICES_OPINIONS_PORT:8081}

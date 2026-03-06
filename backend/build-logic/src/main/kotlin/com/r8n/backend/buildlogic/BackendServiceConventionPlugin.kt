@@ -18,17 +18,21 @@ class BackendServiceConventionPlugin : Plugin<Project> {
             pluginManager.apply(libs.findPlugin("spring-boot").get().get().pluginId)
             pluginManager.apply(libs.findPlugin("spring-dependency-management").get().get().pluginId)
             pluginManager.apply("org.jetbrains.kotlin.plugin.jpa")
+            pluginManager.apply("org.jetbrains.kotlin.plugin.allopen")
 
             dependencies.apply {
                 add("implementation", project(":core:security"))
                 add("implementation", project(":core:api"))
                 add("implementation", project(":core:utils"))
 
+                add("implementation", libs.findLibrary("flyway-core").get())
                 add("implementation", libs.findLibrary("jackson-datatype").get())
                 add("implementation", libs.findLibrary("jackson-module-kotlin").get())
                 add("implementation", libs.findLibrary("postgresql").get())
                 add("implementation", libs.findLibrary("spring-boot-starter-data-jpa").get())
                 add("implementation", libs.findLibrary("spring-boot-starter").get())
+                add("implementation", libs.findLibrary("spring-boot-starter-flyway").get())
+
                 add("implementation", libs.findLibrary("spring-boot-starter-web").get())
                 //add("implementation", libs.findLibrary("spring-data").get())
                 add("implementation", libs.findLibrary("spring-swagger").get())
