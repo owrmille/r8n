@@ -11,7 +11,7 @@ This guide explains the frontend stack, dependencies, build and dev workflows, l
 
 ## Dependencies
 
-- Node.js `>=22.12.0` (pinned in `frontend/.nvmrc`)
+- Node.js `>=22.13.0` (pinned in `frontend/.nvmrc`)
 - npm (recommended `npm 10+`)
 - Docker + Docker Compose for local production
 
@@ -32,6 +32,18 @@ Node version check:
 
 - `make frontend-check-node`
 - If the version is too old, it prints a fix command using `nvm`
+
+Session note:
+
+- `nvm use` applies only to the current terminal session.
+- New terminals may fall back to the system Node version unless `nvm use` is run again.
+- The system Node version is not changed because it can affect other projects and often requires admin rights.
+
+Why Node >= 22.13.0:
+
+- The project pins this version in `frontend/.nvmrc` and `frontend/package.json` for consistency.
+- Some lint tooling (ESLint dependencies like `eslint-visitor-keys`) declares support starting from Node 22.13.
+- These are development tools only; the runtime app is unaffected.
 
 Frontend install (with Playwright browsers):
 
@@ -105,6 +117,8 @@ Rebuild containers:
 - `make docker-down && make docker-build && make docker-up`
 - if certs were cleaned, run `make frontend-cert` before starting
 
+Note: `make docker-up` builds the frontend bundle on the host (using `make frontend-build`) and then builds the Nginx image from `frontend/dist`. This keeps the Docker image smaller and avoids running `npm ci` inside the Docker build.
+
 ## Tests
 
 Unit tests:
@@ -122,6 +136,11 @@ E2E meaning:
 
 Note: E2E tests require Playwright browsers. `make frontend-install-all` downloads them.
 On macOS 13 (arm64), Playwright does not support WebKit. In that case, run only Chromium/Firefox or disable the WebKit project.
+
+Test output notes:
+
+- `npm warn deprecated glob@10.5.0` is expected (transitive dependency) and does not affect test results.
+- `vitest` runs in watch mode by default. Use `make frontend-test-unit -- --run` to run once and exit.
 
 ## What to Test and Expected Results
 

@@ -25,7 +25,7 @@ help:
 docker-up: frontend-cert docker-build ensure-log-dirs
 	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml up -d
 
-docker-build: prepare-artifacts
+docker-build: frontend-build prepare-artifacts
 	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml build
 
 prepare-artifacts: prebuild-jars
@@ -92,14 +92,14 @@ frontend-install-all: frontend-install
 	cd frontend && npx playwright install
 
 frontend-check-node:
-	@node -v | awk 'BEGIN{min=22} {gsub("v",""); split($$0,a,"."); if (a[1]<min) {print "Node >=22.12.0 required. Run: cd frontend && nvm install && nvm use"; exit 1}}'
+	@node -e 'const [M,m]=process.versions.node.split(".").map(Number); if (M<22 || (M===22 && m<13)) {console.error("Node >=22.13.0 required. Run: cd frontend && nvm install && nvm use"); process.exit(1)}'
 	@echo "Node version OK: $$(node -v)"
 
 frontend-dev:
 	cd frontend && npm run dev
 
 frontend-build:
-	cd frontend && npm run build
+	@cd frontend && ( [ -d node_modules ] || npm ci ) && npm run build
 
 frontend-test-unit:
 	cd frontend && npm run test:unit

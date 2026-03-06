@@ -4,7 +4,7 @@ Production (Docker):
 
 - `make docker-up` start local production stack (includes frontend, generates certs if missing)
 - `make docker-down` stop local production stack
-- `make docker-build` rebuild images and artifacts
+- `make docker-build` rebuild images and artifacts (builds frontend dist on host)
 - `make docker-logs` tail logs for all services
 
 Backend (dev only):
@@ -28,7 +28,7 @@ Maintenance:
 
 - `make clean-artifacts` remove backend JARs in `deployment/*/app.jar`
 - `make clean-logs` remove `deployment/**/*.log`
-- `make frontend-build` build production bundle (`dist/`)
+- `make frontend-build` build production bundle (`dist/`), installs deps if missing
 
 Certificates:
 

@@ -57,7 +57,7 @@ Useful context:
 
 Install these tools before running frontend locally:
 
-- `Node.js` `>=22.12.0`
+- `Node.js` `>=22.13.0`
 - `npm` (comes with Node.js, recommended `npm 10+`)
 
 Install command examples:
