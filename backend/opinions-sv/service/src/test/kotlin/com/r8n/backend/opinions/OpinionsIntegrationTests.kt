@@ -31,6 +31,7 @@ import java.util.UUID
 @AutoConfigureMockMvc
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.MOCK,
+    properties = ["spring.jpa.hibernate.ddl-auto=create-drop"]
     )
 @Import(TestObjectMapperConfiguration::class)
 class OpinionsIntegrationTests {

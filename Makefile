@@ -56,8 +56,11 @@ local-run-all: $(addprefix local-run-,$(SERVICES))
 $(addprefix local-run-,$(SERVICES)): local-run-%:
 	@echo "Starting $*-sv..."
 	@$(LOAD_LOCAL_ENV) \
-	cd backend && (./gradlew :$*-sv:bootRun > $*.log 2>&1 & \
+	cd backend && (./gradlew :$*-sv:bootRun --args='--spring.profiles.active=local' > $*.log 2>&1 & \
 	echo $$! > /tmp/$*.pid)
+
+build-opinions:
+	cd backend && ./gradlew :opinions-sv:build | tee build.log
 
 local-stop-all: $(addprefix local-stop-,$(SERVICES))
 
