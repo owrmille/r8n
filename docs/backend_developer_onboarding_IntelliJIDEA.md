@@ -62,6 +62,41 @@ Build and dependency management system for backend. Runs every time you build ba
 - `curl "http://localhost:8080/opinions/id?id=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"` (random valid UUID plus actual stub authentication token that you could have got from the previous step), get a stub response
 - return to running terminal, Ctrl-C to terminate
 
+# Local run via Makefile (HTTP)
+- `export BACKEND=~/PROJECTS/r8n`
+- `cd $BACKEND`
+- start all backend services locally:
+  - `make local-run-all`
+- check direct requests:
+  - `make direct-request-opinion`
+  - `make direct-request-mock`
+- check routed requests:
+  - `make routed-request-opinion`
+  - `make routed-request-mock`
+- stop all local services (required!):
+  - `make local-stop-all`
+
+# Docker run via Makefile (HTTPS)
+- service list:
+  - `deployment/config/services.list`
+  - when adding a new service, add its name there so Makefile targets and TLS certificate generation include it
+- create local secrets file (do once and do not commit it):
+  - `cp deployment/secrets/docker.secrets.env.example deployment/secrets/docker.secrets.env`
+  - set values in `deployment/secrets/docker.secrets.env`:
+    - `TLS_KEYSTORE_PASSWORD=...`
+    - `TLS_TRUSTSTORE_PASSWORD=...`
+- TLS certificates are generated automatically by `make docker-up` (`docker-certs` target), stored in `deployment/certs/` (generated artifacts, not committed), and reused if already present and valid.
+- start Docker services:
+  - `make docker-up`
+- watch logs:
+  - `make docker-logs`
+  - or per service: `make docker-logs-gateway`, `make docker-logs-opinions`, `make docker-logs-mock`
+- test HTTPS routed requests through gateway:
+  - `make https-routed-request-opinion`
+  - `make https-routed-request-mock`
+- stop Docker services (required!):
+  - `make docker-down`
+
 # Running frontend
 - open a new terminal (backend can keep running in another one)
 - check if Node.js is installed:

@@ -1,7 +1,15 @@
 LOCAL_ENV_FILE := deployment/config/local.env
 DOCKER_ENV_FILE := deployment/config/docker.env
+DOCKER_SECRETS_ENV_FILE := deployment/secrets/docker.secrets.env
+DOCKER_COMPOSE_ENV_ARGS := --env-file $(DOCKER_ENV_FILE) --env-file $(DOCKER_SECRETS_ENV_FILE)
 LOAD_LOCAL_ENV = set -a; [ -f "$(LOCAL_ENV_FILE)" ] && . "$(LOCAL_ENV_FILE)"; set +a;
-SERVICES := gateway opinions mock
+LOAD_DOCKER_ENV = set -a; . "$(DOCKER_ENV_FILE)"; . "$(DOCKER_SECRETS_ENV_FILE)"; set +a;
+SERVICES_FILE := deployment/config/services.list
+ifeq (,$(wildcard $(SERVICES_FILE)))
+    $(error Missing $(SERVICES_FILE))
+endif
+SERVICES := $(shell awk 'NF && $$1 !~ /^\#/{printf "%s ",$$1}' "$(SERVICES_FILE)")
+
 BOOT_JAR_TASKS := $(addprefix :,$(addsuffix -sv:bootJar,$(SERVICES)))
 
 .PHONY: local-run-all local-stop-all \
@@ -9,15 +17,17 @@ BOOT_JAR_TASKS := $(addprefix :,$(addsuffix -sv:bootJar,$(SERVICES)))
     $(addprefix local-stop-,$(SERVICES)) \
     $(addprefix docker-logs-,$(SERVICES)) \
     prebuild-jars prepare-artifacts docker-build docker-up \
+    docker-certs docker-certs-force \
     docker-down docker-logs clean-artifacts ensure-log-dirs clean-logs \
     routed-request-opinion routed-request-mock \
-    direct-request-opinion direct-request-mock
+    direct-request-opinion direct-request-mock \
+    https-routed-request-opinion https-routed-request-mock
 
-docker-up: docker-build ensure-log-dirs
-	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml up -d
+docker-up: docker-build ensure-log-dirs docker-certs
+	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml up -d
 
 docker-build: prepare-artifacts
-	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml build
+	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml build
 
 prepare-artifacts: prebuild-jars
 	@set -e; \
@@ -34,14 +44,24 @@ ensure-log-dirs:
 		mkdir -p "deployment/$$svc/logs"; \
 	done
 
+docker-certs:
+	@$(LOAD_DOCKER_ENV) \
+	chmod +x ./deployment/scripts/generate-certs.sh && \
+	./deployment/scripts/generate-certs.sh
+
+docker-certs-force:
+	@$(LOAD_DOCKER_ENV) \
+	chmod +x ./deployment/scripts/generate-certs.sh && \
+	FORCE_REGEN_CERTS=true ./deployment/scripts/generate-certs.sh
+
 docker-down:
-	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml down
+	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml down
 
 docker-logs:
-	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml logs -f $(SERVICES)
+	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml logs -f $(SERVICES)
 
 $(addprefix docker-logs-,$(SERVICES)): docker-logs-%:
-	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml logs -f $*
+	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml logs -f $*
 
 clean-logs:
 	find deployment -type f -name '*.log' -delete
@@ -75,3 +95,9 @@ direct-request-opinion:
 
 direct-request-mock:
 	curl "http://localhost:8090/opinionLists/summary?listId=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
+
+https-routed-request-opinion:
+	curl --cacert deployment/certs/gateway.crt "https://localhost:8080/opinions/id?id=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
+
+https-routed-request-mock:
+	curl --cacert deployment/certs/gateway.crt "https://localhost:8080/opinionLists/summary?listId=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
