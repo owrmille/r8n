@@ -9,7 +9,6 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.kotlin.dsl.getByType
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import kotlin.jvm.java
 
 @Suppress("unused") // used through reflection in :build-logic:build.gradle.kts
 class LanguageConventionPlugin : Plugin<Project> {

@@ -1,4 +1,6 @@
 spring:
+  lifecycle:
+    timeout-per-shutdown-phase: 1s
   jpa:
     hibernate:
       ddl-auto: create-drop
@@ -6,3 +8,7 @@ spring:
     url: jdbc:postgresql://localhost:5432/opinions
     username: test
     password: test
+    hikari:
+      minimumIdle: 0
+      idleTimeout: 10000
+      maxLifetime: 30000

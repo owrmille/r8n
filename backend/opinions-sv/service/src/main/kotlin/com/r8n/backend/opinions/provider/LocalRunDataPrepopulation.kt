@@ -19,6 +19,7 @@ class LocalRunDataPrepopulation(
         val op = alexanderOnDonald()
         repo.saveAndFlush(
             OpinionPersistence(
+                id = op.id,
                 owner = op.owner,
                 subject = op.subject,
                 mark = op.mark,

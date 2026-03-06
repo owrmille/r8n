@@ -17,6 +17,7 @@ class BackendServiceConventionPlugin : Plugin<Project> {
             pluginManager.apply("convention-language")
             pluginManager.apply(libs.findPlugin("spring-boot").get().get().pluginId)
             pluginManager.apply(libs.findPlugin("spring-dependency-management").get().get().pluginId)
+            pluginManager.apply("org.jetbrains.kotlin.plugin.jpa")
 
             dependencies.apply {
                 add("implementation", project(":core:security"))

@@ -19,7 +19,7 @@ import java.util.UUID
 
 object OpinionTestDataFactory {
 
-    fun alexanderOnDonald(id: UUID = UUID.randomUUID()) = OpinionDto(
+    fun alexanderOnDonald(id: UUID = UUID.fromString("00000000-0000-0000-0000-000000000000")) = OpinionDto(
         id,
         alexanderReferent.id,
         alexanderReferent.name,

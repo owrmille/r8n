@@ -13,7 +13,9 @@ kotlin {
 dependencies {
     implementation(gradleApi())
     implementation(localGroovy())
-    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin")
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.21")
+    implementation("org.springframework.boot:spring-boot-gradle-plugin:4.0.2")
+    implementation("org.jetbrains.kotlin.plugin.jpa:org.jetbrains.kotlin.plugin.jpa.gradle.plugin:2.2.21")
 }
 
 gradlePlugin {

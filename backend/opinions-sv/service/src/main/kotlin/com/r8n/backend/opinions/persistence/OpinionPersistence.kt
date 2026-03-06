@@ -11,7 +11,7 @@ import java.util.UUID
 
 @Entity
 @Table(name = "opinions")
-open class OpinionPersistence(
+data class OpinionPersistence(
     @Id
     @GeneratedValue
     @UuidGenerator
@@ -21,14 +21,4 @@ open class OpinionPersistence(
     var mark: Double?,
     var status: OpinionStatusEnum,
     var timestamp: Instant,
-) {
-    @Suppress("unused") // used by Jakarta Persistence API
-    protected constructor() : this(
-        null,
-        UUID.randomUUID(),
-        UUID.randomUUID(),
-        0.0,
-        OpinionStatusEnum.DRAFT,
-        Instant.now()
-    )
-}
+)
