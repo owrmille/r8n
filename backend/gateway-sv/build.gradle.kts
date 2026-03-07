@@ -1,8 +1,6 @@
 plugins {
-    id("convention-language")
+    id("convention-backend-service")
 }
-
-//pluginManager.apply(libs.findPlugin("spring-boot").get().get().pluginId)
 
 dependencies {
     implementation(platform(project(":platform")))

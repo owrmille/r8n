@@ -21,19 +21,15 @@ class BackendServiceConventionPlugin : Plugin<Project> {
 
             dependencies.apply {
                 add("implementation", project(":core:api"))
-                add("implementation", project(":core:security"))
                 add("implementation", project(":core:utils"))
 
                 add("implementation", libs.findLibrary("jackson-datatype").get())
                 add("implementation", libs.findLibrary("jackson-module-kotlin").get())
                 add("implementation", libs.findLibrary("spring-boot-starter").get())
-                add("implementation", libs.findLibrary("spring-boot-starter-web").get())
                 add("implementation", libs.findLibrary("spring-data-commons").get())
-                add("implementation", libs.findLibrary("spring-swagger").get())
 
                 add("testImplementation", libs.findLibrary("mockito").get())
                 add("testImplementation", libs.findLibrary("spring-boot-starter-test").get())
-                add("testImplementation", libs.findLibrary("spring-boot-starter-webmvc-test").get())
                 add("testImplementation", libs.findLibrary("spring-boot-test-autoconfigure").get())
                 add("testImplementation", libs.findLibrary("spring-security-test").get())
             }

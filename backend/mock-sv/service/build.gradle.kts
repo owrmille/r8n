@@ -1,5 +1,5 @@
 plugins {
-    id("convention-backend-service")
+    id("convention-nonreactive-backend-service")
 }
 
 group = "com.r8n.backend"
