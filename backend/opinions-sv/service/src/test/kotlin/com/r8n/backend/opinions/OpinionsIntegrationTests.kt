@@ -44,7 +44,6 @@ class OpinionsIntegrationTests {
             .withDatabaseName("opinions")
             .withUsername("test")
             .withPassword("test")
-            .withReuse(true)
             .withInitScript("db/init-schema.sql")
     }
 
