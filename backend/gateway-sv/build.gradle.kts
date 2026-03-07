@@ -2,7 +2,7 @@ plugins {
     id("convention-language")
 }
 
-pluginManager.apply(libs.findPlugin("spring-boot").get().get().pluginId)
+//pluginManager.apply(libs.findPlugin("spring-boot").get().get().pluginId)
 
 dependencies {
     implementation(platform(project(":platform")))
