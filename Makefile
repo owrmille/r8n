@@ -35,7 +35,7 @@ ensure-log-dirs:
 	done
 
 docker-down:
-	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml down -v
+	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml down
 
 docker-logs:
 	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml logs -f $(SERVICES)

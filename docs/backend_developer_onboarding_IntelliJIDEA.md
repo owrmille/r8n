@@ -45,6 +45,7 @@ Build and dependency management system for backend. Runs every time you build ba
 - (backend.code-workspace is a VSCode-only file)
 
 # Running backend in IDEA
+- (probably this won't work, all terminals can bug out being run in IDEA. addressed in tickets #21, #22)
 - open Gradle panel on the right 
   - if it's not there, open $BACKEND/settings.gradle.kts, (top right corner) Link the Gradle project
 - r8n-backend - gateway - Tasks - application - bootRun
@@ -56,11 +57,13 @@ Build and dependency management system for backend. Runs every time you build ba
 - IDEA: open bottom left Run panel, select Stop for the service
 
 # Running backend in an external terminal
-- `export BACKEND=~/PROJECTS/r8n`
-- `cd $BACKEND && ./gradlew :gateway:bootRun`
-- (optional) `curl -X POST http://localhost:8080/auth/login -H "Content-Type: application/json" -d '{"login": "test","password": "1234"}' -i` - get the stub authentication token as a response
-- `curl "http://localhost:8080/opinions/id?id=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"` (random valid UUID plus actual stub authentication token that you could have got from the previous step), get a stub response
-- return to running terminal, Ctrl-C to terminate
+- only gateway and opinions-sv is runnable currently
+- `make docker-run-database`
+- `make local-run-opinions`, see opinions.log filled and opinions-sv started successfully
+- `make direct-request-opinion`, see valid result
+- can play around with the request from previous command to get failures
+- (manual access to database) `make docker-database-connect`, `\c r8n` (connect to database), `set schema 'opinions';`, `\dt` to see five tables, `select * from opinions;` to see some data
+- `make build-opinions`
 
 # Running frontend
 - open a new terminal (backend can keep running in another one)
