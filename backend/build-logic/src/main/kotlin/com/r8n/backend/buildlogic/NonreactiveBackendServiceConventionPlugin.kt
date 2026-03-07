@@ -8,6 +8,7 @@ import kotlin.apply
 
 @Suppress("unused") // used through reflection in :build-logic:build.gradle.kts
 class NonreactiveBackendServiceConventionPlugin : Plugin<Project> {
+    // gateway is reactive, so whenever we need to add a non-reactive (blocking MVC) dependency for all non-gateway services, it goes here.
     override fun apply(project: Project) {
         with(project) {
             val libs = extensions

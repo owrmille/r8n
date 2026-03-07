@@ -45,16 +45,13 @@ Build and dependency management system for backend. Runs every time you build ba
 - (backend.code-workspace is a VSCode-only file)
 
 # Running backend in IDEA
-- (probably this won't work, all terminals can bug out being run in IDEA. addressed in tickets #21, #22)
+- might not work on campus, all terminals can bug out being run in IDEA. addressed in tickets #21, #22
 - open Gradle panel on the right 
   - if it's not there, open $BACKEND/settings.gradle.kts, (top right corner) Link the Gradle project
-- r8n-backend - gateway - Tasks - application - bootRun
-- as soon as you see 'Started GatewayApplicationKt in X seconds' in the logs in the terminal - the app is running
-- if you see something about wrong Java version, return to JDK installation/setup
-- if you see something about Gradle not having enough space, return to moving Gradle cache to another partition
-- (optional) `curl -X POST http://localhost:8080/auth/login -H "Content-Type: application/json" -d '{"login": "test","password": "1234"}' -i` - get the stub authentication token as a response
-- `curl "http://localhost:8080/opinions/id?id=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"` (random valid UUID plus actual stub authentication token that you could have got from the previous step), get a stub response
-- IDEA: open bottom left Run panel, select Stop for the service
+- for each service in the order of their interdependency (gateway last):
+  - find its bootRun task, right-click, Modify run configuration
+  - open Environment variables field, insert everything from local.env there
+  - call that modified bootRun
 
 # Running backend in an external terminal
 - only gateway and opinions-sv is runnable currently
@@ -63,7 +60,10 @@ Build and dependency management system for backend. Runs every time you build ba
 - `make direct-request-opinion`, see valid result
 - can play around with the request from previous command to get failures
 - (manual access to database) `make docker-database-connect`, `\c r8n` (connect to database), `set schema 'opinions';`, `\dt` to see five tables, `select * from opinions;` to see some data
-- `make build-opinions`
+- `make build-opinions` - see build succeeding
+- `make local-stop-all`
+- `make local-run-all` and check all the log files for Started application in X seconds
+- `make direct-request-opinions` and `make routed-request-opinions` should provide same result, with 0000..0 id
 
 # Running frontend
 - open a new terminal (backend can keep running in another one)
@@ -100,3 +100,4 @@ Build and dependency management system for backend. Runs every time you build ba
   - solution: `rm ~/.var/app/com.jetbrains.IntelliJ-IDEA-Community/config/JetBrains/IdeaIC2025.3/.lock`
 - not enough space
   - clean up as much as possible. delete all unused projects, evals, downloads, clear browser cache, clear trash. Home folder is only 5G, this is to be expected. Alternatively you can try downloading IDEA separately and installing it to sgoinfre.
+  - there is a magic rule in the makefile, but it can be dangerous
