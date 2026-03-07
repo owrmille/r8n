@@ -36,7 +36,10 @@ After generating certs:
 - `make docker-up`
 
 Then open:
-- `https://localhost`
+- `https://localhost:8443`
+
+Optional:
+- `http://localhost:8088` redirects to HTTPS
 
 HTTP will redirect to HTTPS.
 

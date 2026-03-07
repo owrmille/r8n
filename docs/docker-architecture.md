@@ -1,13 +1,13 @@
-# Docker Architecture (HTTPS at the Edge + Internal TLS)
+# Docker Architecture (HTTPS at the Edge + Internal HTTP)
 
-This document explains the Docker networking layout, TLS termination, and how internal service-to-service HTTPS fits in.
+This document explains the Docker networking layout, TLS termination, and how the current local Docker setup uses HTTP on the private network.
 
 ## Core Idea
 
 - HTTPS is required at the **edge** (browser <-> Nginx) to protect user traffic.
-- Inside the Docker network, services can use **HTTPS** as well when internal TLS is enabled.
+- Inside the Docker network, services use HTTP in the current local setup.
 - Nginx terminates edge TLS and forwards requests to the gateway.
-- The gateway can call backend services over HTTPS while still using the same internal ports.
+- The gateway calls backend services over HTTP while still using the same internal ports.
 
 ## High-Level Flows
 
@@ -37,10 +37,10 @@ graph LR
   Opinions["Opinions Service (opinions:8080)"]
   Mock["Mock Service (mock:8080)"]
 
-  Browser -->|"HTTPS :443"| Nginx
-  Nginx -->|"HTTP or HTTPS :8080"| Gateway
-  Gateway -->|"HTTPS :8080"| Opinions
-  Gateway -->|"HTTPS :8080"| Mock
+  Browser -->|"HTTPS :8443 -> container :443"| Nginx
+  Nginx -->|"HTTP :8080"| Gateway
+  Gateway -->|"HTTP :8080"| Opinions
+  Gateway -->|"HTTP :8080"| Mock
 ```
 
 ## Runtime API Sequence (Nginx + Gateway)
@@ -52,12 +52,12 @@ sequenceDiagram
   participant G as Gateway
   participant O as Opinions
 
-  B->>N: GET https://localhost/
+  B->>N: GET https://localhost:8443/
   N-->>B: HTML/JS/CSS (Vue app)
 
   B->>N: API call /api/...
-  N->>G: Proxy to http(s)://gateway:8080/...
-  G->>O: HTTPS https://opinions:8080/...
+  N->>G: Proxy to http://gateway:8080/...
+  G->>O: HTTP http://opinions:8080/...
   O-->>G: JSON response
   N-->>B: JSON response
 ```
@@ -71,10 +71,11 @@ Dev (Vite):
 - No Nginx involved.
 
 Runtime (local production):
-- Browser talks to Nginx over `https://localhost`.
-- Nginx serves static assets and proxies `/api` to the gateway at `http(s)://gateway:8080`.
-- The gateway reaches services by name on `https://opinions:8080` and `https://mock:8080` when internal TLS is enabled.
-- This mirrors a production edge setup with TLS termination and optional internal TLS.
+- Browser talks to Nginx over `https://localhost:8443` by default.
+- `http://localhost:8088` redirects to HTTPS.
+- Nginx serves static assets and proxies `/api` to the gateway at `http://gateway:8080`.
+- The gateway reaches services by name on `http://opinions:8080` and `http://mock:8080`.
+- This mirrors a production edge setup with TLS termination at the edge and simple HTTP on the private network.
 
 ## Ports by Mode
 
@@ -84,12 +85,15 @@ Local dev (no Docker):
 - `mock` -> `localhost:8090`
 
 Local production (Docker):
-- `gateway` -> `gateway:8080` (HTTP or HTTPS)
-- `opinions` -> `opinions:8080` (HTTPS)
-- `mock` -> `mock:8080` (HTTPS)
+- browser -> `localhost:8088` (HTTP) and `localhost:8443` (HTTPS)
+- `gateway` -> `localhost:8080` from the host, `gateway:8080` inside Docker
+- `opinions` -> `opinions:8080` inside Docker only
+- `mock` -> `mock:8080` inside Docker only
 
 Inside Docker, containers are isolated. Multiple services can use the same port because each service has its own hostname.
 From the host machine, only published ports are reachable. In this setup:
+- `localhost:8088` maps to `frontend:80`
+- `localhost:8443` maps to `frontend:443`
 - `localhost:8080` maps to `gateway:8080`
 
 ## Docker Network View
@@ -101,26 +105,27 @@ graph TB
   end
 
   subgraph Docker["Docker Bridge Network (r8n_net)"]
-    Nginx["frontend (nginx:443)"]
+    Nginx["frontend (nginx:80/443)"]
     Gateway["gateway (8080)"]
     Opinions["opinions (8080)"]
     Mock["mock (8080)"]
   end
 
-  Browser -->|"HTTPS :443"| Nginx
-  Nginx -->|"HTTP or HTTPS :8080"| Gateway
-  Gateway -->|"HTTPS :8080"| Opinions
-  Gateway -->|"HTTPS :8080"| Mock
+  Browser -->|"HTTPS :8443"| Nginx
+  Nginx -->|"HTTP :8080"| Gateway
+  Gateway -->|"HTTP :8080"| Opinions
+  Gateway -->|"HTTP :8080"| Mock
 ```
 
-## Why HTTPS at the Edge (and Sometimes Inside)
+## Why HTTPS at the Edge
 
 - The browser is outside the Docker network, so traffic must be encrypted.
 - The Docker bridge network is isolated and private to the host machine.
-- Internal HTTPS can be enabled to mirror production and satisfy security requirements.
-- Internal TLS adds certificate management, but it makes service-to-service traffic encrypted too.
+- The private Docker network keeps the internal traffic simple in local development.
+- Internal TLS can be added later if needed, but it adds certificate management complexity.
 
 ## Notes
 
 - If deployed to a public environment, internal TLS can be added as well.
-- For local production, TLS at the edge is mandatory; internal TLS is optional but supported.
+- For local production, TLS at the edge is mandatory; internal service traffic stays on HTTP in the current setup.
+- On rootless Docker, host ports `80` and `443` may not be bindable. This branch uses `8088` and `8443` by default for that reason.

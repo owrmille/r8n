@@ -2,7 +2,7 @@
 
 Production (Docker):
 
-- `make docker-up` start local production stack (includes frontend, generates certs if missing)
+- `make docker-up` start local production stack (includes frontend, generates certs if missing). Current default URLs: `https://localhost:8443`, `http://localhost:8080`
 - `make docker-down` stop local production stack
 - `make docker-build` rebuild images and artifacts (builds frontend dist on host)
 - `make docker-logs` tail logs for all services
@@ -20,6 +20,7 @@ Frontend (dev only):
 - `make frontend-install-all` install deps and Playwright browsers
 - `make frontend-dev` start Vite dev server
 - `make frontend-test-unit` run unit tests (Vitest)
+- `cd frontend && npm run test:unit -- --run` run unit tests once and exit
 - `make frontend-test-e2e` run E2E tests (Playwright)
 - `make frontend-clean` remove frontend build output and cache
 - `make frontend-clean-all` remove build output, cache, node_modules, certs

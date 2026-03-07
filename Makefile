@@ -1,6 +1,19 @@
 LOCAL_ENV_FILE := deployment/config/local.env
 DOCKER_ENV_FILE := deployment/config/docker.env
 LOAD_LOCAL_ENV = set -a; [ -f "$(LOCAL_ENV_FILE)" ] && . "$(LOCAL_ENV_FILE)"; set +a;
+DOCKER_ENV_VARS := \
+	GATEWAY_HOST \
+	GATEWAY_CONTAINER_PORT \
+	GATEWAY_HOST_PORT \
+	INTERSERVICE_PROTOCOL \
+	LOGGING_FILE_NAME \
+	SERVICES_MOCK_HOST \
+	SERVICES_MOCK_PORT \
+	SERVICES_OPINIONS_HOST \
+	SERVICES_OPINIONS_PORT \
+	FRONTEND_HTTP_HOST_PORT \
+	FRONTEND_HTTPS_HOST_PORT
+UNSET_DOCKER_ENV = env $(foreach var,$(DOCKER_ENV_VARS),-u $(var))
 SERVICES := gateway opinions mock
 BOOT_JAR_TASKS := $(addprefix :,$(addsuffix -sv:bootJar,$(SERVICES)))
 FRONTEND_CERT_DIR := deployment/certs
@@ -23,10 +36,10 @@ help:
 	@cat docs/make-help.md
 
 docker-up: frontend-cert docker-build ensure-log-dirs
-	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml up -d
+	$(UNSET_DOCKER_ENV) docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml up -d
 
 docker-build: frontend-build prepare-artifacts
-	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml build
+	$(UNSET_DOCKER_ENV) docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml build
 
 prepare-artifacts: prebuild-jars
 	@set -e; \
@@ -44,13 +57,13 @@ ensure-log-dirs:
 	done
 
 docker-down:
-	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml down
+	$(UNSET_DOCKER_ENV) docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml down
 
 docker-logs:
-	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml logs -f $(SERVICES)
+	$(UNSET_DOCKER_ENV) docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml logs -f $(SERVICES)
 
 $(addprefix docker-logs-,$(SERVICES)): docker-logs-%:
-	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml logs -f $*
+	$(UNSET_DOCKER_ENV) docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml logs -f $*
 
 clean-logs:
 	find deployment -type f -name '*.log' -delete
