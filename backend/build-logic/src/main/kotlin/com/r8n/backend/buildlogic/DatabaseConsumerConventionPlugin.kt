@@ -15,7 +15,7 @@ class DatabaseConsumerConventionPlugin : Plugin<Project> {
                 .named("libs")
 
             pluginManager.apply("convention-language")
-            pluginManager.apply("org.jetbrains.kotlin.plugin.jpa")
+            pluginManager.apply(libs.findPlugin("kotlin.jpa").get().get().pluginId)
 
             dependencies.apply {
                 add("implementation", libs.findLibrary("postgresql").get())

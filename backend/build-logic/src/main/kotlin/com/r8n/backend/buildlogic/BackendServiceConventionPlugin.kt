@@ -15,9 +15,9 @@ class BackendServiceConventionPlugin : Plugin<Project> {
                 .named("libs")
 
             pluginManager.apply("convention-language")
+            pluginManager.apply(libs.findPlugin("kotlin-allopen").get().get().pluginId)
             pluginManager.apply(libs.findPlugin("spring-boot").get().get().pluginId)
             pluginManager.apply(libs.findPlugin("spring-dependency-management").get().get().pluginId)
-            pluginManager.apply("org.jetbrains.kotlin.plugin.allopen")
 
             dependencies.apply {
                 add("implementation", project(":core:api"))
