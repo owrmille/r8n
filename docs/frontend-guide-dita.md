@@ -107,9 +107,9 @@ graph LR
   Mock["Mock Service (mock:8080)"]
 
   Browser -->|"HTTPS :443"| Nginx
-  Nginx -->|"HTTP :8080"| Gateway
-  Gateway -->|"HTTP :8080"| Opinions
-  Gateway -->|"HTTP :8080"| Mock
+  Nginx -->|"HTTP or HTTPS :8080"| Gateway
+  Gateway -->|"HTTPS :8080"| Opinions
+  Gateway -->|"HTTPS :8080"| Mock
 ```
 
 Rebuild containers:
@@ -118,6 +118,11 @@ Rebuild containers:
 - if certs were cleaned, run `make frontend-cert` before starting
 
 Note: `make docker-up` builds the frontend bundle on the host (using `make frontend-build`) and then builds the Nginx image from `frontend/dist`. This keeps the Docker image smaller and avoids running `npm ci` inside the Docker build.
+
+Internal TLS note:
+
+- When internal HTTPS is enabled, the gateway calls backend services over `https://opinions:8080` and `https://mock:8080`.
+- This encrypts service-to-service traffic inside the Docker network as well.
 
 ## Tests
 

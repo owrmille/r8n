@@ -1,12 +1,13 @@
-# Docker Architecture (HTTPS at the Edge)
+# Docker Architecture (HTTPS at the Edge + Internal TLS)
 
-This document explains the Docker networking layout, TLS termination, and why only the public edge uses HTTPS.
+This document explains the Docker networking layout, TLS termination, and how internal service-to-service HTTPS fits in.
 
 ## Core Idea
 
 - HTTPS is required at the **edge** (browser <-> Nginx) to protect user traffic.
-- Inside the Docker network, services can use **HTTP** because traffic stays on a private, isolated bridge.
-- Nginx terminates TLS and forwards requests to the gateway over HTTP.
+- Inside the Docker network, services can use **HTTPS** as well when internal TLS is enabled.
+- Nginx terminates edge TLS and forwards requests to the gateway.
+- The gateway can call backend services over HTTPS while still using the same internal ports.
 
 ## High-Level Flows
 
@@ -37,9 +38,9 @@ graph LR
   Mock["Mock Service (mock:8080)"]
 
   Browser -->|"HTTPS :443"| Nginx
-  Nginx -->|"HTTP :8080"| Gateway
-  Gateway -->|"HTTP :8080"| Opinions
-  Gateway -->|"HTTP :8080"| Mock
+  Nginx -->|"HTTP or HTTPS :8080"| Gateway
+  Gateway -->|"HTTPS :8080"| Opinions
+  Gateway -->|"HTTPS :8080"| Mock
 ```
 
 ## Runtime API Sequence (Nginx + Gateway)
@@ -49,13 +50,15 @@ sequenceDiagram
   participant B as Browser
   participant N as Nginx
   participant G as Gateway
+  participant O as Opinions
 
   B->>N: GET https://localhost/
   N-->>B: HTML/JS/CSS (Vue app)
 
   B->>N: API call /api/...
-  N->>G: Proxy to http://gateway:8080/...
-  G-->>N: JSON response
+  N->>G: Proxy to http(s)://gateway:8080/...
+  G->>O: HTTPS https://opinions:8080/...
+  O-->>G: JSON response
   N-->>B: JSON response
 ```
 
@@ -69,9 +72,9 @@ Dev (Vite):
 
 Runtime (local production):
 - Browser talks to Nginx over `https://localhost`.
-- Nginx serves static assets and proxies `/api` to the gateway at `http://gateway:8080`.
-- The gateway reaches services by name on `opinions:8080` and `mock:8080`.
-- This mirrors a production edge setup with TLS termination.
+- Nginx serves static assets and proxies `/api` to the gateway at `http(s)://gateway:8080`.
+- The gateway reaches services by name on `https://opinions:8080` and `https://mock:8080` when internal TLS is enabled.
+- This mirrors a production edge setup with TLS termination and optional internal TLS.
 
 ## Ports by Mode
 
@@ -81,9 +84,9 @@ Local dev (no Docker):
 - `mock` -> `localhost:8090`
 
 Local production (Docker):
-- `gateway` -> `gateway:8080`
-- `opinions` -> `opinions:8080`
-- `mock` -> `mock:8080`
+- `gateway` -> `gateway:8080` (HTTP or HTTPS)
+- `opinions` -> `opinions:8080` (HTTPS)
+- `mock` -> `mock:8080` (HTTPS)
 
 Inside Docker, containers are isolated. Multiple services can use the same port because each service has its own hostname.
 From the host machine, only published ports are reachable. In this setup:
@@ -105,19 +108,19 @@ graph TB
   end
 
   Browser -->|"HTTPS :443"| Nginx
-  Nginx -->|"HTTP :8080"| Gateway
-  Gateway -->|"HTTP :8080"| Opinions
-  Gateway -->|"HTTP :8080"| Mock
+  Nginx -->|"HTTP or HTTPS :8080"| Gateway
+  Gateway -->|"HTTPS :8080"| Opinions
+  Gateway -->|"HTTPS :8080"| Mock
 ```
 
-## Why HTTPS Only at the Edge
+## Why HTTPS at the Edge (and Sometimes Inside)
 
 - The browser is outside the Docker network, so traffic must be encrypted.
 - The Docker bridge network is isolated and private to the host machine.
-- Encrypting internal service-to-service traffic adds complexity and is not required for local-only deployments.
-- This mirrors real production setups that use a load balancer or Nginx to terminate TLS.
+- Internal HTTPS can be enabled to mirror production and satisfy security requirements.
+- Internal TLS adds certificate management, but it makes service-to-service traffic encrypted too.
 
 ## Notes
 
 - If deployed to a public environment, internal TLS can be added as well.
-- For local production, TLS at the edge is enough and keeps the setup simple.
+- For local production, TLS at the edge is mandatory; internal TLS is optional but supported.
