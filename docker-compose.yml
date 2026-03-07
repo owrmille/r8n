@@ -4,13 +4,14 @@ services:
     container_name: database
     restart: unless-stopped
     environment:
-      POSTGRES_DB: opinions
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${DATABASE_NAME:?}
+      POSTGRES_USER: ${DATABASE_USERNAME:?}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?}
     ports:
-      - "5432:5432"
+      - "${DATABASE_HOST_PORT:?}:${DATABASE_CONTAINER_PORT:?}"
     volumes:
-      - ./deployment/db/data:/var/lib/postgresql/data
+      - ./deployment/database/data:/var/lib/postgresql/data
+      - ./deployment/database/init:/docker-entrypoint-initdb.d
     networks:
       - r8n_net
 
@@ -62,6 +63,7 @@ services:
     depends_on:
       - opinions
       - mock
+      - database
     networks:
       - r8n_net
     volumes:
