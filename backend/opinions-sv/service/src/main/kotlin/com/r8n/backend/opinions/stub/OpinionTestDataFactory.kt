@@ -15,6 +15,8 @@ import com.r8n.backend.opinions.stub.OpinionSubjectTestDataFactory.moreMoney
 import com.r8n.backend.opinions.stub.OpinionSubjectTestDataFactory.president
 import com.r8n.backend.opinions.stub.OpinionSubjectTestDataFactory.venezuelaInvasion
 import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 
 object OpinionTestDataFactory {
@@ -34,7 +36,9 @@ object OpinionTestDataFactory {
             WeightedOpinionReferenceDto(UUID.randomUUID(), canadaTariffs.id, 1.0),
         ),
         OpinionStatusEnumDto.DRAFT,
-        Instant.now(),
+        LocalDateTime
+            .of(2024, 1, 1, 12, 0)
+            .toInstant(ZoneOffset.UTC),
     )
 
     fun alexanderOnVenezuela(id: UUID = UUID.randomUUID()) = OpinionDto(

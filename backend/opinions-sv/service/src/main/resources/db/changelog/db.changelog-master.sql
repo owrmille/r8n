@@ -51,6 +51,6 @@ ALTER TABLE weighted_opinion_reference
 --changeset inikulin:V2_seed_data context:local,test
 INSERT INTO opinions (id, owner, subject, mark, status, timestamp)
 VALUES ('00000000-0000-0000-0000-000000000000'
-, '11111111-1111-1111-1111-111111111111'
-, '22222222-2222-2222-2222-222222222222'
-, 5.0, 'DRAFT', NOW());
+, '07070707-0707-0707-0707-070707070707'
+, '23232323-2323-2323-2323-232323232323'
+, 1.07, 'DRAFT', '2024-01-01T12:00:00Z');

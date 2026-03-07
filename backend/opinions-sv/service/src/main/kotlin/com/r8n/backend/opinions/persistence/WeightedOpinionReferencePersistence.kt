@@ -9,7 +9,7 @@ import org.hibernate.annotations.UuidGenerator
 import java.util.UUID
 
 @Entity
-@Table(name = "weighted_opinion_reference")
+@Table(schema = "opinions", name = "weighted_opinion_reference")
 class WeightedOpinionReferencePersistence(
     @Id
     @GeneratedValue

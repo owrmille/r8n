@@ -5,7 +5,8 @@ spring:
     enabled: true
     change-log: db/changelog/db.changelog-master.sql
     default-schema: opinions
-    contexts: test
+    contexts:
+      - test
   datasource:
     driver-class-name: org.postgresql.Driver
     hikari:
@@ -16,11 +17,15 @@ spring:
       maxLifetime: 100
       validationTimeout: 250
       leakDetectionThreshold: 0
+    url: jdbc:postgresql://localhost:5432/opinions?currentSchema=opinions
   jpa:
     defer-datasource-initialization: false
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
     properties:
       hibernate.default_schema: opinions
   lifecycle:
     timeout-per-shutdown-phase: 1s
+logging:
+  level:
+    liquibase: DEBUG

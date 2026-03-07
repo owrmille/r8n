@@ -13,7 +13,7 @@ import java.time.Instant
 import java.util.UUID
 
 @Entity
-@Table(name = "opinions")
+@Table(schema = "opinions", name = "opinions")
 class OpinionPersistence(
     @Id
     @GeneratedValue
