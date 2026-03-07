@@ -1,5 +1,6 @@
 package com.r8n.backend.opinions.persistence
 
+import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -16,9 +17,15 @@ class OpinionNotePersistence(
     @GeneratedValue
     @UuidGenerator
     val id: UUID,
+
+    @Column(nullable = false)
     val opinionId: UUID,
+
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     val type: OpinionNoteTypeEnum,
+
+    @Column(nullable = false)
     val description: String,
 )
 

@@ -30,22 +30,19 @@ class BackendServiceConventionPlugin : Plugin<Project> {
                 add("implementation", libs.findLibrary("postgresql").get())
                 add("implementation", libs.findLibrary("spring-boot-starter").get())
                 add("implementation", libs.findLibrary("spring-boot-starter-data-jpa").get())
-
+                add("implementation", libs.findLibrary("spring-boot-starter-liquibase").get())
                 add("implementation", libs.findLibrary("spring-boot-starter-web").get())
-                //add("implementation", libs.findLibrary("spring-data").get())
                 add("implementation", libs.findLibrary("spring-swagger").get())
-                add("implementation", libs.findLibrary("spring-boot-testcontainers").get())
-                //add("implementation", libs.findLibrary("spring-web").get())
-                add("implementation", libs.findLibrary("testcontainers-postgresql").get())
-
-                add("runtimeOnly", libs.findLibrary("liquibase").get())
 
                 add("testImplementation", libs.findLibrary("mockito").get())
                 add("testImplementation", libs.findLibrary("spring-boot-starter-test").get())
-                add("testImplementation", libs.findLibrary("spring-boot-test-autoconfigure").get())
                 add("testImplementation", libs.findLibrary("spring-boot-starter-webmvc-test").get())
+                add("testImplementation", libs.findLibrary("spring-boot-test-autoconfigure").get())
+                add("testImplementation", libs.findLibrary("spring-boot-testcontainers").get())
                 add("testImplementation", libs.findLibrary("spring-security-test").get())
+                add("testImplementation", libs.findLibrary("testcontainers").get())
                 add("testImplementation", libs.findLibrary("testcontainers-junit").get())
+                add("testImplementation", libs.findLibrary("testcontainers-postgresql").get())
             }
         }
     }

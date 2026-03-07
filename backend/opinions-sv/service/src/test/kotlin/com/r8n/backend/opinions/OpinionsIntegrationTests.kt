@@ -17,6 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.springframework.context.annotation.Import
 import org.springframework.security.test.context.support.WithMockUser
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
@@ -26,12 +27,12 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import java.util.UUID
 
+@ActiveProfiles("test")
 @Testcontainers
 @AutoConfigureJsonTesters
 @AutoConfigureMockMvc
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.MOCK,
-    properties = ["spring.jpa.hibernate.ddl-auto=create-drop"],
 )
 @Import(TestObjectMapperConfiguration::class)
 class OpinionsIntegrationTests {
@@ -44,6 +45,7 @@ class OpinionsIntegrationTests {
             .withUsername("test")
             .withPassword("test")
             .withReuse(true)
+            .withInitScript("db/init-schema.sql")
     }
 
     @Autowired

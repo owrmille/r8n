@@ -35,7 +35,7 @@ ensure-log-dirs:
 	done
 
 docker-down:
-	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml down
+	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml down -v
 
 docker-logs:
 	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml logs -f $(SERVICES)
@@ -53,6 +53,17 @@ clean-artifacts:
 
 local-run-all: $(addprefix local-run-,$(SERVICES))
 
+docker-database-drop-volume-personal:
+	@rm -rf ./deployment/database/data
+
+docker-database-drop-volume-campus:
+	@# yes this is the only way, since some files are owned by root, and you don't have sudo rights in campus
+	@docker run --rm -v ./deployment/database:/pg alpine rm -rf /pg/data
+
+docker-run-database:
+	chmod a+x deployment/database/init/01_create_schemas.sh
+	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml up -d database
+
 $(addprefix local-run-,$(SERVICES)): local-run-%:
 	@echo "Starting $*-sv..."
 	@$(LOAD_LOCAL_ENV) \
@@ -64,9 +75,9 @@ build-opinions:
 
 local-stop-all: $(addprefix local-stop-,$(SERVICES))
 
-local-dbconnect-opinions:
-	@$(LOAD_LOCAL_ENV) \
-	docker exec -it opinions-db psql -U $$DATABASE_OPINIONS_USERNAME -d $$DATABASE_OPINIONS_SCHEMA
+docker-database-connect:
+	$(LOAD_LOCAL_ENV) \
+	docker exec -it database psql -U $$DATABASE_USERNAME -d $$DATABASE_NAME
 
 $(addprefix local-stop-,$(SERVICES)): local-stop-%:
 	-@kill $$(cat /tmp/$*.pid) 2>/dev/null || true

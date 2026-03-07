@@ -4,19 +4,17 @@ spring:
   liquibase:
     enabled: true
     change-log: db/changelog/db.changelog-master.sql
+    default-schema: opinions
     contexts: local
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://${DATABASE_OPINIONS_HOST}:${DATABASE_OPINIONS_PORT}/opinions
-    username: ${DATABASE_OPINIONS_USERNAME}
-    password: ${DATABASE_OPINIONS_PASSWORD}
+    url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_HOST_PORT}/${DATABASE_NAME}?currentSchema=opinions
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
   jpa:
-    defer-datasource-initialization: true
+    defer-datasource-initialization: false
     hibernate:
-      ddl-auto: none
+      ddl-auto: validate
   sql:
     init:
       mode: never
-logging:
-  level:
-    liquibase: DEBUG
