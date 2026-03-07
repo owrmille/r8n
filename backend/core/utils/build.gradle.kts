@@ -8,5 +8,5 @@ description = "misc stuff for backend"
 
 dependencies {
     implementation(project(":core:api"))
-    implementation(libs.spring.data)
+    implementation(libs.spring.data.commons)
 }

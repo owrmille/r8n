@@ -1,5 +1,6 @@
 plugins {
     id("convention-backend-service")
+    id("convention-database-consumer")
 }
 
 group = "com.r8n.backend"
@@ -9,4 +10,5 @@ description = "provides individual opinions"
 dependencies {
     implementation(project(":opinions-api"))
     implementation(project(":mock-client"))
+    implementation(project(":mock-sv"))
 }

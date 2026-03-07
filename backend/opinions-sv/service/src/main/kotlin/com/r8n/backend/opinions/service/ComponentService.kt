@@ -1,8 +1,8 @@
 package com.r8n.backend.opinions.service
 
+import com.r8n.backend.mock.stub.OpinionTestDataFactory
 import com.r8n.backend.opinions.domain.ComponentSection
 import com.r8n.backend.opinions.domain.WeightedOpinionReference
-import com.r8n.backend.opinions.stub.OpinionTestDataFactory
 import org.springframework.stereotype.Service
 import java.util.UUID
 

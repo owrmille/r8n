@@ -1,9 +1,9 @@
 package com.r8n.backend.opinions.controller
 
+import com.r8n.backend.mock.stub.OpinionTestDataFactory
 import com.r8n.backend.opinions.api.OpinionApi
 import com.r8n.backend.opinions.api.dto.opinion.OpinionDto
 import com.r8n.backend.opinions.facade.OpinionFacade
-import com.r8n.backend.opinions.stub.OpinionTestDataFactory
 import org.springframework.web.bind.annotation.DeleteMapping
 import java.util.UUID
 import org.springframework.web.bind.annotation.GetMapping
