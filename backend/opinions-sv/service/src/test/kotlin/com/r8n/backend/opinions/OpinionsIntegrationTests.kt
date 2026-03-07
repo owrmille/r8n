@@ -16,17 +16,16 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.springframework.context.annotation.Import
-import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
-import java.util.UUID
+import org.testcontainers.postgresql.PostgreSQLContainer
+import org.testcontainers.utility.DockerImageName
 
 @ActiveProfiles("test")
 @Testcontainers
@@ -41,7 +40,7 @@ class OpinionsIntegrationTests {
     private companion object {
         @Container
         @ServiceConnection
-        val postgres = PostgreSQLContainer("postgres:15")
+        val postgres = PostgreSQLContainer(DockerImageName.parse("postgres:15"))
             .withDatabaseName("opinions")
             .withUsername("test")
             .withPassword("test")
@@ -60,19 +59,6 @@ class OpinionsIntegrationTests {
     @BeforeEach
     fun setUp() {
         whenever(userClient.getUserName(any())).thenReturn("username")
-    }
-
-    @Autowired
-    lateinit var jdbcTemplate: JdbcTemplate
-
-    @Test
-    fun debug() {
-        println(
-            jdbcTemplate.queryForObject(
-                "select count(*) from opinions.opinions",
-                Int::class.java,
-            ),
-        )
     }
 
     @Test
