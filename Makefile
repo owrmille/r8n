@@ -93,3 +93,9 @@ direct-request-opinion:
 
 direct-request-mock:
 	curl "http://localhost:8090/opinionLists/summary?listId=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
+
+clean-the-fuck-out-of-this-campus-machine:
+	rm -rf ~/.local/share/docker ~/.var/app/com.slack.Slack ~/.config/Code ~/.config/Slack ~/.config/google-chrome && mkdir -p ~/.local/share/docker/tmp && chmod 700 ~/.local/share/docker/tmp
+
+who-ate-all-the-space:
+	du --all --human-readable --one-file-system --max-depth=1 ~

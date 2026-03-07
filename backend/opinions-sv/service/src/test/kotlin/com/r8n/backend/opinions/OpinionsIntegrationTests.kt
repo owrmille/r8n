@@ -32,7 +32,7 @@ import java.util.UUID
 @AutoConfigureJsonTesters
 @AutoConfigureMockMvc
 @SpringBootTest(
-    webEnvironment = SpringBootTest.WebEnvironment.MOCK,
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 )
 @Import(TestObjectMapperConfiguration::class)
 class OpinionsIntegrationTests {
