@@ -9,6 +9,8 @@ ifeq (,$(wildcard $(SERVICES_FILE)))
     $(error Missing $(SERVICES_FILE))
 endif
 SERVICES := $(shell awk 'NF && $$1 !~ /^\#/{printf "%s ",$$1}' "$(SERVICES_FILE)")
+FRONTEND_DIR := frontend
+FRONTEND_GATEWAY_CERT := $(CURDIR)/deployment/certs/gateway.crt
 
 BOOT_JAR_TASKS := $(addprefix :,$(addsuffix -sv:bootJar,$(SERVICES)))
 
@@ -21,7 +23,8 @@ BOOT_JAR_TASKS := $(addprefix :,$(addsuffix -sv:bootJar,$(SERVICES)))
     docker-down docker-logs clean-artifacts ensure-log-dirs clean-logs \
     routed-request-opinion routed-request-mock \
     direct-request-opinion direct-request-mock \
-    https-routed-request-opinion https-routed-request-mock
+    https-routed-request-opinion https-routed-request-mock \
+    frontend-dev
 
 docker-up: docker-build ensure-log-dirs docker-certs
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml up -d
@@ -83,6 +86,9 @@ local-stop-all: $(addprefix local-stop-,$(SERVICES))
 
 $(addprefix local-stop-,$(SERVICES)): local-stop-%:
 	-@kill $$(cat /tmp/$*.pid) 2>/dev/null || true
+
+frontend-dev:
+	cd $(FRONTEND_DIR) && NODE_EXTRA_CA_CERTS="$(FRONTEND_GATEWAY_CERT)" npm run dev
 
 routed-request-opinion:
 	curl "http://localhost:8080/opinions/id?id=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"

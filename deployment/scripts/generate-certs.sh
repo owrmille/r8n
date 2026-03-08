@@ -49,7 +49,7 @@ mkdir -p "${CERTS_DIR}"
 
 generate_keystore() {
   local service="$1"
-  local dname="CN=${service}, OU=r8n, O=r8n, L=Local, ST=Local, C=US"
+  local dname="CN=${service}, OU=r8n, O=r8n, L=Local, ST=Local, C=DE"
   local san="dns:${service},dns:localhost,ip:127.0.0.1"
   local svc
   for svc in $(read_services); do
