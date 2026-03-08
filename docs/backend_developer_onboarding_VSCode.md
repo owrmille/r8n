@@ -66,5 +66,35 @@ Build and dependency management system for backend. Runs every time you build ba
 - (optional) `curl -X POST http://localhost:8080/auth/login -H "Content-Type: application/json" -d '{"login": "test","password": "1234"}' -i` - get the stub authentication token as a response
 - `curl "http://localhost:8080/opinions/id?id=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"` (random valid UUID plus actual stub authentication token that you could have got from the previous step), get a stub response
 - return to running terminal, Ctrl-C to terminate
-    
+
+# Running frontend
+- open a new terminal (backend can keep running in another one)
+- check if Node.js is installed:
+    - `node -v`
+    - if you see a version (e.g. `v22.x.x`), Node is installed
+    - if command is not found, install Node via nvm:
+
+        - `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash`
+        - restart terminal
+- use the project's Node version:
+    - `cd ~/PROJECTS/r8n/frontend`
+    - `nvm install`
+    - `nvm use`
+- verify correct Node version:
+    - `node -v`
+    - should be `>= 22.12.0`
+- if you run frontend on a campus machine, move npm cache to sgoinfre:
+    - `npm config set cache /sgoinfre/goinfre/Perso/$USER/.npm-cache --global`
+    - `npm config get cache` it should print `/sgoinfre/goinfre/Perso/$USER/.npm-cache`
+- install dependencies:
+    - `npm ci`
+- start dev server:
+    - `npm run dev`
+    - as soon as you see something like:
+      `VITE vX.X.X ready in X ms`
+      `Local: http://localhost:5173/`
+      the dev server is running
+- open `http://localhost:5173` in browser
+    - the main page should load
+
 for expanded development experience (better code navigation, code suggestions) try IntelliJ IDEA onboarding guide
