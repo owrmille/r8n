@@ -40,6 +40,7 @@ Services follow a 3-module split for isolation:
   - Handle errors intentionally; provide consistent error responses without leaking internal details.
   - Redact or avoid sensitive values in logs, metrics, and test fixtures.
   - Write tests for every non-trivial change (Unit, Integration, or Regression).
+  - Suggest explicit conventions and ArchUnit tests for consistency.
   - Explicitly define transactional boundaries. Avoid N+1 queries and inefficient loading.
 - **NEVER**:
   - Introduce placeholder TODOs or bypass validation for convenience.
@@ -59,6 +60,5 @@ Services follow a 3-module split for isolation:
 # 6. Development Workflow
 - **Makefile**: Entrypoint for developers (e.g. `make docker-up`, `make build-opinions`).
 - **Gradle**: Use `./gradlew test` for running backend tests.
-- **Commit Strategy**: If asked to commit, add co-author trailer: `Co-authored-by: Junie <junie@jetbrains.com>`.
 - **Code Style**: Mirror the existing style of the file/module (indentation, imports, comments).
 - **Frontend**: Extract reusable logic into composables/utilities. Separate presentation from data-fetching. Handle loading/error/empty states explicitly.
