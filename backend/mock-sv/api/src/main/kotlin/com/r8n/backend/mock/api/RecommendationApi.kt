@@ -3,7 +3,7 @@ package com.r8n.backend.mock.api
 import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.mock.api.dto.list.OpinionListSummaryDto
-import com.r8n.backend.opinions.api.dto.about.OpinionSubjectDto
+import com.r8n.backend.mock.api.dto.about.OpinionSubjectDto
 import java.util.UUID
 
 interface RecommendationApi {

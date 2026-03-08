@@ -1,6 +1,6 @@
 package com.r8n.backend.opinions.facade
 
-import com.r8n.backend.mock.integration.UserClient
+import com.r8n.backend.users.integration.UserClient
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import java.util.UUID

@@ -1,6 +1,6 @@
 package com.r8n.backend.opinions.api
 
-import com.r8n.backend.opinions.api.dto.opinion.OpinionDto
+import com.r8n.backend.opinions.api.dto.OpinionDto
 import java.util.UUID
 
 interface OpinionApi {

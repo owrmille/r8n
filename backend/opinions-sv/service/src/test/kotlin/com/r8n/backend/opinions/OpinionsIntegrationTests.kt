@@ -2,9 +2,9 @@ package com.r8n.backend.opinions
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.r8n.backend.mock.integration.UserClient
+import com.r8n.backend.users.integration.UserClient
 import com.r8n.backend.mock.stub.OpinionTestDataFactory
-import com.r8n.backend.opinions.api.dto.opinion.OpinionDto
+import com.r8n.backend.opinions.api.dto.OpinionDto
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

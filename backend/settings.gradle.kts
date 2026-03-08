@@ -7,8 +7,11 @@ include("core")
 include("gateway-sv")
 
 include("mock-api", "mock-sv/api")
-include("mock-client", "mock-sv/client")
 include("mock-sv", "mock-sv/service")
+
+include("users-api", "users-sv/api")
+include("users-client", "users-sv/client")
+include("users-sv", "users-sv/service")
 
 include("opinions-api", "opinions-sv/api")
 include("opinions-sv", "opinions-sv/service")

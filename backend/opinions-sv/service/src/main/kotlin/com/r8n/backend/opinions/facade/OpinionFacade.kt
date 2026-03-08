@@ -1,7 +1,7 @@
 package com.r8n.backend.opinions.facade
 
-import com.r8n.backend.mock.integration.UserClient
-import com.r8n.backend.opinions.api.dto.opinion.OpinionDto
+import com.r8n.backend.users.integration.UserClient
+import com.r8n.backend.opinions.api.dto.OpinionDto
 import com.r8n.backend.opinions.domain.toDto
 import com.r8n.backend.opinions.service.OpinionService
 import org.springframework.stereotype.Component

@@ -1,0 +1,12 @@
+plugins {
+    id("convention-language")
+}
+
+group = "com.r8n.backend.users"
+version = "0.0.1-SNAPSHOT"
+description = "user information service API"
+
+dependencies {
+    implementation(project(":core:api"))
+    implementation(project(":mock-api"))
+}

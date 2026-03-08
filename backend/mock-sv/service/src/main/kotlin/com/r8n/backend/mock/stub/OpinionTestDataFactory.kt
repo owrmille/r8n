@@ -11,9 +11,9 @@ import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.donaldReferent
 import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.moreMoney
 import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.president
 import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.venezuelaInvasion
-import com.r8n.backend.opinions.api.dto.opinion.OpinionDto
-import com.r8n.backend.opinions.api.dto.opinion.OpinionStatusEnumDto
-import com.r8n.backend.opinions.api.dto.opinion.WeightedOpinionReferenceDto
+import com.r8n.backend.opinions.api.dto.OpinionDto
+import com.r8n.backend.opinions.api.dto.OpinionStatusEnumDto
+import com.r8n.backend.opinions.api.dto.WeightedOpinionReferenceDto
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
