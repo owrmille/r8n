@@ -1,0 +1,14 @@
+plugins {
+    id("convention-nonreactive-backend-service")
+    id("convention-database-consumer")
+}
+
+group = "com.r8n.backend"
+version = "0.0.1-SNAPSHOT"
+description = "provides individual opinions"
+
+dependencies {
+    implementation(project(":opinions-api"))
+    implementation(project(":mock-client"))
+    implementation(project(":mock-sv"))
+}

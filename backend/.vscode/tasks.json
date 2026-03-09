@@ -4,7 +4,7 @@
     {
       "label": "bootRun gateway",
       "type": "shell",
-      "command": "./gradlew :gateway:bootRun",
+      "command": "cd .. && make local-run-gateway",
       "group": "build",
       "problemMatcher": []
     }

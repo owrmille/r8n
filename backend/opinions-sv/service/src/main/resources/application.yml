@@ -1,0 +1,8 @@
+server.port: ${SERVICES_OPINIONS_PORT:8081}
+spring:
+  application.name: opinions-sv
+  liquibase:
+    change-log: db/changelog/db.changelog-master.sql
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
