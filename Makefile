@@ -1,5 +1,6 @@
 LOCAL_ENV_FILE := deployment/config/local.env
 DOCKER_ENV_FILE := deployment/config/docker.env
+DOCKER_ENV_FILE_LOCAL := deployment/config/docker.local.env
 LOAD_LOCAL_ENV = set -a; [ -f "$(LOCAL_ENV_FILE)" ] && . "$(LOCAL_ENV_FILE)"; set +a;
 DOCKER_ENV_VARS := \
 	GATEWAY_HOST \
@@ -20,6 +21,11 @@ FRONTEND_CERT_DIR := deployment/certs
 FRONTEND_CERT_KEY := $(FRONTEND_CERT_DIR)/localhost.key
 FRONTEND_CERT_CRT := $(FRONTEND_CERT_DIR)/localhost.crt
 
+DOCKER_ENV_ARGS := --env-file $(DOCKER_ENV_FILE)
+ifneq ("$(wildcard $(DOCKER_ENV_FILE_LOCAL))","")
+DOCKER_ENV_ARGS := $(DOCKER_ENV_ARGS) --env-file $(DOCKER_ENV_FILE_LOCAL)
+endif
+
 .PHONY: help local-run-all local-stop-all \
     $(addprefix local-run-,$(SERVICES)) \
     $(addprefix local-stop-,$(SERVICES)) \
@@ -36,10 +42,10 @@ help:
 	@cat docs/make-help.md
 
 docker-up: frontend-cert docker-build ensure-log-dirs
-	$(UNSET_DOCKER_ENV) docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml up -d
+	$(UNSET_DOCKER_ENV) docker compose $(DOCKER_ENV_ARGS) -f docker-compose.yml up -d
 
 docker-build: frontend-build prepare-artifacts
-	$(UNSET_DOCKER_ENV) docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml build
+	$(UNSET_DOCKER_ENV) docker compose $(DOCKER_ENV_ARGS) -f docker-compose.yml build
 
 prepare-artifacts: prebuild-jars
 	@set -e; \
@@ -57,13 +63,13 @@ ensure-log-dirs:
 	done
 
 docker-down:
-	$(UNSET_DOCKER_ENV) docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml down
+	$(UNSET_DOCKER_ENV) docker compose $(DOCKER_ENV_ARGS) -f docker-compose.yml down
 
 docker-logs:
-	$(UNSET_DOCKER_ENV) docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml logs -f $(SERVICES)
+	$(UNSET_DOCKER_ENV) docker compose $(DOCKER_ENV_ARGS) -f docker-compose.yml logs -f $(SERVICES)
 
 $(addprefix docker-logs-,$(SERVICES)): docker-logs-%:
-	$(UNSET_DOCKER_ENV) docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml logs -f $*
+	$(UNSET_DOCKER_ENV) docker compose $(DOCKER_ENV_ARGS) -f docker-compose.yml logs -f $*
 
 clean-logs:
 	find deployment -type f -name '*.log' -delete

@@ -2,7 +2,7 @@
 
 Production (Docker):
 
-- `make docker-up` start local production stack (includes frontend, generates certs if missing). Current default URLs: `https://localhost:8443`, `http://localhost:8080`
+- `make docker-up` start local production stack (includes frontend, generates certs if missing). Requires `FRONTEND_HTTP_HOST_PORT` and `FRONTEND_HTTPS_HOST_PORT` to be set (recommended in `deployment/config/docker.local.env`).
 - `make docker-down` stop local production stack
 - `make docker-build` rebuild images and artifacts (builds frontend dist on host)
 - `make docker-logs` tail logs for all services

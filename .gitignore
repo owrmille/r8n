@@ -7,3 +7,4 @@ frontend/node_modules
 frontend/dist
 frontend/node_modules/.vite
 deployment/certs
+deployment/config/docker.local.env

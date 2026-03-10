@@ -68,11 +68,11 @@ The working Docker data root is on `/goinfre`, which is a local filesystem.
 The user Docker config path on this machine is symlinked, so write the config at the target:
 
 ```sh
-mkdir -p /goinfre/dbisko/.config/docker
-mkdir -p /goinfre/dbisko/docker
-cat > /goinfre/dbisko/.config/docker/daemon.json <<EOF
+mkdir -p /goinfre/$USER/.config/docker
+mkdir -p /goinfre/$USER/docker
+cat > /goinfre/$USER/.config/docker/daemon.json <<EOF
 {
-  "data-root": "/goinfre/dbisko/docker"
+  "data-root": "/goinfre/$USER/docker"
 }
 EOF
 ```
@@ -87,12 +87,12 @@ docker info --format '{{.DockerRootDir}}'
 Expected:
 
 ```sh
-/goinfre/dbisko/docker
+/goinfre/$USER/docker
 ```
 
 ## 6. Clean Old Docker Data From Home
 
-After Docker is confirmed to use `/goinfre/dbisko/docker`, remove the old home-directory Docker data to free space:
+After Docker is confirmed to use `/goinfre/$USER/docker`, remove the old home-directory Docker data to free space:
 
 ```sh
 rm -rf ~/.local/share/docker
@@ -131,7 +131,7 @@ The Makefile was updated to unset the Docker-related env vars before invoking Do
 From a shell with Java 21 active:
 
 ```sh
-cd /home/dbisko/trans
+cd /home/$USER/trans
 source ~/.zshrc
 make docker-up
 ```
@@ -165,11 +165,11 @@ Before `make docker-up`, verify:
 ```sh
 java --version
 docker info --format '{{.DockerRootDir}}'
-df -h /home/dbisko /goinfre
+df -h /home/$USER /goinfre
 ```
 
 You want:
 
 - Java 21 active
-- Docker root at `/goinfre/dbisko/docker`
+- Docker root at `/goinfre/$USER/docker`
 - enough free space on `/goinfre`
