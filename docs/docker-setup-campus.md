@@ -147,8 +147,7 @@ curl -k -I https://localhost:8443
 Gateway API:
 
 ```sh
-curl -i "http://localhost:8080/opinions/id?id=00000000-0000-0000-0000-000000000000" \
-  -H "Authorization: Bearer stub-access-token-123"
+make routed-request-opinion
 ```
 
 Expected:
