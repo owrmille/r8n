@@ -27,6 +27,9 @@ Frontend (dev only):
 
 Maintenance:
 
+- `make clean` remove backend artifacts/logs and frontend build cache
+- `make fclean` remove clean plus frontend node_modules and certs
+- `make re` full rebuild (fclean + docker-build)
 - `make clean-artifacts` remove backend JARs in `deployment/*/app.jar`
 - `make clean-logs` remove `deployment/**/*.log`
 - `make frontend-build` build production bundle (`dist/`), installs deps if missing

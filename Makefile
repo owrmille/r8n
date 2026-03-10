@@ -25,7 +25,7 @@ FRONTEND_CERT_CRT := $(FRONTEND_CERT_DIR)/localhost.crt
     $(addprefix local-stop-,$(SERVICES)) \
     $(addprefix docker-logs-,$(SERVICES)) \
     prebuild-jars prepare-artifacts docker-build docker-up \
-    docker-down docker-logs clean-artifacts ensure-log-dirs clean-logs \
+    docker-down docker-logs clean clean-artifacts ensure-log-dirs clean-logs fclean re \
     routed-request-opinion routed-request-mock \
     direct-request-opinion direct-request-mock \
     frontend-install frontend-install-all frontend-dev frontend-build frontend-clean frontend-clean-all frontend-cert frontend-cert-clean \
@@ -72,6 +72,12 @@ clean-artifacts:
 	@for svc in $(SERVICES); do \
 		rm -f "deployment/$$svc/app.jar"; \
 	done
+
+clean: clean-artifacts clean-logs frontend-clean
+
+fclean: clean frontend-clean-all
+
+re: fclean docker-build
 
 local-run-all: $(addprefix local-run-,$(SERVICES))
 
