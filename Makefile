@@ -76,16 +76,49 @@ clean-artifacts:
 
 local-run-all: $(addprefix local-run-,$(SERVICES))
 
+docker-database-drop-volume-personal:
+	@rm -rf ./deployment/database/data
+
+docker-database-drop-volume-campus:
+	@# yes this is the only way, since some files are owned by root, and you don't have sudo rights in campus
+	@docker run --rm -v ./deployment/database:/pg alpine rm -rf /pg/data
+
+docker-run-database:
+	chmod a+x deployment/database/init/01_create_schemas.sh
+	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml up -d database
+
 $(addprefix local-run-,$(SERVICES)): local-run-%:
 	@echo "Starting $*-sv..."
 	@$(LOAD_LOCAL_ENV) \
-	cd backend && (./gradlew :$*-sv:bootRun > $*.log 2>&1 & \
+	cd backend && (./gradlew :$*-sv:bootRun --args='--spring.profiles.active=local' > $*.log 2>&1 & \
 	echo $$! > /tmp/$*.pid)
+
+build-opinions:
+	cd backend && ./gradlew :opinions-sv:build | tee build.log
 
 local-stop-all: $(addprefix local-stop-,$(SERVICES))
 
+docker-database-connect:
+	$(LOAD_LOCAL_ENV) \
+	docker exec -it database psql -U $$DATABASE_USERNAME -d $$DATABASE_NAME
+
 $(addprefix local-stop-,$(SERVICES)): local-stop-%:
-	-@kill $$(cat /tmp/$*.pid) 2>/dev/null || true
+	-@set -e; \
+	if [ -f /tmp/$*.pid ]; then \
+		kill $$(cat /tmp/$*.pid) 2>/dev/null || true; \
+		rm -f /tmp/$*.pid; \
+	fi; \
+	$(LOAD_LOCAL_ENV) \
+	port=""; \
+	case "$*" in \
+		gateway) port="$$GATEWAY_PORT" ;; \
+		opinions) port="$$SERVICES_OPINIONS_PORT" ;; \
+		mock) port="$$SERVICES_MOCK_PORT" ;; \
+	esac; \
+	if [ -n "$$port" ] && command -v lsof >/dev/null 2>&1; then \
+		pids="$$(lsof -ti tcp:$$port 2>/dev/null || true)"; \
+		[ -z "$$pids" ] || kill $$pids 2>/dev/null || true; \
+	fi
 
 frontend-dev:
 	cd $(FRONTEND_DIR) && NODE_EXTRA_CA_CERTS="$(FRONTEND_GATEWAY_CERT)" npm run dev
@@ -107,3 +140,9 @@ https-routed-request-opinion:
 
 https-routed-request-mock:
 	curl --cacert deployment/certs/gateway.crt "https://localhost:8080/opinionLists/summary?listId=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
+
+clean-the-fuck-out-of-this-campus-machine:
+	rm -rf ~/.local/share/docker ~/.var/app/com.slack.Slack ~/.config/Code ~/.config/Slack ~/.config/google-chrome && mkdir -p ~/.local/share/docker/tmp && chmod 700 ~/.local/share/docker/tmp
+
+who-ate-all-the-space:
+	du --all --human-readable --one-file-system --max-depth=1 ~
