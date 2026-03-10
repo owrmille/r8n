@@ -13,7 +13,9 @@ kotlin {
 dependencies {
     implementation(gradleApi())
     implementation(localGroovy())
-    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin")
+    implementation(libs.kotlin.gradle)
+    implementation(libs.spring.boot.gradle)
+    implementation(libs.kotlin.jpa)
 }
 
 gradlePlugin {
@@ -25,6 +27,14 @@ gradlePlugin {
         create("convention-backend-service") {
             id = "convention-backend-service"
             implementationClass = "com.r8n.backend.buildlogic.BackendServiceConventionPlugin"
+        }
+        create("convention-nonreactive-backend-service") {
+            id = "convention-nonreactive-backend-service"
+            implementationClass = "com.r8n.backend.buildlogic.NonreactiveBackendServiceConventionPlugin"
+        }
+        create("convention-database-consumer") {
+            id = "convention-database-consumer"
+            implementationClass = "com.r8n.backend.buildlogic.DatabaseConsumerConventionPlugin"
         }
     }
 }

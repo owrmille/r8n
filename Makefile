@@ -87,13 +87,31 @@ re: fclean docker-build
 
 local-run-all: $(addprefix local-run-,$(SERVICES))
 
+docker-database-drop-volume-personal:
+	@rm -rf ./deployment/database/data
+
+docker-database-drop-volume-campus:
+	@# yes this is the only way, since some files are owned by root, and you don't have sudo rights in campus
+	@docker run --rm -v ./deployment/database:/pg alpine rm -rf /pg/data
+
+docker-run-database:
+	chmod a+x deployment/database/init/01_create_schemas.sh
+	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml up -d database
+
 $(addprefix local-run-,$(SERVICES)): local-run-%:
 	@echo "Starting $*-sv..."
 	@$(LOAD_LOCAL_ENV) \
-	cd backend && (./gradlew :$*-sv:bootRun > $*.log 2>&1 & \
+	cd backend && (./gradlew :$*-sv:bootRun --args='--spring.profiles.active=local' > $*.log 2>&1 & \
 	echo $$! > /tmp/$*.pid)
 
+build-opinions:
+	cd backend && ./gradlew :opinions-sv:build | tee build.log
+
 local-stop-all: $(addprefix local-stop-,$(SERVICES))
+
+docker-database-connect:
+	$(LOAD_LOCAL_ENV) \
+	docker exec -it database psql -U $$DATABASE_USERNAME -d $$DATABASE_NAME
 
 $(addprefix local-stop-,$(SERVICES)): local-stop-%:
 	-@kill $$(cat /tmp/$*.pid) 2>/dev/null || true
@@ -143,3 +161,9 @@ frontend-cert:
 
 frontend-cert-clean:
 	rm -rf deployment/certs
+
+clean-the-fuck-out-of-this-campus-machine:
+	rm -rf ~/.local/share/docker ~/.var/app/com.slack.Slack ~/.config/Code ~/.config/Slack ~/.config/google-chrome && mkdir -p ~/.local/share/docker/tmp && chmod 700 ~/.local/share/docker/tmp
+
+who-ate-all-the-space:
+	du --all --human-readable --one-file-system --max-depth=1 ~
