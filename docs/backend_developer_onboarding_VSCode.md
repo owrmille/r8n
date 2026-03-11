@@ -87,7 +87,7 @@ Build and dependency management system for backend. Runs every time you build ba
   - `npm config get cache` should print `/sgoinfre/goinfre/Perso/$USER/.npm-cache`
 - install dependencies:
   - `npm ci`
-- start dev server:
+- start frontend dev server:
   - `npm run dev`
   - as soon as you see `Local: http://localhost:5173/` in the logs, the app is running
 - open `http://localhost:5173` in browser
@@ -103,7 +103,7 @@ Build and dependency management system for backend. Runs every time you build ba
 - `npm run build` to verify production build
 
 # Frontend after repository update
-- stop dev server in running terminal (`Ctrl-C` or `q`)
+- stop frontend dev server in running terminal (`Ctrl-C` or `q`)
 - `cd ~/PROJECTS/r8n && git pull`
 - `cd ~/PROJECTS/r8n/frontend`
 - `nvm use`

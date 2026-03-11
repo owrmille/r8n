@@ -76,7 +76,7 @@ Useful context:
   - `Prettier - Code formatter`
   - `Tailwind CSS IntelliSense`
 - if `Vetur` is installed, disable it for this workspace
-- start frontend:
+- start frontend dev server:
   - `npm run dev`
   - as soon as you see `Local: http://localhost:5173/` in logs, the app is running
 - open `http://localhost:5173` in browser
