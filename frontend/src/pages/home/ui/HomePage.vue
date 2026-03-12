@@ -5,7 +5,14 @@ import { RouterLink } from 'vue-router'
 <template>
   <main class="home-page">
     <h1>Home</h1>
-    <RouterLink class="api-debug-link" to="/api-debug">Open API Debug</RouterLink>
+    <RouterLink class="link" to="/auth">Open Login/Register</RouterLink>
+    <RouterLink class="link" to="/dashboard">Open Dashboard</RouterLink>
+    <RouterLink class="link" to="/opinion-list">Open Opinion List</RouterLink>
+    <RouterLink class="link" to="/requests">Open Requests</RouterLink>
+    <RouterLink class="link" to="/account">Open Account</RouterLink>
+    <RouterLink class="link" to="/legal/privacy">Open Privacy Policy</RouterLink>
+    <RouterLink class="link" to="/legal/terms">Open Terms of Service</RouterLink>
+    <RouterLink class="link" to="/api-debug">Open API Debug</RouterLink>
   </main>
 </template>
 
@@ -18,7 +25,7 @@ import { RouterLink } from 'vue-router'
   gap: 0.75rem;
 }
 
-.api-debug-link {
+.link {
   text-decoration: underline;
 }
 </style>
