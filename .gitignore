@@ -3,3 +3,4 @@ build
 .idea
 *.log
 *.jar
+deployment/database/data

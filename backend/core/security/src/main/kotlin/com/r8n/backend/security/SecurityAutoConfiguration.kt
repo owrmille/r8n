@@ -32,6 +32,7 @@ class SecurityAutoConfiguration {
                 StubTokenFilter(),
                 UsernamePasswordAuthenticationFilter::class.java
             )
+            .oauth2ResourceServer(oauth -> oauth.jwt())
             .build()
     }
 }
