@@ -2,7 +2,8 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-CERTS_DIR="${ROOT_DIR}/deployment/certs"
+CERTS_INTERNAL_DIR="${ROOT_DIR}/deployment/certs/internal"
+CERTS_EDGE_DIR="${ROOT_DIR}/deployment/certs/edge"
 SERVICES_FILE="${ROOT_DIR}/deployment/config/services.list"
 FORCE_REGEN="${FORCE_REGEN_CERTS:-false}"
 
@@ -26,26 +27,39 @@ keystore_valid() {
   keytool -list -storetype PKCS12 -keystore "${path}" -storepass "${password}" >/dev/null 2>&1
 }
 
-all_certs_present_and_valid() {
+all_internal_certs_present_and_valid() {
   local service
 
   for service in $(read_services); do
-    [ -f "${CERTS_DIR}/keystore-${service}.p12" ] || return 1
-    [ -f "${CERTS_DIR}/${service}.crt" ] || return 1
-    keystore_valid "${CERTS_DIR}/keystore-${service}.p12" "${KEYSTORE_PASSWORD}" || return 1
+    [ -f "${CERTS_INTERNAL_DIR}/keystore-${service}.p12" ] || return 1
+    [ -f "${CERTS_INTERNAL_DIR}/${service}.crt" ] || return 1
+    keystore_valid "${CERTS_INTERNAL_DIR}/keystore-${service}.p12" "${KEYSTORE_PASSWORD}" || return 1
   done
 
-  [ -f "${CERTS_DIR}/truststore.p12" ] || return 1
-  keystore_valid "${CERTS_DIR}/truststore.p12" "${TRUSTSTORE_PASSWORD}" || return 1
+  [ -f "${CERTS_INTERNAL_DIR}/truststore.p12" ] || return 1
+  keystore_valid "${CERTS_INTERNAL_DIR}/truststore.p12" "${TRUSTSTORE_PASSWORD}" || return 1
 }
 
-if [ "${FORCE_REGEN}" != "true" ] && all_certs_present_and_valid; then
+internal_skip=false
+if [ "${FORCE_REGEN}" != "true" ] && all_internal_certs_present_and_valid; then
+  internal_skip=true
+fi
+
+if [ "${FORCE_REGEN}" != "true" ] && [ -f "${CERTS_EDGE_DIR}/localhost.crt" ] && [ -f "${CERTS_EDGE_DIR}/localhost.key" ]; then
+  edge_skip=true
+else
+  edge_skip=false
+fi
+
+if [ "${internal_skip}" = "true" ] && [ "${edge_skip}" = "true" ]; then
   echo "TLS files already exist and are valid, skipping generation."
   exit 0
 fi
 
-rm -rf "${CERTS_DIR}"
-mkdir -p "${CERTS_DIR}"
+if [ "${internal_skip}" != "true" ]; then
+  rm -rf "${CERTS_INTERNAL_DIR}"
+  mkdir -p "${CERTS_INTERNAL_DIR}"
+fi
 
 generate_keystore() {
   local service="$1"
@@ -56,8 +70,8 @@ generate_keystore() {
     [ "${svc}" = "${service}" ] && continue
     san="${san},dns:${svc}"
   done
-  local keystore="${CERTS_DIR}/keystore-${service}.p12"
-  local certfile="${CERTS_DIR}/${service}.crt"
+  local keystore="${CERTS_INTERNAL_DIR}/keystore-${service}.p12"
+  local certfile="${CERTS_INTERNAL_DIR}/${service}.crt"
 
   keytool -genkeypair \
     -alias "${ALIAS}" \
@@ -81,21 +95,28 @@ generate_keystore() {
     -file "${certfile}"
 }
 
-for service in $(read_services); do
-  generate_keystore "${service}"
-done
+if [ "${internal_skip}" != "true" ]; then
+  for service in $(read_services); do
+    generate_keystore "${service}"
+  done
 
-# Gateway must trust downstream service certificates for HTTPS upstream routing.
-for cert in "${CERTS_DIR}"/*.crt; do
-  [ "$(basename "${cert}")" = "gateway.crt" ] && continue
-  alias_name="$(basename "${cert}" .crt)"
-  keytool -importcert \
-    -alias "${alias_name}" \
-    -file "${cert}" \
-    -keystore "${CERTS_DIR}/truststore.p12" \
-    -storetype PKCS12 \
-    -storepass "${TRUSTSTORE_PASSWORD}" \
-    -noprompt
-done
+  # Gateway must trust downstream service certificates for HTTPS upstream routing.
+  for cert in "${CERTS_INTERNAL_DIR}"/*.crt; do
+    [ "$(basename "${cert}")" = "gateway.crt" ] && continue
+    alias_name="$(basename "${cert}" .crt)"
+    keytool -importcert \
+      -alias "${alias_name}" \
+      -file "${cert}" \
+      -keystore "${CERTS_INTERNAL_DIR}/truststore.p12" \
+      -storetype PKCS12 \
+      -storepass "${TRUSTSTORE_PASSWORD}" \
+      -noprompt
+  done
 
-echo "Generated TLS files in ${CERTS_DIR}"
+  echo "Generated internal TLS files in ${CERTS_INTERNAL_DIR}"
+fi
+
+if [ "${edge_skip}" != "true" ]; then
+  CERT_DIR="${CERTS_EDGE_DIR}" FORCE_REGEN_CERTS="${FORCE_REGEN}" "${ROOT_DIR}/scripts/gen-frontend-cert.sh"
+  echo "Generated edge TLS files in ${CERTS_EDGE_DIR}"
+fi

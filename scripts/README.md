@@ -25,9 +25,9 @@ Option 2 (direct script):
 - `./scripts/gen-frontend-cert.sh`
 
 This creates:
-- `deployment/certs/localhost.crt`
-- `deployment/certs/localhost.key`
-- `deployment/certs/openssl.cnf`
+- `deployment/certs/edge/localhost.crt`
+- `deployment/certs/edge/localhost.key`
+- `deployment/certs/edge/openssl.cnf`
 
 ## Use
 
@@ -39,9 +39,7 @@ Then open:
 - `https://localhost:8443`
 
 Optional:
-- `http://localhost:8088` redirects to HTTPS
-
-HTTP will redirect to HTTPS.
+- `http://localhost:8088` redirects to HTTPS (only if you map the HTTP port)
 
 ## Notes
 

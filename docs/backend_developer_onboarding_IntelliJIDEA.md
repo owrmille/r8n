@@ -71,7 +71,7 @@ Build and dependency management system for backend. Runs every time you build ba
   - set values in `deployment/secrets/docker.secrets.env`:
     - `TLS_KEYSTORE_PASSWORD=...`
     - `TLS_TRUSTSTORE_PASSWORD=...`
-- TLS certificates are generated automatically by `make docker-up` (`docker-certs` target), stored in `deployment/certs/` (generated artifacts, not committed), and reused if already present and valid.
+- TLS certificates are generated automatically by `make docker-up` (`docker-certs` target), stored in `deployment/certs/internal` (services) and `deployment/certs/edge` (Nginx), and reused if already present and valid.
 - start Docker services:
   - `make docker-up`
 - watch logs:

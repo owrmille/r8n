@@ -1,12 +1,16 @@
 #!/bin/sh
 set -eu
 
-CERT_DIR="deployment/certs"
+CERT_DIR="${CERT_DIR:-deployment/certs/edge}"
 CERT_KEY="${CERT_DIR}/localhost.key"
 CERT_CRT="${CERT_DIR}/localhost.crt"
 CERT_CONF="${CERT_DIR}/openssl.cnf"
 
 mkdir -p "${CERT_DIR}"
+
+if [ "${FORCE_REGEN_CERTS:-false}" = "true" ]; then
+  rm -f "${CERT_KEY}" "${CERT_CRT}" "${CERT_CONF}"
+fi
 
 if [ -f "${CERT_KEY}" ] && [ -f "${CERT_CRT}" ]; then
   echo "Certificate already exists: ${CERT_CRT}"

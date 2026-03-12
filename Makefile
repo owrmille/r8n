@@ -10,9 +10,9 @@ ifeq (,$(wildcard $(SERVICES_FILE)))
 endif
 SERVICES := $(shell awk 'NF && $$1 !~ /^\#/{printf "%s ",$$1}' "$(SERVICES_FILE)")
 FRONTEND_DIR := frontend
-FRONTEND_GATEWAY_CERT := $(CURDIR)/deployment/certs/gateway.crt
+FRONTEND_GATEWAY_CERT := $(CURDIR)/deployment/certs/internal/gateway.crt
 BOOT_JAR_TASKS := $(addprefix :,$(addsuffix -sv:bootJar,$(SERVICES)))
-FRONTEND_CERT_DIR := deployment/certs
+FRONTEND_CERT_DIR := deployment/certs/edge
 FRONTEND_CERT_KEY := $(FRONTEND_CERT_DIR)/localhost.key
 FRONTEND_CERT_CRT := $(FRONTEND_CERT_DIR)/localhost.crt
 
@@ -171,13 +171,13 @@ frontend-cert:
 	@./scripts/gen-frontend-cert.sh
 
 frontend-cert-clean:
-	rm -rf deployment/certs
+	rm -rf deployment/certs/edge
 
 https-routed-request-opinion:
-	curl --cacert deployment/certs/gateway.crt "https://localhost:8080/opinions/id?id=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
+	curl --cacert deployment/certs/internal/gateway.crt "https://localhost:8080/opinions/id?id=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
 
 https-routed-request-mock:
-	curl --cacert deployment/certs/gateway.crt "https://localhost:8080/opinionLists/summary?listId=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
+	curl --cacert deployment/certs/internal/gateway.crt "https://localhost:8080/opinionLists/summary?listId=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
 
 clean-the-fuck-out-of-this-campus-machine:
 	rm -rf ~/.local/share/docker ~/.var/app/com.slack.Slack ~/.config/Code ~/.config/Slack ~/.config/google-chrome && mkdir -p ~/.local/share/docker/tmp && chmod 700 ~/.local/share/docker/tmp
