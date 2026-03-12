@@ -130,7 +130,7 @@ routed-request-mock:
 	curl "http://localhost:8080/opinionLists/summary?listId=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
 
 direct-request-opinion:
-	curl "http://localhost:8081/opinions/id?id=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
+	curl "http://localhost:8081/opinions/id?id=30000000-0000-0000-0000-000000000001" -i -H "Authorization: Bearer stub-access-token-123"
 
 direct-request-mock:
 	curl "http://localhost:8090/opinionLists/summary?listId=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
