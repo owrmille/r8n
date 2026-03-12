@@ -13,8 +13,7 @@ That has two practical consequences for this project:
 The working local URLs for this branch are:
 
 - frontend HTTPS: `https://localhost:8443`
-- frontend HTTP redirect: `http://localhost:8088`
-- gateway API: `http://localhost:8080`
+- gateway API: `https://localhost:8080`
 
 ## 1. Use Java 21
 
@@ -153,13 +152,13 @@ curl -ik "https://localhost:8443/api/opinions/id?id=00000000-0000-0000-0000-0000
 Gateway API:
 
 ```sh
-make routed-request-opinion
+make https-routed-request-opinion
 ```
 
 Expected:
 
 - frontend responds on `https://localhost:8443`
-- gateway responds on `http://localhost:8080`
+- gateway responds on `https://localhost:8080`
 - Nginx proxies `/api` only to the gateway
 - backend internal traffic stays on HTTP in the current local Docker setup
 

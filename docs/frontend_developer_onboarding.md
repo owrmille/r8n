@@ -43,7 +43,6 @@ Build and dependency management system for backend. Runs every time you build ba
 ### Running backend
 - `make docker-run-database`
 - `make local-run-all` and check all the log files for Started application in X seconds
-- `make direct-request-opinions` and `make routed-request-opinions` should provide same result, with 0000..0 id
 
 Useful context:
 

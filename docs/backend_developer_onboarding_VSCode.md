@@ -60,13 +60,10 @@ Build and dependency management system for backend. Runs every time you build ba
 - only gateway and opinions-sv is runnable currently
 - `make docker-run-database`
 - `make local-run-opinions`, see opinions.log filled and opinions-sv started successfully
-- `make direct-request-opinion`, see valid result
-- can play around with the request from previous command to get failures
 - (manual access to database) `make docker-database-connect`, `\c r8n` (connect to database), `set schema 'opinions';`, `\dt` to see five tables, `select * from opinions;` to see some data
 - `make build-opinions` - see build succeeding
 - `make local-stop-all`
 - `make local-run-all` and check all the log files for Started application in X seconds
-- `make direct-request-opinions` and `make routed-request-opinions` should provide same result, with 0000..0 id
 
 # Frontend setup
 - open a new terminal (backend can keep running in another one)

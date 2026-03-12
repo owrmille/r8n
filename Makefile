@@ -1,51 +1,40 @@
 LOCAL_ENV_FILE := deployment/config/local.env
 DOCKER_ENV_FILE := deployment/config/docker.env
-DOCKER_ENV_FILE_LOCAL := deployment/config/docker.local.env
+DOCKER_SECRETS_ENV_FILE := deployment/secrets/docker.secrets.env
+DOCKER_COMPOSE_ENV_ARGS := --env-file $(DOCKER_ENV_FILE) --env-file $(DOCKER_SECRETS_ENV_FILE)
 LOAD_LOCAL_ENV = set -a; [ -f "$(LOCAL_ENV_FILE)" ] && . "$(LOCAL_ENV_FILE)"; set +a;
-DOCKER_ENV_VARS := \
-	GATEWAY_HOST \
-	GATEWAY_CONTAINER_PORT \
-	GATEWAY_HOST_PORT \
-	INTERSERVICE_PROTOCOL \
-	LOGGING_FILE_NAME \
-	SERVICES_MOCK_HOST \
-	SERVICES_MOCK_PORT \
-	SERVICES_OPINIONS_HOST \
-	SERVICES_OPINIONS_PORT \
-	FRONTEND_HTTP_HOST_PORT \
-	FRONTEND_HTTPS_HOST_PORT
-UNSET_DOCKER_ENV = env $(foreach var,$(DOCKER_ENV_VARS),-u $(var))
-SERVICES := gateway opinions mock
+LOAD_DOCKER_ENV = set -a; . "$(DOCKER_ENV_FILE)"; . "$(DOCKER_SECRETS_ENV_FILE)"; set +a;
+SERVICES_FILE := deployment/config/services.list
+ifeq (,$(wildcard $(SERVICES_FILE)))
+    $(error Missing $(SERVICES_FILE))
+endif
+SERVICES := $(shell awk 'NF && $$1 !~ /^\#/{printf "%s ",$$1}' "$(SERVICES_FILE)")
+FRONTEND_DIR := frontend
+FRONTEND_GATEWAY_CERT := $(CURDIR)/deployment/certs/gateway.crt
 BOOT_JAR_TASKS := $(addprefix :,$(addsuffix -sv:bootJar,$(SERVICES)))
 FRONTEND_CERT_DIR := deployment/certs
 FRONTEND_CERT_KEY := $(FRONTEND_CERT_DIR)/localhost.key
 FRONTEND_CERT_CRT := $(FRONTEND_CERT_DIR)/localhost.crt
-
-DOCKER_ENV_ARGS := --env-file $(DOCKER_ENV_FILE)
-ifneq ("$(wildcard $(DOCKER_ENV_FILE_LOCAL))","")
-DOCKER_ENV_ARGS := $(DOCKER_ENV_ARGS) --env-file $(DOCKER_ENV_FILE_LOCAL)
-endif
 
 .PHONY: help local-run-all local-stop-all \
     $(addprefix local-run-,$(SERVICES)) \
     $(addprefix local-stop-,$(SERVICES)) \
     $(addprefix docker-logs-,$(SERVICES)) \
     prebuild-jars prepare-artifacts docker-build docker-up \
-    docker-down docker-logs clean clean-artifacts ensure-log-dirs clean-logs fclean re \
-    routed-request-opinion routed-request-mock \
-    direct-request-opinion direct-request-mock \
-    frontend-install frontend-install-all frontend-dev frontend-build frontend-clean frontend-clean-all frontend-cert frontend-cert-clean \
-    frontend-check-node \
-    frontend-test-unit frontend-test-e2e
+    docker-certs docker-certs-force \
+    docker-down docker-logs clean-artifacts ensure-log-dirs clean-logs \
+    https-routed-request-opinion https-routed-request-mock \
+    frontend-install frontend-install-all frontend-check-node frontend-dev frontend-build \
+    frontend-test-unit frontend-test-e2e frontend-clean frontend-clean-all frontend-cert frontend-cert-clean
 
 help:
 	@cat docs/make-help.md
 
-docker-up: frontend-cert docker-build ensure-log-dirs
-	$(UNSET_DOCKER_ENV) docker compose $(DOCKER_ENV_ARGS) -f docker-compose.yml up -d
+docker-up: docker-build ensure-log-dirs docker-certs
+	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml up -d
 
-docker-build: frontend-build prepare-artifacts
-	$(UNSET_DOCKER_ENV) docker compose $(DOCKER_ENV_ARGS) -f docker-compose.yml build
+docker-build: prepare-artifacts
+	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml build
 
 prepare-artifacts: prebuild-jars
 	@set -e; \
@@ -71,14 +60,24 @@ ensure-log-dirs:
 		mkdir -p "deployment/$$svc/logs"; \
 	done
 
+docker-certs:
+	@$(LOAD_DOCKER_ENV) \
+	chmod +x ./deployment/scripts/generate-certs.sh && \
+	./deployment/scripts/generate-certs.sh
+
+docker-certs-force:
+	@$(LOAD_DOCKER_ENV) \
+	chmod +x ./deployment/scripts/generate-certs.sh && \
+	FORCE_REGEN_CERTS=true ./deployment/scripts/generate-certs.sh
+
 docker-down:
-	$(UNSET_DOCKER_ENV) docker compose $(DOCKER_ENV_ARGS) -f docker-compose.yml down
+	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml down
 
 docker-logs:
-	$(UNSET_DOCKER_ENV) docker compose $(DOCKER_ENV_ARGS) -f docker-compose.yml logs -f $(SERVICES)
+	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml logs -f $(SERVICES)
 
 $(addprefix docker-logs-,$(SERVICES)): docker-logs-%:
-	$(UNSET_DOCKER_ENV) docker compose $(DOCKER_ENV_ARGS) -f docker-compose.yml logs -f $*
+	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml logs -f $*
 
 clean-logs:
 	find deployment -type f -name '*.log' -delete
@@ -105,7 +104,7 @@ docker-database-drop-volume-campus:
 
 docker-run-database:
 	chmod a+x deployment/database/init/01_create_schemas.sh
-	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml up -d database
+	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml up -d database
 
 $(addprefix local-run-,$(SERVICES)): local-run-%:
 	@echo "Starting $*-sv..."
@@ -123,53 +122,62 @@ docker-database-connect:
 	docker exec -it database psql -U $$DATABASE_USERNAME -d $$DATABASE_NAME
 
 $(addprefix local-stop-,$(SERVICES)): local-stop-%:
-	-@kill $$(cat /tmp/$*.pid) 2>/dev/null || true
+	-@set -e; \
+	if [ -f /tmp/$*.pid ]; then \
+		kill $$(cat /tmp/$*.pid) 2>/dev/null || true; \
+		rm -f /tmp/$*.pid; \
+	fi; \
+	$(LOAD_LOCAL_ENV) \
+	port=""; \
+	case "$*" in \
+		gateway) port="$$GATEWAY_PORT" ;; \
+		opinions) port="$$SERVICES_OPINIONS_PORT" ;; \
+		mock) port="$$SERVICES_MOCK_PORT" ;; \
+	esac; \
+	if [ -n "$$port" ] && command -v lsof >/dev/null 2>&1; then \
+		pids="$$(lsof -ti tcp:$$port 2>/dev/null || true)"; \
+		[ -z "$$pids" ] || kill $$pids 2>/dev/null || true; \
+	fi
 
-routed-request-opinion:
-	curl "http://localhost:8080/opinions/id?id=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
-
-routed-request-mock:
-	curl "http://localhost:8080/opinionLists/summary?listId=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
-
-direct-request-opinion:
-	curl "http://localhost:8081/opinions/id?id=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
-
-direct-request-mock:
-	curl "http://localhost:8090/opinionLists/summary?listId=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
+frontend-dev:
+	cd $(FRONTEND_DIR) && NODE_EXTRA_CA_CERTS="$(FRONTEND_GATEWAY_CERT)" npm run dev
 
 frontend-install:
-	cd frontend && npm ci
+	cd $(FRONTEND_DIR) && npm ci
 
 frontend-install-all: frontend-install
-	cd frontend && npx playwright install
+	cd $(FRONTEND_DIR) && npx playwright install
 
 frontend-check-node:
 	@node -e 'const [M,m]=process.versions.node.split(".").map(Number); if (M<22 || (M===22 && m<13)) {console.error("Node >=22.13.0 required. Run: cd frontend && nvm install && nvm use"); process.exit(1)}'
 	@echo "Node version OK: $$(node -v)"
 
-frontend-dev:
-	cd frontend && npm run dev
-
 frontend-build:
-	@cd frontend && ( [ -d node_modules ] || npm ci ) && npm run build
+	@cd $(FRONTEND_DIR) && ( [ -d node_modules ] || npm ci ) && npm run build
 
 frontend-test-unit:
-	cd frontend && npm run test:unit
+	cd $(FRONTEND_DIR) && npm run test:unit
 
 frontend-test-e2e:
-	cd frontend && npm run test:e2e
+	cd $(FRONTEND_DIR) && npm run test:e2e
 
 frontend-clean:
-	rm -rf frontend/dist frontend/node_modules/.vite
+	rm -rf $(FRONTEND_DIR)/dist $(FRONTEND_DIR)/node_modules/.vite
 
 frontend-clean-all: frontend-clean frontend-cert-clean
-	rm -rf frontend/node_modules
+	rm -rf $(FRONTEND_DIR)/node_modules
 
 frontend-cert:
 	@./scripts/gen-frontend-cert.sh
 
 frontend-cert-clean:
 	rm -rf deployment/certs
+
+https-routed-request-opinion:
+	curl --cacert deployment/certs/gateway.crt "https://localhost:8080/opinions/id?id=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
+
+https-routed-request-mock:
+	curl --cacert deployment/certs/gateway.crt "https://localhost:8080/opinionLists/summary?listId=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
 
 clean-the-fuck-out-of-this-campus-machine:
 	rm -rf ~/.local/share/docker ~/.var/app/com.slack.Slack ~/.config/Code ~/.config/Slack ~/.config/google-chrome && mkdir -p ~/.local/share/docker/tmp && chmod 700 ~/.local/share/docker/tmp

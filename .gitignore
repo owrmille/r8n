@@ -2,9 +2,11 @@
 build
 .idea
 *.log
+*.gz
 *.jar
 frontend/node_modules
 frontend/dist
-deployment/certs
+deployment/certs/
 deployment/config/docker.local.env
 deployment/*/logs/
+docker.secrets.env

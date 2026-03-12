@@ -57,13 +57,31 @@ Build and dependency management system for backend. Runs every time you build ba
 - only gateway and opinions-sv is runnable currently
 - `make docker-run-database`
 - `make local-run-opinions`, see opinions.log filled and opinions-sv started successfully
-- `make direct-request-opinion`, see valid result
-- can play around with the request from previous command to get failures
 - (manual access to database) `make docker-database-connect`, `\c r8n` (connect to database), `set schema 'opinions';`, `\dt` to see five tables, `select * from opinions;` to see some data
 - `make build-opinions` - see build succeeding
 - `make local-stop-all`
 - `make local-run-all` and check all the log files for Started application in X seconds
-- `make direct-request-opinions` and `make routed-request-opinions` should provide same result, with 0000..0 id
+
+# Docker run via Makefile (HTTPS)
+- service list:
+  - `deployment/config/services.list`
+  - when adding a new service, add its name there so Makefile targets and TLS certificate generation include it
+- create local secrets file (do once and do not commit it):
+  - `cp deployment/secrets/docker.secrets.env.example deployment/secrets/docker.secrets.env`
+  - set values in `deployment/secrets/docker.secrets.env`:
+    - `TLS_KEYSTORE_PASSWORD=...`
+    - `TLS_TRUSTSTORE_PASSWORD=...`
+- TLS certificates are generated automatically by `make docker-up` (`docker-certs` target), stored in `deployment/certs/` (generated artifacts, not committed), and reused if already present and valid.
+- start Docker services:
+  - `make docker-up`
+- watch logs:
+  - `make docker-logs`
+  - or per service: `make docker-logs-gateway`, `make docker-logs-opinions`, `make docker-logs-mock`
+- test HTTPS routed requests through gateway:
+  - `make https-routed-request-opinion`
+  - `make https-routed-request-mock`
+- stop Docker services (required!):
+  - `make docker-down`
 
 # Frontend setup
 - open a new terminal (backend can keep running in another one)
