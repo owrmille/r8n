@@ -2,7 +2,7 @@
 
 Production (Docker):
 
-- `make docker-up` start local production stack (includes frontend, generates certs if missing). Requires `FRONTEND_HTTP_HOST_PORT` and `FRONTEND_HTTPS_HOST_PORT` to be set (recommended in `deployment/config/docker.local.env`).
+- `make docker-up` start local production stack (includes frontend, generates certs if missing). Defaults `FRONTEND_HTTP_HOST_PORT=8088` and `FRONTEND_HTTPS_HOST_PORT=8443` from `deployment/config/docker.env`; override in `deployment/config/docker.local.env` if needed.
 - `make docker-down` stop local production stack
 - `make docker-build` rebuild images and artifacts (builds frontend dist on host)
 - `make docker-logs` tail logs for all services

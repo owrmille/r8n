@@ -51,7 +51,16 @@ prepare-artifacts: prebuild-jars
 	@set -e; \
 	for svc in $(SERVICES); do \
 		mkdir -p "deployment/$$svc"; \
-		cp "$$(ls backend/$$svc-sv/build/libs/*.jar | grep -v -- '-plain\.jar$$' | head -n1)" "deployment/$$svc/app.jar"; \
+		build_dir="backend/$$svc-sv/build/libs"; \
+		if [ -d "backend/$$svc-sv/service/build/libs" ]; then \
+			build_dir="backend/$$svc-sv/service/build/libs"; \
+		fi; \
+		jar_path="$$(find "$$build_dir" -maxdepth 1 -type f -name '*.jar' ! -name '*-plain.jar' | head -n1)"; \
+		if [ -z "$$jar_path" ]; then \
+			echo "No bootJar found in $$build_dir for $$svc-sv. Run: cd backend && ./gradlew :$$svc-sv:bootJar" >&2; \
+			exit 1; \
+		fi; \
+		cp "$$jar_path" "deployment/$$svc/app.jar"; \
 	done
 
 prebuild-jars:

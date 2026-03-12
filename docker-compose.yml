@@ -22,6 +22,7 @@ services:
     env_file:
       - ./deployment/config/docker.env
     environment:
+      SPRING_PROFILES_ACTIVE: local
       SERVICES_OPINIONS_PORT: ${SERVICES_OPINIONS_PORT:?}
       LOGGING_FILE_NAME: ${LOGGING_FILE_NAME:?}
     networks:

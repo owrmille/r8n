@@ -144,6 +144,12 @@ Frontend:
 curl -k -I https://localhost:8443
 ```
 
+Gateway API via Nginx HTTPS:
+
+```sh
+curl -ik "https://localhost:8443/api/opinions/id?id=00000000-0000-0000-0000-000000000000" -H "Authorization: Bearer stub-access-token-123"
+```
+
 Gateway API:
 
 ```sh
