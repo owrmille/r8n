@@ -10,7 +10,7 @@ import java.util.UUID
 
 @Entity
 @Table(schema = "opinions", name = "subjects")
-class OpinionSubjectPersistence( // cup of coffee
+class OpinionSubjectPersistence(
     @Id
     @GeneratedValue
     @UuidGenerator
