@@ -9,7 +9,7 @@ import java.util.UUID
 
 data class UserCompleteDataDto(
     val id: UUID,
-    val status: UserStatusEnum,
+    val status: UserStatusEnumDto,
     val statusTimestamp: Instant,
     val consents: ConsentDto,
     val personalIdentifiableInformation: PersonalIdentifiableInformationSectionDto,
@@ -19,7 +19,7 @@ data class UserCompleteDataDto(
     val messages: PageResponseDto<SupportThreadDto>,
 )
 
-enum class UserStatusEnum {
+enum class UserStatusEnumDto {
     ACTIVE,
     SUSPENDED,
     DELETED,

@@ -24,6 +24,10 @@ gradlePlugin {
             id = "convention-language"
             implementationClass = "com.r8n.backend.buildlogic.LanguageConventionPlugin"
         }
+        create("convention-api") {
+            id = "convention-api"
+            implementationClass = "com.r8n.backend.buildlogic.ApiConventionPlugin"
+        }
         create("convention-backend-service") {
             id = "convention-backend-service"
             implementationClass = "com.r8n.backend.buildlogic.BackendServiceConventionPlugin"
