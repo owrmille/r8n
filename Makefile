@@ -15,6 +15,8 @@ BOOT_JAR_TASKS := $(addprefix :,$(addsuffix -sv:bootJar,$(SERVICES)))
 FRONTEND_CERT_DIR := deployment/certs/edge
 FRONTEND_CERT_KEY := $(FRONTEND_CERT_DIR)/localhost.key
 FRONTEND_CERT_CRT := $(FRONTEND_CERT_DIR)/localhost.crt
+FRONTEND_NODE_VERSION := 22.13.0
+FRONTEND_NVM_BOOTSTRAP = if [ -n "$$NVM_DIR" ] && [ -s "$$NVM_DIR/nvm.sh" ]; then . "$$NVM_DIR/nvm.sh"; elif [ -s "$$HOME/.nvm/nvm.sh" ]; then . "$$HOME/.nvm/nvm.sh"; fi; if command -v nvm >/dev/null 2>&1; then nvm use $(FRONTEND_NODE_VERSION) >/dev/null 2>&1 || nvm install $(FRONTEND_NODE_VERSION); fi;
 
 .PHONY: help local-run-all local-stop-all \
     $(addprefix local-run-,$(SERVICES)) \
@@ -176,13 +178,13 @@ $(addprefix local-stop-,$(SERVICES)): local-stop-%: ## Stop one local backend se
 
 ##@ Frontend
 frontend-dev: frontend-install ## Start Vite dev server
-	cd $(FRONTEND_DIR) && NODE_EXTRA_CA_CERTS="$(FRONTEND_GATEWAY_CERT)" npm run dev
+	@bash -lc 'set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR) && NODE_EXTRA_CA_CERTS="$(FRONTEND_GATEWAY_CERT)" npm run dev'
 
 frontend-install: frontend-check-node ## Install frontend dependencies
-	cd $(FRONTEND_DIR) && npm ci
+	@bash -lc 'set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR) && npm ci'
 
 frontend-install-all: frontend-install ## Install deps and Playwright browsers
-	cd $(FRONTEND_DIR) && npx playwright install
+	@bash -lc 'set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR) && npx playwright install'
 
 frontend-check-node: ## Check Node.js version (attempts nvm if too old)
 	@bash -lc '\
@@ -217,15 +219,15 @@ frontend-check-node: ## Check Node.js version (attempts nvm if too old)
 	'
 
 frontend-build: frontend-check-node ## Build frontend dist (installs deps if missing)
-	@cd $(FRONTEND_DIR) && ( [ -d node_modules ] || npm ci ) && npm run build
+	@bash -lc 'set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR) && ( [ -d node_modules ] || npm ci ) && npm run build'
 
 frontend-test-unit: frontend-check-node ## Run frontend unit tests
-	cd $(FRONTEND_DIR) && npm run test:unit
+	@bash -lc 'set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR) && npm run test:unit'
 
 frontend-test: frontend-test-unit frontend-test-e2e ## Run all frontend tests
 
 frontend-test-e2e: frontend-check-node ## Run frontend E2E tests
-	cd $(FRONTEND_DIR) && npm run test:e2e
+	@bash -lc 'set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR) && npm run test:e2e'
 
 frontend-clean: ## Remove frontend build output, cache, and test artifacts
 	rm -rf $(FRONTEND_DIR)/dist $(FRONTEND_DIR)/node_modules/.vite $(FRONTEND_DIR)/playwright-report $(FRONTEND_DIR)/test-results $(FRONTEND_DIR)/coverage
