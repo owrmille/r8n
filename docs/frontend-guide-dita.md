@@ -182,4 +182,4 @@ Gateway root:
 - Nginx config: `deployment/frontend/nginx.conf`
 - Docker env (shared defaults): `deployment/config/docker.env`
 - Docker env (local overrides, not committed): `deployment/config/docker.local.env`
-- Cert generation: `scripts/gen-frontend-cert.sh`
+- Cert generation: `deployment/scripts/generate-edge-certs.sh`

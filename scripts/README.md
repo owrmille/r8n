@@ -22,7 +22,7 @@ Option 1 (recommended):
 
 Option 2 (direct script):
 
-- `./scripts/gen-frontend-cert.sh`
+- `./deployment/scripts/generate-edge-certs.sh`
 
 This creates:
 - `deployment/certs/edge/localhost.crt`
