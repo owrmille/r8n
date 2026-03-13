@@ -4,34 +4,32 @@ import com.r8n.backend.mock.stub.OpinionTestDataFactory
 import com.r8n.backend.opinions.api.OpinionApi
 import com.r8n.backend.opinions.api.dto.OpinionDto
 import com.r8n.backend.opinions.facade.OpinionFacade
+import jakarta.websocket.server.PathParam
 import org.springframework.web.bind.annotation.DeleteMapping
 import java.util.UUID
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.bind.annotation.RequestParam
 
 @RestController
-@RequestMapping("/opinions")
 class OpinionController(
     private val opinionFacade: OpinionFacade,
 ) : OpinionApi {
 
-    @GetMapping("/id")
     override fun getOpinionById(
-        @RequestParam(required = true)
+        @PathVariable
         id: UUID,
     ) = opinionFacade.getOpinionDto(id)
 
-    @GetMapping("/for")
     override fun getOpinionFor(
-        @RequestParam(required = true)
+        @PathVariable
         subjectId: UUID,
     ) = OpinionTestDataFactory.getOpinion(subjectId)
 
-    @PostMapping("/add")
     override fun createOpinion(
         @RequestParam(required = true)
         subjectId: UUID,
@@ -48,9 +46,8 @@ class OpinionController(
         mark = mark,
     )
 
-    @PatchMapping("/update")
     override fun updateOpinion(
-        @RequestParam(required = true)
+        @PathVariable
         opinionId: UUID,
         @RequestParam(required = false)
         subjective: List<String>,
@@ -65,14 +62,12 @@ class OpinionController(
         mark = mark,
     )
 
-    @DeleteMapping("/delete")
     override fun deleteOpinion(
-        @RequestParam(required = true)
+        @PathVariable
         opinionId: UUID,
     ) {
     }
 
-    @PostMapping("/link")
     override fun linkComponent(
         @RequestParam(required = true)
         parentOpinionId: UUID,
@@ -82,16 +77,14 @@ class OpinionController(
         weight: Double,
     ) = OpinionTestDataFactory.getOpinion(parentOpinionId)
 
-    @DeleteMapping("/unlink")
     override fun unlinkComponent(
-        @RequestParam(required = true)
+        @PathVariable
         linkId: UUID,
     ): OpinionDto =
         OpinionTestDataFactory.getOpinion(UUID.fromString("0"))
 
-    @PatchMapping("/adjustComponentWeight")
     override fun adjustComponentWeight(
-        @RequestParam(required = true)
+        @PathVariable
         linkId: UUID,
         @RequestParam(required = true)
         weight: Double,

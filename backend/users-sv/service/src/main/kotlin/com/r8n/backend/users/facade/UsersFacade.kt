@@ -22,7 +22,7 @@ class UsersFacade(
             usr.statusTimestamp,
             consentsService.getConsents(id).toDto(),
             piiService.getPII(id).toDto(),
-            opi
+            opinionsClient.
         )
     }
 }

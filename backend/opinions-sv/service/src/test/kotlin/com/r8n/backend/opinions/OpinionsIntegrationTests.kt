@@ -2,7 +2,7 @@ package com.r8n.backend.opinions
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.r8n.backend.users.integration.UserClient
+import com.r8n.backend.users.integration.UsersInternalApi
 import com.r8n.backend.mock.stub.OpinionTestDataFactory
 import com.r8n.backend.opinions.api.dto.OpinionDto
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -54,11 +54,11 @@ class OpinionsIntegrationTests {
     lateinit var objectMapper: ObjectMapper
 
     @MockitoBean
-    lateinit var userClient: UserClient
+    lateinit var usersInternalApi: UsersInternalApi
 
     @BeforeEach
     fun setUp() {
-        whenever(userClient.getUserName(any())).thenReturn("username")
+        whenever(usersInternalApi.getUserName(any())).thenReturn("username")
     }
 
     @Test
