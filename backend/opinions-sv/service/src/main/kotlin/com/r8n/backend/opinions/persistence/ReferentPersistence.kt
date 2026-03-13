@@ -10,7 +10,7 @@ import java.util.UUID
 
 @Entity
 @Table(schema = "opinions", name = "referents")
-class ReferentPersistence( // cafe
+class ReferentPersistence(
     @Id
     @GeneratedValue
     @UuidGenerator
@@ -20,5 +20,5 @@ class ReferentPersistence( // cafe
     var name: String,
 
     @Column(nullable = false)
-    var referentGroup: UUID, // cafes under same brand share same group
+    var referentGroup: UUID,
 )
