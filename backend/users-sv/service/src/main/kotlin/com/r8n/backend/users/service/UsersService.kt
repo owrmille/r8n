@@ -4,6 +4,9 @@ import org.springframework.stereotype.Service
 import java.util.UUID
 
 @Service
-class UsersService {
+class UsersService(
+    private val consentsService: ConsentsService,
+    private val piiService: PersonalIdentifiableInformationService,
+) {
     fun getName(id: UUID) = "username"
 }

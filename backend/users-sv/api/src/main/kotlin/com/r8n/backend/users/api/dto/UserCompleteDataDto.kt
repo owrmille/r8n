@@ -22,5 +22,6 @@ data class UserCompleteDataDto(
 enum class UserStatusEnumDto {
     ACTIVE,
     SUSPENDED,
+    DELETION_PENDING,
     DELETED,
 }

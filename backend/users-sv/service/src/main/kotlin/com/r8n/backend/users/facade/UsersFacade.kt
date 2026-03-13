@@ -8,8 +8,6 @@ import java.util.UUID
 @Component
 class UsersFacade(
     private val usersService: UsersService,
-    private val consentsService: ConsentsService,
-    private val piiService: PersonalIdentifiableInformationService,
     private val opinionsClient: OpinionsClient,
     private val accessRequestsClient: AccessRequestsClient,
     private val messageClient: MessageClient,
@@ -20,8 +18,8 @@ class UsersFacade(
             usr.id,
             usr.status,
             usr.statusTimestamp,
-            consentsService.getConsents(id).toDto(),
-            piiService.getPII(id).toDto(),
+            usr.consents.toDto(),
+            usr.pii.toDto(),
             opinionsClient.
         )
     }
