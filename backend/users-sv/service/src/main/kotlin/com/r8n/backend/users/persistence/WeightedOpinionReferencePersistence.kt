@@ -1,4 +1,4 @@
-package com.r8n.backend.opinions.persistence
+package com.r8n.backend.users.persistence
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -9,8 +9,8 @@ import org.hibernate.annotations.UuidGenerator
 import java.util.UUID
 
 @Entity
-@Table(schema = "opinions", name = "weighted_opinion_reference")
-class WeightedOpinionReferencePersistence(
+@Table(schema = "users", name = "users")
+class UsersPersistence(
     @Id
     @GeneratedValue
     @UuidGenerator

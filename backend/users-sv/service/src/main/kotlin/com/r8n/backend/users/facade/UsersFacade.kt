@@ -8,9 +8,9 @@ import java.util.UUID
 @Component
 class UsersFacade(
     private val usersService: UsersService,
-    private val opinionsClient: OpinionsClient,
-    private val accessRequestsClient: AccessRequestsClient,
-    private val messageClient: MessageClient,
+    private val opinionsClient: MockClient,
+    private val accessRequestsClient: MockClient,
+    private val messageClient: MockClient,
 ) {
     fun getUserCompleteDataDto(id: UUID): UserCompleteDataDto {
         val usr = usersService.getUser(id)
@@ -20,7 +20,7 @@ class UsersFacade(
             usr.statusTimestamp,
             usr.consents.toDto(),
             usr.pii.toDto(),
-            opinionsClient.
+            opinionsClient
         )
     }
 }

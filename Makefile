@@ -1,7 +1,7 @@
 LOCAL_ENV_FILE := deployment/config/local.env
 DOCKER_ENV_FILE := deployment/config/docker.env
 LOAD_LOCAL_ENV = set -a; [ -f "$(LOCAL_ENV_FILE)" ] && . "$(LOCAL_ENV_FILE)"; set +a;
-SERVICES := gateway opinions mock
+SERVICES := gateway opinions users mock
 BOOT_JAR_TASKS := $(addprefix :,$(addsuffix -sv:bootJar,$(SERVICES)))
 
 .PHONY: local-run-all local-stop-all \

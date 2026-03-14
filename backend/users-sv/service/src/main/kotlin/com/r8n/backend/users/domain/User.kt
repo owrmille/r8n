@@ -8,7 +8,7 @@ data class User(
     val name: UUID,
     val status: UserStatusEnum,
     val statusTimestamp: Instant,
-    val consents
+    val consents: List<Consent>,
 )
 
 enum class UserStatusEnum {

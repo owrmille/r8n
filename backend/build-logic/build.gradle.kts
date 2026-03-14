@@ -28,6 +28,10 @@ gradlePlugin {
             id = "convention-api"
             implementationClass = "com.r8n.backend.buildlogic.ApiConventionPlugin"
         }
+        create("convention-integration") {
+            id = "convention-integration"
+            implementationClass = "com.r8n.backend.buildlogic.IntegrationConventionPlugin"
+        }
         create("convention-backend-service") {
             id = "convention-backend-service"
             implementationClass = "com.r8n.backend.buildlogic.BackendServiceConventionPlugin"

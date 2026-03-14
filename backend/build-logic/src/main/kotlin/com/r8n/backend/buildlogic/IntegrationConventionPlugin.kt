@@ -7,20 +7,17 @@ import org.gradle.kotlin.dsl.getByType
 import kotlin.apply
 
 @Suppress("unused") // used through reflection in :build-logic:build.gradle.kts
-class ApiConventionPlugin : Plugin<Project> {
+class IntegrationConventionPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         with(project) {
             val libs = extensions
                 .getByType<VersionCatalogsExtension>()
                 .named("libs")
 
-            pluginManager.apply("convention-language")
+            pluginManager.apply("convention-api")
 
             dependencies.apply {
-                add("implementation", project(":core:api"))
-                add("implementation", project(":core:utils"))
-
-                add("compileOnly", libs.findLibrary("spring-web").get())
+                add("compileOnly", libs.findLibrary("spring-context").get())
             }
         }
     }

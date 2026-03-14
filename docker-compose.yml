@@ -43,6 +43,20 @@ services:
     volumes:
       - ./deployment/mock/logs:/var/log/r8n
 
+  users:
+    build:
+      context: ./deployment/users
+      dockerfile: Dockerfile
+    env_file:
+      - ./deployment/config/docker.env
+    environment:
+      SERVICES_USERS_PORT: ${SERVICES_USERS_PORT:?}
+      LOGGING_FILE_NAME: ${LOGGING_FILE_NAME:?}
+    networks:
+      - r8n_net
+    volumes:
+      - ./deployment/users/logs:/var/log/r8n
+
   gateway:
     build:
       context: ./deployment/gateway
