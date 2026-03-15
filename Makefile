@@ -181,15 +181,15 @@ frontend-dev: frontend-install ## Start Vite dev server
 	@bash -lc 'set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR) && NODE_EXTRA_CA_CERTS="$(FRONTEND_GATEWAY_CERT)" npm run dev'
 
 frontend-install: frontend-check-node ## Install frontend dependencies
-	@bash -lc 'set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR) && npm ci'
+	@bash -lc 'set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR) && if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NODE_VERSION) npm ci; else npm ci; fi'
 
 frontend-install-all: frontend-install ## Install deps and Playwright browsers
-	@bash -lc 'set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR) && npx playwright install'
+	@bash -lc 'set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR) && if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NODE_VERSION) npx playwright install; else npx playwright install; fi'
 
 frontend-check-node: ## Check Node.js version (attempts nvm if too old)
 	@bash -lc '\
-	req="22.13.0"; \
-	check_node() { node -e "const req=[22,13,0]; const cur=process.versions.node.split(\".\").map(Number); const ok = cur[0]>req[0] || (cur[0]==req[0] && (cur[1]>req[1] || (cur[1]==req[1] && cur[2]>=req[2]))); if (!ok) process.exit(1);" >/dev/null 2>&1; }; \
+	req="$(FRONTEND_NODE_VERSION)"; \
+	check_node() { REQ="$$req" node -e "const req=process.env.REQ.split('.').map(Number); const cur=process.versions.node.split(\".\").map(Number); const ok = cur[0]>req[0] || (cur[0]==req[0] && (cur[1]>req[1] || (cur[1]==req[1] && cur[2]>=req[2]))); if (!ok) process.exit(1);" >/dev/null 2>&1; }; \
 	if command -v node >/dev/null 2>&1; then \
 		if check_node; then \
 			echo "Node version OK: $$(node -v)"; \
@@ -219,15 +219,15 @@ frontend-check-node: ## Check Node.js version (attempts nvm if too old)
 	'
 
 frontend-build: frontend-check-node ## Build frontend dist (installs deps if missing)
-	@bash -lc 'set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR) && ( [ -d node_modules ] || npm ci ) && npm run build'
+	@bash -lc 'set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR) && if [ -d node_modules ]; then true; else if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NODE_VERSION) npm ci; else npm ci; fi; fi && if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NODE_VERSION) npm run build; else npm run build; fi'
 
 frontend-test-unit: frontend-check-node ## Run frontend unit tests
-	@bash -lc 'set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR) && npm run test:unit'
+	@bash -lc 'set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR) && if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NODE_VERSION) npm run test:unit; else npm run test:unit; fi'
 
 frontend-test: frontend-test-unit frontend-test-e2e ## Run all frontend tests
 
 frontend-test-e2e: frontend-check-node ## Run frontend E2E tests
-	@bash -lc 'set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR) && npm run test:e2e'
+	@bash -lc 'set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR) && if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NODE_VERSION) npm run test:e2e; else npm run test:e2e; fi'
 
 frontend-clean: ## Remove frontend build output, cache, and test artifacts
 	rm -rf $(FRONTEND_DIR)/dist $(FRONTEND_DIR)/node_modules/.vite $(FRONTEND_DIR)/playwright-report $(FRONTEND_DIR)/test-results $(FRONTEND_DIR)/coverage
