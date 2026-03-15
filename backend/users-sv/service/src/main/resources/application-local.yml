@@ -1,14 +1,14 @@
-server.port: ${SERVICES_OPINIONS_PORT}
+server.port: ${SERVICES_USERS_PORT}
 spring:
-  application.name: opinions-sv
+  application.name: users-sv
   liquibase:
     enabled: true
     change-log: db/changelog/db.changelog-master.sql
-    default-schema: opinions
+    default-schema: users
     contexts: local
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_HOST_PORT}/${DATABASE_NAME}?currentSchema=opinions
+    url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_HOST_PORT}/${DATABASE_NAME}?currentSchema=users
     username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
   jpa:

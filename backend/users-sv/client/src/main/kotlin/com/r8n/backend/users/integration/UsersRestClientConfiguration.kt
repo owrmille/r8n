@@ -9,10 +9,9 @@ import org.springframework.web.client.RestClient
 class UsersRestClientConfiguration {
     @Bean
     fun usersRestClient(
-        builder: RestClient.Builder,
         @Value($$"${services.users.url}") baseUrl: String
     ): RestClient =
-        builder
+        RestClient.builder()
             .baseUrl(baseUrl)
             .build()
 

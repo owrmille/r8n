@@ -1,5 +1,6 @@
-package com.r8n.backend.opinions.persistence
+package com.r8n.backend.users.persistence
 
+import com.r8n.backend.users.domain.UserStatusEnum
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -8,28 +9,28 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.hibernate.annotations.UuidGenerator
+import java.time.Instant
 import java.util.UUID
 
 @Entity
-@Table(schema = "opinions", name = "opinion_note")
-class OpinionNotePersistence(
+@Table(schema = "users", name = "users")
+class UserPersistence(
     @Id
     @GeneratedValue
     @UuidGenerator
     val id: UUID,
 
     @Column(nullable = false)
-    val opinionId: UUID,
-
-    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    val type: OpinionNoteTypeEnum,
+    val status: UserStatusEnum,
 
     @Column(nullable = false)
-    val description: String,
+    val statusTimestamp: Instant,
 )
 
-enum class OpinionNoteTypeEnum {
-    OBJECTIVE,
-    SUBJECTIVE,
+enum class UserStatusEnum {
+    ACTIVE,
+    SUSPENDED,
+    DELETION_PENDING,
+    DELETED,
 }

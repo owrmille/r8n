@@ -11,7 +11,7 @@ data class UserCompleteDataDto(
     val id: UUID,
     val status: UserStatusEnumDto,
     val statusTimestamp: Instant,
-    val consents: ConsentDto,
+    val consents: PageResponseDto<ConsentDto>,
     val personalIdentifiableInformation: PersonalIdentifiableInformationSectionDto,
     val opinions: PageResponseDto<OpinionListDto>,
     val outgoingRequests: PageResponseDto<AccessRequestDto>,

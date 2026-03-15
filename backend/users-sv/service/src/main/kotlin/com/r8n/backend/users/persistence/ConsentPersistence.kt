@@ -6,22 +6,26 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.hibernate.annotations.UuidGenerator
+import java.time.Instant
 import java.util.UUID
 
 @Entity
-@Table(schema = "users", name = "users")
-class UsersPersistence(
+@Table(schema = "users", name = "consents")
+class ConsentPersistence(
     @Id
     @GeneratedValue
     @UuidGenerator
     val id: UUID,
 
     @Column(nullable = false)
-    val parentOpinion: UUID,
+    val userId: UUID,
 
     @Column(nullable = false)
-    val childOpinion: UUID,
+    val type: String,
 
     @Column(nullable = false)
-    val weight: Double,
+    val accepted: Instant,
+
+    @Column(nullable = false)
+    val session: UUID,
 )

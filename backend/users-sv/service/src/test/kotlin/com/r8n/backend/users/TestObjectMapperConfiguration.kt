@@ -1,4 +1,4 @@
-package com.r8n.backend.opinions
+package com.r8n.backend.users
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.boot.test.context.TestConfiguration

@@ -13,3 +13,9 @@ spring:
 logging:
   level:
     root: ERROR
+
+services:
+  mock:
+    url: http://localhost:${server.port}
+  users:
+    url: http://localhost:8082

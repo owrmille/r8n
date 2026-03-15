@@ -66,7 +66,7 @@ class OpinionsIntegrationTests {
     fun `get opinion works`() {
         val requestedId = "00000000-0000-0000-0000-000000000000"
         val result = mockMvc.perform(
-            get("/opinions/id?id=$requestedId")
+            get("/opinions/$requestedId")
                 .header("Authorization", "Bearer stub-access-token-123"),
         )
             .andExpect(status().isOk).andReturn()

@@ -5,7 +5,8 @@ import java.util.UUID
 
 data class User(
     val id: UUID,
-    val name: UUID,
+    val name: String,
+    val email: String,
     val status: UserStatusEnum,
     val statusTimestamp: Instant,
     val consents: List<Consent>,

@@ -1,56 +1,39 @@
 --liquibase formatted sql
 
---changeset inikulin:V1_create_schema
-CREATE TABLE IF NOT EXISTS opinions (
+--changeset inikulin:V1_create_tables
+CREATE TABLE users.users (
     id UUID PRIMARY KEY,
-    owner UUID NOT NULL,
-    subject UUID NOT NULL,
-    mark DOUBLE PRECISION,
     status VARCHAR(32) NOT NULL,
-    timestamp TIMESTAMPTZ NOT NULL
+    status_timestamp TIMESTAMPTZ NOT NULL
 );
-CREATE INDEX IF NOT EXISTS idx_opinions_owner ON opinions(owner);
-CREATE INDEX IF NOT EXISTS idx_opinions_subject ON opinions(subject);
 
-CREATE TABLE IF NOT EXISTS opinion_note (
+CREATE TABLE users.pii (
+    user_id UUID PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255),
+    phone VARCHAR(255),
+    CONSTRAINT fk_pii_user FOREIGN KEY (user_id) REFERENCES users.users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE users.sessions (
     id UUID PRIMARY KEY,
-    opinion_id UUID NOT NULL,
-    type VARCHAR(32) NOT NULL,
-    description TEXT NOT NULL
+    user_id UUID NOT NULL,
+    created TIMESTAMPTZ NOT NULL,
+    expires TIMESTAMPTZ NOT NULL,
+    ip VARCHAR(45) NOT NULL,
+    user_agent TEXT NOT NULL,
+    CONSTRAINT fk_session_user FOREIGN KEY (user_id) REFERENCES users.users(id) ON DELETE CASCADE
 );
-CREATE INDEX IF NOT EXISTS idx_opinion_note_opinion_id
-    ON opinion_note(opinion_id);
-ALTER TABLE opinion_note
-    ADD CONSTRAINT fk_opinion_note_opinion
-    FOREIGN KEY (opinion_id)
-    REFERENCES opinions(id)
-    ON DELETE CASCADE;
+CREATE INDEX idx_sessions_user_id ON users.sessions(user_id);
 
-CREATE TABLE IF NOT EXISTS weighted_opinion_reference(
+CREATE TABLE users.consents (
     id UUID PRIMARY KEY,
-    parent_opinion UUID NOT NULL,
-    child_opinion UUID NOT NULL,
-    weight DOUBLE PRECISION NOT NULL
+    user_id UUID NOT NULL,
+    type VARCHAR(64) NOT NULL,
+    accepted TIMESTAMPTZ NOT NULL,
+    session UUID NOT NULL,
+    CONSTRAINT fk_consent_user FOREIGN KEY (user_id) REFERENCES users.users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_consent_session FOREIGN KEY (session) REFERENCES users.sessions(id) ON DELETE CASCADE
 );
-CREATE INDEX IF NOT EXISTS idx_weighted_opinion_parent
-    ON weighted_opinion_reference(parent_opinion);
-CREATE INDEX IF NOT EXISTS idx_weighted_opinion_child
-    ON weighted_opinion_reference(child_opinion);
-ALTER TABLE weighted_opinion_reference
-    ADD CONSTRAINT fk_weighted_parent
-    FOREIGN KEY (parent_opinion)
-    REFERENCES opinions(id);
-ALTER TABLE weighted_opinion_reference
-    ADD CONSTRAINT fk_weighted_child
-    FOREIGN KEY (child_opinion)
-    REFERENCES opinions(id);
-ALTER TABLE weighted_opinion_reference
-    ADD CONSTRAINT chk_no_self_reference
-    CHECK (parent_opinion <> child_opinion);
-
---changeset inikulin:V2_seed_data context:local,test
-INSERT INTO opinions (id, owner, subject, mark, status, timestamp)
-VALUES ('00000000-0000-0000-0000-000000000000'
-, '07070707-0707-0707-0707-070707070707'
-, '23232323-2323-2323-2323-232323232323'
-, 1.07, 'DRAFT', '2024-01-01T12:00:00Z');
+CREATE INDEX idx_consents_user_id ON users.consents(user_id);
+CREATE INDEX idx_consents_session ON users.consents(session);

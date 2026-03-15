@@ -1,30 +1,21 @@
 package com.r8n.backend.mock.controller
 
 import com.r8n.backend.core.api.PageRequestDto
-import com.r8n.backend.mock.api.OutgoingAccessRequestsApi
+import com.r8n.backend.mock.api.OutgoingAccessRequestApi
 import com.r8n.backend.mock.api.dto.access.RequestStatusEnumDto
 import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.mock.stub.AccessRequestsTestDataFactory
 import org.springframework.data.domain.PageImpl
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.time.Instant
 import java.util.UUID
 
 @RestController
-@RequestMapping("/accessRequests/outgoing")
-class StubOutgoingAccessRequestsController : OutgoingAccessRequestsApi {
+class StubOutgoingAccessRequestController : OutgoingAccessRequestApi {
 
-    @GetMapping("/get")
     override fun get(
-        @RequestParam(required = false)
         forListId: UUID?,
-        @RequestParam(required = false)
         since: Instant?,
-        @RequestParam(required = false)
         status: RequestStatusEnumDto?,
         pageable: PageRequestDto,
     ) = PageImpl(
@@ -35,15 +26,11 @@ class StubOutgoingAccessRequestsController : OutgoingAccessRequestsApi {
         ),
     ).toResponse()
 
-    @PostMapping("/create")
     override fun create(
-        @RequestParam(required = true)
         listId: UUID,
     ) = AccessRequestsTestDataFactory.get(status = RequestStatusEnumDto.SENT)
 
-    @PostMapping("/cancel")
     override fun cancel(
-        @RequestParam(required = true)
         requestId: UUID,
     ) = AccessRequestsTestDataFactory.get(status = RequestStatusEnumDto.CANCELLED)
 }

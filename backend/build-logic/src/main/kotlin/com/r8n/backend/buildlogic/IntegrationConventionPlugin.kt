@@ -18,6 +18,7 @@ class IntegrationConventionPlugin : Plugin<Project> {
 
             dependencies.apply {
                 add("compileOnly", libs.findLibrary("spring-context").get())
+                add("implementation", libs.findLibrary("spring-boot-starter-web").get())
             }
         }
     }
