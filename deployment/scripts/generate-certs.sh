@@ -85,9 +85,8 @@ for service in $(read_services); do
   generate_keystore "${service}"
 done
 
-# Gateway must trust downstream service certificates for HTTPS upstream routing.
+# Truststore contains all service certificates so any service can perform outbound HTTPS calls.
 for cert in "${CERTS_DIR}"/*.crt; do
-  [ "$(basename "${cert}")" = "gateway.crt" ] && continue
   alias_name="$(basename "${cert}" .crt)"
   keytool -importcert \
     -alias "${alias_name}" \
