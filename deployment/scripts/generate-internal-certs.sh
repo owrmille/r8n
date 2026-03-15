@@ -92,7 +92,6 @@ done
 
 # Gateway must trust downstream service certificates for HTTPS upstream routing.
 for cert in "${CERTS_INTERNAL_DIR}"/*.crt; do
-  [ "$(basename "${cert}")" = "gateway.crt" ] && continue
   alias_name="$(basename "${cert}" .crt)"
   keytool -importcert \
     -alias "${alias_name}" \
