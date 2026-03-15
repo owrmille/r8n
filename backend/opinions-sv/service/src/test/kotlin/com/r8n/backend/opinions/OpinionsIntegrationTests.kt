@@ -96,7 +96,7 @@ class OpinionsIntegrationTests {
             Instant.parse("2024-02-01T09:30:00Z"),
         )
 
-        assertEquals(expected, actual) // doesn't fail anymore
+        assertEquals(expected, actual)
     }
 
 }

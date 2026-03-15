@@ -13,8 +13,9 @@ class ComponentService(
     fun getComponentSection(parentOpinionId: UUID): ComponentSection {
         val components = weightedOpinionReferenceRepository.findAllByParentOpinionOrderByIdAsc(parentOpinionId)
             .map { WeightedOpinionReference(it.id, it.childOpinion, it.weight) }
+        val componentMark = components.takeIf { it.isNotEmpty() }?.sumOf { it.weight }
         return ComponentSection(
-            null,
+            componentMark,
             components,
         )
     }
