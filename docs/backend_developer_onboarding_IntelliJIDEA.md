@@ -65,34 +65,48 @@ Build and dependency management system for backend. Runs every time you build ba
 - `make local-run-all` and check all the log files for Started application in X seconds
 - `make direct-request-opinions` and `make routed-request-opinions` should provide same result, with 0000..0 id
 
-# Running frontend
+# Frontend setup
 - open a new terminal (backend can keep running in another one)
+- `export FRONTEND=~/PROJECTS/r8n/frontend` adjust to your setup
 - check if Node.js is installed:
-    - `node -v`
-    - if you see a version (e.g. `v22.x.x`), Node is installed
-    - if command is not found, install Node via nvm:
-        - `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash`
-        - restart terminal
+  - `node -v`
+  - if command is not found, install Node via nvm:
+    - `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash`
+    - restart terminal
 - use the project's Node version:
-    - `cd ~/PROJECTS/r8n/frontend`
-    - `nvm install`
-    - `nvm use`
+  - `cd $FRONTEND`
+  - `nvm install`
+  - `nvm use`
 - verify correct Node version:
-    - `node -v`
-    - should be `>= 22.12.0`
+  - `node -v` should be `>= 22.13.0`
 - if you run frontend on a campus machine, move npm cache to sgoinfre:
-    - `npm config set cache /sgoinfre/goinfre/Perso/$USER/.npm-cache --global`
-    - `npm config get cache` it should print `/sgoinfre/goinfre/Perso/$USER/.npm-cache`
+  - `npm config set cache /sgoinfre/goinfre/Perso/$USER/.npm-cache --global`
+  - `npm config get cache` should print `/sgoinfre/goinfre/Perso/$USER/.npm-cache`
 - install dependencies:
-    - `npm ci`
-- start dev server:
-    - `npm run dev`
-    - as soon as you see something like:
-      `VITE vX.X.X ready in X ms`
-      `Local: http://localhost:5173/`
-      the dev server is running
+  - `npm ci`
+- start frontend dev server:
+  - `npm run dev`
+  - as soon as you see `Local: http://localhost:5173/` in the logs, the app is running
 - open `http://localhost:5173` in browser
-    - the main page should load
+- for API integration keep backend services running in another terminal: `make local-run-all`
+
+# Frontend commands for daily work
+- `cd ~/PROJECTS/r8n/frontend`
+- `nvm use`
+- `npm run dev` to run UI locally
+- `npm run type-check` for TypeScript checks
+- `npm run lint` to run linters with autofixes
+- `npm run test:unit` to run unit tests
+- `npm run build` to verify production build
+
+# Frontend after repository update
+- stop dev server in running terminal (`Ctrl-C` or `q`)
+- `cd ~/PROJECTS/r8n && git pull`
+- `cd ~/PROJECTS/r8n/frontend`
+- `nvm use`
+- `npm ci` to sync dependencies with updated lockfile
+- `npm run type-check` and `npm run lint`
+- `npm run dev` and verify `http://localhost:5173`
 
 # IDEA troubleshooting
 - `com.intellij.platform.ide.bootstrap.DirectoryLock$CannotActivateException: Process "/app/bin/idea" (2) is still running and does not respond.`
