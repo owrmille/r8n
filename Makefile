@@ -17,13 +17,16 @@ FRONTEND_CERT_KEY := $(FRONTEND_CERT_DIR)/localhost.key
 FRONTEND_CERT_CRT := $(FRONTEND_CERT_DIR)/localhost.crt
 FRONTEND_NODE_VERSION := 22.13.0
 FRONTEND_NVM_BOOTSTRAP = if [ -n "$$NVM_DIR" ] && [ -s "$$NVM_DIR/nvm.sh" ]; then . "$$NVM_DIR/nvm.sh"; elif [ -s "$$HOME/.nvm/nvm.sh" ]; then . "$$HOME/.nvm/nvm.sh"; fi; if command -v nvm >/dev/null 2>&1; then nvm use $(FRONTEND_NODE_VERSION) >/dev/null 2>&1 || nvm install $(FRONTEND_NODE_VERSION); fi;
+FRONTEND_SHELL = set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR); \
+frontend_npm() { if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NODE_VERSION) npm "$$@"; else npm "$$@"; fi; }; \
+frontend_npx() { if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NODE_VERSION) npx "$$@"; else npx "$$@"; fi; };
 
 .PHONY: help local-run-all local-stop-all \
     $(addprefix local-run-,$(SERVICES)) \
     $(addprefix local-stop-,$(SERVICES)) \
     $(addprefix docker-logs-,$(SERVICES)) \
     prebuild-jars prepare-artifacts verify-artifacts docker-build docker-up \
-    docker-certs docker-certs-force internal-certs internal-certs-force edge-certs edge-certs-force \
+    docker-certs docker-certs-force internal-certs internal-certs-force internal-certs-clean docker-certs-clean docker-secrets-clean docker-secrets-init edge-certs edge-certs-force \
     docker-down docker-logs clean-artifacts ensure-log-dirs clean-logs \
     https-routed-request-opinion https-routed-request-mock \
     frontend-install frontend-install-all frontend-check-node frontend-dev frontend-build \
@@ -36,7 +39,7 @@ help: ## Show this help
 docker-up: docker-build ensure-log-dirs docker-certs ## Start local Docker stack (builds images, ensures logs, generates certs)
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml up -d
 
-docker-build: verify-artifacts frontend-build ## Build Docker images
+docker-build: docker-secrets-init verify-artifacts frontend-build ## Build Docker images
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml build
 
 prepare-artifacts: prebuild-jars ## Copy service JARs into deployment/ folders
@@ -104,6 +107,39 @@ internal-certs-force: ## Force regenerate internal TLS certs
 	@$(LOAD_DOCKER_ENV) \
 	chmod +x ./deployment/scripts/generate-internal-certs.sh && \
 	FORCE_REGEN_CERTS=true ./deployment/scripts/generate-internal-certs.sh
+
+internal-certs-clean: ## Remove generated internal TLS certs
+	rm -rf deployment/certs/internal
+
+docker-certs-clean: ## Remove all generated TLS certs (internal + edge)
+	rm -rf deployment/certs
+
+docker-secrets-clean: ## Remove local Docker secrets file (TLS passwords)
+	rm -f $(DOCKER_SECRETS_ENV_FILE)
+
+docker-secrets-init: ## Ensure local Docker secrets file exists (prompts if missing)
+	@bash -lc '\
+	set -e; \
+	file="$(DOCKER_SECRETS_ENV_FILE)"; \
+	ks=""; ts=""; \
+	if [ -f "$$file" ]; then \
+		ks="$$(awk -F= "/^TLS_KEYSTORE_PASSWORD=/{print substr(\$$0,index(\$$0,\"=\")+1)}" "$$file")"; \
+		ts="$$(awk -F= "/^TLS_TRUSTSTORE_PASSWORD=/{print substr(\$$0,index(\$$0,\"=\")+1)}" "$$file")"; \
+	fi; \
+	if [ -z "$$ks" ]; then \
+		read -s -p "TLS_KEYSTORE_PASSWORD (min 6 chars): " ks; echo; \
+	fi; \
+	if [ -z "$$ts" ]; then \
+		read -s -p "TLS_TRUSTSTORE_PASSWORD (min 6 chars): " ts; echo; \
+	fi; \
+	if [ "$${#ks}" -lt 6 ] || [ "$${#ts}" -lt 6 ]; then \
+		echo "Passwords must be at least 6 characters."; \
+		exit 1; \
+	fi; \
+	mkdir -p "$$(dirname "$$file")"; \
+	printf "TLS_KEYSTORE_PASSWORD=%s\nTLS_TRUSTSTORE_PASSWORD=%s\n" "$$ks" "$$ts" > "$$file"; \
+	echo "Wrote $$file"; \
+	'
 
 docker-down: ## Stop Docker stack
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml down
@@ -178,56 +214,27 @@ $(addprefix local-stop-,$(SERVICES)): local-stop-%: ## Stop one local backend se
 
 ##@ Frontend
 frontend-dev: frontend-install ## Start Vite dev server
-	@bash -lc 'set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR) && NODE_EXTRA_CA_CERTS="$(FRONTEND_GATEWAY_CERT)" npm run dev'
+	@bash -lc '$(FRONTEND_SHELL) NODE_EXTRA_CA_CERTS="$(FRONTEND_GATEWAY_CERT)" frontend_npm run dev'
 
 frontend-install: frontend-check-node ## Install frontend dependencies
-	@bash -lc 'set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR) && if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NODE_VERSION) npm ci; else npm ci; fi'
+	@bash -lc '$(FRONTEND_SHELL) frontend_npm ci'
 
 frontend-install-all: frontend-install ## Install deps and Playwright browsers
-	@bash -lc 'set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR) && if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NODE_VERSION) npx playwright install; else npx playwright install; fi'
+	@bash -lc '$(FRONTEND_SHELL) frontend_npx playwright install'
 
 frontend-check-node: ## Check Node.js version (attempts nvm if too old)
-	@bash -lc '\
-	req="$(FRONTEND_NODE_VERSION)"; \
-	check_node() { REQ="$$req" node -e "const req=process.env.REQ.split('.').map(Number); const cur=process.versions.node.split(\".\").map(Number); const ok = cur[0]>req[0] || (cur[0]==req[0] && (cur[1]>req[1] || (cur[1]==req[1] && cur[2]>=req[2]))); if (!ok) process.exit(1);" >/dev/null 2>&1; }; \
-	if command -v node >/dev/null 2>&1; then \
-		if check_node; then \
-			echo "Node version OK: $$(node -v)"; \
-			exit 0; \
-		fi; \
-		echo "Node version too old: $$(node -v). Required >= $$req."; \
-	else \
-		echo "Node not found. Required >= $$req."; \
-	fi; \
-	if [ -n "$$NVM_DIR" ] && [ -s "$$NVM_DIR/nvm.sh" ]; then \
-		. "$$NVM_DIR/nvm.sh"; \
-	elif [ -s "$$HOME/.nvm/nvm.sh" ]; then \
-		. "$$HOME/.nvm/nvm.sh"; \
-	else \
-		echo "nvm not found. Please install Node $$req manually."; \
-		exit 1; \
-	fi; \
-	echo "Attempting to install/use Node $$req via nvm..."; \
-	nvm install $$req; \
-	nvm use $$req; \
-	if check_node; then \
-		echo "Node version OK: $$(node -v)"; \
-		exit 0; \
-	fi; \
-	echo "Node still < $$req after nvm. Please install manually."; \
-	exit 1; \
-	'
+	@FRONTEND_NODE_VERSION="$(FRONTEND_NODE_VERSION)" ./scripts/frontend-check-node.sh
 
 frontend-build: frontend-check-node ## Build frontend dist (installs deps if missing)
-	@bash -lc 'set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR) && if [ -d node_modules ]; then true; else if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NODE_VERSION) npm ci; else npm ci; fi; fi && if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NODE_VERSION) npm run build; else npm run build; fi'
+	@bash -lc '$(FRONTEND_SHELL) [ -d node_modules ] || frontend_npm ci; frontend_npm run build'
 
 frontend-test-unit: frontend-check-node ## Run frontend unit tests
-	@bash -lc 'set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR) && if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NODE_VERSION) npm run test:unit; else npm run test:unit; fi'
+	@bash -lc '$(FRONTEND_SHELL) frontend_npm run test:unit'
 
 frontend-test: frontend-test-unit frontend-test-e2e ## Run all frontend tests
 
 frontend-test-e2e: frontend-check-node ## Run frontend E2E tests
-	@bash -lc 'set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR) && if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NODE_VERSION) npm run test:e2e; else npm run test:e2e; fi'
+	@bash -lc '$(FRONTEND_SHELL) frontend_npm run test:e2e'
 
 frontend-clean: ## Remove frontend build output, cache, and test artifacts
 	rm -rf $(FRONTEND_DIR)/dist $(FRONTEND_DIR)/node_modules/.vite $(FRONTEND_DIR)/playwright-report $(FRONTEND_DIR)/test-results $(FRONTEND_DIR)/coverage
