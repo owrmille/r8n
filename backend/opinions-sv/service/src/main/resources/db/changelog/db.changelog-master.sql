@@ -48,9 +48,51 @@ ALTER TABLE weighted_opinion_reference
     ADD CONSTRAINT chk_no_self_reference
     CHECK (parent_opinion <> child_opinion);
 
---changeset inikulin:V2_seed_data context:local,test
+--changeset iatopchu:V2_seed_bernard_on_cap1 context:local,test
 INSERT INTO opinions (id, owner, subject, mark, status, timestamp)
-VALUES ('00000000-0000-0000-0000-000000000000'
-, '07070707-0707-0707-0707-070707070707'
-, '23232323-2323-2323-2323-232323232323'
-, 1.07, 'DRAFT', '2024-01-01T12:00:00Z');
+VALUES ('30000000-0000-0000-0000-000000000001'
+, '10101010-1010-1010-1010-101010101010'
+, '14141414-1414-1414-1414-141414141414'
+, 4.23, 'DRAFT', '2024-02-01T09:30:00Z');
+
+INSERT INTO opinion_note (id, opinion_id, type, description)
+VALUES ('30000000-0000-0000-0000-000000000101', '30000000-0000-0000-0000-000000000001', 'SUBJECTIVE', 'reminds of grandma''s home coffee');
+
+INSERT INTO opinion_note (id, opinion_id, type, description)
+VALUES ('30000000-0000-0000-0000-000000000102', '30000000-0000-0000-0000-000000000001', 'OBJECTIVE', '5.50€');
+
+INSERT INTO opinion_note (id, opinion_id, type, description)
+VALUES ('30000000-0000-0000-0000-000000000103', '30000000-0000-0000-0000-000000000001', 'OBJECTIVE', 'lactose-free milk');
+
+--changeset iatopchu:V3_subjects_and_referents context:local,test
+CREATE TABLE IF NOT EXISTS referents (
+    id UUID PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    address TEXT,
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION,
+    referent_group UUID NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS subjects (
+    id UUID PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    referent UUID NOT NULL
+);
+
+ALTER TABLE subjects
+    ADD CONSTRAINT fk_subjects_referent
+    FOREIGN KEY (referent)
+    REFERENCES referents(id);
+
+INSERT INTO referents (id, name, address, latitude, longitude, referent_group)
+VALUES
+    ('12121212-1212-1212-1212-121212121212', 'cappuccino @ Cafe Eins A', 'Berlin, Alexanderplatz 1', 52.5217457, 13.4097131, '41414141-4141-4141-4141-414141414141'),
+    ('13131313-1313-1313-1313-131313131313', 'cappuccino @ Cafe Eins G', 'Berlin, Görlitzer str 1', 52.49921333621459, 13.432348384513238, '41414141-4141-4141-4141-414141414141')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO subjects (id, name, referent)
+VALUES
+    ('14141414-1414-1414-1414-141414141414', 'cappuccino @ Cafe Eins A', '12121212-1212-1212-1212-121212121212'),
+    ('15151515-1515-1515-1515-151515151515', 'cappuccino @ Cafe Eins G', '13131313-1313-1313-1313-131313131313')
+ON CONFLICT (id) DO NOTHING;
