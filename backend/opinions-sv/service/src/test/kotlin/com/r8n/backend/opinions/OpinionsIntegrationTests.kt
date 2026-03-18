@@ -26,6 +26,11 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.postgresql.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
+import com.r8n.backend.opinions.domain.OpinionStatusEnum
+import com.r8n.backend.opinions.persistence.OpinionPersistence
+import com.r8n.backend.opinions.provider.database.OpinionRepository
+import java.time.Instant
+import java.util.UUID
 
 @ActiveProfiles("test")
 @Testcontainers
@@ -52,6 +57,9 @@ class OpinionsIntegrationTests {
 
     @Autowired
     lateinit var objectMapper: ObjectMapper
+
+    @Autowired
+    lateinit var opinionRepository: OpinionRepository
 
     @MockitoBean
     lateinit var userClient: UserClient
@@ -82,5 +90,21 @@ class OpinionsIntegrationTests {
         assertEquals(expected.timestamp, actual.timestamp)
     }
 
+    @Test
+    @WithMockUser
+    fun `saved opinion gets uuid v7 id`() {
+        val saved = opinionRepository.save(
+            OpinionPersistence(
+                owner = UUID.fromString("07070707-0707-0707-0707-070707070707"),
+                subject = UUID.fromString("23232323-2323-2323-2323-232323232323"),
+                mark = null,
+                status = OpinionStatusEnum.DRAFT,
+                timestamp = Instant.now(),
+            )
+        )
+
+        val id = saved.id!!
+        assertEquals(7, id.version(), "Expected UUID v7 but got v${id.version()}")
+    }
 }
 
