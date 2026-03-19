@@ -1,9 +1,10 @@
+import { Outlet } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import MobileNav from "@/components/layout/MobileNav";
 
 interface AppLayoutProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 const AppLayout = ({ children }: AppLayoutProps) => {
@@ -29,7 +30,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
           {/* Main content */}
           <main className="flex-1 pb-20 md:pb-0">
-            {children}
+            {children ?? <Outlet />}
           </main>
         </div>
 

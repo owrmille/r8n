@@ -30,26 +30,22 @@ const App = () => (
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/create-profile" element={<CreateProfile />} />
-          <Route path="*" element={
-            <AppLayout>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/profile/:id" element={<Profile />} />
-                <Route path="/supplier/:id" element={<Supplier />} />
-                <Route path="/supplier" element={<Supplier />} />
-                <Route path="/list/:id" element={<OpinionList />} />
-                <Route path="/lists" element={<MyLists />} />
-                <Route path="/requests" element={<Requests />} />
-                <Route path="/discover" element={<Discover />} />
-                <Route path="/create" element={<CreateReview />} />
-                <Route path="/lists/create" element={<CreateList />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/profile/edit" element={<EditProfile />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </AppLayout>
-          } />
+          <Route element={<AppLayout />}>
+            <Route index element={<Index />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:id" element={<Profile />} />
+            <Route path="/supplier/:id" element={<Supplier />} />
+            <Route path="/supplier" element={<Supplier />} />
+            <Route path="/list/:id" element={<OpinionList />} />
+            <Route path="/lists" element={<MyLists />} />
+            <Route path="/requests" element={<Requests />} />
+            <Route path="/discover" element={<Discover />} />
+            <Route path="/create" element={<CreateReview />} />
+            <Route path="/lists/create" element={<CreateList />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/profile/edit" element={<EditProfile />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
