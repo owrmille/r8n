@@ -1,73 +1,73 @@
-# frontend
+# Welcome to your Lovable project
 
-This template should help get you started developing with Vue 3 in Vite.
+## Project info
 
-## Recommended IDE Setup
+**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## How can I edit this code?
 
-## Recommended Browser Setup
+There are several ways of editing your application.
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+**Use Lovable**
 
-## Type Support for `.vue` Imports in TS
+Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+Changes made via Lovable will be committed automatically to this repo.
 
-## Customize configuration
+**Use your preferred IDE**
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
-## Project Setup
+The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+
+Follow these steps:
 
 ```sh
-npm install
-```
+# Step 1: Clone the repository using the project's Git URL.
+git clone <YOUR_GIT_URL>
 
-### Compile and Hot-Reload for Development
+# Step 2: Navigate to the project directory.
+cd <YOUR_PROJECT_NAME>
 
-```sh
+# Step 3: Install the necessary dependencies.
+npm i
+
+# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
+**Edit a file directly in GitHub**
 
-```sh
-npm run build
-```
+- Navigate to the desired file(s).
+- Click the "Edit" button (pencil icon) at the top right of the file view.
+- Make your changes and commit the changes.
 
-### Run Unit Tests with [Vitest](https://vitest.dev/)
+**Use GitHub Codespaces**
 
-```sh
-npm run test:unit
-```
+- Navigate to the main page of your repository.
+- Click on the "Code" button (green button) near the top right.
+- Select the "Codespaces" tab.
+- Click on "New codespace" to launch a new Codespace environment.
+- Edit files directly within the Codespace and commit and push your changes once you're done.
 
-### Run End-to-End Tests with [Playwright](https://playwright.dev)
+## What technologies are used for this project?
 
-```sh
-# Install browsers for the first run
-npx playwright install
+This project is built with:
 
-# When testing on CI, must build the project first
-npm run build
+- Vite
+- TypeScript
+- React
+- shadcn-ui
+- Tailwind CSS
 
-# Runs the end-to-end tests
-npm run test:e2e
-# Runs the tests only on Chromium
-npm run test:e2e -- --project=chromium
-# Runs the tests of a specific file
-npm run test:e2e -- tests/example.spec.ts
-# Runs the tests in debug mode
-npm run test:e2e -- --debug
-```
+## How can I deploy this project?
 
-### Lint with [ESLint](https://eslint.org/)
+Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
 
-```sh
-npm run lint
-```
+## Can I connect a custom domain to my Lovable project?
+
+Yes, you can!
+
+To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+
+Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
