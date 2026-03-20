@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.AutoConfigureJsonTesters
@@ -60,7 +61,7 @@ class UsersIntegrationTests {
             .withPassword("test")
             .withInitScript("db/init-schema.sql")
 
-        const val USER_ID = "07070707-0707-0707-0707-070707070707"
+        const val USER_ID = "00000000-0000-0000-0000-000000000000"
         val opinions = OpinionListTestDataFactory.getList()
         val incomingAccessRequests = AccessRequestsTestDataFactory.get()
         val outgoingAccessRequests = AccessRequestsTestDataFactory.get()
@@ -91,10 +92,10 @@ class UsersIntegrationTests {
         whenever(opinionClient.getMineFull(any())).thenReturn(
             PageImpl(listOf(opinions)).toResponse(),
         )
-        whenever(incomingAccessRequestClient.get(any(), any(), any(), any())).thenReturn(
+        whenever(incomingAccessRequestClient.get(anyOrNull(), anyOrNull(), anyOrNull(), any())).thenReturn(
             PageImpl(listOf(incomingAccessRequests)).toResponse(),
         )
-        whenever(outgoingAccessRequestClient.get(any(), any(), any(), any())).thenReturn(
+        whenever(outgoingAccessRequestClient.get(anyOrNull(), anyOrNull(), anyOrNull(), any())).thenReturn(
             PageImpl(listOf(outgoingAccessRequests)).toResponse(),
         )
         whenever(messageClient.getSupportThreads()).thenReturn(
@@ -117,7 +118,7 @@ class UsersIntegrationTests {
         val timestamp = LocalDateTime.of(2024, 1, 1, 12, 0).toInstant(ZoneOffset.UTC)
 
         val session = UserSessionDto(
-            UUID.fromString("02020202-0202-0202-0202-020202020202"), timestamp,
+            UUID.fromString("01010101-0101-0101-0101-010101010101"), timestamp,
             timestamp.plus(
                 1,
                 ChronoUnit.DAYS,
