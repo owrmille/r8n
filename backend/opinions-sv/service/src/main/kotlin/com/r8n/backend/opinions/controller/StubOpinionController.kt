@@ -14,32 +14,22 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.bind.annotation.RequestParam
 
 @RestController
-@RequestMapping("/opinions")
 class StubOpinionController(
     private val opinionFacade: OpinionFacade,
 ) : OpinionApi {
 
-    @GetMapping("/id")
     override fun getOpinionById(
-        @RequestParam(required = true)
         id: UUID,
     ) = opinionFacade.getOpinionDto(id)
 
-    @GetMapping("/for")
     override fun getOpinionFor(
-        @RequestParam(required = true)
         subjectId: UUID,
     ) = OpinionTestDataFactory.getOpinion(subjectId)
 
-    @PostMapping("/add")
     override fun createOpinion(
-        @RequestParam(required = true)
         subjectId: UUID,
-        @RequestParam(required = false)
         subjective: List<String>,
-        @RequestParam(required = false)
         objective: List<String>,
-        @RequestParam(required = false)
         mark: Double?,
     ) = OpinionTestDataFactory.postOpinion(
         subjectId = subjectId,
@@ -48,15 +38,10 @@ class StubOpinionController(
         mark = mark,
     )
 
-    @PatchMapping("/update")
     override fun updateOpinion(
-        @RequestParam(required = true)
         opinionId: UUID,
-        @RequestParam(required = false)
         subjective: List<String>,
-        @RequestParam(required = false)
         objective: List<String>,
-        @RequestParam(required = false)
         mark: Double?,
     ) = OpinionTestDataFactory.postOpinion(
         opinionId = opinionId,
@@ -65,16 +50,12 @@ class StubOpinionController(
         mark = mark,
     )
 
-    @DeleteMapping("/delete")
     override fun deleteOpinion(
-        @RequestParam(required = true)
         opinionId: UUID,
     ) {
     }
 
-    @PostMapping("/link")
     override fun linkComponent(
-        @RequestParam(required = true)
         parentOpinionId: UUID,
         @RequestParam(required = true)
         childOpinionId: UUID,

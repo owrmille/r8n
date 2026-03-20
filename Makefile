@@ -83,7 +83,7 @@ $(addprefix local-stop-,$(SERVICES)): local-stop-%:
 	-@kill $$(cat /tmp/$*.pid) 2>/dev/null || true
 
 routed-request-opinion:
-	curl "http://localhost:8080/opinions/id?id=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
+	curl "http://localhost:8080/opinions/00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
 
 routed-request-mock:
 	curl "http://localhost:8080/opinionLists/summary?listId=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
