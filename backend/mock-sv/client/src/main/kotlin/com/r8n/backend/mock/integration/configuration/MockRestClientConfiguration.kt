@@ -14,6 +14,7 @@ import com.r8n.backend.mock.integration.client.OutgoingAccessRequestRestClient
 import com.r8n.backend.mock.integration.client.RecommendationRestClient
 import com.r8n.backend.mock.integration.client.SelectorRestClient
 import com.r8n.backend.mock.integration.api.OpinionListInternalApi
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -22,38 +23,39 @@ import org.springframework.web.client.RestClient
 @Configuration
 class MockRestClientConfiguration {
     @Bean
+    @Qualifier("mockRestBaseClient")
     fun mockRestBaseClient(
-        @Value($$"${services.mock.url}") baseUrl: String
+        @Value("${"$"}{services.mock.url}") baseUrl: String
     ): RestClient =
         RestClient.builder()
             .baseUrl(baseUrl)
             .build()
 
     @Bean
-    fun opinionListRestClient(mockRestBaseClient: RestClient): OpinionListApi =
+    fun opinionListRestClient(@Qualifier("mockRestBaseClient") mockRestBaseClient: RestClient): OpinionListApi =
         OpinionListRestClient(mockRestBaseClient)
 
     @Bean
-    fun incomingAccessRequestsRestClient(mockRestBaseClient: RestClient): IncomingAccessRequestApi =
+    fun incomingAccessRequestsRestClient(@Qualifier("mockRestBaseClient") mockRestBaseClient: RestClient): IncomingAccessRequestApi =
         IncomingAccessRequestRestClient(mockRestBaseClient)
 
     @Bean
-    fun outgoingAccessRequestsRestClient(mockRestBaseClient: RestClient): OutgoingAccessRequestApi =
+    fun outgoingAccessRequestsRestClient(@Qualifier("mockRestBaseClient") mockRestBaseClient: RestClient): OutgoingAccessRequestApi =
         OutgoingAccessRequestRestClient(mockRestBaseClient)
 
     @Bean
-    fun recommendationsRestClient(mockRestBaseClient: RestClient): RecommendationApi =
+    fun recommendationsRestClient(@Qualifier("mockRestBaseClient") mockRestBaseClient: RestClient): RecommendationApi =
         RecommendationRestClient(mockRestBaseClient)
 
     @Bean
-    fun selectorRestClient(mockRestBaseClient: RestClient): SelectorApi =
+    fun selectorRestClient(@Qualifier("mockRestBaseClient") mockRestBaseClient: RestClient): SelectorApi =
         SelectorRestClient(mockRestBaseClient)
 
     @Bean
-    fun messagingRestClient(mockRestBaseClient: RestClient): MessagingApi =
+    fun messagingRestClient(@Qualifier("mockRestBaseClient") mockRestBaseClient: RestClient): MessagingApi =
         MessagingRestClient(mockRestBaseClient)
 
     @Bean
-    fun opinionListInternalRestClient(mockRestBaseClient: RestClient): OpinionListInternalApi =
+    fun opinionListInternalRestClient(@Qualifier("mockRestBaseClient") mockRestBaseClient: RestClient): OpinionListInternalApi =
         OpinionListInternalRestClient(mockRestBaseClient)
 }
