@@ -11,12 +11,7 @@ import java.time.Instant
 import java.util.UUID
 
 @RestController
-<<<<<<<< HEAD:backend/mock-sv/service/src/main/kotlin/com/r8n/backend/mock/controller/StubOutgoingAccessRequestController.kt
 class StubOutgoingAccessRequestController : OutgoingAccessRequestApi {
-
-========
-class StubOutgoingAccessRequestsController : OutgoingAccessRequestsApi {
->>>>>>>> 65_paths_in_apis:backend/mock-sv/service/src/main/kotlin/com/r8n/backend/mock/controller/StubOutgoingAccessRequestsController.kt
     override fun get(
         forListId: UUID?,
         since: Instant?,

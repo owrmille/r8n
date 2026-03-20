@@ -10,16 +10,11 @@ import com.r8n.backend.mock.integration.api.OpinionListInternalApi
 import com.r8n.backend.mock.stub.AccessRequestsTestDataFactory
 import com.r8n.backend.mock.stub.MiscTestFactory
 import com.r8n.backend.mock.stub.OpinionListTestDataFactory
+import com.r8n.backend.users.api.dto.ConsentDto
+import com.r8n.backend.users.api.dto.PersonalIdentifiableInformationSectionDto
 import com.r8n.backend.users.api.dto.UserCompleteDataDto
-import com.r8n.backend.users.domain.UserStatusEnum
-import com.r8n.backend.users.persistence.ConsentPersistence
-import com.r8n.backend.users.persistence.PIIPersistence
-import com.r8n.backend.users.persistence.UserPersistence
-import com.r8n.backend.users.persistence.UserSessionPersistence
-import com.r8n.backend.users.provider.database.ConsentRepository
-import com.r8n.backend.users.provider.database.PIIRepository
-import com.r8n.backend.users.provider.database.UserRepository
-import com.r8n.backend.users.provider.database.UserSessionRepository
+import com.r8n.backend.users.api.dto.UserSessionDto
+import com.r8n.backend.users.api.dto.UserStatusEnumDto
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -43,7 +38,9 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.postgresql.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
-import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 @ActiveProfiles("test")
@@ -62,6 +59,12 @@ class UsersIntegrationTests {
             .withUsername("test")
             .withPassword("test")
             .withInitScript("db/init-schema.sql")
+
+        const val USER_ID = "07070707-0707-0707-0707-070707070707"
+        val opinions = OpinionListTestDataFactory.getList()
+        val incomingAccessRequests = AccessRequestsTestDataFactory.get()
+        val outgoingAccessRequests = AccessRequestsTestDataFactory.get()
+        val supportMessages = MiscTestFactory.getSupportMessage()
     }
 
     @Autowired
@@ -69,18 +72,6 @@ class UsersIntegrationTests {
 
     @Autowired
     lateinit var objectMapper: ObjectMapper
-
-    @Autowired
-    lateinit var userRepository: UserRepository
-
-    @Autowired
-    lateinit var piiRepository: PIIRepository
-
-    @Autowired
-    lateinit var sessionRepository: UserSessionRepository
-
-    @Autowired
-    lateinit var consentRepository: ConsentRepository
 
     @MockitoBean
     lateinit var opinionClient: OpinionListInternalApi
@@ -94,60 +85,66 @@ class UsersIntegrationTests {
     @MockitoBean
     lateinit var messageClient: MessagingApi
 
-    private val userId = UUID.fromString("07070707-0707-0707-0707-070707070707")
-
     @BeforeEach
     fun setUp() {
-        consentRepository.deleteAllInBatch()
-        sessionRepository.deleteAllInBatch()
-        piiRepository.deleteAllInBatch()
-        userRepository.deleteAllInBatch()
-
-        val user = UserPersistence(userId, UserStatusEnum.ACTIVE, Instant.now())
-        userRepository.saveAndFlush(user)
-
-        val pii = PIIPersistence(userId, "Test User", "test@example.com", "")
-        piiRepository.saveAndFlush(pii)
-
-        val session = UserSessionPersistence(UUID.randomUUID(), userId, Instant.now(), Instant.now().plusSeconds(3600), "127.0.0.1", "Mock Browser")
-        sessionRepository.saveAndFlush(session)
-
-        val consent = ConsentPersistence(UUID.randomUUID(), userId, "COOKIES", Instant.now(), session.id)
-        consentRepository.saveAndFlush(consent)
 
         whenever(opinionClient.getMineFull(any())).thenReturn(
-            PageImpl(listOf(OpinionListTestDataFactory.getList(userId))).toResponse()
+            PageImpl(listOf(opinions)).toResponse(),
         )
         whenever(incomingAccessRequestClient.get(any(), any(), any(), any())).thenReturn(
-            PageImpl(listOf(AccessRequestsTestDataFactory.get())).toResponse()
+            PageImpl(listOf(incomingAccessRequests)).toResponse(),
         )
         whenever(outgoingAccessRequestClient.get(any(), any(), any(), any())).thenReturn(
-            PageImpl(listOf(AccessRequestsTestDataFactory.get())).toResponse()
+            PageImpl(listOf(outgoingAccessRequests)).toResponse(),
         )
         whenever(messageClient.getSupportThreads()).thenReturn(
-            PageImpl(listOf(MiscTestFactory.getSupportMessage())).toResponse()
+            PageImpl(listOf(supportMessages)).toResponse(),
         )
     }
 
     @Test
-    @WithMockUser(username = "07070707-0707-0707-0707-070707070707")
+    @WithMockUser(username = USER_ID)
     fun `exportAll returns complete user data`() {
         val result = mockMvc.perform(
             get("/users/export")
+                .header("Authorization", "Bearer stub-access-token-123"),
         )
             .andExpect(status().isOk)
             .andReturn()
 
         val actual: UserCompleteDataDto = objectMapper.readValue(result.response.contentAsString)
 
-        assertEquals(userId, actual.id)
-        assertEquals("Test User", actual.personalIdentifiableInformation.name)
-        assertEquals("test@example.com", actual.personalIdentifiableInformation.email)
-        assertEquals(1, actual.personalIdentifiableInformation.sessions.items.size)
-        assertEquals(1, actual.consents.items.size)
-        assertEquals(1, actual.opinions.items.size)
-        assertEquals(1, actual.incomingRequests.items.size)
-        assertEquals(1, actual.outgoingRequests.items.size)
-        assertEquals(1, actual.messages.items.size)
+        val timestamp = LocalDateTime.of(2024, 1, 1, 12, 0).toInstant(ZoneOffset.UTC)
+
+        val session = UserSessionDto(
+            UUID.fromString("02020202-0202-0202-0202-020202020202"), timestamp,
+            timestamp.plus(
+                1,
+                ChronoUnit.DAYS,
+            ),
+            "127.0.0.1",
+            "Test User Agent",
+        )
+
+        val expected = UserCompleteDataDto(
+            UUID.fromString(USER_ID),
+            UserStatusEnumDto.ACTIVE,
+            timestamp,
+            PageImpl(
+                listOf(
+                    ConsentDto("PRIVACY_POLICY", timestamp, session),
+                ),
+            ).toResponse(),
+            PersonalIdentifiableInformationSectionDto(
+                "Test Testsson",
+                "test@test.test",
+                PageImpl(listOf(session)).toResponse(),
+            ),
+            PageImpl(listOf(opinions)).toResponse(),
+            PageImpl(listOf(outgoingAccessRequests)).toResponse(),
+            PageImpl(listOf(incomingAccessRequests)).toResponse(),
+            PageImpl(listOf(supportMessages)).toResponse(),
+        )
+        assertEquals(expected, actual)
     }
 }

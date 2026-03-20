@@ -37,3 +37,24 @@ CREATE TABLE users.consents (
 );
 CREATE INDEX idx_consents_user_id ON users.consents(user_id);
 CREATE INDEX idx_consents_session ON users.consents(session);
+
+--changeset inikulin:V2_seed_data context:local,test
+INSERT INTO users.users (id, status, status_timestamp)
+VALUES ('00000000-0000-0000-0000-000000000000', 'ACTIVE', '2024-01-01T12:00:00Z');
+INSERT INTO users.pii (user_id, name, email, phone)
+VALUES ('00000000-0000-0000-0000-000000000000', 'Test Testsson', 'test@test.test', '123-456-7890');
+INSERT INTO users.sessions(id, user_id, created, expires, ip, user_agent)
+VALUES ('01010101-0101-0101-0101-010101010101'
+, '00000000-0000-0000-0000-000000000000'
+, '2024-01-01T12:00:00Z'
+, '2024-01-02T12:00:00Z'
+,'127.0.0.1'
+, 'Test User Agent'
+);
+INSERT INTO users.consents(id, user_id, type, accepted, session)
+VALUES ('02020202-0202-0202-0202-020202020202'
+, '00000000-0000-0000-0000-000000000000'
+, 'PRIVACY_POLICY'
+, '2024-01-01T12:00:00Z'
+, '01010101-0101-0101-0101-010101010101'
+);
