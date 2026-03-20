@@ -20,4 +20,4 @@ spring:
       mode: never
 services:
   users:
-    url: http://localhost:8081
+    url: ${INTERSERVICE_PROTOCOL}://${SERVICES_USERS_HOST}:${SERVICES_USERS_PORT}

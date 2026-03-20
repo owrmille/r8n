@@ -14,6 +14,7 @@ import com.r8n.backend.mock.integration.client.OutgoingAccessRequestRestClient
 import com.r8n.backend.mock.integration.client.RecommendationRestClient
 import com.r8n.backend.mock.integration.client.SelectorRestClient
 import com.r8n.backend.mock.integration.api.OpinionListInternalApi
+import com.r8n.backend.security.SecurityContextTokenInterceptor
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -29,6 +30,7 @@ class MockRestClientConfiguration {
     ): RestClient =
         RestClient.builder()
             .baseUrl(baseUrl)
+            .requestInterceptor(SecurityContextTokenInterceptor())
             .build()
 
     @Bean
