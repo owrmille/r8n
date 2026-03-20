@@ -2,4 +2,7 @@
 build
 .idea
 *.log
+*.gz
 *.jar
+deployment/certs/
+docker.secrets.env
