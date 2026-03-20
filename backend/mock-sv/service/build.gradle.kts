@@ -8,6 +8,6 @@ description = "mock service for everything not cut out into dedicated services y
 
 dependencies {
     implementation(project(":mock-api"))
-    implementation(project(":mock-client"))
+    implementation(project(":mock-api-integration"))
     implementation(project(":opinions-api"))
 }

@@ -11,6 +11,7 @@ dependencies {
     implementation(project(":users-api"))
     implementation(project(":users-client"))
     implementation(project(":mock-api"))
+    implementation(project(":mock-api-integration"))
     implementation(project(":mock-client"))
     implementation(project(":mock-sv"))
     implementation(libs.spring.boot.starter.oauth)

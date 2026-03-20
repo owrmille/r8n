@@ -60,7 +60,7 @@ docker-database-drop-volume-campus:
 	@# yes this is the only way, since some files are owned by root, and you don't have sudo rights in campus
 	@docker run --rm -v ./deployment/database:/pg alpine rm -rf /pg/data
 
-docker-run-database:
+docker-database-run:
 	chmod a+x deployment/database/init/01_create_schemas.sh
 	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml up -d database
 

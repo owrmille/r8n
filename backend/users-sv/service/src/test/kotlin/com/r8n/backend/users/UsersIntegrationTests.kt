@@ -55,7 +55,7 @@ class UsersIntegrationTests {
     private companion object {
         @Container
         @ServiceConnection
-        val postgres = PostgreSQLContainer(DockerImageName.parse("postgres:15"))
+        val postgres: PostgreSQLContainer = PostgreSQLContainer(DockerImageName.parse("postgres:15"))
             .withDatabaseName("users")
             .withUsername("test")
             .withPassword("test")
