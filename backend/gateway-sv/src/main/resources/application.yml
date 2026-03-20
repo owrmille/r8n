@@ -14,4 +14,4 @@ spring:
             - id: mock
               uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_MOCK_HOST}:${SERVICES_MOCK_PORT}
               predicates:
-                - Path=/auth/**,/accessRequests/**,/opinionLists/**,/selectors/**
+                - Path=/auth/**,/access-requests/**,/opinion-lists/**,/selectors/**

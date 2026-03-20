@@ -4,14 +4,8 @@ import com.r8n.backend.mock.stub.OpinionTestDataFactory
 import com.r8n.backend.opinions.api.OpinionApi
 import com.r8n.backend.opinions.api.dto.opinion.OpinionDto
 import com.r8n.backend.opinions.facade.OpinionFacade
-import org.springframework.web.bind.annotation.DeleteMapping
 import java.util.UUID
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PatchMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.bind.annotation.RequestParam
 
 @RestController
 class StubOpinionController(
@@ -57,24 +51,17 @@ class StubOpinionController(
 
     override fun linkComponent(
         parentOpinionId: UUID,
-        @RequestParam(required = true)
         childOpinionId: UUID,
-        @RequestParam(required = true)
         weight: Double,
     ) = OpinionTestDataFactory.getOpinion(parentOpinionId)
 
-    @DeleteMapping("/unlink")
     override fun unlinkComponent(
-        @RequestParam(required = true)
         linkId: UUID,
     ): OpinionDto =
         OpinionTestDataFactory.getOpinion(UUID.fromString("0"))
 
-    @PatchMapping("/adjustComponentWeight")
     override fun adjustComponentWeight(
-        @RequestParam(required = true)
         linkId: UUID,
-        @RequestParam(required = true)
         weight: Double,
     ): OpinionDto =
         OpinionTestDataFactory.getOpinion(UUID.fromString("0"))

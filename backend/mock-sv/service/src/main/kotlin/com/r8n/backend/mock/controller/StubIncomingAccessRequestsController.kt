@@ -5,26 +5,17 @@ import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.mock.api.IncomingAccessRequestsApi
 import com.r8n.backend.mock.api.dto.access.RequestStatusEnumDto
 import com.r8n.backend.mock.stub.AccessRequestsTestDataFactory
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.data.domain.PageImpl
 import java.time.Instant
 import java.util.UUID
 
 @RestController
-@RequestMapping("/accessRequests/incoming")
 class StubIncomingAccessRequestsController : IncomingAccessRequestsApi {
 
-    @GetMapping("/get")
     override fun get(
-        @RequestParam(required = false)
         forListId: UUID?,
-        @RequestParam(required = false)
         since: Instant?,
-        @RequestParam(required = false)
         status: RequestStatusEnumDto?,
         pageable: PageRequestDto,
     ) = PageImpl(
@@ -35,21 +26,15 @@ class StubIncomingAccessRequestsController : IncomingAccessRequestsApi {
             )
         ).toResponse()
 
-    @PostMapping("/accept")
     override fun accept(
-        @RequestParam(required = true)
         requestId: UUID,
     ) = AccessRequestsTestDataFactory.get(status = RequestStatusEnumDto.ACCEPTED)
 
-    @PostMapping("/decline")
     override fun decline(
-        @RequestParam(required = true)
         requestId: UUID,
     ) = AccessRequestsTestDataFactory.get(status = RequestStatusEnumDto.REJECTED)
 
-    @PostMapping("/hide")
     override fun hide(
-        @RequestParam(required = true)
         requestId: UUID,
     ) = AccessRequestsTestDataFactory.get(status = RequestStatusEnumDto.HIDDEN)
 
