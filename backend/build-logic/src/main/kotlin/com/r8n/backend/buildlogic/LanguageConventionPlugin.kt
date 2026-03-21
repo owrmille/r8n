@@ -46,6 +46,7 @@ class LanguageConventionPlugin : Plugin<Project> {
             dependencies.apply {
                 add("implementation", enforcedPlatform(project(":platform")))
 
+                add("implementation", libs.findLibrary("jackson-module-kotlin").get())
                 add("implementation", libs.findLibrary("kotlin-reflect").get())
             }
         }

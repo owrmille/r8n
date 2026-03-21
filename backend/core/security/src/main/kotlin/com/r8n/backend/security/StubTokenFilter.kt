@@ -10,7 +10,6 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.filter.OncePerRequestFilter
 
 class StubTokenFilter : OncePerRequestFilter() {
-
     override fun shouldNotFilter(request: HttpServletRequest): Boolean {
         return request.servletPath.startsWith("/auth/")
     }

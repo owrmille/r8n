@@ -1,7 +1,5 @@
 package com.r8n.backend.users
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.mock.api.IncomingAccessRequestApi
 import com.r8n.backend.mock.api.MessagingApi
@@ -39,6 +37,8 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.postgresql.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
+import tools.jackson.databind.ObjectMapper
+import tools.jackson.module.kotlin.readValue
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit

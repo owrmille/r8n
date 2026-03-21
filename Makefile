@@ -98,7 +98,10 @@ routed-request-gdpr:
 	curl "http://localhost:8080/users/export" -i -H "Authorization: Bearer stub-access-token-123"
 
 clean-the-fuck-out-of-this-campus-machine:
-	rm -rf ~/.local/share/docker ~/.var/app/com.slack.Slack ~/.config/Code ~/.config/Slack ~/.config/google-chrome && mkdir -p ~/.local/share/docker/tmp && chmod 700 ~/.local/share/docker/tmp
+	docker system prune -f
+	rm -rf ~/.local/share/docker ~/.var/app/com.slack.Slack ~/.config/Code ~/.config/Slack ~/.config/google-chrome
+	mkdir -p ~/.local/share/docker/tmp && chmod 700 ~/.local/share/docker/tmp
+	pkill -f GradleDaemon
 
 who-ate-all-the-space:
 	du --all --human-readable --one-file-system --max-depth=1 ~
