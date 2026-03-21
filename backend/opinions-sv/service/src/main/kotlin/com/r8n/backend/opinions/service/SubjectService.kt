@@ -1,7 +1,7 @@
 package com.r8n.backend.opinions.service
 
-import com.r8n.backend.opinions.api.dto.about.OpinionSubjectDto
-import com.r8n.backend.opinions.api.dto.about.ReferentDto
+import com.r8n.backend.opinions.domain.SubjectDetails
+import com.r8n.backend.opinions.domain.SubjectReferent
 import com.r8n.backend.opinions.persistence.ReferentPersistence
 import com.r8n.backend.opinions.provider.database.OpinionSubjectRepository
 import com.r8n.backend.opinions.provider.database.ReferentRepository
@@ -15,24 +15,22 @@ class SubjectService(
 ) {
     fun getSubjectName(id: UUID): String = getSubject(id)?.name ?: "Subject"
 
-    fun getSubject(id: UUID): OpinionSubjectDto? {
+    fun getSubject(id: UUID): SubjectDetails? {
         val subject = opinionSubjectRepository.findById(id).orElse(null) ?: return null
-        val primaryReferent = referentRepository.findById(subject.referent).orElse(null)
-        val alternativeReferents = primaryReferent
-            ?.let { referentRepository.findAllByReferentGroupOrderByIdAsc(it.referentGroup) }
-            .orEmpty()
-            .filter { it.id != primaryReferent?.id }
-            .map { it.toDto() }
+        val primaryReferent = referentRepository.findById(subject.referent).orElseThrow()
+        val alternativeReferents = referentRepository.findAllByReferentGroupOrderByIdAsc(primaryReferent.referentGroup)
+            .filter { it.id != primaryReferent.id }
+            .map { it.toModel() }
 
-        return OpinionSubjectDto(
+        return SubjectDetails(
             id = subject.id ?: return null,
             name = subject.name,
-            primaryReferent = primaryReferent?.toDto(),
+            primaryReferent = primaryReferent.toModel(),
             alternativeReferents = alternativeReferents,
         )
     }
 
-    private fun ReferentPersistence.toDto() = ReferentDto(
+    private fun ReferentPersistence.toModel() = SubjectReferent(
         id = id!!,
         name = name,
         address = address,
