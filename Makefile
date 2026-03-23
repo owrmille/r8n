@@ -36,7 +36,7 @@ prepare-artifacts: prebuild-jars
 	@set -e; \
 	for svc in $(SERVICES); do \
 		mkdir -p "deployment/$$svc"; \
-		cp "$$(ls backend/$$svc-sv/build/libs/*.jar | grep -v -- '-plain\.jar$$' | head -n1)" "deployment/$$svc/app.jar"; \
+		cp "$$(ls backend/$$svc-sv/service/build/libs/*.jar | grep -v -- '-plain\.jar$$' | head -n1)" "deployment/$$svc/app.jar"; \
 	done
 
 prebuild-jars:
