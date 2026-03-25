@@ -1,3 +1,15 @@
+x-tls-common-env: &tls-common-env
+  SERVER_SSL_ENABLED: ${SERVER_SSL_ENABLED:?}
+  SERVER_SSL_KEY_STORE_PASSWORD: ${TLS_KEYSTORE_PASSWORD:?}
+  SERVER_SSL_KEY_STORE_TYPE: PKCS12
+  SERVER_SSL_KEY_ALIAS: ${SERVER_SSL_KEY_ALIAS:?}
+
+x-tls-client-common-env: &tls-client-common-env
+  JAVA_TOOL_OPTIONS: >-
+    -Djavax.net.ssl.trustStore=${SSL_TRUST_STORE:?}
+    -Djavax.net.ssl.trustStorePassword=${TLS_TRUSTSTORE_PASSWORD:?}
+    -Djavax.net.ssl.trustStoreType=PKCS12
+
 services:
   database:
     image: postgres:15
@@ -21,13 +33,18 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ./deployment/config/docker.env
+      - ./deployment/secrets/docker.secrets.env
     environment:
+      <<: [*tls-common-env, *tls-client-common-env]
+      SERVICE_NAME: opinions
+      SERVER_SSL_KEY_STORE: /certs/keystore-opinions.p12
       SERVICES_OPINIONS_PORT: ${SERVICES_OPINIONS_PORT:?}
       LOGGING_FILE_NAME: ${LOGGING_FILE_NAME:?}
     networks:
       - r8n_net
     volumes:
       - ./deployment/opinions/logs:/var/log/r8n
+      - ./deployment/certs:/certs:ro
 
   mock:
     build:
@@ -35,13 +52,18 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ./deployment/config/docker.env
+      - ./deployment/secrets/docker.secrets.env
     environment:
+      <<: [*tls-common-env, *tls-client-common-env]
+      SERVICE_NAME: mock
+      SERVER_SSL_KEY_STORE: /certs/keystore-mock.p12
       SERVICES_MOCK_PORT: ${SERVICES_MOCK_PORT:?}
       LOGGING_FILE_NAME: ${LOGGING_FILE_NAME:?}
     networks:
       - r8n_net
     volumes:
       - ./deployment/mock/logs:/var/log/r8n
+      - ./deployment/certs:/certs:ro
 
   users:
     build:
@@ -63,7 +85,11 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ./deployment/config/docker.env
+      - ./deployment/secrets/docker.secrets.env
     environment:
+      <<: [*tls-common-env, *tls-client-common-env]
+      SERVICE_NAME: gateway
+      SERVER_SSL_KEY_STORE: /certs/keystore-gateway.p12
       GATEWAY_PORT: ${GATEWAY_CONTAINER_PORT:?}
       GATEWAY_HOST_PORT: ${GATEWAY_HOST_PORT:?}
       INTERSERVICE_PROTOCOL: ${INTERSERVICE_PROTOCOL:?}
@@ -82,6 +108,7 @@ services:
       - r8n_net
     volumes:
       - ./deployment/gateway/logs:/var/log/r8n
+      - ./deployment/certs:/certs:ro
 
 networks:
   r8n_net:

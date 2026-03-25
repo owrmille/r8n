@@ -2,6 +2,9 @@
 build
 .idea
 *.log
+*.gz
 *.jar
 deployment/database/data
 .kotlin
+deployment/certs/
+docker.secrets.env
