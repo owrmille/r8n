@@ -63,7 +63,7 @@ Build and dependency management system for backend. Runs every time you build ba
 - `make build-opinions` - see build succeeding
 - `make local-stop-all`
 - `make local-run-all` and check all the log files for Started application in X seconds
-- `make direct-request-opinions` and `make routed-request-opinions` should provide same result, with 0000..0 id
+- `make direct-request-opinion` and `make routed-request-opinion` should provide same result, with 0000..0 id
 
 # Docker run via Makefile (HTTPS)
 - service list:
@@ -100,24 +100,26 @@ Build and dependency management system for backend. Runs every time you build ba
   - `nvm use`
 - verify correct Node version:
   - `node -v` should be `>= 22.13.0`
+  - `npm -v` should be `10+`
 - if you run frontend on a campus machine, move npm cache to sgoinfre:
   - `npm config set cache /sgoinfre/goinfre/Perso/$USER/.npm-cache --global`
   - `npm config get cache` should print `/sgoinfre/goinfre/Perso/$USER/.npm-cache`
 - install dependencies:
   - `npm ci`
 - start frontend dev server:
-  - `npm run dev`
-  - as soon as you see `Local: http://localhost:5173/` in the logs, the app is running
-- open `http://localhost:5173` in browser
+  - `npm run dev` for standalone UI work
+  - `make frontend-dev` if you need frontend proxying to local backend over HTTPS with project certificate
+  - as soon as you see `Local: http://127.0.0.1:5173/` in the logs, the app is running
+- open `http://127.0.0.1:5173` in browser
 - for API integration keep backend services running in another terminal: `make local-run-all`
 
 # Frontend commands for daily work
 - `cd ~/PROJECTS/r8n/frontend`
 - `nvm use`
 - `npm run dev` to run UI locally
-- `npm run type-check` for TypeScript checks
-- `npm run lint` to run linters with autofixes
-- `npm run test:unit` to run unit tests
+- `make frontend-dev` to run UI with gateway certificate when proxying `/api` to local backend
+- `npm run lint` to run ESLint
+- `npm test` to run Vitest tests
 - `npm run build` to verify production build
 
 # Frontend after repository update
@@ -126,8 +128,8 @@ Build and dependency management system for backend. Runs every time you build ba
 - `cd ~/PROJECTS/r8n/frontend`
 - `nvm use`
 - `npm ci` to sync dependencies with updated lockfile
-- `npm run type-check` and `npm run lint`
-- `npm run dev` and verify `http://localhost:5173`
+- `npm run lint` and `npm test`
+- `npm run dev` and verify `http://127.0.0.1:5173`
 
 # IDEA troubleshooting
 - `com.intellij.platform.ide.bootstrap.DirectoryLock$CannotActivateException: Process "/app/bin/idea" (2) is still running and does not respond.`
