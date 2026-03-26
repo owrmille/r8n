@@ -159,7 +159,13 @@ clean-the-fuck-out-of-this-campus-machine:
 who-ate-all-the-space:
 	du --all --human-readable --one-file-system --max-depth=1 ~
 
-test-github: test-backend test-frontend test-e2e
+test-github-backend: test-backend
+
+test-github-frontend: test-frontend
+
+test-github-e2e: test-e2e
+
+test-github: test-github-backend test-github-frontend test-github-e2e
 
 test-backend: lint-backend
 	cd backend && ./gradlew test
@@ -174,7 +180,7 @@ test-frontend: test-frontend-prepare
 	cd frontend && npm run type-check && npx oxlint && npx eslint . --max-warnings=0 && npm run test:unit -- --run && npm run build-only
 
 test-e2e:
-	cd frontend && npx playwright install --with-deps && npm run test:e2e
+	cd frontend && npm run test:e2e
 
 help:
 	@echo "Available Makefile targets:"
