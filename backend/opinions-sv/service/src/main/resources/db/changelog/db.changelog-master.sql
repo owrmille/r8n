@@ -73,17 +73,23 @@ CREATE TABLE IF NOT EXISTS referents (
     longitude DOUBLE PRECISION,
     referent_group UUID NOT NULL
 );
+CREATE INDEX IF NOT EXISTS idx_referents_referent_group
+    ON referents(referent_group);
+CREATE INDEX IF NOT EXISTS idx_referents_name
+    ON referents(name);
 
 CREATE TABLE IF NOT EXISTS subjects (
     id UUID PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    referent UUID NOT NULL
-);
-
-ALTER TABLE subjects
-    ADD CONSTRAINT fk_subjects_referent
+    referent UUID NOT NULL,
+    CONSTRAINT fk_subjects_referent
     FOREIGN KEY (referent)
-    REFERENCES referents(id);
+    REFERENCES referents(id)
+);
+CREATE INDEX IF NOT EXISTS idx_subjects_referent
+    ON subjects(referent);
+CREATE INDEX IF NOT EXISTS idx_subjects_name
+    ON subjects(name);
 
 INSERT INTO referents (id, name, address, latitude, longitude, referent_group)
 VALUES

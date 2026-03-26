@@ -12,7 +12,6 @@ import com.r8n.backend.opinions.api.dto.opinion.WeightedOpinionReferenceDto
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
@@ -65,7 +64,6 @@ class OpinionsIntegrationTests {
 
     @BeforeEach
     fun setUp() {
-        whenever(userClient.getUserName(any())).thenReturn("username")
         whenever(userClient.getUserName(eq(bernardReferent.id)))
             .thenReturn(bernardReferent.name)
     }
