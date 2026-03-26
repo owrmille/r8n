@@ -113,13 +113,13 @@ Useful context:
 
 ## Stack & architecture (brief)
 - frontend stack:
-  - [`React 18`](https://react.dev/) + [`TypeScript`](https://www.typescriptlang.org/docs/)
-  - [`Vite`](https://vite.dev/guide/) (dev server and build)
+  - [`React 18.3+`](https://react.dev/) + [`TypeScript 5.8+`](https://www.typescriptlang.org/docs/)
+  - [`Vite 8+`](https://vite.dev/guide/) (dev server and build)
   - [`React Router`](https://reactrouter.com/) for routing
   - [`@tanstack/react-query`](https://tanstack.com/query/latest) for query state
-  - [`Tailwind CSS v3`](https://tailwindcss.com/docs/installation/using-vite)
+  - [`Tailwind CSS v3.4+`](https://tailwindcss.com/docs/installation/using-vite)
   - local `shadcn/ui`-style components built on Radix UI primitives
-  - [`Vitest`](https://vitest.dev/) for unit tests
+  - [`Vitest`](https://vitest.dev/) + React Testing Library for unit tests
   - [`Playwright`](https://playwright.dev/) for e2e testing infrastructure
 - current top-level structure in `src`:
   - `App.tsx` app bootstrap, router, providers, and layout wiring
@@ -128,3 +128,9 @@ Useful context:
   - `components/ui` shared UI primitives
   - `components` page-level reusable components
   - `hooks`, `lib`, `assets`, `test` support code and utilities
+- frontend workflow conventions:
+  - keep server communication behind shared API modules and query/mutation hooks; do not call `fetch` directly from page or UI components
+  - use the shared HTTP client and typed request/response contracts; map backend DTOs before they reach presentation components when needed
+  - manage remote data through shared query utilities such as React Query instead of reimplementing loading, caching, refetching, or retry logic ad hoc
+  - keep query hooks and mutation hooks separate, and update or invalidate related cache entries after writes
+  - handle loading, error, success, and empty states explicitly for every API-backed screen
