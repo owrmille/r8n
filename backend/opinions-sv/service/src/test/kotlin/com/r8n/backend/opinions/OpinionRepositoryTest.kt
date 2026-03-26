@@ -1,9 +1,9 @@
 package com.r8n.backend.opinions
 
-import com.r8n.backend.mock.integration.UserClient
 import com.r8n.backend.opinions.domain.OpinionStatusEnum
 import com.r8n.backend.opinions.persistence.OpinionPersistence
 import com.r8n.backend.opinions.provider.database.OpinionRepository
+import com.r8n.backend.users.integration.UsersInternalApi
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -22,34 +22,35 @@ import java.util.UUID
 @Testcontainers
 @SpringBootTest
 class OpinionRepositoryTest {
-
     private companion object {
         @Container
         @ServiceConnection
-        val postgres = PostgreSQLContainer(DockerImageName.parse("postgres:15"))
-            .withDatabaseName("opinions")
-            .withUsername("test")
-            .withPassword("test")
-            .withInitScript("db/init-schema.sql")
+        val postgres =
+            PostgreSQLContainer(DockerImageName.parse("postgres:15"))
+                .withDatabaseName("opinions")
+                .withUsername("test")
+                .withPassword("test")
+                .withInitScript("db/init-schema.sql")
     }
 
     @Autowired
     lateinit var opinionRepository: OpinionRepository
 
     @MockitoBean
-    lateinit var userClient: UserClient
+    lateinit var userClient: UsersInternalApi
 
     @Test
     fun `saved opinion gets uuid v7 id`() {
-        val saved = opinionRepository.save(
-            OpinionPersistence(
-                owner = UUID.fromString("07070707-0707-0707-0707-070707070707"),
-                subject = UUID.fromString("23232323-2323-2323-2323-232323232323"),
-                mark = null,
-                status = OpinionStatusEnum.DRAFT,
-                timestamp = Instant.now(),
+        val saved =
+            opinionRepository.save(
+                OpinionPersistence(
+                    owner = UUID.fromString("07070707-0707-0707-0707-070707070707"),
+                    subject = UUID.fromString("23232323-2323-2323-2323-232323232323"),
+                    mark = null,
+                    status = OpinionStatusEnum.DRAFT,
+                    timestamp = Instant.now(),
+                ),
             )
-        )
 
         val id = saved.id!!
         assertEquals(7, id.version(), "Expected UUID v7 but got v${id.version()}")
