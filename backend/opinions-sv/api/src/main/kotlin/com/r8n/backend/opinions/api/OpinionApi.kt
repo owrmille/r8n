@@ -10,26 +10,51 @@ import java.util.UUID
 
 interface OpinionApi {
     @GetMapping("/opinions/{id}")
-    fun getOpinionById(@PathVariable id: UUID): OpinionDto
+    fun getOpinionById(
+        @PathVariable id: UUID,
+    ): OpinionDto
 
     @GetMapping("/opinions/for/{subjectId}")
-    fun getOpinionFor(@PathVariable subjectId: UUID): OpinionDto
+    fun getOpinionFor(
+        @PathVariable subjectId: UUID,
+    ): OpinionDto
 
     @PostMapping("/opinions")
-    fun createOpinion(subjectId: UUID, subjective: List<String>, objective: List<String>, mark: Double?): OpinionDto
+    fun createOpinion(
+        subjectId: UUID,
+        subjective: List<String>,
+        objective: List<String>,
+        mark: Double?,
+    ): OpinionDto
 
     @PatchMapping("/opinions/{opinionId}")
-    fun updateOpinion(@PathVariable opinionId: UUID, subjective: List<String>, objective: List<String>, mark: Double?): OpinionDto
+    fun updateOpinion(
+        @PathVariable opinionId: UUID,
+        subjective: List<String>,
+        objective: List<String>,
+        mark: Double?,
+    ): OpinionDto
 
     @DeleteMapping("/opinions/{opinionId}")
-    fun deleteOpinion(@PathVariable opinionId: UUID)
+    fun deleteOpinion(
+        @PathVariable opinionId: UUID,
+    )
 
     @PostMapping("/opinions/link")
-    fun linkComponent(parentOpinionId: UUID, childOpinionId: UUID, weight: Double): OpinionDto
+    fun linkComponent(
+        parentOpinionId: UUID,
+        childOpinionId: UUID,
+        weight: Double,
+    ): OpinionDto
 
     @DeleteMapping("/opinions/unlink/{linkId}")
-    fun unlinkComponent(@PathVariable linkId: UUID): OpinionDto
+    fun unlinkComponent(
+        @PathVariable linkId: UUID,
+    ): OpinionDto
 
     @PatchMapping("/opinions/adjustWeight/{linkId}")
-    fun adjustComponentWeight(@PathVariable linkId: UUID, weight: Double): OpinionDto
+    fun adjustComponentWeight(
+        @PathVariable linkId: UUID,
+        weight: Double,
+    ): OpinionDto
 }

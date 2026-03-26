@@ -7,6 +7,6 @@ import java.util.UUID
 
 @Profile("local")
 @Component
-class UsersInternalApiStub: UsersInternalApi {
+class UsersInternalApiStub : UsersInternalApi {
     override fun getUserName(id: UUID) = "Lorem Ipsum"
 }

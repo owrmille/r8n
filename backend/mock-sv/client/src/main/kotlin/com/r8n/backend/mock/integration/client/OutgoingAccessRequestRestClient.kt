@@ -23,24 +23,35 @@ class OutgoingAccessRequestRestClient(
         status: RequestStatusEnumDto?,
         pageable: PageRequestDto,
     ): PageResponseDto<AccessRequestDto> =
-        restClient.get().uri { uriBuilder ->
-            uriBuilder.path(GET_PATH)
-                .queryParamIfPresent("forListId", Optional.ofNullable(forListId))
-                .queryParamIfPresent("since", Optional.ofNullable(since))
-                .queryParamIfPresent("status", Optional.ofNullable(status))
-                .queryParam("page", pageable.page)
-                .queryParam("size", pageable.size)
-                .apply {
-                    pageable.sort.forEach {
-                        queryParam("sort", "${it.property},${it.direction}")
-                    }
-                }
-                .build()
-        }.retrieve().body<PageResponseDto<AccessRequestDto>>()!!
+        restClient
+            .get()
+            .uri { uriBuilder ->
+                uriBuilder
+                    .path(GET_PATH)
+                    .queryParamIfPresent("forListId", Optional.ofNullable(forListId))
+                    .queryParamIfPresent("since", Optional.ofNullable(since))
+                    .queryParamIfPresent("status", Optional.ofNullable(status))
+                    .queryParam("page", pageable.page)
+                    .queryParam("size", pageable.size)
+                    .apply {
+                        pageable.sort.forEach {
+                            queryParam("sort", "${it.property},${it.direction}")
+                        }
+                    }.build()
+            }.retrieve()
+            .body<PageResponseDto<AccessRequestDto>>()!!
 
     override fun create(listId: UUID): AccessRequestDto =
-        restClient.get().uri(CREATE_PATH, listId).retrieve().body<AccessRequestDto>()!!
+        restClient
+            .get()
+            .uri(CREATE_PATH, listId)
+            .retrieve()
+            .body<AccessRequestDto>()!!
 
     override fun cancel(requestId: UUID): AccessRequestDto =
-        restClient.get().uri(CANCEL_PATH, requestId).retrieve().body<AccessRequestDto>()!!
+        restClient
+            .get()
+            .uri(CANCEL_PATH, requestId)
+            .retrieve()
+            .body<AccessRequestDto>()!!
 }

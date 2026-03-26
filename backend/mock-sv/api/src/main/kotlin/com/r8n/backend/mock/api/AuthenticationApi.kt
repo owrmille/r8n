@@ -14,7 +14,9 @@ interface AuthenticationApi {
     }
 
     @PostMapping(LOGIN_PATH)
-    fun login(@RequestBody request: LoginRequestDto): AuthenticationTokenDto
+    fun login(
+        @RequestBody request: LoginRequestDto,
+    ): AuthenticationTokenDto
 
     @PostMapping(LOGOUT_PATH)
     fun logout()

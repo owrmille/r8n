@@ -11,7 +11,6 @@ import java.util.UUID
 class UserController(
     private val userFacade: UserFacade,
 ) : UsersApi {
-
     override fun exportAll(): UserCompleteDataDto {
         val auth = SecurityContextHolder.getContext().authentication ?: throw IllegalStateException("Not authenticated")
         val userId = UUID.fromString(auth.name)

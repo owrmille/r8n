@@ -13,7 +13,7 @@ spring-dependency-management = "1.1.7"
 spring-gateway = "5.0.1"
 spring-web = "7.0.5"
 springdoc = "2.2.0"
-ktlint = "12.1.2"
+ktlint = "14.0.1"
 testcontainers = "2.0.3"
 testcontainers-jupiter = "1.21.3"
 

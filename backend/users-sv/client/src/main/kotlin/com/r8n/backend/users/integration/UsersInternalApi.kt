@@ -8,6 +8,9 @@ interface UsersInternalApi {
     companion object {
         const val NAME_PATH = "/users/name/{id}"
     }
+
     @GetMapping(NAME_PATH)
-    fun getUserName(@PathVariable id: UUID): String
+    fun getUserName(
+        @PathVariable id: UUID,
+    ): String
 }

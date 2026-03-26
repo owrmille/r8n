@@ -13,9 +13,7 @@ import org.springframework.web.server.ResponseStatusException
 
 @RestController
 class StubAuthenticationController : AuthenticationApi {
-
     override fun login(request: LoginRequestDto): AuthenticationTokenDto {
-
         if (request.login == STUB_LOGIN &&
             request.password == STUB_PASSWORD
         ) {

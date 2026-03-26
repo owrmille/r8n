@@ -2,8 +2,8 @@ package com.r8n.backend.mock.api
 
 import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
-import com.r8n.backend.mock.api.dto.list.OpinionListSummaryDto
 import com.r8n.backend.mock.api.dto.about.OpinionSubjectDto
+import com.r8n.backend.mock.api.dto.list.OpinionListSummaryDto
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -34,10 +34,14 @@ interface RecommendationApi {
     ): PageResponseDto<OpinionListSummaryDto>
 
     @PatchMapping(HIDE_SUBJECT_PATH)
-    fun hideRecommendedSubject(@PathVariable id: UUID)
+    fun hideRecommendedSubject(
+        @PathVariable id: UUID,
+    )
 
     @PatchMapping(HIDE_LIST_PATH)
-    fun hideRecommendedOpinionList(@PathVariable id: UUID)
+    fun hideRecommendedOpinionList(
+        @PathVariable id: UUID,
+    )
 
     @GetMapping(HIDDEN_SUBJECTS_PATH)
     fun getHiddenSubjects(pageable: PageRequestDto): PageResponseDto<OpinionSubjectDto>
@@ -46,8 +50,12 @@ interface RecommendationApi {
     fun getHiddenOpinionLists(pageable: PageRequestDto): PageResponseDto<OpinionListSummaryDto>
 
     @PatchMapping(UNHIDE_SUBJECT_PATH)
-    fun unhideSubject(@PathVariable id: UUID): OpinionSubjectDto
+    fun unhideSubject(
+        @PathVariable id: UUID,
+    ): OpinionSubjectDto
 
     @PatchMapping(UNHIDE_LIST_PATH)
-    fun unhideOpinionList(@PathVariable id: UUID): OpinionListSummaryDto
+    fun unhideOpinionList(
+        @PathVariable id: UUID,
+    ): OpinionListSummaryDto
 }

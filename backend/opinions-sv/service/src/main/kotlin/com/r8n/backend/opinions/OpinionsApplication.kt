@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 class OpinionsApplication
 
 fun main(args: Array<String>) {
-	runApplication<OpinionsApplication>(*args)
+    runApplication<OpinionsApplication>(*args)
 }

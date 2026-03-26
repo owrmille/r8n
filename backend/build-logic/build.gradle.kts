@@ -14,10 +14,10 @@ kotlin {
 dependencies {
     implementation(gradleApi())
     implementation(localGroovy())
-    implementation(libs.ktlint)
     implementation(libs.kotlin.gradle)
     implementation(libs.spring.boot.gradle)
     implementation(libs.kotlin.jpa)
+    implementation("org.jlleitschuh.gradle:ktlint-gradle:14.0.1")
 }
 
 gradlePlugin {

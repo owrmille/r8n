@@ -8,5 +8,9 @@ class UsersRestClient(
     private val restClient: RestClient,
 ) : UsersInternalApi {
     override fun getUserName(id: UUID): String =
-        restClient.get().uri(NAME_PATH, id).retrieve().body(String::class.java)!!
+        restClient
+            .get()
+            .uri(NAME_PATH, id)
+            .retrieve()
+            .body(String::class.java)!!
 }

@@ -6,7 +6,10 @@ import java.time.Instant
 import java.util.UUID
 
 object AccessRequestsTestDataFactory {
-    fun get(listId: UUID? = null, status: RequestStatusEnumDto = RequestStatusEnumDto.SENT): AccessRequestDto {
+    fun get(
+        listId: UUID? = null,
+        status: RequestStatusEnumDto = RequestStatusEnumDto.SENT,
+    ): AccessRequestDto {
         val listId = listId ?: UUID.randomUUID()
         return AccessRequestDto(
             UUID.randomUUID(),

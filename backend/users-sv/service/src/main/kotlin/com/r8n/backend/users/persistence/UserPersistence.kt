@@ -19,11 +19,9 @@ class UserPersistence(
     @GeneratedValue
     @UuidGenerator
     val id: UUID,
-
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     val status: UserStatusEnum,
-
     @Column(nullable = false)
     val statusTimestamp: Instant,
 )

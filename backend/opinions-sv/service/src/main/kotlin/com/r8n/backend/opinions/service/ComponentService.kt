@@ -12,7 +12,7 @@ class ComponentService {
         val stub = OpinionTestDataFactory.getOpinion(parentOpinionId)
         return ComponentSection(
             stub.componentMark,
-            stub.components.map { WeightedOpinionReference(it.id, it.opinion, it.weight) }
+            stub.components.map { WeightedOpinionReference(it.id, it.opinion, it.weight) },
         )
     }
 }

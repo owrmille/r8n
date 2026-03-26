@@ -11,13 +11,15 @@ class UsersRestClientConfiguration {
     @Bean
     @Qualifier("usersRestClient")
     fun usersRestClient(
-        @Value("${"$"}{services.users.url}") baseUrl: String
+        @Value("${"$"}{services.users.url}") baseUrl: String,
     ): RestClient =
-        RestClient.builder()
+        RestClient
+            .builder()
             .baseUrl(baseUrl)
             .build()
 
     @Bean
-    fun userRestClient(@Qualifier("usersRestClient") restClient: RestClient): UsersInternalApi =
-        UsersRestClient(restClient)
+    fun userRestClient(
+        @Qualifier("usersRestClient") restClient: RestClient,
+    ): UsersInternalApi = UsersRestClient(restClient)
 }
