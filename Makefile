@@ -6,7 +6,7 @@ LOAD_LOCAL_ENV = set -a; [ -f "$(LOCAL_ENV_FILE)" ] && . "$(LOCAL_ENV_FILE)"; se
 LOAD_DOCKER_ENV = set -a; . "$(DOCKER_ENV_FILE)"; . "$(DOCKER_SECRETS_ENV_FILE)"; set +a;
 SERVICES_FILE := deployment/config/services.list
 ifeq (,$(wildcard $(SERVICES_FILE)))
-    $(error Missing $(SERVICES_FILE))
+	$(error Missing $(SERVICES_FILE))
 endif
 SERVICES := $(shell awk 'NF && $$1 !~ /^\#/{printf "%s ",$$1}' "$(SERVICES_FILE)")
 FRONTEND_DIR := frontend
@@ -15,22 +15,22 @@ FRONTEND_GATEWAY_CERT := $(CURDIR)/deployment/certs/gateway.crt
 BOOT_JAR_TASKS := $(addprefix :,$(addsuffix -sv:bootJar,$(SERVICES)))
 
 .PHONY: local-run-all local-stop-all \
-    $(addprefix local-run-,$(SERVICES)) \
-    $(addprefix local-stop-,$(SERVICES)) \
-    $(addprefix docker-logs-,$(SERVICES)) \
-    prebuild-jars prepare-artifacts docker-build docker-up \
-    docker-certs docker-certs-force \
-    docker-down docker-logs clean-artifacts ensure-log-dirs clean-logs \
-    routed-request-opinion routed-request-mock \
-    direct-request-opinion direct-request-mock \
-    https-routed-request-opinion https-routed-request-mock \
-    frontend-dev
-    direct-request-opinion direct-request-mock \
-    routed-request-gdpr build-opinions \
-    docker-database-drop-volume-personal docker-database-drop-volume-campus \
-    docker-database-run docker-database-connect \
-    clean-the-fuck-out-of-this-campus-machine who-ate-all-the-space \
-    test-github test-backend lint-backend test-frontend-prepare test-frontend test-e2e help
+	$(addprefix local-run-,$(SERVICES)) \
+	$(addprefix local-stop-,$(SERVICES)) \
+	$(addprefix docker-logs-,$(SERVICES)) \
+	prebuild-jars prepare-artifacts docker-build docker-up \
+	docker-certs docker-certs-force \
+	docker-down docker-logs clean-artifacts ensure-log-dirs clean-logs \
+	routed-request-opinion routed-request-mock \
+	direct-request-opinion direct-request-mock \
+	https-routed-request-opinion https-routed-request-mock \
+	routed-request-gdpr \
+	frontend-dev \
+	build-opinions \
+	docker-database-drop-volume-personal docker-database-drop-volume-campus \
+	docker-database-run docker-database-connect \
+	clean-the-fuck-out-of-this-campus-machine who-ate-all-the-space \
+	test-github test-backend lint-backend test-frontend-prepare test-frontend test-e2e help
 
 docker-up: docker-build ensure-log-dirs docker-certs
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml up -d
