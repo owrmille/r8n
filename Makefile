@@ -191,7 +191,9 @@ docker-run-database: ## Start only the database container
 $(addprefix local-run-,$(SERVICES)): local-run-%: ## Run one backend service locally
 	@echo "Starting $*-sv..."
 	@$(LOAD_LOCAL_ENV) \
-	cd backend && (./gradlew :$*-sv:bootRun --args='--spring.profiles.active=local' > $*.log 2>&1 & \
+	profiles="local"; \
+	[ "$*" = "opinions" ] && profiles="local,mocked-users" || true; \
+	cd backend && (./gradlew :$*-sv:bootRun --args="--spring.profiles.active=$$profiles" > $*.log 2>&1 & \
 	echo $$! > /tmp/$*.pid)
 
 build-opinions: ## Build opinions service with tests

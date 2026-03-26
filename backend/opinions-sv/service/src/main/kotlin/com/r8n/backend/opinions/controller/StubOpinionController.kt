@@ -18,7 +18,7 @@ class StubOpinionController(
 
     override fun getOpinionFor(
         subjectId: UUID,
-    ) = OpinionTestDataFactory.getOpinion(subjectId)
+    ) = opinionFacade.getOpinionForDto(subjectId)
 
     override fun createOpinion(
         subjectId: UUID,
