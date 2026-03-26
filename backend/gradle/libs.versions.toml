@@ -36,6 +36,7 @@ jackson-module-kotlin = { module = "tools.jackson.module:jackson-module-kotlin",
 kotlin-gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-jpa = { module = "org.jetbrains.kotlin.plugin.jpa:org.jetbrains.kotlin.plugin.jpa.gradle.plugin", version.ref = "kotlin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
+ktlint = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref = "ktlint" }
 liquibase = { module = "org.liquibase:liquibase-core", version.ref = "liquibase" }
 mockito = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockito"}
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
