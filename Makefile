@@ -11,7 +11,12 @@ BOOT_JAR_TASKS := $(addprefix :,$(addsuffix -sv:bootJar,$(SERVICES)))
     prebuild-jars prepare-artifacts docker-build docker-up \
     docker-down docker-logs clean-artifacts ensure-log-dirs clean-logs \
     routed-request-opinion routed-request-mock \
-    direct-request-opinion direct-request-mock
+    direct-request-opinion direct-request-mock \
+    routed-request-gdpr build-opinions \
+    docker-database-drop-volume-personal docker-database-drop-volume-campus \
+    docker-database-run docker-database-connect \
+    clean-the-fuck-out-of-this-campus-machine who-ate-all-the-space \
+    test-github test-backend lint-backend test-frontend-prepare test-frontend test-e2e help
 
 docker-up: docker-build ensure-log-dirs
 	docker compose --env-file $(DOCKER_ENV_FILE) -f docker-compose.yml up -d
@@ -105,3 +110,38 @@ clean-the-fuck-out-of-this-campus-machine:
 
 who-ate-all-the-space:
 	du --all --human-readable --one-file-system --max-depth=1 ~
+
+test-github: test-backend test-frontend test-e2e
+
+test-backend: lint-backend
+	cd backend && ./gradlew test
+
+lint-backend:
+	cd backend && ./gradlew ktlintCheck
+
+test-frontend-prepare:
+	cd frontend && npm ci
+
+test-frontend: test-frontend-prepare
+	cd frontend && npm run type-check && npx oxlint && npx eslint . --max-warnings=0 && npm run test:unit -- --run && npm run build-only
+
+test-e2e:
+	cd frontend && npx playwright install --with-deps && npm run test:e2e
+
+help:
+	@echo "Available Makefile targets:"
+	@echo "  docker-up                               - Build and start all services in Docker"
+	@echo "  docker-down                             - Stop all Docker services"
+	@echo "  docker-logs                             - Show logs for all services"
+	@echo "  local-run-all                           - Start all services locally (background)"
+	@echo "  local-stop-all                          - Stop all locally running services"
+	@echo "  test-github                             - Run all tests (backend, frontend, e2e)"
+	@echo "  test-backend                            - Run backend tests (includes lint)"
+	@echo "  lint-backend                            - Run backend lint check (ktlint)"
+	@echo "  test-frontend                           - Run frontend tests (lint, unit, build)"
+	@echo "  test-e2e                                - Run frontend e2e tests (Playwright)"
+	@echo "  docker-database-run                     - Run PostgreSQL database in Docker"
+	@echo "  docker-database-connect                 - Connect to the running PostgreSQL database"
+	@echo "  clean-logs                              - Remove all .log files in deployment folder"
+	@echo "  clean-the-fuck-out-of-this-campus-machine - Deep clean for shared lab environments"
+	@echo "  who-ate-all-the-space                   - Disk usage summary for current user"
