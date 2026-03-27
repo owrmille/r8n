@@ -26,6 +26,7 @@ BOOT_JAR_TASKS := $(addprefix :,$(addsuffix -sv:bootJar,$(SERVICES)))
     https-routed-request-opinion https-routed-request-mock \
     frontend-dev \
     clean fclean all \
+    gradle-%-bootJar \
 
 # Dynamic service artifacts configuration
 SERVICE_JARS := $(foreach svc,$(SERVICES),deployment/$(svc)/app.jar)
@@ -45,7 +46,6 @@ docker-build: prepare-artifacts
 prepare-artifacts: $(SERVICE_JARS)
 
 # Build bootJar for a specific service. Gradle decides if work is needed (up-to-date check).
-.PHONY: gradle-%-bootJar
 gradle-%-bootJar:
 	cd backend && ./gradlew :$*-sv:bootJar
 
