@@ -142,7 +142,19 @@ https-routed-request-mock:
 	curl --cacert deployment/certs/gateway.crt "https://localhost:8080/opinionLists/summary?listId=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
 
 clean-the-fuck-out-of-this-campus-machine:
-	rm -rf ~/.local/share/docker ~/.var/app/com.slack.Slack ~/.config/Code ~/.config/Slack ~/.config/google-chrome && mkdir -p ~/.local/share/docker/tmp && chmod 700 ~/.local/share/docker/tmp
+	@echo "Stopping Docker service..."
+	-systemctl --user stop docker.service
+	@echo "Pruning Docker system..."
+	-docker system prune -f
+	@echo "Deleting Docker root directory and other caches..."
+	-rm -rf ~/.local/share/docker ~/.var/app/com.slack.Slack ~/.config/Code ~/.config/Slack ~/.config/google-chrome
+	@echo "Recreating Docker tmp directory..."
+	mkdir -p ~/.local/share/docker/tmp && chmod 700 ~/.local/share/docker/tmp
+	@echo "Restarting Docker service..."
+	-systemctl --user start docker.service
+	@echo "Killing Gradle daemons..."
+	-pkill -f GradleDaemon
+	@echo "Cleanup complete. Please wait a moment for Docker to fully initialize before running 'make docker-up'."
 
 who-ate-all-the-space:
 	du --all --human-readable --one-file-system --max-depth=1 ~
