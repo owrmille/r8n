@@ -24,9 +24,15 @@ BOOT_JAR_TASKS := $(addprefix :,$(addsuffix -sv:bootJar,$(SERVICES)))
     routed-request-opinion routed-request-mock \
     direct-request-opinion direct-request-mock \
     https-routed-request-opinion https-routed-request-mock \
+    docker-database-drop-volume-personal \
+    docker-database-drop-volume-campus \
+    docker-run-database docker-database-connect \
+    build-opinions \
+    who-ate-all-the-space clean-the-fuck-out-of-this-campus-machine \
     frontend-dev \
     clean fclean all \
     gradle-%-bootJar \
+    lint-makefile check-makefile
 
 # Dynamic service artifacts configuration
 SERVICE_JARS := $(foreach svc,$(SERVICES),deployment/$(svc)/app.jar)
@@ -35,6 +41,8 @@ SERVICE_JARS := $(foreach svc,$(SERVICES),deployment/$(svc)/app.jar)
 GRADLE_BOOT_JARS := $(addprefix gradle-,$(addsuffix -bootJar,$(SERVICES)))
 
 # Docker helpers
+
+all: docker-up
 
 docker-up: docker-build ensure-log-dirs docker-certs
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml up -d
@@ -139,6 +147,7 @@ $(addprefix local-stop-,$(SERVICES)): local-stop-%:
 frontend-dev:
 	cd $(FRONTEND_DIR) && NODE_EXTRA_CA_CERTS="$(FRONTEND_GATEWAY_CERT)" npm run dev
 
+# for local-* runs
 routed-request-opinion:
 	curl "http://localhost:8080/opinions/30000000-0000-0000-0000-000000000001" -i -H "Authorization: Bearer stub-access-token-123"
 
@@ -148,16 +157,17 @@ routed-request-mock:
 direct-request-opinion:
 	curl "http://localhost:8081/opinions/30000000-0000-0000-0000-000000000001" -i -H "Authorization: Bearer stub-access-token-123"
 
-
 direct-request-mock:
 	curl "http://localhost:8090/opinion-lists/00000000-0000-0000-0000-000000000000/summary" -i -H "Authorization: Bearer stub-access-token-123"
 
+# for docker- runs
 https-routed-request-opinion:
 	curl --cacert deployment/certs/gateway.crt "https://localhost:8080/opinions/00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
 
 https-routed-request-mock:
 	curl --cacert deployment/certs/gateway.crt "https://localhost:8080/opinion-lists/00000000-0000-0000-0000-000000000000/summary" -i -H "Authorization: Bearer stub-access-token-123"
 
+# cleanup
 clean-the-fuck-out-of-this-campus-machine:
 	@echo "Stopping Docker service..."
 	-systemctl --user stop docker.service
@@ -181,4 +191,6 @@ clean: clean-logs
 
 fclean: clean clean-artifacts
 
-all: docker-up
+check-makefile:
+	chmod +x utils/lint-makefile.sh
+	./utils/lint-makefile.sh

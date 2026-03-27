@@ -45,7 +45,6 @@ services:
     volumes:
       - ./deployment/opinions/logs:/var/log/r8n
       - ./deployment/certs:/certs:ro
-      - ./deployment/database/init:/docker-entrypoint-initdb.d:ro
     depends_on:
       - database
 
