@@ -8,7 +8,7 @@ SERVICES_FILE := deployment/config/services.list
 ifeq (,$(wildcard $(SERVICES_FILE)))
     $(error Missing $(SERVICES_FILE))
 endif
-SERVICES := $(shell awk 'NF && $$1 !~ /^\#/{printf "%s ",$$1}' "$(SERVICES_FILE)")
+SERVICES := $(shell awk 'NF && $$1 !~ /^#/{printf "%s ",$$1}' "$(SERVICES_FILE)")
 FRONTEND_DIR := frontend
 FRONTEND_GATEWAY_CERT := $(CURDIR)/deployment/certs/gateway.crt
 
@@ -26,21 +26,36 @@ BOOT_JAR_TASKS := $(addprefix :,$(addsuffix -sv:bootJar,$(SERVICES)))
     https-routed-request-opinion https-routed-request-mock \
     frontend-dev
 
+# Dynamic service artifacts configuration
+SERVICE_JARS := $(foreach svc,$(SERVICES),deployment/$(svc)/app.jar)
+
+# Aggregate per-service Gradle bootJar targets
+GRADLE_BOOT_JARS := $(addprefix gradle-,$(addsuffix -bootJar,$(SERVICES)))
+
+# Docker helpers
+
 docker-up: docker-build ensure-log-dirs docker-certs
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml up -d
 
 docker-build: prepare-artifacts
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml build
 
-prepare-artifacts: prebuild-jars
-	@set -e; \
-	for svc in $(SERVICES); do \
-		mkdir -p "deployment/$$svc"; \
-		cp "$$(ls backend/$$svc-sv/service/build/libs/*.jar | grep -v -- '-plain\.jar$$' | head -n1)" "deployment/$$svc/app.jar"; \
-	done
+# Preparing artifacts copies built jars; building is handled by per-service Gradle targets
+prepare-artifacts: $(SERVICE_JARS)
 
-prebuild-jars:
-	cd backend && ./gradlew $(BOOT_JAR_TASKS)
+# Build bootJar for a specific service. Gradle decides if work is needed (up-to-date check).
+.PHONY: gradle-%-bootJar
+gradle-%-bootJar:
+	cd backend && ./gradlew :$*-sv:bootJar
+
+# Copy the latest non-plain jar for the service into deployment/<svc>/app.jar
+# Depends on the Gradle build of that specific service only.
+deployment/%/app.jar: gradle-%-bootJar
+	@mkdir -p deployment/$*
+	cp "$$(ls backend/$*-sv/service/build/libs/*.jar | grep -v -- '-plain\.jar$$' | head -n1)" "$@"
+
+# Keep a target to build all service jars without copying them
+prebuild-jars: $(GRADLE_BOOT_JARS)
 
 ensure-log-dirs:
 	@for svc in $(SERVICES); do \
