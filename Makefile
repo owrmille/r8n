@@ -24,7 +24,8 @@ BOOT_JAR_TASKS := $(addprefix :,$(addsuffix -sv:bootJar,$(SERVICES)))
     routed-request-opinion routed-request-mock \
     direct-request-opinion direct-request-mock \
     https-routed-request-opinion https-routed-request-mock \
-    frontend-dev
+    frontend-dev \
+    clean fclean all \
 
 # Dynamic service artifacts configuration
 SERVICE_JARS := $(foreach svc,$(SERVICES),deployment/$(svc)/app.jar)
@@ -151,10 +152,10 @@ direct-request-mock:
 	curl "http://localhost:8090/opinion-lists/00000000-0000-0000-0000-000000000000/summary" -i -H "Authorization: Bearer stub-access-token-123"
 
 https-routed-request-opinion:
-	curl --cacert deployment/certs/gateway.crt "https://localhost:8080/opinions/id?id=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
+	curl --cacert deployment/certs/gateway.crt "https://localhost:8080/opinions/00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
 
 https-routed-request-mock:
-	curl --cacert deployment/certs/gateway.crt "https://localhost:8080/opinionLists/summary?listId=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
+	curl --cacert deployment/certs/gateway.crt "https://localhost:8080/opinion-lists/00000000-0000-0000-0000-000000000000/summary" -i -H "Authorization: Bearer stub-access-token-123"
 
 clean-the-fuck-out-of-this-campus-machine:
 	@echo "Stopping Docker service..."
@@ -169,7 +170,14 @@ clean-the-fuck-out-of-this-campus-machine:
 	-systemctl --user start docker.service
 	@echo "Killing Gradle daemons..."
 	-pkill -f GradleDaemon
-	@echo "Cleanup complete. Please wait a moment for Docker to fully initialize before running 'make docker-up'."
+	@echo "Cleanup complete"
 
 who-ate-all-the-space:
 	du --all --human-readable --one-file-system --max-depth=1 ~
+
+clean: clean-logs
+	cd backend && ./gradlew clean
+
+fclean: clean clean-artifacts
+
+all: docker-up
