@@ -21,6 +21,7 @@ class DatabaseConsumerConventionPlugin : Plugin<Project> {
                 add("implementation", libs.findLibrary("postgresql").get())
                 add("implementation", libs.findLibrary("spring-boot-starter-data-jpa").get())
                 add("implementation", libs.findLibrary("spring-boot-starter-liquibase").get())
+                add("testImplementation", libs.findLibrary("spring-boot-starter-test").get())
                 add("testImplementation", libs.findLibrary("spring-boot-testcontainers").get())
                 add("testImplementation", libs.findLibrary("testcontainers").get())
                 add("testImplementation", libs.findLibrary("testcontainers-junit").get())
