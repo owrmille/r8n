@@ -18,6 +18,10 @@ spring:
   sql:
     init:
       mode: never
+  profiles:
+    active:
+      - local
+      - mocked-users
 services:
   users:
     url: ${INTERSERVICE_PROTOCOL}://${SERVICES_USERS_HOST}:${SERVICES_USERS_PORT}

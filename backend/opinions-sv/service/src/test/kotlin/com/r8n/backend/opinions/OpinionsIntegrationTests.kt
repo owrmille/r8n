@@ -3,13 +3,16 @@ package com.r8n.backend.opinions
 import tools.jackson.databind.ObjectMapper
 import tools.jackson.module.kotlin.readValue
 import com.r8n.backend.mock.integration.UserClient
-import com.r8n.backend.users.integration.UsersInternalApi
+import com.r8n.backend.opinions.api.dto.opinion.OpinionDto
+import com.r8n.backend.opinions.api.dto.opinion.OpinionStatusEnumDto
+import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.bernardReferent
+import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.cappuccino1A
 import com.r8n.backend.mock.stub.OpinionTestDataFactory
-import com.r8n.backend.opinions.api.dto.OpinionDto
+import com.r8n.backend.opinions.api.dto.opinion.WeightedOpinionReferenceDto
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.AutoConfigureJsonTesters
@@ -27,6 +30,8 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.postgresql.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
+import java.time.Instant
+import java.util.UUID
 
 @ActiveProfiles("test")
 @Testcontainers
@@ -59,13 +64,14 @@ class OpinionsIntegrationTests {
 
     @BeforeEach
     fun setUp() {
-        whenever(usersInternalApi.getUserName(any())).thenReturn("username")
+        whenever(usersInternalApi.getUserName(eq(bernardReferent.id)))
+            .thenReturn(bernardReferent.name)
     }
 
     @Test
     @WithMockUser
     fun `get opinion works`() {
-        val requestedId = "00000000-0000-0000-0000-000000000000"
+        val requestedId = "30000000-0000-0000-0000-000000000001"
         val result = mockMvc.perform(
             get("/opinions/$requestedId")
                 .header("Authorization", "Bearer stub-access-token-123"),
@@ -73,15 +79,22 @@ class OpinionsIntegrationTests {
             .andExpect(status().isOk).andReturn()
 
         val actual: OpinionDto = objectMapper.readValue(result.response.contentAsString)
-        val expected = OpinionTestDataFactory.alexanderOnDonald()
-        //assertEquals(expected, actual) // fails since only one table functional now
-        assertEquals(expected.id, actual.id)
-        assertEquals(expected.owner, actual.owner)
-        assertEquals(expected.subject, actual.subject)
-        assertEquals(expected.mark, actual.mark)
-        assertEquals(expected.status, actual.status)
-        assertEquals(expected.timestamp, actual.timestamp)
+        val expected = OpinionDto(
+            UUID.fromString("30000000-0000-0000-0000-000000000001"),
+            bernardReferent.id,
+            bernardReferent.name,
+            cappuccino1A.id,
+            cappuccino1A.name,
+            listOf("reminds of grandma's home coffee"),
+            listOf("5.50€", "lactose-free milk"),
+            4.23,
+            null,
+            emptyList(),
+            OpinionStatusEnumDto.DRAFT,
+            Instant.parse("2024-02-01T09:30:00Z"),
+        )
+
+        assertEquals(expected, actual)
     }
 
 }
-

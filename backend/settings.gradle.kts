@@ -4,7 +4,7 @@ includeBuild("build-logic")
 include("platform")
 include("core")
 
-include("gateway-sv")
+include("gateway-sv", "gateway-sv/service")
 
 include("mock-api", "mock-sv/api")
 include("mock-api-integration", "mock-sv/api-integration")

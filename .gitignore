@@ -4,7 +4,7 @@ build
 *.log
 *.gz
 *.jar
-deployment/database/data
 .kotlin
+deployment/database/data
 deployment/certs/
 docker.secrets.env

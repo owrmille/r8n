@@ -8,7 +8,7 @@ SERVICES_FILE := deployment/config/services.list
 ifeq (,$(wildcard $(SERVICES_FILE)))
     $(error Missing $(SERVICES_FILE))
 endif
-SERVICES := $(shell awk 'NF && $$1 !~ /^\#/{printf "%s ",$$1}' "$(SERVICES_FILE)")
+SERVICES := $(shell awk 'NF && $$1 !~ /^#/{printf "%s ",$$1}' "$(SERVICES_FILE)")
 FRONTEND_DIR := frontend
 FRONTEND_GATEWAY_CERT := $(CURDIR)/deployment/certs/gateway.crt
 
@@ -24,7 +24,25 @@ BOOT_JAR_TASKS := $(addprefix :,$(addsuffix -sv:bootJar,$(SERVICES)))
     routed-request-opinion routed-request-mock \
     direct-request-opinion direct-request-mock \
     https-routed-request-opinion https-routed-request-mock \
-    frontend-dev
+    docker-database-drop-volume-personal \
+    docker-database-drop-volume-campus \
+    docker-run-database docker-database-connect \
+    build-opinions \
+    who-ate-all-the-space clean-the-fuck-out-of-this-campus-machine \
+    frontend-dev \
+    clean fclean all \
+    gradle-%-bootJar \
+    lint-makefile check-makefile
+
+# Dynamic service artifacts configuration
+SERVICE_JARS := $(foreach svc,$(SERVICES),deployment/$(svc)/app.jar)
+
+# Aggregate per-service Gradle bootJar targets
+GRADLE_BOOT_JARS := $(addprefix gradle-,$(addsuffix -bootJar,$(SERVICES)))
+
+# Docker helpers
+
+all: docker-up
 
 docker-up: docker-build ensure-log-dirs docker-certs
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml up -d
@@ -32,15 +50,21 @@ docker-up: docker-build ensure-log-dirs docker-certs
 docker-build: prepare-artifacts
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml build
 
-prepare-artifacts: prebuild-jars
-	@set -e; \
-	for svc in $(SERVICES); do \
-		mkdir -p "deployment/$$svc"; \
-		cp "$$(ls backend/$$svc-sv/build/libs/*.jar | grep -v -- '-plain\.jar$$' | head -n1)" "deployment/$$svc/app.jar"; \
-	done
+# Preparing artifacts copies built jars; building is handled by per-service Gradle targets
+prepare-artifacts: $(SERVICE_JARS)
 
-prebuild-jars:
-	cd backend && ./gradlew $(BOOT_JAR_TASKS)
+# Build bootJar for a specific service. Gradle decides if work is needed (up-to-date check).
+gradle-%-bootJar:
+	cd backend && ./gradlew :$*-sv:bootJar
+
+# Copy the latest non-plain jar for the service into deployment/<svc>/app.jar
+# Depends on the Gradle build of that specific service only.
+deployment/%/app.jar: gradle-%-bootJar
+	@mkdir -p deployment/$*
+	cp "$$(ls backend/$*-sv/service/build/libs/*.jar | grep -v -- '-plain\.jar$$' | head -n1)" "$@"
+
+# Keep a target to build all service jars without copying them
+prebuild-jars: $(GRADLE_BOOT_JARS)
 
 ensure-log-dirs:
 	@for svc in $(SERVICES); do \
@@ -123,14 +147,15 @@ $(addprefix local-stop-,$(SERVICES)): local-stop-%:
 frontend-dev:
 	cd $(FRONTEND_DIR) && NODE_EXTRA_CA_CERTS="$(FRONTEND_GATEWAY_CERT)" npm run dev
 
+# for local-* runs
 routed-request-opinion:
-	curl "http://localhost:8080/opinions/00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
+	curl "http://localhost:8080/opinions/30000000-0000-0000-0000-000000000001" -i -H "Authorization: Bearer stub-access-token-123"
 
 routed-request-mock:
 	curl "http://localhost:8080/opinion-lists/00000000-0000-0000-0000-000000000000/summary" -i -H "Authorization: Bearer stub-access-token-123"
 
 direct-request-opinion:
-	curl "http://localhost:8081/opinions/00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
+	curl "http://localhost:8081/opinions/30000000-0000-0000-0000-000000000001" -i -H "Authorization: Bearer stub-access-token-123"
 
 direct-request-mock:
 	curl "http://localhost:8090/opinion-lists/00000000-0000-0000-0000-000000000000/summary" -i -H "Authorization: Bearer stub-access-token-123"
@@ -138,17 +163,37 @@ direct-request-mock:
 routed-request-gdpr:
 	curl "http://localhost:8080/users/export" -i -H "Authorization: Bearer stub-access-token-123"
 
+# for docker- runs
 https-routed-request-opinion:
-	curl --cacert deployment/certs/gateway.crt "https://localhost:8080/opinions/id?id=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
+	curl --cacert deployment/certs/gateway.crt "https://localhost:8080/opinions/00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
 
 https-routed-request-mock:
-	curl --cacert deployment/certs/gateway.crt "https://localhost:8080/opinionLists/summary?listId=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
+	curl --cacert deployment/certs/gateway.crt "https://localhost:8080/opinion-lists/00000000-0000-0000-0000-000000000000/summary" -i -H "Authorization: Bearer stub-access-token-123"
 
+# cleanup
 clean-the-fuck-out-of-this-campus-machine:
-	docker system prune -f
-	rm -rf ~/.local/share/docker ~/.var/app/com.slack.Slack ~/.config/Code ~/.config/Slack ~/.config/google-chrome
+	@echo "Stopping Docker service..."
+	-systemctl --user stop docker.service
+	@echo "Pruning Docker system..."
+	-docker system prune -f
+	@echo "Deleting Docker root directory and other caches..."
+	-rm -rf ~/.local/share/docker ~/.var/app/com.slack.Slack ~/.config/Code ~/.config/Slack ~/.config/google-chrome
+	@echo "Recreating Docker tmp directory..."
 	mkdir -p ~/.local/share/docker/tmp && chmod 700 ~/.local/share/docker/tmp
-	pkill -f GradleDaemon
+	@echo "Restarting Docker service..."
+	-systemctl --user start docker.service
+	@echo "Killing Gradle daemons..."
+	-pkill -f GradleDaemon
+	@echo "Cleanup complete"
 
 who-ate-all-the-space:
 	du --all --human-readable --one-file-system --max-depth=1 ~
+
+clean: clean-logs
+	cd backend && ./gradlew clean
+
+fclean: clean clean-artifacts
+
+check-makefile:
+	chmod +x utils/lint-makefile.sh
+	./utils/lint-makefile.sh
