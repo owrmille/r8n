@@ -194,6 +194,13 @@ clean: clean-logs
 
 fclean: clean clean-artifacts
 
+# linters
 check-makefile:
 	chmod +x utils/lint-makefile.sh
 	./utils/lint-makefile.sh
+
+# utils
+move-gradle-to-sgoinfre:
+	pkill -f GradleDaemon
+	rm -rf /sgoinfre/goinfre/Perso/$USER/gradle ~/.gradle
+	ln -s /sgoinfre/goinfre/Perso/$USER/gradle ~/.gradle
