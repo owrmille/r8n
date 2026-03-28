@@ -8,7 +8,7 @@ SERVICES_FILE := deployment/config/services.list
 ifeq (,$(wildcard $(SERVICES_FILE)))
     $(error Missing $(SERVICES_FILE))
 endif
-SERVICES := $(shell awk 'NF && $$1 !~ /^#/{printf "%s ",$$1}' "$(SERVICES_FILE)")
+SERVICES := $(shell awk 'NF && substr($$1, 1, 1) != sprintf("%c", 35) { printf "%s ", $$1 }' "$(SERVICES_FILE)")
 FRONTEND_DIR := frontend
 FRONTEND_GATEWAY_CERT := $(CURDIR)/deployment/certs/gateway.crt
 
