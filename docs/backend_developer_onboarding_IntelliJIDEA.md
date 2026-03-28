@@ -61,6 +61,7 @@ Build and dependency management system for backend. Runs every time you build ba
 - `make build-opinions` - see build succeeding
 - `make local-stop-all`
 - `make local-run-all` and check all the log files for Started application in X seconds
+- `make direct-request-opinion` and `make routed-request-opinion` should provide same result, with 0000..0 id
 
 # Docker run via Makefile (HTTPS)
 - service list:

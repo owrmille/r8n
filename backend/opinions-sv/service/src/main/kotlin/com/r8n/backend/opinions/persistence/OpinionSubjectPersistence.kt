@@ -9,19 +9,16 @@ import org.hibernate.annotations.UuidGenerator
 import java.util.UUID
 
 @Entity
-@Table(schema = "opinions", name = "weighted_opinion_reference")
-class WeightedOpinionReferencePersistence(
+@Table(schema = "opinions", name = "subjects")
+class OpinionSubjectPersistence(
     @Id
     @GeneratedValue
-    @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
-    val id: UUID,
+    @UuidGenerator
+    var id: UUID? = null,
 
     @Column(nullable = false)
-    val parentOpinion: UUID,
+    var name: String,
 
     @Column(nullable = false)
-    val childOpinion: UUID,
-
-    @Column(nullable = false)
-    val weight: Double,
+    var referent: UUID,
 )
