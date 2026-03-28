@@ -1,19 +1,66 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { motion } from "framer-motion";
+import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { authApi } from "@/lib/api";
+import { HttpError } from "@/lib/http-client";
+import { toast } from "@/hooks/use-toast";
 import logo from "@/assets/logo.png";
 
 const Login = () => {
   const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState("");
+  const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [gdprAccepted, setGdprAccepted] = useState(false);
   const navigate = useNavigate();
+  const loginMutation = useMutation({
+    mutationFn: authApi.login,
+    onError: (error) => {
+      const description =
+        error instanceof HttpError
+          ? error.message
+          : "Could not sign in. Please try again.";
+
+      toast({
+        title: "Sign in failed",
+        description,
+        variant: "destructive",
+      });
+    },
+    onSuccess: () => {
+      navigate("/", { replace: true });
+    },
+  });
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (isSignUp) {
+      toast({
+        title: "Sign up is not connected yet",
+        description: "Use the sign in flow while backend registration is still missing.",
+      });
+      return;
+    }
+
+    if (login.trim() === "" || password.trim() === "") {
+      toast({
+        title: "Missing credentials",
+        description: "Enter both login and password.",
+      });
+      return;
+    }
+
+    loginMutation.mutate({
+      login: login.trim(),
+      password,
+    });
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -35,18 +82,19 @@ const Login = () => {
 
         <div className="rounded-2xl border border-border bg-card p-6">
           <form
-            onSubmit={() => navigate("/")}
+            onSubmit={handleSubmit}
             className="space-y-4"
           >
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-xs">Email</Label>
+              <Label htmlFor="login" className="text-xs">Login</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="login"
+                type="text"
+                placeholder="test"
+                value={login}
+                onChange={(e) => setLogin(e.target.value)}
                 className="rounded-xl"
+                autoComplete="username"
               />
             </div>
 
@@ -59,8 +107,15 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="rounded-xl"
+                autoComplete={isSignUp ? "new-password" : "current-password"}
               />
             </div>
+
+            {!isSignUp && (
+              <p className="text-xs text-muted-foreground">
+                Stub credentials for local development: <span className="font-mono">test / 1234</span>
+              </p>
+            )}
 
             {isSignUp && (
               <div className="space-y-2">
@@ -81,9 +136,9 @@ const Login = () => {
                 <input
                   type="checkbox"
                   checked={gdprAccepted}
-                  onChange={(e) => setGdprAccepted(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
-                />
+                    onChange={(e) => setGdprAccepted(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
+                  />
                 <span className="text-xs text-muted-foreground leading-relaxed">
                   I agree to the{" "}
                   <button type="button" className="text-primary hover:underline">Privacy Policy</button>{" "}
@@ -103,7 +158,11 @@ const Login = () => {
             )}
 
             <Button type="submit" className="w-full rounded-xl">
-              {isSignUp ? "Create account" : "Sign in"}
+              {loginMutation.isPending
+                ? "Signing in..."
+                : isSignUp
+                  ? "Create account"
+                  : "Sign in"}
             </Button>
           </form>
 
