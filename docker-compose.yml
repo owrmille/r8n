@@ -35,7 +35,6 @@ services:
       - ./deployment/config/docker.env
       - ./deployment/secrets/docker.secrets.env
     environment:
-      SPRING_PROFILES_ACTIVE: local
       <<: [*tls-common-env, *tls-client-common-env]
       SERVICE_NAME: opinions
       SERVER_SSL_KEY_STORE: /certs/keystore-opinions.p12
@@ -45,6 +44,7 @@ services:
       - r8n_net
     volumes:
       - ./deployment/opinions/logs:/var/log/r8n
+      - ./deployment/certs:/certs:ro
       - ./deployment/certs/internal:/certs:ro
     depends_on:
       - database
@@ -66,6 +66,7 @@ services:
       - r8n_net
     volumes:
       - ./deployment/mock/logs:/var/log/r8n
+      - ./deployment/certs:/certs:ro
       - ./deployment/certs/internal:/certs:ro
 
   gateway:
@@ -97,6 +98,7 @@ services:
       - r8n_net
     volumes:
       - ./deployment/gateway/logs:/var/log/r8n
+      - ./deployment/certs:/certs:ro
       - ./deployment/certs/internal:/certs:ro
 
   frontend:
