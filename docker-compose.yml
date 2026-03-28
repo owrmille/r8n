@@ -46,6 +46,8 @@ services:
     volumes:
       - ./deployment/opinions/logs:/var/log/r8n
       - ./deployment/certs/internal:/certs:ro
+    depends_on:
+      - database
 
   mock:
     build:

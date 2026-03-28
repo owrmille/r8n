@@ -8,7 +8,7 @@ SERVICES_FILE := deployment/config/services.list
 ifeq (,$(wildcard $(SERVICES_FILE)))
     $(error Missing $(SERVICES_FILE))
 endif
-SERVICES := $(shell awk 'NF && $$1 !~ /^\#/{printf "%s ",$$1}' "$(SERVICES_FILE)")
+SERVICES := $(shell awk 'NF && substr($$1, 1, 1) != sprintf("%c", 35) { printf "%s ", $$1 }' "$(SERVICES_FILE)")
 FRONTEND_DIR := frontend
 FRONTEND_GATEWAY_CERT := $(CURDIR)/deployment/certs/internal/gateway.crt
 BOOT_JAR_TASKS := $(addprefix :,$(addsuffix -sv:bootJar,$(SERVICES)))
@@ -262,7 +262,14 @@ https-routed-request-mock: ## HTTPS gateway request to mock
 
 ##@ Misc
 clean-the-fuck-out-of-this-campus-machine: ## Remove large local caches (campus machine only)
-	rm -rf ~/.local/share/docker ~/.var/app/com.slack.Slack ~/.config/Code ~/.config/Slack ~/.config/google-chrome && mkdir -p ~/.local/share/docker/tmp && chmod 700 ~/.local/share/docker/tmp
+	docker run --rm -v  ~/.local/share:/disk alpine rm -rf /disk/docker || true
+	rm -rf ~/.local/share/docker ~/.var/app/com.slack.Slack ~/.config/Code ~/.config/Slack ~/.config/google-chrome || true
+	mkdir -p ~/.local/share/docker/tmp && chmod 700 ~/.local/share/docker/tmp
+	docker system prune -f
 
 who-ate-all-the-space: ## Show top-level disk usage in home
 	du --all --human-readable --one-file-system --max-depth=1 ~
+
+move-caches-to-goinfre: ## Move Docker and Gradle caches to /goinfre (campus machine)
+	@chmod +x scripts/move-docker-to-goinfre.sh
+	./scripts/move-docker-to-goinfre.sh
