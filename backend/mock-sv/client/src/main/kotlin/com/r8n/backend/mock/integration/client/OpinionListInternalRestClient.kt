@@ -4,7 +4,6 @@ import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.mock.api.dto.list.OpinionListDto
 import com.r8n.backend.mock.integration.api.OpinionListInternalApi
-import com.r8n.backend.mock.integration.api.OpinionListInternalApi.Companion.MINE_FULL_PATH
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.body
 
@@ -13,7 +12,7 @@ class OpinionListInternalRestClient(
 ) : OpinionListInternalApi {
     override fun getMineFull(pageable: PageRequestDto): PageResponseDto<OpinionListDto> =
         restClient.get().uri { uriBuilder ->
-            uriBuilder.path(MINE_FULL_PATH)
+            uriBuilder.path(OpinionListInternalApi.MINE_FULL_PATH)
                 .queryParam("page", pageable.page)
                 .queryParam("size", pageable.size)
                 .apply {

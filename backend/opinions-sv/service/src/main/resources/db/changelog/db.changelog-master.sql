@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS opinions.opinion_notes (
 );
 CREATE INDEX IF NOT EXISTS idx_opinion_note_opinion_id ON opinions.opinion_notes(opinion_id);
 
-CREATE TABLE IF NOT EXISTS opinions.weighted_opinion_reference (
+CREATE TABLE IF NOT EXISTS opinions.weighted_opinion_references (
     id UUID PRIMARY KEY,
     parent_opinion UUID NOT NULL,
     child_opinion UUID NOT NULL,
@@ -32,8 +32,8 @@ CREATE TABLE IF NOT EXISTS opinions.weighted_opinion_reference (
     CONSTRAINT fk_weighted_child FOREIGN KEY (child_opinion) REFERENCES opinions.opinions(id) ON DELETE CASCADE,
     CONSTRAINT chk_no_self_reference CHECK (parent_opinion <> child_opinion)
 );
-CREATE INDEX IF NOT EXISTS idx_weighted_opinion_parent ON opinions.weighted_opinion_reference(parent_opinion);
-CREATE INDEX IF NOT EXISTS idx_weighted_opinion_child ON opinions.weighted_opinion_reference(child_opinion);
+CREATE INDEX IF NOT EXISTS idx_weighted_opinion_parent ON opinions.weighted_opinion_references(parent_opinion);
+CREATE INDEX IF NOT EXISTS idx_weighted_opinion_child ON opinions.weighted_opinion_references(child_opinion);
 
 --changeset iatopchu:V2_seed_bernard_on_cap1 context:local,test
 INSERT INTO opinions.opinions (id, owner, subject, mark, status, timestamp)

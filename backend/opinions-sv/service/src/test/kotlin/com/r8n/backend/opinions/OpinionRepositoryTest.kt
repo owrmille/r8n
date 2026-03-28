@@ -1,9 +1,9 @@
 package com.r8n.backend.opinions
 
-import com.r8n.backend.mock.integration.UserClient
 import com.r8n.backend.opinions.domain.OpinionStatusEnum
 import com.r8n.backend.opinions.persistence.OpinionPersistence
 import com.r8n.backend.opinions.provider.database.OpinionRepository
+import com.r8n.backend.users.integration.UsersRestClient
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -26,7 +26,7 @@ class OpinionRepositoryTest {
     private companion object {
         @Container
         @ServiceConnection
-        val postgres = PostgreSQLContainer(DockerImageName.parse("postgres:15"))
+        val postgres: PostgreSQLContainer = PostgreSQLContainer(DockerImageName.parse("postgres:15"))
             .withDatabaseName("opinions")
             .withUsername("test")
             .withPassword("test")
@@ -37,7 +37,7 @@ class OpinionRepositoryTest {
     lateinit var opinionRepository: OpinionRepository
 
     @MockitoBean
-    lateinit var userClient: UserClient
+    lateinit var userClient: UsersRestClient
 
     @Test
     fun `saved opinion gets uuid v7 id`() {
