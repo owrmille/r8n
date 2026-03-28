@@ -231,7 +231,7 @@ direct-request-opinion:
 frontend-check-node: ## Check Node.js version (attempts nvm if too old)
 	@FRONTEND_NODE_VERSION="$(FRONTEND_NODE_VERSION)" ./scripts/frontend-check-node.sh
 
-frontend-build: frontend-check-node ## Build frontend dist (installs deps if missing)
+frontend-build: frontend-install ## Build frontend dist (installs deps if missing)
 	@bash -lc '$(FRONTEND_SHELL) [ -d node_modules ] || frontend_npm ci; frontend_npm run build'
 
 frontend-test-unit: frontend-check-node ## Run frontend unit tests
