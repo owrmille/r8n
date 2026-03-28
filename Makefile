@@ -30,9 +30,10 @@ BOOT_JAR_TASKS := $(addprefix :,$(addsuffix -sv:bootJar,$(SERVICES)))
     build-opinions \
     who-ate-all-the-space clean-the-fuck-out-of-this-campus-machine \
     frontend-dev \
-    clean fclean all \
+    clean fclean all re \
+    move-gradle-to-sgoinfre\
     gradle-%-bootJar \
-    lint-makefile check-makefile
+    check-makefile \
 
 # Dynamic service artifacts configuration
 SERVICE_JARS := $(foreach svc,$(SERVICES),deployment/$(svc)/app.jar)
