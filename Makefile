@@ -189,7 +189,9 @@ who-ate-all-the-space:
 clean: clean-logs
 	cd backend && ./gradlew clean
 
-fclean: clean clean-artifacts
+fclean: docker-down clean clean-artifacts
+
+re: fclean all
 
 # linters
 check-makefile:
