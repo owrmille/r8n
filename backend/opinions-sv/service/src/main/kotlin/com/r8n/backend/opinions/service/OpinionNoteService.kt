@@ -1,10 +1,19 @@
 package com.r8n.backend.opinions.service
 
+import com.r8n.backend.opinions.persistence.OpinionNoteTypeEnum
+import com.r8n.backend.opinions.provider.database.OpinionNoteRepository
 import org.springframework.stereotype.Service
 import java.util.UUID
 
 @Service
-class OpinionNoteService {
-    fun getSubjective(id: UUID) = listOf("subjective 1", "subjective 2")
-    fun getObjective(id: UUID) = listOf("objective 1", "objective 2")
+class OpinionNoteService(
+    private val opinionNoteRepository: OpinionNoteRepository,
+) {
+    fun getSubjective(id: UUID) =
+        opinionNoteRepository.findAllByOpinionIdAndTypeOrderByIdAsc(id, OpinionNoteTypeEnum.SUBJECTIVE)
+            .map { it.description }
+
+    fun getObjective(id: UUID) =
+        opinionNoteRepository.findAllByOpinionIdAndTypeOrderByIdAsc(id, OpinionNoteTypeEnum.OBJECTIVE)
+            .map { it.description }
 }

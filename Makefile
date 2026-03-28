@@ -216,16 +216,22 @@ $(addprefix local-stop-,$(SERVICES)): local-stop-%: ## Stop one local backend se
 frontend-dev: frontend-install ## Start Vite dev server
 	@bash -lc '$(FRONTEND_SHELL) NODE_EXTRA_CA_CERTS="$(FRONTEND_GATEWAY_CERT)" frontend_npm run dev'
 
+routed-request-opinion:
+	curl "http://localhost:8080/opinions/id?id=30000000-0000-0000-0000-000000000001" -i -H "Authorization: Bearer stub-access-token-123"
+
 frontend-install: frontend-check-node ## Install frontend dependencies
 	@bash -lc '$(FRONTEND_SHELL) frontend_npm ci'
 
 frontend-install-all: frontend-install ## Install deps and Playwright browsers
 	@bash -lc '$(FRONTEND_SHELL) frontend_npx playwright install'
 
+direct-request-opinion:
+	curl "http://localhost:8081/opinions/id?id=30000000-0000-0000-0000-000000000001" -i -H "Authorization: Bearer stub-access-token-123"
+
 frontend-check-node: ## Check Node.js version (attempts nvm if too old)
 	@FRONTEND_NODE_VERSION="$(FRONTEND_NODE_VERSION)" ./scripts/frontend-check-node.sh
 
-frontend-build: frontend-check-node ## Build frontend dist (installs deps if missing)
+frontend-build: frontend-install ## Build frontend dist (installs deps if missing)
 	@bash -lc '$(FRONTEND_SHELL) [ -d node_modules ] || frontend_npm ci; frontend_npm run build'
 
 frontend-test-unit: frontend-check-node ## Run frontend unit tests
