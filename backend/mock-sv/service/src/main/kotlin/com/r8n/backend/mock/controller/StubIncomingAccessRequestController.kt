@@ -2,7 +2,7 @@ package com.r8n.backend.mock.controller
 
 import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.utils.toResponse
-import com.r8n.backend.mock.api.IncomingAccessRequestsApi
+import com.r8n.backend.mock.api.IncomingAccessRequestApi
 import com.r8n.backend.mock.api.dto.access.RequestStatusEnumDto
 import com.r8n.backend.mock.stub.AccessRequestsTestDataFactory
 import org.springframework.web.bind.annotation.RestController
@@ -11,7 +11,7 @@ import java.time.Instant
 import java.util.UUID
 
 @RestController
-class StubIncomingAccessRequestsController : IncomingAccessRequestsApi {
+class StubIncomingAccessRequestController : IncomingAccessRequestApi {
 
     override fun get(
         forListId: UUID?,

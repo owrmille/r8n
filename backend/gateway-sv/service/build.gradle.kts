@@ -1,5 +1,11 @@
+import org.springframework.boot.gradle.tasks.bundling.BootJar
+
 plugins {
     id("convention-backend-service")
+}
+
+tasks.named<BootJar>("bootJar") {
+    mainClass.set("com.r8n.backend.gateway.GatewayApplicationKt")
 }
 
 dependencies {

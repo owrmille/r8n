@@ -4,5 +4,6 @@ build
 *.log
 *.gz
 *.jar
+.kotlin
 deployment/certs/
 docker.secrets.env

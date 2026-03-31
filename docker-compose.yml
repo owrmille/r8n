@@ -22,8 +22,8 @@ services:
     ports:
       - "${DATABASE_HOST_PORT:?}:${DATABASE_CONTAINER_PORT:?}"
     volumes:
-      - ./deployment/database/data:/var/lib/postgresql/data
-      - ./deployment/database/init:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
+      - ./deployment/database/init:/docker-entrypoint-initdb.d:ro
     networks:
       - r8n_net
 
@@ -45,6 +45,8 @@ services:
     volumes:
       - ./deployment/opinions/logs:/var/log/r8n
       - ./deployment/certs:/certs:ro
+    depends_on:
+      - database
 
   mock:
     build:
@@ -100,3 +102,6 @@ networks:
   r8n_net:
     name: r8n_net
     driver: bridge
+
+volumes:
+  postgres_data:

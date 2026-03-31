@@ -18,3 +18,7 @@ spring:
   sql:
     init:
       mode: never
+  profiles:
+    active:
+      - local
+      - mocked-users
