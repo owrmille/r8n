@@ -30,9 +30,10 @@ BOOT_JAR_TASKS := $(addprefix :,$(addsuffix -sv:bootJar,$(SERVICES)))
     build-opinions \
     who-ate-all-the-space clean-the-fuck-out-of-this-campus-machine \
     frontend-dev \
-    clean fclean all \
+    clean fclean all re \
+    move-gradle-to-sgoinfre\
     gradle-%-bootJar \
-    lint-makefile check-makefile
+    check-makefile \
 
 # Dynamic service artifacts configuration
 SERVICE_JARS := $(foreach svc,$(SERVICES),deployment/$(svc)/app.jar)
@@ -165,7 +166,7 @@ routed-request-gdpr:
 
 # for docker- runs
 https-routed-request-opinion:
-	curl --cacert deployment/certs/gateway.crt "https://localhost:8080/opinions/00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
+	curl --cacert deployment/certs/gateway.crt "https://localhost:8080/opinions/30000000-0000-0000-0000-000000000001" -i -H "Authorization: Bearer stub-access-token-123"
 
 https-routed-request-mock:
 	curl --cacert deployment/certs/gateway.crt "https://localhost:8080/opinion-lists/00000000-0000-0000-0000-000000000000/summary" -i -H "Authorization: Bearer stub-access-token-123"
@@ -192,7 +193,9 @@ who-ate-all-the-space:
 clean: clean-logs
 	cd backend && ./gradlew clean
 
-fclean: clean clean-artifacts
+fclean: docker-down clean clean-artifacts
+
+re: fclean all
 
 # linters
 check-makefile:
