@@ -10,124 +10,200 @@ ifeq (,$(wildcard $(SERVICES_FILE)))
 endif
 SERVICES := $(shell awk 'NF && substr($$1, 1, 1) != sprintf("%c", 35) { printf "%s ", $$1 }' "$(SERVICES_FILE)")
 FRONTEND_DIR := frontend
-FRONTEND_GATEWAY_CERT := $(CURDIR)/deployment/certs/gateway.crt
-
+FRONTEND_GATEWAY_CERT := $(CURDIR)/deployment/certs/internal/gateway.crt
 BOOT_JAR_TASKS := $(addprefix :,$(addsuffix -sv:bootJar,$(SERVICES)))
+FRONTEND_CERT_DIR := deployment/certs/edge
+FRONTEND_CERT_KEY := $(FRONTEND_CERT_DIR)/localhost.key
+FRONTEND_CERT_CRT := $(FRONTEND_CERT_DIR)/localhost.crt
+FRONTEND_NODE_VERSION := 22.13.0
+FRONTEND_NVM_BOOTSTRAP = if [ -n "$$NVM_DIR" ] && [ -s "$$NVM_DIR/nvm.sh" ]; then . "$$NVM_DIR/nvm.sh"; elif [ -s "$$HOME/.nvm/nvm.sh" ]; then . "$$HOME/.nvm/nvm.sh"; fi; if command -v nvm >/dev/null 2>&1; then nvm use $(FRONTEND_NODE_VERSION) >/dev/null 2>&1 || nvm install $(FRONTEND_NODE_VERSION); fi;
+FRONTEND_SHELL = set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR); \
+frontend_npm() { if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NODE_VERSION) npm "$$@"; else npm "$$@"; fi; }; \
+frontend_npx() { if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NODE_VERSION) npx "$$@"; else npx "$$@"; fi; };
 
-.PHONY: local-run-all local-stop-all \
+.PHONY: help all local-run-all local-stop-all \
     $(addprefix local-run-,$(SERVICES)) \
     $(addprefix local-stop-,$(SERVICES)) \
     $(addprefix docker-logs-,$(SERVICES)) \
-    prebuild-jars prepare-artifacts docker-build docker-up \
-    docker-certs docker-certs-force \
+    prebuild-jars prepare-artifacts verify-artifacts docker-build docker-up \
+    docker-certs docker-certs-force internal-certs internal-certs-force internal-certs-clean docker-certs-clean docker-secrets-clean docker-secrets-init edge-certs edge-certs-force \
     docker-down docker-logs clean-artifacts ensure-log-dirs clean-logs \
-    routed-request-opinion routed-request-mock \
-    direct-request-opinion direct-request-mock \
+    routed-request-opinion routed-request-mock direct-request-opinion direct-request-mock \
     https-routed-request-opinion https-routed-request-mock \
-    docker-database-drop-volume-personal \
-    docker-database-drop-volume-campus \
-    docker-run-database docker-database-connect \
-    build-opinions \
-    who-ate-all-the-space clean-the-fuck-out-of-this-campus-machine \
-    frontend-dev \
-    clean fclean all re \
-    move-gradle-to-sgoinfre\
-    gradle-%-bootJar \
-    check-makefile \
+    docker-database-drop-volume-personal docker-database-drop-volume-campus docker-run-database docker-database-connect \
+    build-opinions who-ate-all-the-space clean-the-fuck-out-of-this-campus-machine \
+    frontend-install frontend-install-all frontend-check-node frontend-dev frontend-build \
+    frontend-test frontend-test-unit frontend-test-e2e frontend-clean frontend-clean-all frontend-cert frontend-cert-clean \
+    clean fclean re move-caches-to-goinfre gradle-%-bootJar check-makefile
 
-# Dynamic service artifacts configuration
-SERVICE_JARS := $(foreach svc,$(SERVICES),deployment/$(svc)/app.jar)
+help: ## Show this help
+	@awk 'BEGIN {FS=":.*##"} /^##@/ {printf "\n%s:\n", substr($$0,5)} /^[a-zA-Z0-9_.%-]+:.*##/ {printf "  %-32s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-# Aggregate per-service Gradle bootJar targets
-GRADLE_BOOT_JARS := $(addprefix gradle-,$(addsuffix -bootJar,$(SERVICES)))
+all: docker-up ## Default target
 
-# Docker helpers
-
-all: docker-up
-
-docker-up: docker-build ensure-log-dirs docker-certs
+##@ Docker
+docker-up: docker-build ensure-log-dirs docker-certs ## Start local Docker stack (builds images, ensures logs, generates certs)
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml up -d
 
-docker-build: prepare-artifacts
+docker-build: docker-secrets-init verify-artifacts frontend-build ## Build Docker images
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml build
 
-# Preparing artifacts copies built jars; building is handled by per-service Gradle targets
-prepare-artifacts: $(SERVICE_JARS)
+prepare-artifacts: prebuild-jars ## Copy service JARs into deployment/ folders
+	@set -e; \
+	for svc in $(SERVICES); do \
+		mkdir -p "deployment/$$svc"; \
+		build_dir="backend/$$svc-sv/build/libs"; \
+		if [ -d "backend/$$svc-sv/service/build/libs" ]; then \
+			build_dir="backend/$$svc-sv/service/build/libs"; \
+		fi; \
+		jar_path="$$(find "$$build_dir" -maxdepth 1 -type f -name '*.jar' ! -name '*-plain.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar' | head -n1)"; \
+		if [ -z "$$jar_path" ]; then \
+			echo "No bootJar found in $$build_dir for $$svc-sv. Run: cd backend && ./gradlew :$$svc-sv:bootJar" >&2; \
+			exit 1; \
+		fi; \
+		cp "$$jar_path" "deployment/$$svc/app.jar"; \
+	done
 
-# Build bootJar for a specific service. Gradle decides if work is needed (up-to-date check).
-gradle-%-bootJar:
+verify-artifacts: prepare-artifacts ## Verify deployment app.jar manifests (re-copy if invalid)
+	@set -e; \
+	invalid=false; \
+	for svc in $(SERVICES); do \
+		jar_path="deployment/$$svc/app.jar"; \
+		if [ ! -f "$$jar_path" ]; then \
+			echo "Missing $$jar_path"; \
+			invalid=true; \
+			continue; \
+		fi; \
+		if ! unzip -p "$$jar_path" META-INF/MANIFEST.MF 2>/dev/null | grep -Eq '^(Main-Class|Start-Class):'; then \
+			echo "Invalid bootJar manifest in $$jar_path"; \
+			invalid=true; \
+		fi; \
+	done; \
+	if [ "$$invalid" = "true" ]; then \
+		echo "Rebuilding artifacts..."; \
+		$(MAKE) --no-print-directory prepare-artifacts; \
+		for svc in $(SERVICES); do \
+			jar_path="deployment/$$svc/app.jar"; \
+			if ! unzip -p "$$jar_path" META-INF/MANIFEST.MF 2>/dev/null | grep -Eq '^(Main-Class|Start-Class):'; then \
+				echo "Invalid bootJar manifest after rebuild in $$jar_path"; \
+				exit 1; \
+			fi; \
+		done; \
+	fi
+
+prebuild-jars: ## Build backend bootJar artifacts
+	cd backend && ./gradlew $(BOOT_JAR_TASKS)
+
+gradle-%-bootJar: ## Build bootJar for one backend service
 	cd backend && ./gradlew :$*-sv:bootJar
 
-# Copy the latest non-plain jar for the service into deployment/<svc>/app.jar
-# Depends on the Gradle build of that specific service only.
-deployment/%/app.jar: gradle-%-bootJar
-	@mkdir -p deployment/$*
-	cp "$$(ls backend/$*-sv/service/build/libs/*.jar | grep -v -- '-plain\.jar$$' | head -n1)" "$@"
-
-# Keep a target to build all service jars without copying them
-prebuild-jars: $(GRADLE_BOOT_JARS)
-
-ensure-log-dirs:
+ensure-log-dirs: ## Create log directories under deployment/
 	@for svc in $(SERVICES); do \
 		mkdir -p "deployment/$$svc/logs"; \
 	done
 
-docker-certs:
-	@$(LOAD_DOCKER_ENV) \
-	chmod +x ./deployment/scripts/generate-certs.sh && \
-	./deployment/scripts/generate-certs.sh
+##@ Certificates
+docker-certs: internal-certs edge-certs ## Generate internal + edge TLS certs (skips if valid)
 
-docker-certs-force:
-	@$(LOAD_DOCKER_ENV) \
-	chmod +x ./deployment/scripts/generate-certs.sh && \
-	FORCE_REGEN_CERTS=true ./deployment/scripts/generate-certs.sh
+docker-certs-force: internal-certs-force edge-certs-force ## Force regenerate internal + edge TLS certs
 
-docker-down:
+internal-certs: ## Generate internal TLS certs (skips if valid)
+	@$(LOAD_DOCKER_ENV) \
+	chmod +x ./deployment/scripts/generate-internal-certs.sh && \
+	./deployment/scripts/generate-internal-certs.sh
+
+internal-certs-force: ## Force regenerate internal TLS certs
+	@$(LOAD_DOCKER_ENV) \
+	chmod +x ./deployment/scripts/generate-internal-certs.sh && \
+	FORCE_REGEN_CERTS=true ./deployment/scripts/generate-internal-certs.sh
+
+internal-certs-clean: ## Remove generated internal TLS certs
+	rm -rf deployment/certs/internal
+
+docker-certs-clean: ## Remove all generated TLS certs (internal + edge)
+	rm -rf deployment/certs
+
+docker-secrets-clean: ## Remove local Docker secrets file (TLS passwords)
+	rm -f $(DOCKER_SECRETS_ENV_FILE)
+
+docker-secrets-init: ## Ensure local Docker secrets file exists (prompts if missing)
+	@bash -lc '\
+	set -e; \
+	file="$(DOCKER_SECRETS_ENV_FILE)"; \
+	ks=""; ts=""; \
+	if [ -f "$$file" ]; then \
+		ks="$$(awk -F= "/^TLS_KEYSTORE_PASSWORD=/{print substr(\$$0,index(\$$0,\"=\")+1)}" "$$file")"; \
+		ts="$$(awk -F= "/^TLS_TRUSTSTORE_PASSWORD=/{print substr(\$$0,index(\$$0,\"=\")+1)}" "$$file")"; \
+	fi; \
+	if [ -z "$$ks" ]; then \
+		read -s -p "TLS_KEYSTORE_PASSWORD (min 6 chars): " ks; echo; \
+	fi; \
+	if [ -z "$$ts" ]; then \
+		read -s -p "TLS_TRUSTSTORE_PASSWORD (min 6 chars): " ts; echo; \
+	fi; \
+	if [ "$${#ks}" -lt 6 ] || [ "$${#ts}" -lt 6 ]; then \
+		echo "Passwords must be at least 6 characters."; \
+		exit 1; \
+	fi; \
+	mkdir -p "$$(dirname "$$file")"; \
+	printf "TLS_KEYSTORE_PASSWORD=%s\nTLS_TRUSTSTORE_PASSWORD=%s\n" "$$ks" "$$ts" > "$$file"; \
+	echo "Wrote $$file"; \
+	'
+
+docker-down: ## Stop Docker stack
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml down
 
-docker-logs:
+docker-logs: ## Tail logs for all services
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml logs -f $(SERVICES)
 
-$(addprefix docker-logs-,$(SERVICES)): docker-logs-%:
+$(addprefix docker-logs-,$(SERVICES)): docker-logs-%: ## Tail logs for one service
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml logs -f $*
 
-clean-logs:
+##@ Maintenance
+clean-logs: ## Remove deployment log files
 	find deployment -type f -name '*.log' -delete
 
-clean-artifacts:
+clean-artifacts: ## Remove deployment service JARs
 	@for svc in $(SERVICES); do \
 		rm -f "deployment/$$svc/app.jar"; \
 	done
 
-local-run-all: $(addprefix local-run-,$(SERVICES))
+clean: clean-artifacts clean-logs frontend-clean ## Remove backend artifacts/logs and frontend cache
 
-docker-database-drop-volume-personal:
+fclean: clean frontend-clean-all ## Remove clean plus frontend node_modules and certs
+
+re: fclean docker-build ## Full rebuild (clean + docker-build)
+
+##@ Local Backend
+local-run-all: $(addprefix local-run-,$(SERVICES)) ## Run all backend services locally
+
+docker-database-drop-volume-personal: ## Delete local Docker DB volume (personal)
 	@rm -rf ./deployment/database/data
 
-docker-database-drop-volume-campus:
+docker-database-drop-volume-campus: ## Delete local Docker DB volume (campus)
 	@# yes this is the only way, since some files are owned by root, and you don't have sudo rights in campus
 	@docker run --rm -v ./deployment/database:/pg alpine rm -rf /pg/data
 
-docker-run-database:
+docker-run-database: ## Start only the database container
 	chmod a+x deployment/database/init/01_create_schemas.sh
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml up -d database
 
-$(addprefix local-run-,$(SERVICES)): local-run-%:
+$(addprefix local-run-,$(SERVICES)): local-run-%: ## Run one backend service locally
 	@echo "Starting $*-sv..."
 	@$(LOAD_LOCAL_ENV) \
 	cd backend && (./gradlew :$*-sv:bootRun --args='--spring.profiles.active=local' > $*.log 2>&1 & \
 	echo $$! > /tmp/$*.pid)
 
-build-opinions:
+build-opinions: ## Build opinions service with tests
 	cd backend && ./gradlew :opinions-sv:build | tee build.log
 
-local-stop-all: $(addprefix local-stop-,$(SERVICES))
+local-stop-all: $(addprefix local-stop-,$(SERVICES)) ## Stop all local backend services
 
-docker-database-connect:
+docker-database-connect: ## Connect to local database via psql
 	$(LOAD_LOCAL_ENV) \
 	docker exec -it database psql -U $$DATABASE_USERNAME -d $$DATABASE_NAME
 
-$(addprefix local-stop-,$(SERVICES)): local-stop-%:
+$(addprefix local-stop-,$(SERVICES)): local-stop-%: ## Stop one local backend service
 	-@set -e; \
 	if [ -f /tmp/$*.pid ]; then \
 		kill $$(cat /tmp/$*.pid) 2>/dev/null || true; \
@@ -145,62 +221,80 @@ $(addprefix local-stop-,$(SERVICES)): local-stop-%:
 		[ -z "$$pids" ] || kill $$pids 2>/dev/null || true; \
 	fi
 
-frontend-dev:
-	cd $(FRONTEND_DIR) && NODE_EXTRA_CA_CERTS="$(FRONTEND_GATEWAY_CERT)" npm run dev
+##@ Frontend
+frontend-dev: frontend-install ## Start Vite dev server
+	@bash -lc '$(FRONTEND_SHELL) NODE_EXTRA_CA_CERTS="$(FRONTEND_GATEWAY_CERT)" frontend_npm run dev'
 
-# for local-* runs
-routed-request-opinion:
+routed-request-opinion: ## HTTP gateway request to opinions (local)
 	curl "http://localhost:8080/opinions/30000000-0000-0000-0000-000000000001" -i -H "Authorization: Bearer stub-access-token-123"
 
-routed-request-mock:
+routed-request-mock: ## HTTP gateway request to mock (local)
 	curl "http://localhost:8080/opinion-lists/00000000-0000-0000-0000-000000000000/summary" -i -H "Authorization: Bearer stub-access-token-123"
 
-direct-request-opinion:
+frontend-install: frontend-check-node ## Install frontend dependencies
+	@bash -lc '$(FRONTEND_SHELL) frontend_npm ci'
+
+frontend-install-all: frontend-install ## Install deps and Playwright browsers
+	@bash -lc '$(FRONTEND_SHELL) frontend_npx playwright install'
+
+direct-request-opinion: ## HTTP direct request to opinions (local)
 	curl "http://localhost:8081/opinions/30000000-0000-0000-0000-000000000001" -i -H "Authorization: Bearer stub-access-token-123"
 
-direct-request-mock:
+direct-request-mock: ## HTTP direct request to mock (local)
 	curl "http://localhost:8090/opinion-lists/00000000-0000-0000-0000-000000000000/summary" -i -H "Authorization: Bearer stub-access-token-123"
 
-# for docker- runs
-https-routed-request-opinion:
-	curl --cacert deployment/certs/gateway.crt "https://localhost:8080/opinions/30000000-0000-0000-0000-000000000001" -i -H "Authorization: Bearer stub-access-token-123"
+frontend-check-node: ## Check Node.js version (attempts nvm if too old)
+	@FRONTEND_NODE_VERSION="$(FRONTEND_NODE_VERSION)" ./scripts/frontend-check-node.sh
 
-https-routed-request-mock:
-	curl --cacert deployment/certs/gateway.crt "https://localhost:8080/opinion-lists/00000000-0000-0000-0000-000000000000/summary" -i -H "Authorization: Bearer stub-access-token-123"
+frontend-build: frontend-install ## Build frontend dist (installs deps if missing)
+	@bash -lc '$(FRONTEND_SHELL) [ -d node_modules ] || frontend_npm ci; frontend_npm run build'
 
-# cleanup
-clean-the-fuck-out-of-this-campus-machine:
-	@echo "Stopping Docker service..."
-	-systemctl --user stop docker.service
-	@echo "Pruning Docker system..."
-	-docker system prune -f
-	@echo "Deleting Docker root directory and other caches..."
-	-rm -rf ~/.local/share/docker ~/.var/app/com.slack.Slack ~/.config/Code ~/.config/Slack ~/.config/google-chrome
-	@echo "Recreating Docker tmp directory..."
+frontend-test-unit: frontend-check-node ## Run frontend unit tests
+	@bash -lc '$(FRONTEND_SHELL) frontend_npm run test:unit'
+
+frontend-test: frontend-test-unit frontend-test-e2e ## Run all frontend tests
+
+frontend-test-e2e: frontend-check-node ## Run frontend E2E tests
+	@bash -lc '$(FRONTEND_SHELL) frontend_npm run test:e2e'
+
+frontend-clean: ## Remove frontend build output, cache, and test artifacts
+	rm -rf $(FRONTEND_DIR)/dist $(FRONTEND_DIR)/node_modules/.vite $(FRONTEND_DIR)/playwright-report $(FRONTEND_DIR)/test-results $(FRONTEND_DIR)/coverage
+
+frontend-clean-all: frontend-clean frontend-cert-clean ## Remove frontend build output, cache, node_modules, and certs
+	rm -rf $(FRONTEND_DIR)/node_modules
+
+edge-certs: ## Generate edge (frontend) HTTPS certs
+	@./deployment/scripts/generate-edge-certs.sh
+
+edge-certs-force: ## Force regenerate edge (frontend) HTTPS certs
+	@FORCE_REGEN_CERTS=true ./deployment/scripts/generate-edge-certs.sh
+
+frontend-cert: edge-certs ## Generate frontend HTTPS certs
+
+frontend-cert-clean: ## Remove generated frontend certs
+	rm -rf deployment/certs/edge
+
+##@ Smoke Tests
+https-routed-request-opinion: ## HTTPS gateway request to opinions
+	curl --cacert deployment/certs/internal/gateway.crt "https://localhost:8080/opinions/30000000-0000-0000-0000-000000000001" -i -H "Authorization: Bearer stub-access-token-123"
+
+https-routed-request-mock: ## HTTPS gateway request to mock
+	curl --cacert deployment/certs/internal/gateway.crt "https://localhost:8080/opinion-lists/00000000-0000-0000-0000-000000000000/summary" -i -H "Authorization: Bearer stub-access-token-123"
+
+##@ Misc
+clean-the-fuck-out-of-this-campus-machine: ## Remove large local caches (campus machine only)
+	docker run --rm -v  ~/.local/share:/disk alpine rm -rf /disk/docker || true
+	rm -rf ~/.local/share/docker ~/.var/app/com.slack.Slack ~/.config/Code ~/.config/Slack ~/.config/google-chrome || true
 	mkdir -p ~/.local/share/docker/tmp && chmod 700 ~/.local/share/docker/tmp
-	@echo "Restarting Docker service..."
-	-systemctl --user start docker.service
-	@echo "Killing Gradle daemons..."
-	-pkill -f GradleDaemon
-	@echo "Cleanup complete"
+	docker system prune -f
 
-who-ate-all-the-space:
+who-ate-all-the-space: ## Show top-level disk usage in home
 	du --all --human-readable --one-file-system --max-depth=1 ~
 
-clean: clean-logs
-	cd backend && ./gradlew clean
+move-caches-to-goinfre: ## Move Docker and Gradle caches to /goinfre (campus machine)
+	@chmod +x scripts/move-docker-to-goinfre.sh
+	./scripts/move-docker-to-goinfre.sh
 
-fclean: docker-down clean clean-artifacts
-
-re: fclean all
-
-# linters
-check-makefile:
+check-makefile: ## Lint Makefile formatting and conflicts
 	chmod +x utils/lint-makefile.sh
 	./utils/lint-makefile.sh
-
-# utils
-move-gradle-to-sgoinfre:
-	pkill -f GradleDaemon
-	rm -rf /sgoinfre/goinfre/Perso/$USER/gradle ~/.gradle
-	ln -s /sgoinfre/goinfre/Perso/$USER/gradle ~/.gradle
