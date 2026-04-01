@@ -276,7 +276,7 @@ frontend-cert-clean: ## Remove generated frontend certs
 
 ##@ Smoke Tests
 https-routed-request-opinion: ## HTTPS gateway request to opinions
-	curl --cacert deployment/certs/internal/gateway.crt "https://localhost:8080/opinions/00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
+	curl --cacert deployment/certs/internal/gateway.crt "https://localhost:8080/opinions/30000000-0000-0000-0000-000000000001" -i -H "Authorization: Bearer stub-access-token-123"
 
 https-routed-request-mock: ## HTTPS gateway request to mock
 	curl --cacert deployment/certs/internal/gateway.crt "https://localhost:8080/opinion-lists/00000000-0000-0000-0000-000000000000/summary" -i -H "Authorization: Bearer stub-access-token-123"
