@@ -21,19 +21,25 @@ FRONTEND_SHELL = set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR); \
 frontend_npm() { if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NODE_VERSION) npm "$$@"; else npm "$$@"; fi; }; \
 frontend_npx() { if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NODE_VERSION) npx "$$@"; else npx "$$@"; fi; };
 
-.PHONY: help local-run-all local-stop-all \
+.PHONY: help all local-run-all local-stop-all \
     $(addprefix local-run-,$(SERVICES)) \
     $(addprefix local-stop-,$(SERVICES)) \
     $(addprefix docker-logs-,$(SERVICES)) \
     prebuild-jars prepare-artifacts verify-artifacts docker-build docker-up \
     docker-certs docker-certs-force internal-certs internal-certs-force internal-certs-clean docker-certs-clean docker-secrets-clean docker-secrets-init edge-certs edge-certs-force \
     docker-down docker-logs clean-artifacts ensure-log-dirs clean-logs \
+    routed-request-opinion routed-request-mock direct-request-opinion direct-request-mock \
     https-routed-request-opinion https-routed-request-mock \
+    docker-database-drop-volume-personal docker-database-drop-volume-campus docker-run-database docker-database-connect \
+    build-opinions who-ate-all-the-space clean-the-fuck-out-of-this-campus-machine \
     frontend-install frontend-install-all frontend-check-node frontend-dev frontend-build \
-    frontend-test frontend-test-unit frontend-test-e2e frontend-clean frontend-clean-all frontend-cert frontend-cert-clean
+    frontend-test frontend-test-unit frontend-test-e2e frontend-clean frontend-clean-all frontend-cert frontend-cert-clean \
+    clean fclean re move-caches-to-goinfre gradle-%-bootJar check-makefile
 
 help: ## Show this help
 	@awk 'BEGIN {FS=":.*##"} /^##@/ {printf "\n%s:\n", substr($$0,5)} /^[a-zA-Z0-9_.%-]+:.*##/ {printf "  %-32s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+all: docker-up ## Default target
 
 ##@ Docker
 docker-up: docker-build ensure-log-dirs docker-certs ## Start local Docker stack (builds images, ensures logs, generates certs)
@@ -87,6 +93,9 @@ verify-artifacts: prepare-artifacts ## Verify deployment app.jar manifests (re-c
 
 prebuild-jars: ## Build backend bootJar artifacts
 	cd backend && ./gradlew $(BOOT_JAR_TASKS)
+
+gradle-%-bootJar: ## Build bootJar for one backend service
+	cd backend && ./gradlew :$*-sv:bootJar
 
 ensure-log-dirs: ## Create log directories under deployment/
 	@for svc in $(SERVICES); do \
@@ -216,8 +225,11 @@ $(addprefix local-stop-,$(SERVICES)): local-stop-%: ## Stop one local backend se
 frontend-dev: frontend-install ## Start Vite dev server
 	@bash -lc '$(FRONTEND_SHELL) NODE_EXTRA_CA_CERTS="$(FRONTEND_GATEWAY_CERT)" frontend_npm run dev'
 
-routed-request-opinion:
-	curl "http://localhost:8080/opinions/id?id=30000000-0000-0000-0000-000000000001" -i -H "Authorization: Bearer stub-access-token-123"
+routed-request-opinion: ## HTTP gateway request to opinions (local)
+	curl "http://localhost:8080/opinions/30000000-0000-0000-0000-000000000001" -i -H "Authorization: Bearer stub-access-token-123"
+
+routed-request-mock: ## HTTP gateway request to mock (local)
+	curl "http://localhost:8080/opinion-lists/00000000-0000-0000-0000-000000000000/summary" -i -H "Authorization: Bearer stub-access-token-123"
 
 frontend-install: frontend-check-node ## Install frontend dependencies
 	@bash -lc '$(FRONTEND_SHELL) frontend_npm ci'
@@ -225,8 +237,11 @@ frontend-install: frontend-check-node ## Install frontend dependencies
 frontend-install-all: frontend-install ## Install deps and Playwright browsers
 	@bash -lc '$(FRONTEND_SHELL) frontend_npx playwright install'
 
-direct-request-opinion:
-	curl "http://localhost:8081/opinions/id?id=30000000-0000-0000-0000-000000000001" -i -H "Authorization: Bearer stub-access-token-123"
+direct-request-opinion: ## HTTP direct request to opinions (local)
+	curl "http://localhost:8081/opinions/30000000-0000-0000-0000-000000000001" -i -H "Authorization: Bearer stub-access-token-123"
+
+direct-request-mock: ## HTTP direct request to mock (local)
+	curl "http://localhost:8090/opinion-lists/00000000-0000-0000-0000-000000000000/summary" -i -H "Authorization: Bearer stub-access-token-123"
 
 frontend-check-node: ## Check Node.js version (attempts nvm if too old)
 	@FRONTEND_NODE_VERSION="$(FRONTEND_NODE_VERSION)" ./scripts/frontend-check-node.sh
@@ -261,10 +276,10 @@ frontend-cert-clean: ## Remove generated frontend certs
 
 ##@ Smoke Tests
 https-routed-request-opinion: ## HTTPS gateway request to opinions
-	curl --cacert deployment/certs/internal/gateway.crt "https://localhost:8080/opinions/id?id=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
+	curl --cacert deployment/certs/internal/gateway.crt "https://localhost:8080/opinions/00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
 
 https-routed-request-mock: ## HTTPS gateway request to mock
-	curl --cacert deployment/certs/internal/gateway.crt "https://localhost:8080/opinionLists/summary?listId=00000000-0000-0000-0000-000000000000" -i -H "Authorization: Bearer stub-access-token-123"
+	curl --cacert deployment/certs/internal/gateway.crt "https://localhost:8080/opinion-lists/00000000-0000-0000-0000-000000000000/summary" -i -H "Authorization: Bearer stub-access-token-123"
 
 ##@ Misc
 clean-the-fuck-out-of-this-campus-machine: ## Remove large local caches (campus machine only)
@@ -279,3 +294,7 @@ who-ate-all-the-space: ## Show top-level disk usage in home
 move-caches-to-goinfre: ## Move Docker and Gradle caches to /goinfre (campus machine)
 	@chmod +x scripts/move-docker-to-goinfre.sh
 	./scripts/move-docker-to-goinfre.sh
+
+check-makefile: ## Lint Makefile formatting and conflicts
+	chmod +x utils/lint-makefile.sh
+	./utils/lint-makefile.sh

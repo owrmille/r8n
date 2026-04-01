@@ -4,7 +4,7 @@ set -eu
 # Wait for database to be ready
 if [ -f /bin/bash ]; then
   until /bin/bash -c "echo > /dev/tcp/database/${DATABASE_CONTAINER_PORT:-5432}" 2>/dev/null; do
-    echo "Waiting for database..."
+    echo "Waiting for database (via bash /dev/tcp)..."
     sleep 2
   done
 else

@@ -7,92 +7,59 @@ import com.r8n.backend.mock.api.dto.list.OpinionListSummaryDto
 import com.r8n.backend.mock.stub.OpinionListTestDataFactory
 import com.r8n.backend.core.utils.toResponse
 import org.springframework.data.domain.PageImpl
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PatchMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
 @RestController
-@RequestMapping("/opinionLists")
 class StubOpinionListController : OpinionListApi {
 
-    @GetMapping("/summary")
     override fun getListSummary(
-        @RequestParam(required = true)
         listId: UUID,
     ): OpinionListSummaryDto = OpinionListTestDataFactory.getListSummary(listId)
 
-    @GetMapping("/get")
     override fun getList(
-        @RequestParam(required = true)
         listId: UUID,
     ) = OpinionListTestDataFactory.getList(listId)
 
-    @PatchMapping("/rename")
     override fun renameList(
-        @RequestParam(required = true)
         listId: UUID,
-        @RequestParam(required = true)
         name: String,
     ) = OpinionListTestDataFactory.getList()
 
-    @PatchMapping("/setPrivacy")
     override fun changePrivacy(
-        @RequestParam(required = true)
         listId: UUID,
-        @RequestParam(required = true)
         privacy: OpinionListPrivacyEnumDto,
     ) =
         OpinionListTestDataFactory.getList(listId)
 
-    @PostMapping("/linkOpinion")
     override fun linkOpinion(
-        @RequestParam(required = true)
         listId: UUID,
-        @RequestParam(required = true)
         opinionId: UUID,
     ) = OpinionListTestDataFactory.getList(listId)
 
-    @PatchMapping("/unlinkOpinion")
     override fun unlinkOpinion(
-        @RequestParam(required = true)
         listId: UUID,
-        @RequestParam(required = true)
         opinionId: UUID,
     ) = OpinionListTestDataFactory.getList(listId)
 
-    @GetMapping("/search")
     override fun search(
-        @RequestParam(required = false)
         nameSubstring: String?,
-        @RequestParam(required = false)
         authorId: UUID?,
-        @RequestParam(required = false)
         authorNameSubstring: String?,
         pageable: PageRequestDto,
     ) = PageImpl(
         listOf(OpinionListTestDataFactory.getListSummary()),
     ).toResponse()
 
-    @PostMapping("/sync")
     override fun syncWithOpinionList(
-        @RequestParam(required = true)
-        existingList: UUID,
-        @RequestParam(required = true)
-        addedList: UUID,
-    ) = OpinionListTestDataFactory.getList(existingList)
+        existingListId: UUID,
+        addedListId: UUID,
+    ) = OpinionListTestDataFactory.getList(existingListId)
 
-    @PostMapping("/unsync")
     override fun unsyncWithOpinionList(
-        @RequestParam(required = true)
-        existingList: UUID,
-        @RequestParam(required = true)
-        removedList: UUID,
-    ) = OpinionListTestDataFactory.getList(existingList)
+        existingListId: UUID,
+        removedListId: UUID,
+    ) = OpinionListTestDataFactory.getList(existingListId)
 
-    @GetMapping("/mine")
     override fun getMine(pageable: PageRequestDto) = search(null, null, null, pageable)
 }

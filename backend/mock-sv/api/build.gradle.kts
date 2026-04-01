@@ -1,5 +1,5 @@
 plugins {
-    id("convention-language")
+    id("convention-api")
 }
 
 group = "com.r8n.backend.mock"
@@ -8,5 +8,4 @@ description = "mock service API"
 
 dependencies {
     implementation(project(":opinions-api"))
-    implementation(project(":core:api"))
 }

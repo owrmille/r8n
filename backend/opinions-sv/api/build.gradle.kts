@@ -1,5 +1,5 @@
 plugins {
-    id("convention-language")
+    id("convention-api")
 }
 
 group = "com.r8n.backend.opinions"
