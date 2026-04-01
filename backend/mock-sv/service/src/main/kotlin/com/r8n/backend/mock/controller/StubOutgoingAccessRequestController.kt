@@ -1,7 +1,7 @@
 package com.r8n.backend.mock.controller
 
 import com.r8n.backend.core.api.PageRequestDto
-import com.r8n.backend.mock.api.OutgoingAccessRequestsApi
+import com.r8n.backend.mock.api.OutgoingAccessRequestApi
 import com.r8n.backend.mock.api.dto.access.RequestStatusEnumDto
 import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.mock.stub.AccessRequestsTestDataFactory
@@ -11,7 +11,8 @@ import java.time.Instant
 import java.util.UUID
 
 @RestController
-class StubOutgoingAccessRequestsController : OutgoingAccessRequestsApi {
+class StubOutgoingAccessRequestController : OutgoingAccessRequestApi {
+
     override fun get(
         forListId: UUID?,
         since: Instant?,
