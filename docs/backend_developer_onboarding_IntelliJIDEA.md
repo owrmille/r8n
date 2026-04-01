@@ -57,13 +57,11 @@ Build and dependency management system for backend. Runs every time you build ba
 - only gateway and opinions-sv is runnable currently
 - `make docker-run-database`
 - `make local-run-opinions`, see opinions.log filled and opinions-sv started successfully
-- `make direct-request-opinion`, see valid result
-- can play around with the request from previous command to get failures
 - (manual access to database) `make docker-database-connect`, `\c r8n` (connect to database), `set schema 'opinions';`, `\dt` to see five tables, `select * from opinions;` to see some data
 - `make build-opinions` - see build succeeding
 - `make local-stop-all`
 - `make local-run-all` and check all the log files for Started application in X seconds
-- `make direct-request-opinions` and `make routed-request-opinions` should provide same result, with 0000..0 id
+- `make direct-request-opinion` and `make routed-request-opinion` should provide same result, with 0000..0 id
 
 # Docker run via Makefile (HTTPS)
 - service list:
@@ -74,7 +72,7 @@ Build and dependency management system for backend. Runs every time you build ba
   - set values in `deployment/secrets/docker.secrets.env`:
     - `TLS_KEYSTORE_PASSWORD=...`
     - `TLS_TRUSTSTORE_PASSWORD=...`
-- TLS certificates are generated automatically by `make docker-up` (`docker-certs` target), stored in `deployment/certs/` (generated artifacts, not committed), and reused if already present and valid.
+- TLS certificates are generated automatically by `make docker-up` (`docker-certs` target), stored in `deployment/certs/internal` (services) and `deployment/certs/edge` (Nginx), and reused if already present and valid.
 - start Docker services:
   - `make docker-up`
 - watch logs:
@@ -96,8 +94,8 @@ Build and dependency management system for backend. Runs every time you build ba
     - restart terminal
 - use the project's Node version:
   - `cd $FRONTEND`
-  - `nvm install`
-  - `nvm use`
+- `nvm install`
+- `nvm use`
 - verify correct Node version:
   - `node -v` should be `>= 22.13.0`
 - if you run frontend on a campus machine, move npm cache to sgoinfre:
