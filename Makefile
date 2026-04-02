@@ -246,10 +246,6 @@ direct-request-mock: ## HTTP direct request to mock (local)
 routed-request-gdpr:
 	curl "http://localhost:8080/users/export" -i -H "Authorization: Bearer stub-access-token-123"
 
-# for docker- runs
-https-routed-request-opinion:
-	curl --cacert deployment/certs/gateway.crt "https://localhost:8080/opinions/30000000-0000-0000-0000-000000000001" -i -H "Authorization: Bearer stub-access-token-123"
-
 # frontend
 frontend-check-node: ## Check Node.js version (attempts nvm if too old)
 	@FRONTEND_NODE_VERSION="$(FRONTEND_NODE_VERSION)" ./scripts/frontend-check-node.sh
