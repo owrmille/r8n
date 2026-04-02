@@ -43,7 +43,6 @@ Build and dependency management system for backend. Runs every time you build ba
 ### Running backend
 - `make docker-run-database`
 - `make local-run-all` and check all the log files for Started application in X seconds
-- `make direct-request-opinions` and `make routed-request-opinions` should provide same result, with 0000..0 id
 
 Useful context:
 
@@ -92,7 +91,6 @@ Useful context:
 - `npm run test:e2e` to run Playwright tests
 - `npm run build` to verify production build
 - `npm run preview` to preview the production build locally
-
 ## Frontend after repository update
 - stop frontend dev server in running terminal (`Ctrl-C`)
 - update repository:
@@ -109,6 +107,10 @@ Useful context:
 - start frontend again:
   - `npm run dev`
 - if backend files were updated too, restart backend services: `make local-stop-all && make local-run-all`
+
+## Frontend requirements (quick)
+- `Node.js` `>=22.13.0`
+- `npm` (comes with Node.js, recommended `npm 10+`)
 
 ## Stack & architecture (brief)
 - frontend stack:
