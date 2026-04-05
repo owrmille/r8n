@@ -9,6 +9,7 @@ description = "provides individual opinions"
 
 dependencies {
     implementation(project(":opinions-api"))
+    implementation(project(":users-api-integration"))
     implementation(project(":users-client"))
     implementation(project(":mock-sv"))
     testImplementation(project(":mock-api"))

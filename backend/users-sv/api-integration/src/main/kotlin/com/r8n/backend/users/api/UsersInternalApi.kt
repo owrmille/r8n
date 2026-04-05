@@ -1,4 +1,4 @@
-package com.r8n.backend.users.integration
+package com.r8n.backend.users.integration.api
 
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -8,6 +8,7 @@ interface UsersInternalApi {
     companion object {
         const val NAME_PATH = "/users/name/{id}"
     }
+
     @GetMapping(NAME_PATH)
     fun getUserName(@PathVariable id: UUID): String
 }

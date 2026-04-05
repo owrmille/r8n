@@ -1,6 +1,7 @@
 package com.r8n.backend.users.integration
 
-import com.r8n.backend.users.integration.UsersInternalApi.Companion.NAME_PATH
+import com.r8n.backend.users.integration.api.UsersInternalApi
+import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.NAME_PATH
 import org.springframework.web.client.RestClient
 import java.util.UUID
 

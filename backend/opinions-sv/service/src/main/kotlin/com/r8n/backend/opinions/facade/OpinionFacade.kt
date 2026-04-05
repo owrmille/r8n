@@ -1,9 +1,9 @@
 package com.r8n.backend.opinions.facade
 
-import com.r8n.backend.users.integration.UsersInternalApi
 import com.r8n.backend.opinions.api.dto.OpinionDto
 import com.r8n.backend.opinions.domain.toDto
 import com.r8n.backend.opinions.service.OpinionService
+import com.r8n.backend.users.integration.api.UsersInternalApi
 import org.springframework.stereotype.Component
 import java.util.UUID
 

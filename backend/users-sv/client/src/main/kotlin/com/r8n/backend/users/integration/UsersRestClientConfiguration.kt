@@ -1,5 +1,6 @@
 package com.r8n.backend.users.integration
 
+import com.r8n.backend.users.integration.api.UsersInternalApi
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
