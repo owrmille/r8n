@@ -12,7 +12,6 @@ import java.util.UUID
 
 @RestController
 class StubOutgoingAccessRequestController : OutgoingAccessRequestApi {
-
     override fun get(
         forListId: UUID?,
         since: Instant?,

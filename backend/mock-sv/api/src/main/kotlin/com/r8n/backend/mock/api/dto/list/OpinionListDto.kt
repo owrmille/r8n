@@ -1,6 +1,6 @@
 package com.r8n.backend.mock.api.dto.list
 
-import com.r8n.backend.opinions.api.dto.opinion.OpinionSummaryDto
+import com.r8n.backend.opinions.api.dto.OpinionSummaryDto
 import java.util.UUID
 
 data class OpinionListDto(

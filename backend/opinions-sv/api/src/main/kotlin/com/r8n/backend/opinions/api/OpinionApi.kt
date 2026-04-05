@@ -1,6 +1,6 @@
 package com.r8n.backend.opinions.api
 
-import com.r8n.backend.opinions.api.dto.opinion.OpinionDto
+import com.r8n.backend.opinions.api.dto.OpinionDto
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping

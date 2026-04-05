@@ -11,7 +11,7 @@ import java.time.Instant
 import java.util.UUID
 
 @RestController
-class StubIncomingAccessRequestController : IncomingAccessRequestApi {
+class StubIncomingAccessRequestsController : IncomingAccessRequestApi {
 
     override fun get(
         forListId: UUID?,

@@ -45,7 +45,7 @@ all: docker-up ## Default target
 docker-up: docker-build ensure-log-dirs docker-certs ## Start local Docker stack (builds images, ensures logs, generates certs)
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml up -d
 
-docker-build: docker-secrets-init verify-artifacts frontend-build ## Build Docker images
+docker-build: docker-secrets-init verify-artifacts docker-database-create-data-folder frontend-build ## Build Docker images
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml build
 
 prepare-artifacts: prebuild-jars ## Copy service JARs into deployment/ folders
@@ -177,14 +177,17 @@ re: fclean docker-build ## Full rebuild (clean + docker-build)
 ##@ Local Backend
 local-run-all: $(addprefix local-run-,$(SERVICES)) ## Run all backend services locally
 
+docker-database-create-data-folder:
+	@mkdir -p ./deployment/database/data
+
 docker-database-drop-volume-personal: ## Delete local Docker DB volume (personal)
-	@rm -rf ./deployment/database/data
+	@sudo rm -rf ./deployment/database/data
 
 docker-database-drop-volume-campus: ## Delete local Docker DB volume (campus)
 	@# yes this is the only way, since some files are owned by root, and you don't have sudo rights in campus
 	@docker run --rm -v ./deployment/database:/pg alpine rm -rf /pg/data
 
-docker-run-database: ## Start only the database container
+docker-database-run: docker-database-create-data-folder ## Start only the database container
 	chmod a+x deployment/database/init/01_create_schemas.sh
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml up -d database
 
@@ -243,6 +246,10 @@ direct-request-opinion: ## HTTP direct request to opinions (local)
 direct-request-mock: ## HTTP direct request to mock (local)
 	curl "http://localhost:8090/opinion-lists/00000000-0000-0000-0000-000000000000/summary" -i -H "Authorization: Bearer stub-access-token-123"
 
+routed-request-gdpr:
+	curl "http://localhost:8080/users/export" -i -H "Authorization: Bearer stub-access-token-123"
+
+# frontend
 frontend-check-node: ## Check Node.js version (attempts nvm if too old)
 	@FRONTEND_NODE_VERSION="$(FRONTEND_NODE_VERSION)" ./scripts/frontend-check-node.sh
 
@@ -287,6 +294,7 @@ clean-the-fuck-out-of-this-campus-machine: ## Remove large local caches (campus 
 	rm -rf ~/.local/share/docker ~/.var/app/com.slack.Slack ~/.config/Code ~/.config/Slack ~/.config/google-chrome || true
 	mkdir -p ~/.local/share/docker/tmp && chmod 700 ~/.local/share/docker/tmp
 	docker system prune -f
+	docker volume rm $(docker volume ls -qf dangling=true)
 
 who-ate-all-the-space: ## Show top-level disk usage in home
 	du --all --human-readable --one-file-system --max-depth=1 ~

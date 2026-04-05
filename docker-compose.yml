@@ -68,6 +68,20 @@ services:
       - ./deployment/certs:/certs:ro
       - ./deployment/certs/internal:/certs:ro
 
+  users:
+    build:
+      context: ./deployment/users
+      dockerfile: Dockerfile
+    env_file:
+      - ./deployment/config/docker.env
+    environment:
+      SERVICES_USERS_PORT: ${SERVICES_USERS_PORT:?}
+      LOGGING_FILE_NAME: ${LOGGING_FILE_NAME:?}
+    networks:
+      - r8n_net
+    volumes:
+      - ./deployment/users/logs:/var/log/r8n
+
   gateway:
     build:
       context: ./deployment/gateway
@@ -122,3 +136,8 @@ networks:
 
 volumes:
   postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./deployment/database/data

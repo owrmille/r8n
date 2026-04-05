@@ -1,6 +1,6 @@
 package com.r8n.backend.opinions.domain
 
-import com.r8n.backend.opinions.api.dto.opinion.OpinionStatusEnumDto
+import com.r8n.backend.opinions.api.dto.OpinionStatusEnumDto
 
 enum class OpinionStatusEnum {
     DRAFT,

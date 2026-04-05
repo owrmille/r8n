@@ -1,11 +1,13 @@
 plugins {
-    id("convention-language")
+    id("convention-integration")
 }
 
-group = "com.r8n.backend.opinions"
+group = "com.r8n.backend.mock"
 version = "0.0.1-SNAPSHOT"
 description = "mock service integration package as entry point for other services"
 
 dependencies {
+    implementation(project(":core:security"))
     implementation(project(":mock-api"))
+    implementation(project(":mock-api-integration"))
 }

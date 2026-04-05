@@ -3,8 +3,8 @@ package com.r8n.backend.mock.stub
 import com.r8n.backend.mock.api.dto.list.OpinionListDto
 import com.r8n.backend.mock.api.dto.list.OpinionListPrivacyEnumDto
 import com.r8n.backend.mock.api.dto.list.OpinionListSummaryDto
-import com.r8n.backend.opinions.api.dto.opinion.OpinionSummaryDto
-import com.r8n.backend.opinions.api.dto.opinion.WeightedOpinionReferenceDto
+import com.r8n.backend.opinions.api.dto.OpinionSummaryDto
+import com.r8n.backend.opinions.api.dto.WeightedOpinionReferenceDto
 import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.bernard
 import java.util.UUID
 
