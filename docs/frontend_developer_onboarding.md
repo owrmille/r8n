@@ -43,6 +43,7 @@ Build and dependency management system for backend. Runs every time you build ba
 ### Running backend
 - `make docker-run-database`
 - `make local-run-all` and check all the log files for Started application in X seconds
+- `make direct-request-opinion` and `make routed-request-opinion` should provide same result, with 0000..0 id
 
 Useful context:
 
@@ -70,27 +71,28 @@ Useful context:
   - `npm ci`
 - open `frontend.code-workspace` in VSCode
 - install recommended extensions for this workspace:
-  - `Vue - Official (Volar)`
   - `ESLint`
   - `Prettier - Code formatter`
   - `Tailwind CSS IntelliSense`
-- if `Vetur` is installed, disable it for this workspace
 - start frontend dev server:
-  - `npm run dev`
-  - as soon as you see `Local: http://localhost:5173/` in logs, the app is running
-- open `http://localhost:5173` in browser
+  - `npm run dev` for standalone UI work
+  - `make frontend-dev` if you need frontend proxying to local backend over HTTPS with project certificate
+  - as soon as you see `Local: http://127.0.0.1:5173/` in logs, the app is running
+- open `http://127.0.0.1:5173` in browser
 - for API integration keep backend services running in another terminal: `make local-run-all`
 
 ## Frontend commands for daily work
 - `cd ~/PROJECTS/r8n/frontend`
 - `nvm use`
 - `npm run dev` to run UI locally
-- `npm run type-check` for TypeScript checks
-- `npm run lint` to run linters with autofixes
-- `npm run test:unit` to run unit tests
-- `npm run test:e2e` to run Playwright tests
+- `make frontend-dev` to run UI with gateway certificate when proxying `/api` to local backend
+- `npm run lint` to run ESLint
+- `npm test` to run Vitest tests
+- `npm run test:e2e` to run Playwright tests (currently there are no checked-in e2e specs, so this command reports `No tests found`)
 - `npm run build` to verify production build
+- `npm run build:dev` to verify development-mode build
 - `npm run preview` to preview the production build locally
+
 ## Frontend after repository update
 - stop frontend dev server in running terminal (`Ctrl-C`)
 - update repository:
@@ -101,31 +103,34 @@ Useful context:
   - `nvm use`
   - `npm ci`
 - validate local state:
-  - `npm run type-check`
   - `npm run lint`
-  - `npm run test:unit`
+  - `npm test`
+  - `npm run build`
 - start frontend again:
-  - `npm run dev`
+  - `npm run dev` for standalone UI work
+  - `make frontend-dev` if you need backend API proxying over HTTPS
 - if backend files were updated too, restart backend services: `make local-stop-all && make local-run-all`
-
-## Frontend requirements (quick)
-- `Node.js` `>=22.13.0`
-- `npm` (comes with Node.js, recommended `npm 10+`)
 
 ## Stack & architecture (brief)
 - frontend stack:
-  - [`Vue 3`](https://vuejs.org/) + [`TypeScript`](https://www.typescriptlang.org/docs/)
-  - [`Vite`](https://vite.dev/guide/) (dev server and build)
-  - [`Vue Router`](https://router.vuejs.org/)
-  - [`Pinia`](https://pinia.vuejs.org/)
-  - [`Tailwind CSS v4`](https://tailwindcss.com/docs/installation/using-vite)
-  - [`shadcn-vue`](https://www.shadcn-vue.com/docs)
-- project structure follows `FSD-lite`:
-  - `app` app bootstrap, global providers, router
+  - [`React 18.3+`](https://react.dev/) + [`TypeScript 5.8+`](https://www.typescriptlang.org/docs/)
+  - [`Vite 8+`](https://vite.dev/guide/) (dev server and build)
+  - [`React Router`](https://reactrouter.com/) for routing
+  - [`@tanstack/react-query`](https://tanstack.com/query/latest) for query state
+  - [`Tailwind CSS v3.4+`](https://tailwindcss.com/docs/installation/using-vite)
+  - local `shadcn/ui`-style components built on Radix UI primitives
+  - [`Vitest`](https://vitest.dev/) + React Testing Library for unit tests
+  - [`Playwright`](https://playwright.dev/) for e2e testing infrastructure
+- current top-level structure in `src`:
+  - `App.tsx` app bootstrap, router, providers, and layout wiring
   - `pages` route-level screens
-  - `widgets` large reusable UI blocks
-  - `features` user actions (login, create opinion, etc.)
-  - `entities` domain models and entity API
-  - `shared` common UI, utilities, and API client
-- keep network layer in `shared/api` and domain API in `entities/*/api` or `features/*/api`
-- page files should mostly compose widgets/features instead of containing heavy business logic
+  - `components/layout` app shell and navigation
+  - `components/ui` shared UI primitives
+  - `components` page-level reusable components
+  - `hooks`, `lib`, `assets`, `test` support code and utilities
+- frontend workflow conventions:
+  - keep server communication behind shared API modules and query/mutation hooks; do not call `fetch` directly from page or UI components
+  - use the shared HTTP client and typed request/response contracts; map backend DTOs before they reach presentation components when needed
+  - manage remote data through shared query utilities such as React Query instead of reimplementing loading, caching, refetching, or retry logic ad hoc
+  - keep query hooks and mutation hooks separate, and update or invalidate related cache entries after writes
+  - handle loading, error, success, and empty states explicitly for every API-backed screen

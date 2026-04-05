@@ -1,0 +1,158 @@
+import { describe, expect, it, vi } from "vitest";
+import { createHttpClient, HttpError } from "@/lib/http-client";
+
+describe("httpClient", () => {
+  it("builds requests against the configured base url", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), {
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      }),
+    );
+    const client = createHttpClient({
+      baseUrl: "/api",
+      fetchFn: fetchMock,
+    });
+
+    await client.get<{ ok: boolean }>("/opinions", {
+      query: { page: 2, tags: ["safe", "public"], empty: undefined },
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/opinions?page=2&tags=safe&tags=public",
+      expect.objectContaining({
+        credentials: "same-origin",
+        method: "GET",
+      }),
+    );
+  });
+
+  it("serializes object bodies as json and keeps default headers", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ id: "1" }), {
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      }),
+    );
+    const client = createHttpClient({
+      baseUrl: "/api",
+      fetchFn: fetchMock,
+    });
+
+    await client.post("/opinions", {
+      body: { title: "Readable review" },
+      headers: { "X-Trace-Id": "trace-id" },
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/opinions",
+      expect.objectContaining({
+        body: JSON.stringify({ title: "Readable review" }),
+        method: "POST",
+      }),
+    );
+
+    const [, requestInit] = fetchMock.mock.calls[0];
+    const headers = new Headers(requestInit.headers);
+
+    expect(headers.get("Accept")).toBe("application/json");
+    expect(headers.get("Content-Type")).toBe("application/json");
+    expect(headers.get("X-Trace-Id")).toBe("trace-id");
+  });
+
+  it("rejects absolute request paths to avoid sending data to unexpected hosts", async () => {
+    const client = createHttpClient({
+      baseUrl: "/api",
+      fetchFn: vi.fn(),
+    });
+
+    await expect(client.get("https://evil.example/api")).rejects.toThrow(
+      "Absolute request URLs are not allowed",
+    );
+    await expect(client.get("opinions")).rejects.toThrow(
+      "HTTP client paths must start with '/'",
+    );
+    await expect(client.get("//evil.example/api")).rejects.toThrow(
+      "Absolute request URLs are not allowed",
+    );
+  });
+
+  it("throws HttpError with a safe server message on unsuccessful responses", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ message: "Validation failed" }), {
+        headers: { "Content-Type": "application/json" },
+        status: 400,
+      }),
+    );
+    const client = createHttpClient({
+      baseUrl: "/api",
+      fetchFn: fetchMock,
+    });
+
+    await expect(client.get("/opinions")).rejects.toEqual(
+      expect.objectContaining({
+        message: "Validation failed",
+        name: "HttpError",
+        responseBody: expect.anything(),
+        status: 400,
+      }),
+    );
+  });
+
+  it("times out long requests", async () => {
+    vi.useFakeTimers();
+
+    let capturedSignal: AbortSignal | null = null;
+    const fetchMock = vi.fn(
+      (_input: RequestInfo | URL, requestInit?: RequestInit) =>
+        new Promise<Response>((resolve, reject) => {
+          capturedSignal = requestInit?.signal ?? null;
+
+          if (!capturedSignal) {
+            reject(new Error("Expected request signal to be defined."));
+            return;
+          }
+
+          const abortHandler = (signal: AbortSignal) => {
+            signal.addEventListener("abort", () => {
+              reject(
+                signal.reason ??
+                  new DOMException("The operation was aborted.", "AbortError"),
+              );
+            });
+          };
+
+          abortHandler(capturedSignal);
+
+          setTimeout(() => {
+            resolve(
+              new Response(JSON.stringify({ ok: true }), {
+                headers: { "Content-Type": "application/json" },
+                status: 200,
+              }),
+            );
+          }, 1000);
+        }),
+    );
+
+    const client = createHttpClient({
+      baseUrl: "/api",
+      defaultTimeoutMs: 50,
+      fetchFn: fetchMock,
+    });
+
+    const request = client.get("/opinions");
+    const expectation = expect(request).rejects.toEqual(
+      expect.objectContaining({
+        message: "Request timed out after 50 ms.",
+        name: "HttpError",
+        status: 0,
+      }),
+    );
+
+    await vi.advanceTimersByTimeAsync(60);
+    await expectation;
+
+    vi.useRealTimers();
+  });
+});
