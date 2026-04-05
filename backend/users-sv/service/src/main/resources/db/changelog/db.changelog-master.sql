@@ -10,7 +10,7 @@ CREATE TABLE users.users (
 CREATE TABLE users.pii (
     user_id UUID PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    email VARCHAR(255),
+    email VARCHAR(255) NOT NULL,
     phone VARCHAR(255),
     CONSTRAINT fk_pii_user FOREIGN KEY (user_id) REFERENCES users.users(id) ON DELETE CASCADE
 );
