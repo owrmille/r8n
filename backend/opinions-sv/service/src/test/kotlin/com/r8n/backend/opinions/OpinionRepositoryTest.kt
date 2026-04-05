@@ -3,7 +3,7 @@ package com.r8n.backend.opinions
 import com.r8n.backend.opinions.domain.OpinionStatusEnum
 import com.r8n.backend.opinions.persistence.OpinionPersistence
 import com.r8n.backend.opinions.provider.database.OpinionRepository
-import com.r8n.backend.users.integration.UsersRestClient
+import com.r8n.backend.users.integration.api.UsersInternalApi
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,7 +37,7 @@ class OpinionRepositoryTest {
     lateinit var opinionRepository: OpinionRepository
 
     @MockitoBean
-    lateinit var userClient: UsersRestClient
+    lateinit var userClient: UsersInternalApi
 
     @Test
     fun `saved opinion gets uuid v7 id`() {

@@ -6,7 +6,7 @@ import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.bernardReferent
 import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.cappuccino1A
 import com.r8n.backend.opinions.api.dto.OpinionDto
 import com.r8n.backend.opinions.api.dto.OpinionStatusEnumDto
-import com.r8n.backend.users.integration.UsersInternalApi
+import com.r8n.backend.users.integration.api.UsersInternalApi
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -19,6 +19,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.springframework.context.annotation.Import
 import org.springframework.security.test.context.support.WithMockUser
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
@@ -30,6 +31,7 @@ import org.testcontainers.utility.DockerImageName
 import java.time.Instant
 import java.util.UUID
 
+@ActiveProfiles("test")
 @Testcontainers
 @AutoConfigureJsonTesters
 @AutoConfigureMockMvc

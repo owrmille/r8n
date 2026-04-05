@@ -1,0 +1,10 @@
+spring:
+  application.name: opinions-sv
+  liquibase:
+    enabled: true
+    change-log: db/changelog/db.changelog-master.sql
+    default-schema: opinions
+
+services:
+  users:
+    url: http://localhost:8082
