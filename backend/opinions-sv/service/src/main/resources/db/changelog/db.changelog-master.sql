@@ -3,7 +3,7 @@
 --changeset inikulin:V1_create_tables
 CREATE SCHEMA IF NOT EXISTS opinions;
 
-CREATE TABLE opinions.opinions (
+CREATE TABLE IF NOT EXISTS opinions.opinions (
     id UUID PRIMARY KEY,
     owner UUID NOT NULL,
     subject UUID NOT NULL,
@@ -11,19 +11,19 @@ CREATE TABLE opinions.opinions (
     status VARCHAR(32) NOT NULL,
     timestamp TIMESTAMPTZ NOT NULL
 );
-CREATE INDEX idx_opinions_owner ON opinions.opinions(owner);
-CREATE INDEX idx_opinions_subject ON opinions.opinions(subject);
+CREATE INDEX IF NOT EXISTS idx_opinions_owner ON opinions.opinions(owner);
+CREATE INDEX IF NOT EXISTS idx_opinions_subject ON opinions.opinions(subject);
 
-CREATE TABLE opinions.opinion_note (
+CREATE TABLE IF NOT EXISTS opinions.opinion_notes (
     id UUID PRIMARY KEY,
     opinion_id UUID NOT NULL,
     type VARCHAR(32) NOT NULL,
     description TEXT NOT NULL,
     CONSTRAINT fk_opinion_note_opinion FOREIGN KEY (opinion_id) REFERENCES opinions.opinions(id) ON DELETE CASCADE
 );
-CREATE INDEX idx_opinion_note_opinion_id ON opinions.opinion_note(opinion_id);
+CREATE INDEX IF NOT EXISTS idx_opinion_note_opinion_id ON opinions.opinion_notes(opinion_id);
 
-CREATE TABLE opinions.weighted_opinion_reference (
+CREATE TABLE IF NOT EXISTS opinions.weighted_opinion_references (
     id UUID PRIMARY KEY,
     parent_opinion UUID NOT NULL,
     child_opinion UUID NOT NULL,
@@ -32,12 +32,61 @@ CREATE TABLE opinions.weighted_opinion_reference (
     CONSTRAINT fk_weighted_child FOREIGN KEY (child_opinion) REFERENCES opinions.opinions(id) ON DELETE CASCADE,
     CONSTRAINT chk_no_self_reference CHECK (parent_opinion <> child_opinion)
 );
-CREATE INDEX idx_weighted_opinion_parent ON opinions.weighted_opinion_reference(parent_opinion);
-CREATE INDEX idx_weighted_opinion_child ON opinions.weighted_opinion_reference(child_opinion);
+CREATE INDEX IF NOT EXISTS idx_weighted_opinion_parent ON opinions.weighted_opinion_references(parent_opinion);
+CREATE INDEX IF NOT EXISTS idx_weighted_opinion_child ON opinions.weighted_opinion_references(child_opinion);
 
---changeset inikulin:V2_seed_data context:local,test
+--changeset iatopchu:V2_seed_bernard_on_cap1 context:local,test
 INSERT INTO opinions.opinions (id, owner, subject, mark, status, timestamp)
-VALUES ('00000000-0000-0000-0000-000000000000'
-, '07070707-0707-0707-0707-070707070707'
-, '23232323-2323-2323-2323-232323232323'
-, 1.07, 'DRAFT', '2024-01-01T12:00:00Z');
+VALUES ('30000000-0000-0000-0000-000000000001'
+, '10101010-1010-1010-1010-101010101010'
+, '14141414-1414-1414-1414-141414141414'
+, 4.23, 'DRAFT', '2024-02-01T09:30:00Z');
+
+INSERT INTO opinions.opinion_notes (id, opinion_id, type, description)
+VALUES ('30000000-0000-0000-0000-000000000101', '30000000-0000-0000-0000-000000000001', 'SUBJECTIVE', 'reminds of grandma''s home coffee');
+
+INSERT INTO opinions.opinion_notes (id, opinion_id, type, description)
+VALUES ('30000000-0000-0000-0000-000000000102', '30000000-0000-0000-0000-000000000001', 'OBJECTIVE', '5.50€');
+
+INSERT INTO opinions.opinion_notes (id, opinion_id, type, description)
+VALUES ('30000000-0000-0000-0000-000000000103', '30000000-0000-0000-0000-000000000001', 'OBJECTIVE', 'lactose-free milk');
+
+--changeset iatopchu:V3_subjects_and_referents
+CREATE TABLE IF NOT EXISTS opinions.referents (
+    id UUID PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    address TEXT,
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION,
+    referent_group UUID NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_referents_referent_group
+    ON opinions.referents(referent_group);
+CREATE INDEX IF NOT EXISTS idx_referents_name
+    ON opinions.referents(name);
+
+CREATE TABLE IF NOT EXISTS opinions.subjects (
+    id UUID PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    referent UUID NOT NULL,
+    CONSTRAINT fk_subjects_referent
+    FOREIGN KEY (referent)
+    REFERENCES referents(id)
+);
+CREATE INDEX IF NOT EXISTS idx_subjects_referent
+    ON opinions.subjects(referent);
+CREATE INDEX IF NOT EXISTS idx_subjects_name
+    ON opinions.subjects(name);
+
+--changeset iatopchu:V3_seed_subjects_referents context:local,test
+INSERT INTO opinions.referents (id, name, address, latitude, longitude, referent_group)
+VALUES
+    ('12121212-1212-1212-1212-121212121212', 'cappuccino @ Cafe Eins A', 'Berlin, Alexanderplatz 1', 52.5217457, 13.4097131, '41414141-4141-4141-4141-414141414141'),
+    ('13131313-1313-1313-1313-131313131313', 'cappuccino @ Cafe Eins G', 'Berlin, Görlitzer str 1', 52.49921333621459, 13.432348384513238, '41414141-4141-4141-4141-414141414141')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO opinions.subjects (id, name, referent)
+VALUES
+    ('14141414-1414-1414-1414-141414141414', 'cappuccino @ Cafe Eins A', '12121212-1212-1212-1212-121212121212'),
+    ('15151515-1515-1515-1515-151515151515', 'cappuccino @ Cafe Eins G', '13131313-1313-1313-1313-131313131313')
+ON CONFLICT (id) DO NOTHING;

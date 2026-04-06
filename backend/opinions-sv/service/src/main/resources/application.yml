@@ -1,11 +1,23 @@
-server.port: ${SERVICES_OPINIONS_PORT:8081}
+server.port: ${SERVICES_OPINIONS_PORT}
 spring:
   application.name: opinions-sv
   liquibase:
+    enabled: true
     change-log: db/changelog/db.changelog-master.sql
+    default-schema: opinions
 
   datasource:
     driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_HOST_PORT}/${DATABASE_NAME}?currentSchema=opinions
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+  jpa:
+    defer-datasource-initialization: false
+    hibernate:
+      ddl-auto: validate
+  sql:
+    init:
+      mode: never
 services:
   users:
     url: ${INTERSERVICE_PROTOCOL:http}://${SERVICES_USERS_HOST:localhost}:${SERVICES_USERS_PORT:8082}

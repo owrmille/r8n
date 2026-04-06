@@ -3,7 +3,7 @@ package com.r8n.backend.opinions
 import com.r8n.backend.opinions.domain.OpinionStatusEnum
 import com.r8n.backend.opinions.persistence.OpinionPersistence
 import com.r8n.backend.opinions.provider.database.OpinionRepository
-import com.r8n.backend.users.integration.UsersInternalApi
+import com.r8n.backend.users.integration.api.UsersInternalApi
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -25,7 +25,7 @@ class OpinionRepositoryTest {
     private companion object {
         @Container
         @ServiceConnection
-        val postgres =
+        val postgres: PostgreSQLContainer =
             PostgreSQLContainer(DockerImageName.parse("postgres:15"))
                 .withDatabaseName("opinions")
                 .withUsername("test")

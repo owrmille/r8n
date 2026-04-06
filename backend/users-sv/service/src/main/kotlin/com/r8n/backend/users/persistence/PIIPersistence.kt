@@ -19,7 +19,7 @@ class PIIPersistence(
     @Column(nullable = false)
     val name: String,
 //
-    @Column(nullable = true)
+    @Column(nullable = false)
     val email: String,
 //
     @Column(nullable = true)
