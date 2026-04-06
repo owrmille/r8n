@@ -13,7 +13,7 @@ class UsersRestClientConfiguration {
     @Bean
     @Qualifier("usersRestClient")
     fun usersRestClient(
-        @Value($$"${services.users.url}") baseUrl: String,
+        @Value("\${services.users.url}") baseUrl: String,
         restSecurityInterceptor: RestSecurityInterceptor,
     ): RestClient =
         RestClient
