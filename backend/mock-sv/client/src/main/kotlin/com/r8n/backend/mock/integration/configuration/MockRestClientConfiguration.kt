@@ -26,7 +26,7 @@ class MockRestClientConfiguration {
     @Bean
     @Qualifier("mockRestBaseClient")
     fun mockRestBaseClient(
-        @Value("${"$"}{services.mock.url}") baseUrl: String,
+        @Value("\${services.mock.url}") baseUrl: String,
     ): RestClient =
         RestClient
             .builder()
