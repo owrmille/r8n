@@ -1,6 +1,6 @@
 spring:
-  application.name: mock
+  application.name: mock-sv
 server:
   port: ${SERVICES_MOCK_PORT}
   ssl:
-    enabled: false
+    enabled: ${SERVER_SSL_ENABLED}

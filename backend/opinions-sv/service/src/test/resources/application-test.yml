@@ -1,4 +1,7 @@
-
+server:
+  port: 0
+  ssl:
+    enabled: false
 spring:
   application.name: opinions-sv
   liquibase:
@@ -27,4 +30,4 @@ logging:
     root: ERROR
 services:
   users:
-    url: ${INTERSERVICE_PROTOCOL}://${SERVICES_USERS_HOST}:${SERVICES_USERS_PORT}
+    url: http://localhost:8082

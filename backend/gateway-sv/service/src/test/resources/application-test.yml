@@ -1,5 +1,5 @@
 server:
-  port: ${GATEWAY_PORT}
+  port: 8080
   ssl:
     enabled: false
 
@@ -14,14 +14,14 @@ spring:
         webflux:
           routes:
             - id: opinions
-              uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_OPINIONS_HOST}:${SERVICES_OPINIONS_PORT}
+              uri: http://localhost:8081
               predicates:
                 - Path=/opinions/**
             - id: users
-              uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_USERS_HOST}:${SERVICES_USERS_PORT}
+              uri: http://localhost:8082
               predicates:
                 - Path=/users/**
             - id: mock
-              uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_MOCK_HOST}:${SERVICES_MOCK_PORT}
+              uri: http://localhost:8090
               predicates:
                 - Path=/auth/**,/access-requests/**,/opinion-lists/**,/selectors/**
