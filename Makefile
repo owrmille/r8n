@@ -287,7 +287,7 @@ clean-the-fuck-out-of-this-campus-machine: ## Remove large local caches (campus 
 	rm -rf ~/.local/share/docker ~/.var/app/com.slack.Slack ~/.config/Code ~/.config/Slack ~/.config/google-chrome || true
 	mkdir -p ~/.local/share/docker/tmp && chmod 700 ~/.local/share/docker/tmp
 	docker system prune -f
-	docker volume rm $(docker volume ls -qf dangling=true)
+	docker volume rm $(docker volume ls -qf dangling=true) || true
 	pkill -f GradleDaemon
 
 who-ate-all-the-space: ## Show top-level disk usage in home
