@@ -338,21 +338,3 @@ clean: clean-artifacts clean-logs frontend-clean ## Remove backend artifacts/log
 fclean: clean frontend-clean-all ## Remove clean plus frontend node_modules and certs
 
 re: fclean docker-build ## Full rebuild (clean + docker-build)
-
-help:
-	@echo "Available Makefile targets:"
-	@echo "  docker-up                               - Build and start all services in Docker"
-	@echo "  docker-down                             - Stop all Docker services"
-	@echo "  docker-logs                             - Show logs for all services"
-	@echo "  local-run-all                           - Start all services locally (background)"
-	@echo "  local-stop-all                          - Stop all locally running services"
-	@echo "  test-github                             - Run all tests (backend, frontend, e2e)"
-	@echo "  test-backend                            - Run backend tests (includes lint)"
-	@echo "  lint-backend                            - Run backend lint check (ktlint)"
-	@echo "  test-frontend                           - Run frontend tests (lint, unit, build)"
-	@echo "  test-e2e                                - Run frontend e2e tests (Playwright)"
-	@echo "  docker-database-run                     - Run PostgreSQL database in Docker"
-	@echo "  docker-database-connect                 - Connect to the running PostgreSQL database"
-	@echo "  clean-logs                              - Remove all .log files in deployment folder"
-	@echo "  clean-the-fuck-out-of-this-campus-machine - Deep clean for shared lab environments"
-	@echo "  who-ate-all-the-space                   - Disk usage summary for current user"
