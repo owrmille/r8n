@@ -1,0 +1,6 @@
+spring:
+  application.name: mock
+server:
+  port: ${SERVICES_MOCK_PORT:8090}
+  ssl:
+    enabled: false

@@ -1,0 +1,22 @@
+server:
+  port: ${GATEWAY_PORT:8080}
+  ssl:
+    enabled: false
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: opinions
+              uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_OPINIONS_HOST:localhost}:${SERVICES_OPINIONS_PORT:8081}
+              predicates:
+                - Path=/opinions/**
+            - id: users
+              uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_USERS_HOST:localhost}:${SERVICES_USERS_PORT:8082}
+              predicates:
+                - Path=/users/**
+            - id: mock
+              uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_MOCK_HOST:localhost}:${SERVICES_MOCK_PORT:8090}
+              predicates:
+                - Path=/auth/**,/access-requests/**,/opinion-lists/**,/selectors/**
