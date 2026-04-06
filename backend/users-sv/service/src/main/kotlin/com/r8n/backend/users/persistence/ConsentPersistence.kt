@@ -16,12 +16,16 @@ class ConsentPersistence(
     @GeneratedValue
     @UuidGenerator
     val id: UUID,
+//
     @Column(nullable = false)
     val userId: UUID,
+//
     @Column(nullable = false)
     val type: String,
+//
     @Column(nullable = false)
     val accepted: Instant,
+//
     @Column(nullable = false)
     val session: UUID,
 )

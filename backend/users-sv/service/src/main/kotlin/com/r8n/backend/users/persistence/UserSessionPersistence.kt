@@ -16,14 +16,19 @@ class UserSessionPersistence(
     @GeneratedValue
     @UuidGenerator
     val id: UUID,
+//
     @Column(nullable = false)
     val userId: UUID,
+//
     @Column(nullable = false)
     val created: Instant,
+//
     @Column(nullable = false)
     val expires: Instant,
+//
     @Column(nullable = false)
     val ip: String,
+//
     @Column(nullable = false)
     val userAgent: String,
 )

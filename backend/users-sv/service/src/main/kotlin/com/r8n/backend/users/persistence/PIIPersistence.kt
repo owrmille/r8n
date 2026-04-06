@@ -15,10 +15,13 @@ class PIIPersistence(
     @GeneratedValue
     @UuidGenerator
     val userId: UUID,
+//
     @Column(nullable = false)
     val name: String,
+//
     @Column(nullable = true)
     val email: String,
+//
     @Column(nullable = true)
     val phone: String,
 )
