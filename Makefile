@@ -160,10 +160,11 @@ docker-secrets-init: ## Ensure local Docker secrets file exists (prompts if miss
 	@bash -lc '\
 	set -e; \
 	file="$(DOCKER_SECRETS_ENV_FILE)"; \
-	ks=""; ts=""; \
+	ks="$$TLS_KEYSTORE_PASSWORD"; \
+	ts="$$TLS_TRUSTSTORE_PASSWORD"; \
 	if [ -f "$$file" ]; then \
-		ks="$$(awk -F= "/^TLS_KEYSTORE_PASSWORD=/{print substr(\$$0,index(\$$0,\"=\")+1)}" "$$file")"; \
-		ts="$$(awk -F= "/^TLS_TRUSTSTORE_PASSWORD=/{print substr(\$$0,index(\$$0,\"=\")+1)}" "$$file")"; \
+		[ -z "$$ks" ] && ks="$$(awk -F= "/^TLS_KEYSTORE_PASSWORD=/{print substr(\$$0,index(\$$0,\"=\")+1)}" "$$file")"; \
+		[ -z "$$ts" ] && ts="$$(awk -F= "/^TLS_TRUSTSTORE_PASSWORD=/{print substr(\$$0,index(\$$0,\"=\")+1)}" "$$file")"; \
 	fi; \
 	if [ -z "$$ks" ]; then \
 		read -s -p "TLS_KEYSTORE_PASSWORD (min 6 chars): " ks; echo; \
