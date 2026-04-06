@@ -5,6 +5,7 @@ spring:
     enabled: true
     change-log: db/changelog/db.changelog-master.sql
     default-schema: users
+
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_HOST_PORT}/${DATABASE_NAME}?currentSchema=users
@@ -20,3 +21,5 @@ spring:
 services:
   mock:
     url: ${INTERSERVICE_PROTOCOL:http}://${SERVICES_MOCK_HOST:localhost}:${SERVICES_MOCK_PORT:8090}
+  users:
+    url: ${INTERSERVICE_PROTOCOL}://${SERVICES_USERS_HOST}:${SERVICES_USERS_PORT}
