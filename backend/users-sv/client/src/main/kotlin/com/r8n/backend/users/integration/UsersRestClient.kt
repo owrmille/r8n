@@ -3,6 +3,7 @@ package com.r8n.backend.users.integration
 import com.r8n.backend.users.integration.api.UsersInternalApi
 import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.NAME_PATH
 import org.springframework.web.client.RestClient
+import org.springframework.web.client.body
 import java.util.UUID
 
 class UsersRestClient(
@@ -13,5 +14,5 @@ class UsersRestClient(
             .get()
             .uri(NAME_PATH, id)
             .retrieve()
-            .body(String::class.java)!!
+            .body<String>()!!
 }

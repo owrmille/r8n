@@ -21,9 +21,7 @@ class SecurityAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    fun restSecurityInterceptor(): RestSecurityInterceptor {
-        return RestSecurityInterceptor()
-    }
+    fun restSecurityInterceptor(): RestSecurityInterceptor = RestSecurityInterceptor()
 
     @Bean
     @ConditionalOnMissingBean
