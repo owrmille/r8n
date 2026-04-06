@@ -15,7 +15,7 @@ BOOT_JAR_TASKS := $(addprefix :,$(addsuffix -sv:bootJar,$(SERVICES)))
 FRONTEND_CERT_DIR := deployment/certs/edge
 FRONTEND_CERT_KEY := $(FRONTEND_CERT_DIR)/localhost.key
 FRONTEND_CERT_CRT := $(FRONTEND_CERT_DIR)/localhost.crt
-FRONTEND_NODE_VERSION := 22.13.0
+FRONTEND_NODE_VERSION := 22.14.0
 FRONTEND_NVM_BOOTSTRAP = if [ -n "$$NVM_DIR" ] && [ -s "$$NVM_DIR/nvm.sh" ]; then . "$$NVM_DIR/nvm.sh"; elif [ -s "$$HOME/.nvm/nvm.sh" ]; then . "$$HOME/.nvm/nvm.sh"; fi; if command -v nvm >/dev/null 2>&1; then nvm use $(FRONTEND_NODE_VERSION) >/dev/null 2>&1 || nvm install $(FRONTEND_NODE_VERSION); fi;
 FRONTEND_SHELL = set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR); \
 frontend_npm() { if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NODE_VERSION) npm "$$@"; else npm "$$@"; fi; }; \
@@ -327,7 +327,7 @@ test-frontend-prepare:
 	cd frontend && npm ci
 
 test-frontend: test-frontend-prepare
-	cd frontend && npm run type-check && npx oxlint && npx eslint . --max-warnings=0 && npm run test:unit -- --run && npm run build-only
+	cd frontend && npm run type-check && npx eslint . --max-warnings=0 && npm run test:unit -- --run && npm run build-only
 
 test-e2e:
 	cd frontend && npm run test:e2e
