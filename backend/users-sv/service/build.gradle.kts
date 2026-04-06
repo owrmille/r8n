@@ -10,7 +10,6 @@ description = "provides information about users"
 dependencies {
     implementation(project(":users-api"))
     implementation(project(":users-api-integration"))
-    implementation(project(":users-client"))
     implementation(project(":mock-api"))
     implementation(project(":mock-api-integration"))
     implementation(project(":mock-client"))

@@ -1,9 +1,0 @@
-spring.application.name: opinions-sv
-server:
-  port: ${SERVICES_OPINIONS_PORT:8081}
-  ssl:
-    enabled: ${SERVER_SSL_ENABLED:false}
-    key-store: ${SERVER_SSL_KEY_STORE}
-    key-store-password: ${SERVER_SSL_KEY_STORE_PASSWORD}
-    key-store-type: ${SERVER_SSL_KEY_STORE_TYPE}
-    key-alias: ${SERVER_SSL_KEY_ALIAS}
