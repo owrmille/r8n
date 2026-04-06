@@ -80,6 +80,11 @@ jobs:
         run: npx playwright install --with-deps
         working-directory: frontend
 
+      - name: Install Playwright OS dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps
+        working-directory: frontend
+
       - name: Start backend
         run: |
           export TLS_KEYSTORE_PASSWORD=password
