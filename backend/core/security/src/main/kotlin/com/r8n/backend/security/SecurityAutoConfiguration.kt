@@ -21,6 +21,12 @@ class SecurityAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
+    fun restSecurityInterceptor(): RestSecurityInterceptor {
+        return RestSecurityInterceptor()
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
     fun filterChain(http: HttpSecurity): SecurityFilterChain =
         http
             .csrf { it.disable() }

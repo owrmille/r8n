@@ -4,7 +4,12 @@ build
 *.log
 *.gz
 *.jar
-deployment/database/data
 .kotlin
+frontend/node_modules
+frontend/dist
 deployment/certs/
+deployment/config/docker.local.env
+deployment/database/data
+deployment/*/logs/
 docker.secrets.env
+*.txt

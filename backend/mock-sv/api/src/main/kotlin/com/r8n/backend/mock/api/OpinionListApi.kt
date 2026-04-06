@@ -24,7 +24,6 @@ interface OpinionListApi {
         const val SYNC_PATH = "/opinion-lists/{existingListId}/sync"
         const val UNSYNC_PATH = "/opinion-lists/{existingListId}/unsync"
         const val MINE_PATH = "/opinion-lists/mine"
-        const val MINE_FULL_PATH = "/opinion-lists/mine/full"
     }
 
     @GetMapping(SUMMARY_PATH)

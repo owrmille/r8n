@@ -10,7 +10,7 @@ CREATE TABLE users.users (
 CREATE TABLE users.pii (
     user_id UUID PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    email VARCHAR(255),
+    email VARCHAR(255) NOT NULL,
     phone VARCHAR(255),
     CONSTRAINT fk_pii_user FOREIGN KEY (user_id) REFERENCES users.users(id) ON DELETE CASCADE
 );
@@ -58,3 +58,9 @@ VALUES ('02020202-0202-0202-0202-020202020202'
 , '2024-01-01T12:00:00Z'
 , '01010101-0101-0101-0101-010101010101'
 );
+
+--changeset inikulin:V3_seed_additional_data context:local,test
+INSERT INTO users.users (id, status, status_timestamp)
+VALUES ('10101010-1010-1010-1010-101010101010', 'ACTIVE', '2024-01-01T12:00:00Z');
+INSERT INTO users.pii (user_id, name, email, phone)
+VALUES ('10101010-1010-1010-1010-101010101010', 'coffee expert Bernard', 'bernard@coffee.com', '123-456-7890');
