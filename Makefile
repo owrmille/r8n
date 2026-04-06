@@ -36,21 +36,12 @@ frontend_npx() { if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NOD
     frontend-test frontend-test-unit frontend-test-e2e frontend-clean frontend-clean-all frontend-cert frontend-cert-clean \
     clean fclean re move-caches-to-goinfre gradle-%-bootJar check-makefile
 
-help: ## Show this help
-	@awk 'BEGIN {FS=":.*##"} /^##@/ {printf "\n%s:\n", substr($$0,5)} /^[a-zA-Z0-9_.%-]+:.*##/ {printf "  %-32s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-
-all: docker-up ## Default target
-
 ##@ Docker
 docker-up: docker-build ensure-log-dirs docker-certs ## Start local Docker stack (builds images, ensures logs, generates certs)
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml up -d
 
 docker-down: ## Stop Docker stack
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml down
-
-docker-database-run: docker-database-create-data-folder ## Start only the database container
-	chmod a+x deployment/database/init/01_create_schemas.sh
-	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml up -d database
 
 $(addprefix local-run-,$(SERVICES)): local-run-%: ## Run one backend service locally
 	@echo "Starting $*-sv..."
@@ -181,8 +172,10 @@ docker-secrets-init: ## Ensure local Docker secrets file exists (prompts if miss
 	echo "Wrote $$file"; \
 	'
 
-##@ Local Backend
-local-run-all: $(addprefix local-run-,$(SERVICES)) ## Run all backend services locally
+##@ Docker database
+docker-database-run: docker-database-create-data-folder ## Start only the database container
+	chmod a+x deployment/database/init/01_create_schemas.sh
+	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml up -d database
 
 docker-database-create-data-folder:
 	@mkdir -p ./deployment/database/data
@@ -194,14 +187,14 @@ docker-database-drop-volume-campus: ## Delete local Docker DB volume (campus)
 	@# yes this is the only way, since some files are owned by root, and you don't have sudo rights in campus
 	@docker run --rm -v ./deployment/database:/pg alpine rm -rf /pg/data
 
-build-opinions: ## Build opinions service with tests
-	cd backend && ./gradlew :opinions-sv:build | tee build.log
-
-local-stop-all: $(addprefix local-stop-,$(SERVICES)) ## Stop all local backend services
-
 docker-database-connect: ## Connect to local database via psql
 	$(LOAD_LOCAL_ENV) \
 	docker exec -it database psql -U $$DATABASE_USERNAME -d $$DATABASE_NAME
+
+##@ Local Backend
+local-run-all: $(addprefix local-run-,$(SERVICES)) ## Run all backend services locally
+
+local-stop-all: $(addprefix local-stop-,$(SERVICES)) ## Stop all local backend services
 
 $(addprefix local-stop-,$(SERVICES)): local-stop-%: ## Stop one local backend service
 	-@set -e; \
@@ -334,6 +327,11 @@ test-e2e:
 	cd frontend && npm run test:e2e
 
 ##@ entrypoints
+help: ## Show this help
+	@awk 'BEGIN {FS=":.*##"} /^##@/ {printf "\n%s:\n", substr($$0,5)} /^[a-zA-Z0-9_.%-]+:.*##/ {printf "  %-32s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+all: docker-up ## Default target
+
 clean: clean-artifacts clean-logs frontend-clean ## Remove backend artifacts/logs and frontend cache
 
 fclean: clean frontend-clean-all ## Remove clean plus frontend node_modules and certs

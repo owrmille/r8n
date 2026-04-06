@@ -86,10 +86,14 @@ jobs:
           export TLS_TRUSTSTORE_PASSWORD=password
           make docker-up
           # Wait for gateway to be healthy
-          timeout 300 bash -c 'until curl -s http://localhost:8080/users/export -H "Authorization: Bearer stub-access-token-123" > /dev/null; do sleep 5; done'
+          timeout 300 bash -c 'until curl -sk https://localhost:8080/users/export -H "Authorization: Bearer stub-access-token-123" > /dev/null 2>&1; do sleep 5; done'
 
       - name: Run E2E tests
         run: make test-github-e2e
+
+      - name: Show docker logs
+        if: failure()
+        run: docker compose --env-file deployment/config/docker.env --env-file deployment/secrets/docker.secrets.env -f docker-compose.yml logs --tail=100
 
       - name: Stop backend
         if: always()

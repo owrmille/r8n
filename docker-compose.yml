@@ -100,12 +100,15 @@ services:
       SERVICES_OPINIONS_PORT: ${SERVICES_OPINIONS_PORT:?}
       SERVICES_MOCK_HOST: ${SERVICES_MOCK_HOST:?}
       SERVICES_MOCK_PORT: ${SERVICES_MOCK_PORT:?}
+      SERVICES_USERS_HOST: ${SERVICES_USERS_HOST:?}
+      SERVICES_USERS_PORT: ${SERVICES_USERS_PORT:?}
       LOGGING_FILE_NAME: ${LOGGING_FILE_NAME:?}
     ports:
       - "${GATEWAY_HOST_PORT:?}:${GATEWAY_CONTAINER_PORT:?}"
     depends_on:
       - opinions
       - mock
+      - users
       - database
     networks:
       - r8n_net
