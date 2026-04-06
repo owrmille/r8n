@@ -6,6 +6,7 @@ build
 *.jar
 frontend/node_modules
 frontend/dist
+frontend/test-results/
 deployment/certs/
 deployment/config/docker.local.env
 deployment/*/logs/
