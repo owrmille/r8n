@@ -40,6 +40,7 @@ services:
       SERVER_SSL_KEY_STORE: /certs/keystore-opinions.p12
       SERVICES_OPINIONS_PORT: ${SERVICES_OPINIONS_PORT:?}
       LOGGING_FILE_NAME: ${LOGGING_FILE_NAME:?}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
     networks:
       - r8n_net
     volumes:
@@ -81,6 +82,7 @@ services:
       SERVER_SSL_KEY_STORE: /certs/keystore-users.p12
       SERVICES_USERS_PORT: ${SERVICES_USERS_PORT:?}
       LOGGING_FILE_NAME: ${LOGGING_FILE_NAME:?}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
     networks:
       - r8n_net
     volumes:
