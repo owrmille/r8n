@@ -15,10 +15,10 @@ class OpinionSubjectPersistence(
     @GeneratedValue
     @UuidGenerator
     var id: UUID? = null,
-
+//
     @Column(nullable = false)
     var name: String,
-
+//
     @Column(nullable = false)
     var referent: UUID,
 )

@@ -1,8 +1,9 @@
-spring.application.name: opinions-sv
+spring:
+  application.name: mock-sv
 server:
-  port: ${SERVICES_OPINIONS_PORT:8081}
+  port: ${SERVICES_MOCK_PORT}
   ssl:
-    enabled: ${SERVER_SSL_ENABLED:false}
+    enabled: ${SERVER_SSL_ENABLED}
     key-store: ${SERVER_SSL_KEY_STORE}
     key-store-password: ${SERVER_SSL_KEY_STORE_PASSWORD}
     key-store-type: ${SERVER_SSL_KEY_STORE_TYPE}

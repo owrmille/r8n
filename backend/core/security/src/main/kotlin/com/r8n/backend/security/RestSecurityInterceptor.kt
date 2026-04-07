@@ -10,7 +10,7 @@ class RestSecurityInterceptor : ClientHttpRequestInterceptor {
     override fun intercept(
         request: HttpRequest,
         body: ByteArray,
-        execution: ClientHttpRequestExecution
+        execution: ClientHttpRequestExecution,
     ): ClientHttpResponse {
         val auth = SecurityContextHolder.getContext().authentication
         if (auth != null && auth.isAuthenticated) {

@@ -1,4 +1,7 @@
-
+server:
+  port: 0
+  ssl:
+    enabled: false
 spring:
   application.name: users-sv
   liquibase:
@@ -27,7 +30,7 @@ logging:
     root: ERROR
 
 services:
-  users:
-    url: http://localhost:${server.port}
   mock:
     url: http://localhost:8090
+  users:
+    url: http://localhost:8082

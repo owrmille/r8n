@@ -24,7 +24,9 @@ class OpinionFacade(
             opinion.objective,
             opinion.mark,
             opinion.componentSection.componentMark,
-            opinion.componentSection.components.map { it.toDto() }.toList(),
+            opinion.componentSection.components
+                .map { it.toDto() }
+                .toList(),
             opinion.status.toDto(),
             opinion.timestamp,
         )

@@ -21,24 +21,23 @@ class SecurityAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    fun restSecurityInterceptor(): RestSecurityInterceptor {
-        return RestSecurityInterceptor()
-    }
+    fun restSecurityInterceptor(): RestSecurityInterceptor = RestSecurityInterceptor()
 
     @Bean
     @ConditionalOnMissingBean
-    fun filterChain(http: HttpSecurity): SecurityFilterChain {
-        return http
+    fun filterChain(http: HttpSecurity): SecurityFilterChain =
+        http
             .csrf { it.disable() }
             .authorizeHttpRequests {
-                it.requestMatchers("/auth/**").permitAll()
-                    .anyRequest().authenticated()
-            }
-            .addFilterBefore(
+                it
+                    .requestMatchers("/auth/**")
+                    .permitAll()
+                    .anyRequest()
+                    .authenticated()
+            }.addFilterBefore(
                 StubTokenFilter(),
-                UsernamePasswordAuthenticationFilter::class.java
+                UsernamePasswordAuthenticationFilter::class.java,
             )
-            //.oauth2ResourceServer(oauth -> oauth.jwt())
+            // .oauth2ResourceServer(oauth -> oauth.jwt())
             .build()
-    }
 }

@@ -10,10 +10,12 @@ class OpinionNoteService(
     private val opinionNoteRepository: OpinionNoteRepository,
 ) {
     fun getSubjective(id: UUID) =
-        opinionNoteRepository.findAllByOpinionIdAndTypeOrderByIdAsc(id, OpinionNoteTypeEnum.SUBJECTIVE)
+        opinionNoteRepository
+            .findAllByOpinionIdAndTypeOrderByIdAsc(id, OpinionNoteTypeEnum.SUBJECTIVE)
             .map { it.description }
 
     fun getObjective(id: UUID) =
-        opinionNoteRepository.findAllByOpinionIdAndTypeOrderByIdAsc(id, OpinionNoteTypeEnum.OBJECTIVE)
+        opinionNoteRepository
+            .findAllByOpinionIdAndTypeOrderByIdAsc(id, OpinionNoteTypeEnum.OBJECTIVE)
             .map { it.description }
 }

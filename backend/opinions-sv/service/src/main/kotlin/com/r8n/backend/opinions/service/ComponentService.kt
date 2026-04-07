@@ -13,13 +13,18 @@ class ComponentService(
     private val opinionRepository: OpinionRepository,
 ) {
     fun getComponentSection(parentOpinionId: UUID): ComponentSection {
-        val components = weightedOpinionReferenceRepository.findAllByParentOpinionOrderByIdAsc(parentOpinionId)
-            .map { WeightedOpinionReference(it.id, it.childOpinion, it.weight) }
-        val childMarksById = opinionRepository.findAllById(components.map { it.opinion }.distinct())
-            .associate { it.id!! to it.mark }
-        val weightedMarks = components.mapNotNull { component ->
-            childMarksById[component.opinion]?.let { mark -> component.weight * mark }
-        }
+        val components =
+            weightedOpinionReferenceRepository
+                .findAllByParentOpinionOrderByIdAsc(parentOpinionId)
+                .map { WeightedOpinionReference(it.id, it.childOpinion, it.weight) }
+        val childMarksById =
+            opinionRepository
+                .findAllById(components.map { it.opinion }.distinct())
+                .associate { it.id!! to it.mark }
+        val weightedMarks =
+            components.mapNotNull { component ->
+                childMarksById[component.opinion]?.let { mark -> component.weight * mark }
+            }
         val componentMark = weightedMarks.takeIf { it.isNotEmpty() && it.size == components.size }?.sum()
         return ComponentSection(
             componentMark,

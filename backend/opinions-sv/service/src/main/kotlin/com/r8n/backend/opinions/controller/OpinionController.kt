@@ -4,21 +4,16 @@ import com.r8n.backend.mock.stub.OpinionTestDataFactory
 import com.r8n.backend.opinions.api.OpinionApi
 import com.r8n.backend.opinions.api.dto.OpinionDto
 import com.r8n.backend.opinions.facade.OpinionFacade
-import java.util.UUID
 import org.springframework.web.bind.annotation.RestController
+import java.util.UUID
 
 @RestController
 class OpinionController(
     private val opinionFacade: OpinionFacade,
 ) : OpinionApi {
+    override fun getOpinionById(id: UUID) = opinionFacade.getOpinionDto(id)
 
-    override fun getOpinionById(
-        id: UUID,
-    ) = opinionFacade.getOpinionDto(id)
-
-    override fun getOpinionFor(
-        subjectId: UUID,
-    ) = OpinionTestDataFactory.getOpinion(subjectId)
+    override fun getOpinionFor(subjectId: UUID) = OpinionTestDataFactory.getOpinion(subjectId)
 
     override fun createOpinion(
         subjectId: UUID,
@@ -44,9 +39,7 @@ class OpinionController(
         mark = mark,
     )
 
-    override fun deleteOpinion(
-        opinionId: UUID,
-    ) {
+    override fun deleteOpinion(opinionId: UUID) {
     }
 
     override fun linkComponent(
@@ -55,15 +48,10 @@ class OpinionController(
         weight: Double,
     ) = OpinionTestDataFactory.getOpinion(parentOpinionId)
 
-    override fun unlinkComponent(
-        linkId: UUID,
-    ): OpinionDto =
-        OpinionTestDataFactory.getOpinion(UUID.fromString("0"))
+    override fun unlinkComponent(linkId: UUID): OpinionDto = OpinionTestDataFactory.getOpinion(UUID.fromString("0"))
 
     override fun adjustComponentWeight(
         linkId: UUID,
         weight: Double,
-    ): OpinionDto =
-        OpinionTestDataFactory.getOpinion(UUID.fromString("0"))
-
+    ): OpinionDto = OpinionTestDataFactory.getOpinion(UUID.fromString("0"))
 }

@@ -29,8 +29,12 @@ interface OutgoingAccessRequestApi {
     ): PageResponseDto<AccessRequestDto>
 
     @GetMapping(CREATE_PATH)
-    fun create(@PathVariable listId: UUID): AccessRequestDto
+    fun create(
+        @PathVariable listId: UUID,
+    ): AccessRequestDto
 
     @GetMapping(CANCEL_PATH)
-    fun cancel(@PathVariable requestId: UUID): AccessRequestDto
+    fun cancel(
+        @PathVariable requestId: UUID,
+    ): AccessRequestDto
 }

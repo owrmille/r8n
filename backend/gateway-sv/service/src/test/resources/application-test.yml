@@ -1,0 +1,27 @@
+server:
+  port: 8080
+  ssl:
+    enabled: false
+
+
+
+
+
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: opinions
+              uri: http://localhost:8081
+              predicates:
+                - Path=/opinions/**
+            - id: users
+              uri: http://localhost:8082
+              predicates:
+                - Path=/users/**
+            - id: mock
+              uri: http://localhost:8090
+              predicates:
+                - Path=/auth/**,/access-requests/**,/opinion-lists/**,/selectors/**
