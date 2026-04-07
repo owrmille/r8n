@@ -6,9 +6,11 @@ import java.util.UUID
 
 interface UsersInternalApi {
     companion object {
-        const val NAME_PATH = "/users/name/{id}"
+        const val NAME_PATH = "/users/{id}/name"
     }
 
     @GetMapping(NAME_PATH)
-    fun getUserName(@PathVariable id: UUID): String
+    fun getUserName(
+        @PathVariable id: UUID,
+    ): String
 }

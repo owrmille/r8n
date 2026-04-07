@@ -8,7 +8,9 @@ import tools.jackson.module.kotlin.KotlinModule
 @TestConfiguration
 class TestObjectMapperConfiguration {
     @Bean
-    fun objectMapper(): JsonMapper = JsonMapper.builder()
-        .addModule(KotlinModule.Builder().build())
-        .build()
+    fun objectMapper(): JsonMapper =
+        JsonMapper
+            .builder()
+            .addModule(KotlinModule.Builder().build())
+            .build()
 }

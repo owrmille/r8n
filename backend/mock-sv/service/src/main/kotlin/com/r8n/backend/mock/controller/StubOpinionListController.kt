@@ -1,25 +1,20 @@
 package com.r8n.backend.mock.controller
 
 import com.r8n.backend.core.api.PageRequestDto
+import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.mock.api.OpinionListApi
 import com.r8n.backend.mock.api.dto.list.OpinionListPrivacyEnumDto
 import com.r8n.backend.mock.api.dto.list.OpinionListSummaryDto
 import com.r8n.backend.mock.stub.OpinionListTestDataFactory
-import com.r8n.backend.core.utils.toResponse
 import org.springframework.data.domain.PageImpl
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
 @RestController
 class StubOpinionListController : OpinionListApi {
+    override fun getListSummary(listId: UUID): OpinionListSummaryDto = OpinionListTestDataFactory.getListSummary(listId)
 
-    override fun getListSummary(
-        listId: UUID,
-    ): OpinionListSummaryDto = OpinionListTestDataFactory.getListSummary(listId)
-
-    override fun getList(
-        listId: UUID,
-    ) = OpinionListTestDataFactory.getList(listId)
+    override fun getList(listId: UUID) = OpinionListTestDataFactory.getList(listId)
 
     override fun renameList(
         listId: UUID,
@@ -29,8 +24,7 @@ class StubOpinionListController : OpinionListApi {
     override fun changePrivacy(
         listId: UUID,
         privacy: OpinionListPrivacyEnumDto,
-    ) =
-        OpinionListTestDataFactory.getList(listId)
+    ) = OpinionListTestDataFactory.getList(listId)
 
     override fun linkOpinion(
         listId: UUID,

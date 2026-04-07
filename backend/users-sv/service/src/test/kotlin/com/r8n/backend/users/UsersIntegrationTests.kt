@@ -21,10 +21,10 @@ import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.AutoConfigureJsonTesters
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
 import org.springframework.data.domain.PageImpl
 import org.springframework.security.test.context.support.WithMockUser
@@ -51,15 +51,15 @@ import java.util.UUID
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @Import(TestObjectMapperConfiguration::class)
 class UsersIntegrationTests {
-
     private companion object {
         @Container
         @ServiceConnection
-        val postgres: PostgreSQLContainer = PostgreSQLContainer(DockerImageName.parse("postgres:15"))
-            .withDatabaseName("users")
-            .withUsername("test")
-            .withPassword("test")
-            .withInitScript("db/init-schema.sql")
+        val postgres: PostgreSQLContainer =
+            PostgreSQLContainer(DockerImageName.parse("postgres:15"))
+                .withDatabaseName("users")
+                .withUsername("test")
+                .withPassword("test")
+                .withInitScript("db/init-schema.sql")
 
         const val USER_ID = "00000000-0000-0000-0000-000000000000"
         val opinions = OpinionListTestDataFactory.getList()
@@ -88,7 +88,6 @@ class UsersIntegrationTests {
 
     @BeforeEach
     fun setUp() {
-
         whenever(opinionClient.getMineFull(any())).thenReturn(
             PageImpl(listOf(opinions)).toResponse(),
         )
@@ -106,46 +105,50 @@ class UsersIntegrationTests {
     @Test
     @WithMockUser(username = USER_ID)
     fun `exportAll returns complete user data`() {
-        val result = mockMvc.perform(
-            get("/users/export")
-                .header("Authorization", "Bearer stub-access-token-123"),
-        )
-            .andExpect(status().isOk)
-            .andReturn()
+        val result =
+            mockMvc
+                .perform(
+                    get("/users/export")
+                        .header("Authorization", "Bearer stub-access-token-123"),
+                ).andExpect(status().isOk)
+                .andReturn()
 
         val actual: UserCompleteDataDto = objectMapper.readValue(result.response.contentAsString)
 
         val timestamp = LocalDateTime.of(2024, 1, 1, 12, 0).toInstant(ZoneOffset.UTC)
 
-        val session = UserSessionDto(
-            UUID.fromString("01010101-0101-0101-0101-010101010101"), timestamp,
-            timestamp.plus(
-                1,
-                ChronoUnit.DAYS,
-            ),
-            "127.0.0.1",
-            "Test User Agent",
-        )
-
-        val expected = UserCompleteDataDto(
-            UUID.fromString(USER_ID),
-            UserStatusEnumDto.ACTIVE,
-            timestamp,
-            PageImpl(
-                listOf(
-                    ConsentDto("PRIVACY_POLICY", timestamp, session),
+        val session =
+            UserSessionDto(
+                UUID.fromString("01010101-0101-0101-0101-010101010101"),
+                timestamp,
+                timestamp.plus(
+                    1,
+                    ChronoUnit.DAYS,
                 ),
-            ).toResponse(),
-            PersonalIdentifiableInformationSectionDto(
-                "Test Testsson",
-                "test@test.test",
-                PageImpl(listOf(session)).toResponse(),
-            ),
-            PageImpl(listOf(opinions)).toResponse(),
-            PageImpl(listOf(outgoingAccessRequests)).toResponse(),
-            PageImpl(listOf(incomingAccessRequests)).toResponse(),
-            PageImpl(listOf(supportMessages)).toResponse(),
-        )
+                "127.0.0.1",
+                "Test User Agent",
+            )
+
+        val expected =
+            UserCompleteDataDto(
+                UUID.fromString(USER_ID),
+                UserStatusEnumDto.ACTIVE,
+                timestamp,
+                PageImpl(
+                    listOf(
+                        ConsentDto("PRIVACY_POLICY", timestamp, session),
+                    ),
+                ).toResponse(),
+                PersonalIdentifiableInformationSectionDto(
+                    "Test Testsson",
+                    "test@test.test",
+                    PageImpl(listOf(session)).toResponse(),
+                ),
+                PageImpl(listOf(opinions)).toResponse(),
+                PageImpl(listOf(outgoingAccessRequests)).toResponse(),
+                PageImpl(listOf(incomingAccessRequests)).toResponse(),
+                PageImpl(listOf(supportMessages)).toResponse(),
+            )
         assertEquals(expected, actual)
     }
 }

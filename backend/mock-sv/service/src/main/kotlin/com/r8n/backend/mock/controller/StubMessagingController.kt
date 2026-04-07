@@ -8,7 +8,8 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 class StubMessagingController : MessagingApi {
-    override fun getSupportThreads() = PageImpl(
-        listOf(MiscTestFactory.getSupportMessage()),
-    ).toResponse()
+    override fun getSupportThreads() =
+        PageImpl(
+            listOf(MiscTestFactory.getSupportMessage()),
+        ).toResponse()
 }

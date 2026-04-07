@@ -10,5 +10,5 @@ import org.springframework.context.annotation.Import
 class OpinionsApplication
 
 fun main(args: Array<String>) {
-	runApplication<OpinionsApplication>(*args)
+    runApplication<OpinionsApplication>(*args)
 }

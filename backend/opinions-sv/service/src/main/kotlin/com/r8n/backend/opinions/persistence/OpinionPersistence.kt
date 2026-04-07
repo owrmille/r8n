@@ -19,20 +19,20 @@ class OpinionPersistence(
     @GeneratedValue
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
     var id: UUID? = null,
-
+//
     @Column(nullable = false)
     var owner: UUID,
-
+//
     @Column(nullable = false)
     var subject: UUID,
-
+//
     @Column(nullable = true)
     var mark: Double?,
-
+//
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     var status: OpinionStatusEnum,
-
+//
     @Column(nullable = false)
     var timestamp: Instant,
 )

@@ -16,10 +16,12 @@ class UserService(
     fun getName(id: UUID) = piiRepository.findByIdOrNull(id)?.name ?: "Unknown"
 
     fun getUser(id: UUID): User {
-        val userPersistence = userRepository.findByIdOrNull(id)
-            ?: throw NoSuchElementException("User $id not found")
-        val piiPersistence = piiRepository.findByIdOrNull(id)
-            ?: throw NoSuchElementException("PII for user $id not found")
+        val userPersistence =
+            userRepository.findByIdOrNull(id)
+                ?: throw NoSuchElementException("User $id not found")
+        val piiPersistence =
+            piiRepository.findByIdOrNull(id)
+                ?: throw NoSuchElementException("PII for user $id not found")
         val consents = consentService.getConsentsForUser(id)
 
         return User(
@@ -28,7 +30,7 @@ class UserService(
             email = piiPersistence.email,
             status = userPersistence.status,
             statusTimestamp = userPersistence.statusTimestamp,
-            consents = consents
+            consents = consents,
         )
     }
 }

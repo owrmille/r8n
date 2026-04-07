@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 class MockApplication
 
 fun main(args: Array<String>) {
-	runApplication<MockApplication>(*args)
+    runApplication<MockApplication>(*args)
 }

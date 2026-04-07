@@ -9,14 +9,16 @@ data class WeightedOpinionReference(
     val weight: Double,
 )
 
-fun WeightedOpinionReference.toDto() = WeightedOpinionReferenceDto(
-    id,
-    opinion,
-    weight,
-)
+fun WeightedOpinionReference.toDto() =
+    WeightedOpinionReferenceDto(
+        id,
+        opinion,
+        weight,
+    )
 
-fun WeightedOpinionReferenceDto.fromDto() = WeightedOpinionReference(
-    id,
-    opinion,
-    weight,
-)
+fun WeightedOpinionReferenceDto.fromDto() =
+    WeightedOpinionReference(
+        id,
+        opinion,
+        weight,
+    )

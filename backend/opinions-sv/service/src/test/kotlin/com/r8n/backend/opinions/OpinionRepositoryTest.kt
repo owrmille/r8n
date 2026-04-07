@@ -22,15 +22,15 @@ import java.util.UUID
 @Testcontainers
 @SpringBootTest
 class OpinionRepositoryTest {
-
     private companion object {
         @Container
         @ServiceConnection
-        val postgres: PostgreSQLContainer = PostgreSQLContainer(DockerImageName.parse("postgres:15"))
-            .withDatabaseName("opinions")
-            .withUsername("test")
-            .withPassword("test")
-            .withInitScript("db/init-schema.sql")
+        val postgres: PostgreSQLContainer =
+            PostgreSQLContainer(DockerImageName.parse("postgres:15"))
+                .withDatabaseName("opinions")
+                .withUsername("test")
+                .withPassword("test")
+                .withInitScript("db/init-schema.sql")
     }
 
     @Autowired
@@ -41,15 +41,16 @@ class OpinionRepositoryTest {
 
     @Test
     fun `saved opinion gets uuid v7 id`() {
-        val saved = opinionRepository.save(
-            OpinionPersistence(
-                owner = UUID.fromString("07070707-0707-0707-0707-070707070707"),
-                subject = UUID.fromString("23232323-2323-2323-2323-232323232323"),
-                mark = null,
-                status = OpinionStatusEnum.DRAFT,
-                timestamp = Instant.now(),
+        val saved =
+            opinionRepository.save(
+                OpinionPersistence(
+                    owner = UUID.fromString("07070707-0707-0707-0707-070707070707"),
+                    subject = UUID.fromString("23232323-2323-2323-2323-232323232323"),
+                    mark = null,
+                    status = OpinionStatusEnum.DRAFT,
+                    timestamp = Instant.now(),
+                ),
             )
-        )
 
         val id = saved.id!!
         assertEquals(7, id.version(), "Expected UUID v7 but got v${id.version()}")
