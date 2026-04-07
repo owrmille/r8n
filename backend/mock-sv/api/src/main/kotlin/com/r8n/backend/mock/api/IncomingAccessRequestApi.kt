@@ -36,8 +36,12 @@ interface IncomingAccessRequestApi {
     ): AccessRequestDto
 
     @PostMapping(DECLINE_PATH)
-    fun decline(@PathVariable requestId: UUID): AccessRequestDto
-    
+    fun decline(
+        @PathVariable requestId: UUID,
+    ): AccessRequestDto
+
     @PostMapping(HIDE_PATH)
-    fun hide(@PathVariable requestId: UUID): AccessRequestDto
+    fun hide(
+        @PathVariable requestId: UUID,
+    ): AccessRequestDto
 }

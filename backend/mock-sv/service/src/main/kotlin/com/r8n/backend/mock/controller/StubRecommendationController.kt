@@ -1,8 +1,8 @@
 package com.r8n.backend.mock.controller
 
 import com.r8n.backend.core.api.PageRequestDto
-import com.r8n.backend.mock.api.RecommendationApi
 import com.r8n.backend.core.utils.toResponse
+import com.r8n.backend.mock.api.RecommendationApi
 import com.r8n.backend.mock.stub.OpinionListTestDataFactory.getListSummary
 import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.cappuccino2
 import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.cappuccino3
@@ -37,11 +37,7 @@ class StubRecommendationController : RecommendationApi {
 
     override fun getHiddenOpinionLists(pageable: PageRequestDto) = PageImpl(listOf(getListSummary())).toResponse()
 
-    override fun unhideSubject(
-        id: UUID,
-    ) = cappuccino3
+    override fun unhideSubject(id: UUID) = cappuccino3
 
-    override fun unhideOpinionList(
-        id: UUID,
-    ) = getListSummary(id)
+    override fun unhideOpinionList(id: UUID) = getListSummary(id)
 }

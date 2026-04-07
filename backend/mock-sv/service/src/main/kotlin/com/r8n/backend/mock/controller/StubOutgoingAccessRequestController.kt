@@ -1,9 +1,9 @@
 package com.r8n.backend.mock.controller
 
 import com.r8n.backend.core.api.PageRequestDto
+import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.mock.api.OutgoingAccessRequestApi
 import com.r8n.backend.mock.api.dto.access.RequestStatusEnumDto
-import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.mock.stub.AccessRequestsTestDataFactory
 import org.springframework.data.domain.PageImpl
 import org.springframework.web.bind.annotation.RestController
@@ -12,7 +12,6 @@ import java.util.UUID
 
 @RestController
 class StubOutgoingAccessRequestController : OutgoingAccessRequestApi {
-
     override fun get(
         forListId: UUID?,
         since: Instant?,
@@ -26,11 +25,7 @@ class StubOutgoingAccessRequestController : OutgoingAccessRequestApi {
         ),
     ).toResponse()
 
-    override fun create(
-        listId: UUID,
-    ) = AccessRequestsTestDataFactory.get(status = RequestStatusEnumDto.SENT)
+    override fun create(listId: UUID) = AccessRequestsTestDataFactory.get(status = RequestStatusEnumDto.SENT)
 
-    override fun cancel(
-        requestId: UUID,
-    ) = AccessRequestsTestDataFactory.get(status = RequestStatusEnumDto.CANCELLED)
+    override fun cancel(requestId: UUID) = AccessRequestsTestDataFactory.get(status = RequestStatusEnumDto.CANCELLED)
 }

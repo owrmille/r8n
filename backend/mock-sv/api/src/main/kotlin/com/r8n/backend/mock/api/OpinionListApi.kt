@@ -24,13 +24,17 @@ interface OpinionListApi {
         const val SYNC_PATH = "/opinion-lists/{existingListId}/sync"
         const val UNSYNC_PATH = "/opinion-lists/{existingListId}/unsync"
         const val MINE_PATH = "/opinion-lists/mine"
-        const val MINE_FULL_PATH = "/opinion-lists/mine/full"
     }
+
     @GetMapping(SUMMARY_PATH)
-    fun getListSummary(@PathVariable listId: UUID): OpinionListSummaryDto
+    fun getListSummary(
+        @PathVariable listId: UUID,
+    ): OpinionListSummaryDto
 
     @GetMapping(GET_PATH)
-    fun getList(@PathVariable listId: UUID): OpinionListDto
+    fun getList(
+        @PathVariable listId: UUID,
+    ): OpinionListDto
 
     @PatchMapping(RENAME_PATH)
     fun renameList(

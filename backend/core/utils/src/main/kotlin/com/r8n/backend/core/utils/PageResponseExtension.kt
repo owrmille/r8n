@@ -8,5 +8,5 @@ fun <T : Any> Page<T>.toResponse(): PageResponseDto<T> =
         items = content,
         total = totalElements,
         page = number,
-        size = size
+        size = size,
     )

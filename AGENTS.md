@@ -13,8 +13,8 @@ We're creating a private review platform. Focusing on security and privacy to sa
 
 # 2. Technology Stack
 - **Backend**: Kotlin 2.2.21, JVM 21, Spring Boot 4.0.2, Spring Cloud 2025.1.1.
-- **Frontend**: Node 22+, Vue 3.5+, TypeScript 5.9+, Vite 7+, Tailwind 4+.
-- **Testing**: JUnit 5, Testcontainers, Mockito, Vitest (Vue), Playwright (E2E).
+- **Frontend**: Node 22+, React 18.3+, TypeScript 5.8+, Vite 8+, Tailwind CSS 3.4+.
+- **Testing**: JUnit 5, Testcontainers, Mockito, Vitest + React Testing Library, Playwright (E2E).
 - **Persistence**: PostgreSQL (separate schemas per service), Liquibase.
 - **Build**: Gradle (libs.versions.toml) for backend, Makefile as developer entrypoint.
 - **Future-Ready**: Keep Kafka and Kubernetes integration in mind for architectural suggestions.
@@ -61,4 +61,15 @@ Services follow a 3-module split for isolation:
 - **Makefile**: Entrypoint for developers (e.g. `make docker-up`, `make build-opinions`).
 - **Gradle**: Use `./gradlew test` for running backend tests.
 - **Code Style**: Mirror the existing style of the file/module (indentation, imports, comments).
-- **Frontend**: Extract reusable logic into composables/utilities. Separate presentation from data-fetching. Handle loading/error/empty states explicitly.
+
+# 7. Frontend Development Workflow
+- **API access**: Do not call `fetch`, `axios`, or other HTTP clients directly inside page or UI components. Keep all server communication behind shared API modules and query/mutation hooks.
+- **API structure**: Centralize API logic in a dedicated layer. Use a shared HTTP client for base URL, headers, auth tokens, interceptors, and common error handling. Group endpoint functions by domain.
+- **Type safety**: Use typed request and response contracts. Do not pass untyped server responses directly into UI components.
+- **Data mapping**: Map backend DTOs into frontend-friendly models when needed. Keep server response shape isolated from presentation logic.
+- **Server state**: Manage remote data through shared query utilities (for example, React Query). Do not reimplement loading, caching, refetching, or retry logic manually without a strong reason.
+- **Queries and mutations**: Keep read operations and write operations separate. Use dedicated query hooks for fetching and dedicated mutation hooks for create/update/delete actions.
+- **UI states**: Handle loading, error, success, and empty states explicitly for every API-backed screen.
+- **Error handling**: Normalize API errors into a predictable shape. Do not swallow errors silently. Surface user-facing errors clearly and handle auth/permission failures consistently.
+- **Cache consistency**: After mutations, update or invalidate related cached data so the UI stays in sync with the server.
+- **Reuse**: Avoid duplicating endpoints, request logic, or transformation code across the app. Prefer small, composable API functions with clear responsibilities.

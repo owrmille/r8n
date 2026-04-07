@@ -18,9 +18,11 @@ class SubjectService(
     fun getSubject(id: UUID): SubjectDetails? {
         val subject = opinionSubjectRepository.findById(id).orElse(null) ?: return null
         val primaryReferent = referentRepository.findById(subject.referent).orElseThrow()
-        val alternativeReferents = referentRepository.findAllByReferentGroupOrderByIdAsc(primaryReferent.referentGroup)
-            .filter { it.id != primaryReferent.id }
-            .map { it.toModel() }
+        val alternativeReferents =
+            referentRepository
+                .findAllByReferentGroupOrderByIdAsc(primaryReferent.referentGroup)
+                .filter { it.id != primaryReferent.id }
+                .map { it.toModel() }
 
         return SubjectDetails(
             id = subject.id ?: return null,
@@ -30,13 +32,14 @@ class SubjectService(
         )
     }
 
-    private fun ReferentPersistence.toModel() = SubjectReferent(
-        id = id!!,
-        name = name,
-        address = address,
-        latitude = latitude,
-        longitude = longitude,
-    )
+    private fun ReferentPersistence.toModel() =
+        SubjectReferent(
+            id = id!!,
+            name = name,
+            address = address,
+            latitude = latitude,
+            longitude = longitude,
+        )
 
     companion object {
         private const val UNNAMED_SUBJECT = "UNNAMED"

@@ -11,20 +11,20 @@ import org.hibernate.annotations.UuidGenerator
 import java.util.UUID
 
 @Entity
-@Table(schema = "opinions", name = "opinion_note")
+@Table(schema = "opinions", name = "opinion_notes")
 class OpinionNotePersistence(
     @Id
     @GeneratedValue
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
     val id: UUID,
-
+//
     @Column(nullable = false)
     val opinionId: UUID,
-
+//
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     val type: OpinionNoteTypeEnum,
-
+//
     @Column(nullable = false)
     val description: String,
 )

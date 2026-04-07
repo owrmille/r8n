@@ -15,19 +15,19 @@ class ReferentPersistence(
     @GeneratedValue
     @UuidGenerator
     var id: UUID? = null,
-
+//
     @Column(nullable = false)
     var name: String,
-
+//
     @Column(nullable = true)
     var address: String?,
-
+//
     @Column(nullable = true)
     var latitude: Double?,
-
+//
     @Column(nullable = true)
     var longitude: Double?,
-
+//
     @Column(nullable = false)
     var referentGroup: UUID,
 )
