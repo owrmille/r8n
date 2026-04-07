@@ -11,14 +11,9 @@ import java.util.UUID
 class OpinionController(
     private val opinionFacade: OpinionFacade,
 ) : OpinionApi {
+    override fun getOpinionById(id: UUID) = opinionFacade.getOpinionDto(id)
 
-    override fun getOpinionById(
-        id: UUID,
-    ) = opinionFacade.getOpinionDto(id)
-
-    override fun getOpinionFor(
-        subjectId: UUID,
-    ) = opinionFacade.getOpinionForDto(subjectId)
+    override fun getOpinionFor(subjectId: UUID) = opinionFacade.getOpinionForDto(subjectId)
 
     override fun createOpinion(
         subjectId: UUID,
