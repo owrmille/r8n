@@ -32,12 +32,7 @@ class OpinionController(
         subjective: List<String>,
         objective: List<String>,
         mark: Double?,
-    ) = OpinionTestDataFactory.postOpinion(
-        opinionId = opinionId,
-        subjective = subjective,
-        objective = objective,
-        mark = mark,
-    )
+    ) = opinionFacade.updateOpinion(opinionId, subjective, objective, mark)
 
     override fun deleteOpinion(opinionId: UUID) {
     }
