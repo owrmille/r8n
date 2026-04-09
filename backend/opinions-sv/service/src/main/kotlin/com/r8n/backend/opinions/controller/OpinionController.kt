@@ -4,6 +4,7 @@ import com.r8n.backend.mock.stub.OpinionTestDataFactory
 import com.r8n.backend.opinions.api.OpinionApi
 import com.r8n.backend.opinions.api.dto.OpinionDto
 import com.r8n.backend.opinions.facade.OpinionFacade
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
@@ -20,12 +21,11 @@ class OpinionController(
         subjective: List<String>,
         objective: List<String>,
         mark: Double?,
-    ) = OpinionTestDataFactory.postOpinion(
-        subjectId = subjectId,
-        subjective = subjective,
-        objective = objective,
-        mark = mark,
-    )
+    ): OpinionDto {
+        val auth = SecurityContextHolder.getContext().authentication ?: throw IllegalStateException("Not authenticated")
+        val userId = UUID.fromString(auth.name)
+        return opinionFacade.createOpinion(userId, subjectId, subjective, objective, mark)
+    }
 
     override fun updateOpinion(
         opinionId: UUID,

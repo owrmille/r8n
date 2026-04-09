@@ -16,7 +16,7 @@ class OpinionNotePersistence(
     @Id
     @GeneratedValue
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
-    val id: UUID,
+    val id: UUID? = null,
 //
     @Column(nullable = false)
     val opinionId: UUID,
