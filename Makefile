@@ -48,6 +48,15 @@ docker-up: docker-build ensure-log-dirs docker-certs ## Start local Docker stack
 docker-build: docker-secrets-init verify-artifacts docker-database-create-data-folder frontend-build ## Build Docker images
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml build
 
+docker-down: ## Stop Docker stack
+	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml down
+
+docker-logs: ## Tail logs for all services
+	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml logs -f $(SERVICES)
+
+$(addprefix docker-logs-,$(SERVICES)): docker-logs-%: ## Tail logs for one service
+	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml logs -f $*
+
 prepare-artifacts: prebuild-jars ## Copy service JARs into deployment/ folders
 	@set -e; \
 	for svc in $(SERVICES); do \
@@ -150,14 +159,9 @@ docker-secrets-init: ## Ensure local Docker secrets file exists (prompts if miss
 	echo "Wrote $$file"; \
 	'
 
-docker-down: ## Stop Docker stack
-	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml down
-
-docker-logs: ## Tail logs for all services
-	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml logs -f $(SERVICES)
-
-$(addprefix docker-logs-,$(SERVICES)): docker-logs-%: ## Tail logs for one service
-	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml logs -f $*
+generate-jwt-keys-%: ## Generate RSA JWT keypair and update deployment/config/<env>.env (env examples: local, docker)
+	chmod +x ./deployment/scripts/generate-jwt-keypair.sh
+	./deployment/scripts/generate-jwt-keypair.sh $*
 
 ##@ Maintenance
 clean-logs: ## Remove deployment log files
