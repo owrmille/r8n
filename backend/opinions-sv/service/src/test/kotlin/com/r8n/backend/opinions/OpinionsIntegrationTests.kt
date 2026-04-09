@@ -2,6 +2,7 @@ package com.r8n.backend.opinions
 
 import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.bernardReferent
 import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.cappuccino1A
+import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.cappuccino1G
 import com.r8n.backend.opinions.api.dto.OpinionDto
 import com.r8n.backend.opinions.api.dto.OpinionStatusEnumDto
 import com.r8n.backend.users.integration.api.UsersInternalApi
@@ -21,6 +22,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
@@ -41,6 +43,9 @@ import java.util.UUID
 @Import(TestObjectMapperConfiguration::class)
 class OpinionsIntegrationTests {
     private companion object {
+        val CURRENT_USER_ID: UUID = UUID.fromString("00000000-0000-0000-0000-000000000000")
+        const val CURRENT_USER_NAME = "username"
+
         @Container
         @ServiceConnection
         val postgres: PostgreSQLContainer =
@@ -64,6 +69,8 @@ class OpinionsIntegrationTests {
     fun setUp() {
         whenever(usersInternalApi.getUserName(eq(bernardReferent.id)))
             .thenReturn(bernardReferent.name)
+        whenever(usersInternalApi.getUserName(eq(CURRENT_USER_ID)))
+            .thenReturn(CURRENT_USER_NAME)
     }
 
     @Test
@@ -127,5 +134,32 @@ class OpinionsIntegrationTests {
                 Instant.parse("2024-02-01T09:30:00Z"),
             )
         assertEquals(expected, actual)
+    }
+
+    @Test
+    @WithMockUser
+    fun `create opinion works`() {
+        val subjectId = "15151515-1515-1515-1515-151515151515"
+        val result =
+            mockMvc
+                .perform(
+                    post("/opinions")
+                        .queryParam("subjectId", subjectId)
+                        .queryParam("subjective", "new subjective")
+                        .queryParam("objective", "new objective")
+                        .queryParam("mark", "4.50")
+                        .header("Authorization", "Bearer stub-access-token-123"),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val actual: OpinionDto = objectMapper.readValue(result.response.contentAsString)
+        assertEquals(CURRENT_USER_ID, actual.owner)
+        assertEquals(CURRENT_USER_NAME, actual.ownerName)
+        assertEquals(UUID.fromString(subjectId), actual.subject)
+        assertEquals(cappuccino1G.name, actual.subjectName)
+        assertEquals(listOf("new subjective"), actual.subjective)
+        assertEquals(listOf("new objective"), actual.objective)
+        assertEquals(4.5, actual.mark)
+        assertEquals(OpinionStatusEnumDto.DRAFT, actual.status)
     }
 }
