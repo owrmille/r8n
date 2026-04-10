@@ -27,8 +27,6 @@ logging:
     root: ERROR
 
 services:
-  users:
-    url: http://localhost:${server.port}
   mock:
     url: http://localhost:8090
 
