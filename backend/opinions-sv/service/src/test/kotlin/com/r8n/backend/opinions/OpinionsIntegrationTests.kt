@@ -1,9 +1,8 @@
 package com.r8n.backend.opinions
 
-import tools.jackson.databind.ObjectMapper
-import tools.jackson.module.kotlin.readValue
 import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.bernardReferent
 import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.cappuccino1A
+import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.cappuccino1G
 import com.r8n.backend.opinions.api.dto.OpinionDto
 import com.r8n.backend.opinions.api.dto.OpinionStatusEnumDto
 import com.r8n.backend.users.integration.api.UsersInternalApi
@@ -14,9 +13,9 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.AutoConfigureJsonTesters
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt
 import org.springframework.test.context.ActiveProfiles
@@ -24,11 +23,14 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.postgresql.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
+import tools.jackson.databind.ObjectMapper
+import tools.jackson.module.kotlin.readValue
 import java.time.Instant
 import java.util.UUID
 
@@ -41,15 +43,18 @@ import java.util.UUID
 )
 @Import(TestObjectMapperConfiguration::class)
 class OpinionsIntegrationTests {
-
     private companion object {
+        val CURRENT_USER_ID: UUID = UUID.fromString("00000000-0000-0000-0000-000000000000")
+        const val CURRENT_USER_NAME = "username"
+
         @Container
         @ServiceConnection
-        val postgres: PostgreSQLContainer = PostgreSQLContainer(DockerImageName.parse("postgres:15"))
-            .withDatabaseName("opinions")
-            .withUsername("test")
-            .withPassword("test")
-            .withInitScript("db/init-schema.sql")
+        val postgres: PostgreSQLContainer =
+            PostgreSQLContainer(DockerImageName.parse("postgres:15"))
+                .withDatabaseName("opinions")
+                .withUsername("test")
+                .withPassword("test")
+                .withInitScript("db/init-schema.sql")
     }
 
     @Autowired
@@ -65,6 +70,8 @@ class OpinionsIntegrationTests {
     fun setUp() {
         whenever(usersInternalApi.getUserName(eq(bernardReferent.id)))
             .thenReturn(bernardReferent.name)
+        whenever(usersInternalApi.getUserName(eq(CURRENT_USER_ID)))
+            .thenReturn(CURRENT_USER_NAME)
     }
 
     @Test
@@ -77,28 +84,87 @@ class OpinionsIntegrationTests {
             .andExpect(status().isOk).andReturn()
 
         val actual: OpinionDto = objectMapper.readValue(result.response.contentAsString)
-        val expected = OpinionDto(
-            UUID.fromString("30000000-0000-0000-0000-000000000001"),
-            bernardReferent.id,
-            bernardReferent.name,
-            cappuccino1A.id,
-            cappuccino1A.name,
-            listOf("reminds of grandma's home coffee"),
-            listOf("5.50€", "lactose-free milk"),
-            4.23,
-            null,
-            emptyList(),
-            OpinionStatusEnumDto.DRAFT,
-            Instant.parse("2024-02-01T09:30:00Z"),
-        )
+        val expected =
+            OpinionDto(
+                UUID.fromString("30000000-0000-0000-0000-000000000001"),
+                bernardReferent.id,
+                bernardReferent.name,
+                cappuccino1A.id,
+                cappuccino1A.name,
+                listOf("reminds of grandma's home coffee"),
+                listOf("5.50€", "lactose-free milk"),
+                4.23,
+                null,
+                emptyList(),
+                OpinionStatusEnumDto.DRAFT,
+                Instant.parse("2024-02-01T09:30:00Z"),
+            )
 
         assertEquals(expected, actual)
     }
 
     @Test
+    @WithMockUser
+    fun `get opinion for subject works`() {
+        val requestedSubjectId = "14141414-1414-1414-1414-141414141414"
+        val result =
+            mockMvc
+                .perform(
+                    get("/opinions/for/$requestedSubjectId")
+                        .header("Authorization", "Bearer stub-access-token-123"),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val actual: OpinionDto = objectMapper.readValue(result.response.contentAsString)
+        val expected =
+            OpinionDto(
+                UUID.fromString("30000000-0000-0000-0000-000000000001"),
+                bernardReferent.id,
+                bernardReferent.name,
+                cappuccino1A.id,
+                cappuccino1A.name,
+                listOf("reminds of grandma's home coffee"),
+                listOf("5.50€", "lactose-free milk"),
+                4.23,
+                null,
+                emptyList(),
+                OpinionStatusEnumDto.DRAFT,
+                Instant.parse("2024-02-01T09:30:00Z"),
+            )
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    @WithMockUser
+    fun `create opinion works`() {
+        val subjectId = "15151515-1515-1515-1515-151515151515"
+        val result =
+            mockMvc
+                .perform(
+                    post("/opinions")
+                        .queryParam("subjectId", subjectId)
+                        .queryParam("subjective", "new subjective")
+                        .queryParam("objective", "new objective")
+                        .queryParam("mark", "4.50")
+                        .header("Authorization", "Bearer stub-access-token-123"),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val actual: OpinionDto = objectMapper.readValue(result.response.contentAsString)
+        assertEquals(CURRENT_USER_ID, actual.owner)
+        assertEquals(CURRENT_USER_NAME, actual.ownerName)
+        assertEquals(UUID.fromString(subjectId), actual.subject)
+        assertEquals(cappuccino1G.name, actual.subjectName)
+        assertEquals(listOf("new subjective"), actual.subjective)
+        assertEquals(listOf("new objective"), actual.objective)
+        assertEquals(4.5, actual.mark)
+        assertEquals(OpinionStatusEnumDto.DRAFT, actual.status)
+    }
+
+    @Test
     fun `delete opinion requires admin role`() {
         val opinionId = UUID.randomUUID()
-        
+
         // No role - 403
         mockMvc.perform(
             delete("/opinions/$opinionId")
@@ -121,7 +187,7 @@ class OpinionsIntegrationTests {
     @Test
     fun `service role can access but not delete if restricted`() {
         val opinionId = UUID.randomUUID()
-        
+
         // Service role - 403 for delete (since it needs ADMIN)
         mockMvc.perform(
             delete("/opinions/$opinionId")

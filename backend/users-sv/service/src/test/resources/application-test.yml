@@ -1,4 +1,7 @@
-
+server:
+  port: 0
+  ssl:
+    enabled: false
 spring:
   application.name: users-sv
   liquibase:

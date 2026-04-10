@@ -9,6 +9,7 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.kotlin.dsl.getByType
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jlleitschuh.gradle.ktlint.KtlintExtension
 
 @Suppress("unused") // used through reflection in :build-logic:build.gradle.kts
 class LanguageConventionPlugin : Plugin<Project> {
@@ -19,9 +20,10 @@ class LanguageConventionPlugin : Plugin<Project> {
                 .getByType<VersionCatalogsExtension>()
                 .named("libs")
 
-            pluginManager.apply(libs.findPlugin("spring-dependency-management").get().get().pluginId)
+            pluginManager.apply(libs.findPlugin("ktlint").get().get().pluginId)
             pluginManager.apply(libs.findPlugin("kotlin-jvm").get().get().pluginId)
             pluginManager.apply(libs.findPlugin("kotlin-spring").get().get().pluginId)
+            pluginManager.apply(libs.findPlugin("spring-dependency-management").get().get().pluginId)
 
             extensions.configure(JavaPluginExtension::class.java) {
                 toolchain.languageVersion.set(JavaLanguageVersion.of(21))
@@ -37,6 +39,12 @@ class LanguageConventionPlugin : Plugin<Project> {
                     "-Xjsr305=strict",
                     "-Xannotation-default-target=param-property",
                 )
+            }
+
+            extensions.configure(KtlintExtension::class.java) {
+                filter {
+                    exclude { element -> element.file.path.contains("generated/") }
+                }
             }
 
             tasks.withType(Test::class.java).configureEach {

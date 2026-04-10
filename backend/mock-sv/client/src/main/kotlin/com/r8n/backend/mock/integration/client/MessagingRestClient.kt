@@ -11,5 +11,9 @@ class MessagingRestClient(
     private val restClient: RestClient,
 ) : MessagingApi {
     override fun getSupportThreads(): PageResponseDto<SupportThreadDto> =
-        restClient.get().uri(SUPPORT_PATH).retrieve().body<PageResponseDto<SupportThreadDto>>()!!
+        restClient
+            .get()
+            .uri(SUPPORT_PATH)
+            .retrieve()
+            .body<PageResponseDto<SupportThreadDto>>()!!
 }

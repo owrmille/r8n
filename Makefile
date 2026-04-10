@@ -6,7 +6,7 @@ LOAD_LOCAL_ENV = set -a; [ -f "$(LOCAL_ENV_FILE)" ] && . "$(LOCAL_ENV_FILE)"; se
 LOAD_DOCKER_ENV = set -a; . "$(DOCKER_ENV_FILE)"; . "$(DOCKER_SECRETS_ENV_FILE)"; set +a;
 SERVICES_FILE := deployment/config/services.list
 ifeq (,$(wildcard $(SERVICES_FILE)))
-    $(error Missing $(SERVICES_FILE))
+	$(error Missing $(SERVICES_FILE))
 endif
 SERVICES := $(shell awk 'NF && substr($$1, 1, 1) != sprintf("%c", 35) { printf "%s ", $$1 }' "$(SERVICES_FILE)")
 FRONTEND_DIR := frontend
@@ -15,7 +15,7 @@ BOOT_JAR_TASKS := $(addprefix :,$(addsuffix -sv:bootJar,$(SERVICES)))
 FRONTEND_CERT_DIR := deployment/certs/edge
 FRONTEND_CERT_KEY := $(FRONTEND_CERT_DIR)/localhost.key
 FRONTEND_CERT_CRT := $(FRONTEND_CERT_DIR)/localhost.crt
-FRONTEND_NODE_VERSION := 22.13.0
+FRONTEND_NODE_VERSION := 22.14.0
 FRONTEND_NVM_BOOTSTRAP = if [ -n "$$NVM_DIR" ] && [ -s "$$NVM_DIR/nvm.sh" ]; then . "$$NVM_DIR/nvm.sh"; elif [ -s "$$HOME/.nvm/nvm.sh" ]; then . "$$HOME/.nvm/nvm.sh"; fi; if command -v nvm >/dev/null 2>&1; then nvm use $(FRONTEND_NODE_VERSION) >/dev/null 2>&1 || nvm install $(FRONTEND_NODE_VERSION); fi;
 FRONTEND_SHELL = set -e; $(FRONTEND_NVM_BOOTSTRAP) cd $(FRONTEND_DIR); \
 frontend_npm() { if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NODE_VERSION) npm "$$@"; else npm "$$@"; fi; }; \
@@ -36,14 +36,18 @@ frontend_npx() { if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NOD
     frontend-test frontend-test-unit frontend-test-e2e frontend-clean frontend-clean-all frontend-cert frontend-cert-clean \
     clean fclean re move-caches-to-goinfre gradle-%-bootJar check-makefile
 
-help: ## Show this help
-	@awk 'BEGIN {FS=":.*##"} /^##@/ {printf "\n%s:\n", substr($$0,5)} /^[a-zA-Z0-9_.%-]+:.*##/ {printf "  %-32s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-
-all: docker-up ## Default target
-
 ##@ Docker
 docker-up: docker-build ensure-log-dirs docker-certs ## Start local Docker stack (builds images, ensures logs, generates certs)
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml up -d
+
+docker-down: ## Stop Docker stack
+	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml down
+
+$(addprefix local-run-,$(SERVICES)): local-run-%: ## Run one backend service locally
+	@echo "Starting $*-sv..."
+	@$(LOAD_LOCAL_ENV) \
+	cd backend && (./gradlew :$*-sv:bootRun --args='--spring.profiles.active=local' > $*.log 2>&1 & \
+	echo $$! > /tmp/$*.pid)
 
 docker-build: docker-secrets-init verify-artifacts docker-database-create-data-folder frontend-build ## Build Docker images
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml build
@@ -51,12 +55,7 @@ docker-build: docker-secrets-init verify-artifacts docker-database-create-data-f
 docker-down: ## Stop Docker stack
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml down
 
-docker-logs: ## Tail logs for all services
-	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml logs -f $(SERVICES)
-
-$(addprefix docker-logs-,$(SERVICES)): docker-logs-%: ## Tail logs for one service
-	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml logs -f $*
-
+##@ Docker artifacts & jars preparations
 prepare-artifacts: prebuild-jars ## Copy service JARs into deployment/ folders
 	@set -e; \
 	for svc in $(SERVICES); do \
@@ -106,10 +105,25 @@ prebuild-jars: ## Build backend bootJar artifacts
 gradle-%-bootJar: ## Build bootJar for one backend service
 	cd backend && ./gradlew :$*-sv:bootJar
 
+clean-artifacts: ## Remove deployment service JARs
+	@for svc in $(SERVICES); do \
+		rm -f "deployment/$$svc/app.jar"; \
+	done
+
+##@ Docker logs
 ensure-log-dirs: ## Create log directories under deployment/
 	@for svc in $(SERVICES); do \
 		mkdir -p "deployment/$$svc/logs"; \
 	done
+
+docker-logs: ## Tail logs for all services
+	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml logs -f $(SERVICES)
+
+clean-logs: ## Remove deployment log files
+	find deployment -type f -name '*.log' -delete
+
+$(addprefix docker-logs-,$(SERVICES)): docker-logs-%: ## Tail logs for one service
+	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml logs -f $*
 
 ##@ Certificates
 docker-certs: internal-certs edge-certs ## Generate internal + edge TLS certs (skips if valid)
@@ -132,6 +146,7 @@ internal-certs-clean: ## Remove generated internal TLS certs
 docker-certs-clean: ## Remove all generated TLS certs (internal + edge)
 	rm -rf deployment/certs
 
+##@ Docker secrets
 docker-secrets-clean: ## Remove local Docker secrets file (TLS passwords)
 	rm -f $(DOCKER_SECRETS_ENV_FILE)
 
@@ -139,10 +154,11 @@ docker-secrets-init: ## Ensure local Docker secrets file exists (prompts if miss
 	@bash -lc '\
 	set -e; \
 	file="$(DOCKER_SECRETS_ENV_FILE)"; \
-	ks=""; ts=""; \
+	ks="$$TLS_KEYSTORE_PASSWORD"; \
+	ts="$$TLS_TRUSTSTORE_PASSWORD"; \
 	if [ -f "$$file" ]; then \
-		ks="$$(awk -F= "/^TLS_KEYSTORE_PASSWORD=/{print substr(\$$0,index(\$$0,\"=\")+1)}" "$$file")"; \
-		ts="$$(awk -F= "/^TLS_TRUSTSTORE_PASSWORD=/{print substr(\$$0,index(\$$0,\"=\")+1)}" "$$file")"; \
+		[ -z "$$ks" ] && ks="$$(awk -F= "/^TLS_KEYSTORE_PASSWORD=/{print substr(\$$0,index(\$$0,\"=\")+1)}" "$$file")"; \
+		[ -z "$$ts" ] && ts="$$(awk -F= "/^TLS_TRUSTSTORE_PASSWORD=/{print substr(\$$0,index(\$$0,\"=\")+1)}" "$$file")"; \
 	fi; \
 	if [ -z "$$ks" ]; then \
 		read -s -p "TLS_KEYSTORE_PASSWORD (min 6 chars): " ks; echo; \
@@ -163,25 +179,7 @@ generate-jwt-keys-%: ## Generate RSA JWT keypair and update deployment/config/<e
 	chmod +x ./deployment/scripts/generate-jwt-keypair.sh
 	./deployment/scripts/generate-jwt-keypair.sh $*
 
-##@ Maintenance
-clean-logs: ## Remove deployment log files
-	find deployment -type f -name '*.log' -delete
-
-clean-artifacts: ## Remove deployment service JARs
-	@for svc in $(SERVICES); do \
-		rm -f "deployment/$$svc/app.jar"; \
-	done
-
-clean: clean-artifacts clean-logs frontend-clean ## Remove backend artifacts/logs and frontend cache
-	rm -f .access_token
-
-fclean: clean frontend-clean-all ## Remove clean plus frontend node_modules and certs
-
-re: fclean docker-build ## Full rebuild (clean + docker-build)
-
-##@ Local Backend
-local-run-all: $(addprefix local-run-,$(SERVICES)) ## Run all backend services locally
-
+##@ Docker database
 docker-database-create-data-folder:
 	@mkdir -p ./deployment/database/data
 
@@ -192,24 +190,14 @@ docker-database-drop-volume-campus: ## Delete local Docker DB volume (campus)
 	@# yes this is the only way, since some files are owned by root, and you don't have sudo rights in campus
 	@docker run --rm -v ./deployment/database:/pg alpine rm -rf /pg/data
 
-docker-database-run: docker-database-create-data-folder ## Start only the database container
-	chmod a+x deployment/database/init/01_create_schemas.sh
-	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml up -d database
-
-$(addprefix local-run-,$(SERVICES)): local-run-%: ## Run one backend service locally
-	@echo "Starting $*-sv..."
-	@$(LOAD_LOCAL_ENV) \
-	cd backend && (./gradlew :$*-sv:bootRun --args='--spring.profiles.active=local' > $*.log 2>&1 & \
-	echo $$! > /tmp/$*.pid)
-
-build-opinions: ## Build opinions service with tests
-	cd backend && ./gradlew :opinions-sv:build | tee build.log
-
-local-stop-all: $(addprefix local-stop-,$(SERVICES)) ## Stop all local backend services
-
 docker-database-connect: ## Connect to local database via psql
 	$(LOAD_LOCAL_ENV) \
 	docker exec -it database psql -U $$DATABASE_USERNAME -d $$DATABASE_NAME
+
+##@ Local Backend
+local-run-all: $(addprefix local-run-,$(SERVICES)) ## Run all backend services locally
+
+local-stop-all: $(addprefix local-stop-,$(SERVICES)) ## Stop all local backend services
 
 $(addprefix local-stop-,$(SERVICES)): local-stop-%: ## Stop one local backend service
 	-@set -e; \
@@ -353,13 +341,14 @@ frontend-cert: edge-certs ## Generate frontend HTTPS certs
 frontend-cert-clean: ## Remove generated frontend certs
 	rm -rf deployment/certs/edge
 
-##@ Misc
+##@ 42 campus utilities
 clean-the-fuck-out-of-this-campus-machine: ## Remove large local caches (campus machine only)
 	docker run --rm -v  ~/.local/share:/disk alpine rm -rf /disk/docker || true
 	rm -rf ~/.local/share/docker ~/.var/app/com.slack.Slack ~/.config/Code ~/.config/Slack ~/.config/google-chrome || true
 	mkdir -p ~/.local/share/docker/tmp && chmod 700 ~/.local/share/docker/tmp
 	docker system prune -f
-	docker volume rm $(docker volume ls -qf dangling=true)
+	docker volume rm $(docker volume ls -qf dangling=true) || true
+	pkill -f GradleDaemon
 
 who-ate-all-the-space: ## Show top-level disk usage in home
 	du --all --human-readable --one-file-system --max-depth=1 ~
@@ -368,6 +357,43 @@ move-caches-to-goinfre: ## Move Docker and Gradle caches to /goinfre (campus mac
 	@chmod +x scripts/move-docker-to-goinfre.sh
 	./scripts/move-docker-to-goinfre.sh
 
+##@ Linters
 check-makefile: ## Lint Makefile formatting and conflicts
 	chmod +x utils/lint-makefile.sh
 	./utils/lint-makefile.sh
+
+##@ CI check stages
+test-github-backend: test-backend
+
+test-github-frontend: test-frontend
+
+test-github-e2e: test-e2e
+
+test-github: test-github-backend test-github-frontend test-github-e2e
+
+test-backend: lint-backend
+	cd backend && ./gradlew test
+
+lint-backend:
+	cd backend && ./gradlew ktlintCheck
+
+test-frontend-prepare:
+	cd frontend && npm ci
+
+test-frontend: test-frontend-prepare
+	cd frontend && npm run type-check && npx eslint . --max-warnings=0 && npm run test:unit -- --run && npm run build-only
+
+test-e2e:
+	cd frontend && npm run test:e2e
+
+##@ entrypoints
+help: ## Show this help
+	@awk 'BEGIN {FS=":.*##"} /^##@/ {printf "\n%s:\n", substr($$0,5)} /^[a-zA-Z0-9_.%-]+:.*##/ {printf "  %-32s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+all: docker-up ## Default target
+
+clean: clean-artifacts clean-logs frontend-clean ## Remove backend artifacts/logs and frontend cache
+
+fclean: clean frontend-clean-all ## Remove clean plus frontend node_modules and certs
+
+re: fclean docker-build ## Full rebuild (clean + docker-build)

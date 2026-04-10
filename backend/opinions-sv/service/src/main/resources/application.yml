@@ -27,7 +27,7 @@ spring:
       mode: never
 services:
   users:
-    url: ${INTERSERVICE_PROTOCOL:http}://${SERVICES_USERS_HOST:localhost}:${SERVICES_USERS_PORT:8082}
+    url: ${INTERSERVICE_PROTOCOL}://${SERVICES_USERS_HOST}:${SERVICES_USERS_PORT}
 r8n:
   security:
     jwt:

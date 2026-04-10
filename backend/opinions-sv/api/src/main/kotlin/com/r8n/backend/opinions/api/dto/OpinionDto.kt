@@ -19,7 +19,7 @@ data class OpinionDto(
 )
 
 data class WeightedOpinionReferenceDto(
-	val id: UUID,
-	val opinion: UUID,
-	val weight: Double,
+    val id: UUID,
+    val opinion: UUID,
+    val weight: Double,
 )

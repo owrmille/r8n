@@ -11,22 +11,27 @@ import java.util.UUID
 class UserSessionService(
     private val userSessionRepository: UserSessionRepository,
 ) {
-    fun getSessionsForUser(userId: UUID, pageable: Pageable): Page<UserSession> {
-        return userSessionRepository.findAllByUserId(userId, pageable).map {
+    fun getSessionsForUser(
+        userId: UUID,
+        pageable: Pageable,
+    ): Page<UserSession> =
+        userSessionRepository.findAllByUserId(userId, pageable).map {
             it.toDomain()
         }
-    }
 
-    fun getSession(id: UUID, userId: UUID): UserSession {
-        return userSessionRepository.findByIdAndUserId(id, userId)?.toDomain()
+    fun getSession(
+        id: UUID,
+        userId: UUID,
+    ): UserSession =
+        userSessionRepository.findByIdAndUserId(id, userId)?.toDomain()
             ?: throw NoSuchElementException("Session $id not found for user $userId")
-    }
 
-    private fun com.r8n.backend.users.persistence.UserSessionPersistence.toDomain() = UserSession(
-        id = id,
-        created = created,
-        expires = expires,
-        ip = ip,
-        userAgent = userAgent
-    )
+    private fun com.r8n.backend.users.persistence.UserSessionPersistence.toDomain() =
+        UserSession(
+            id = id,
+            created = created,
+            expires = expires,
+            ip = ip,
+            userAgent = userAgent,
+        )
 }

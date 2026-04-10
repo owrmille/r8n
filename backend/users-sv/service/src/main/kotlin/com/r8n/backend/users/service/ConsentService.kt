@@ -10,14 +10,13 @@ class ConsentService(
     private val consentRepository: ConsentRepository,
     private val sessionService: UserSessionService,
 ) {
-    fun getConsentsForUser(userId: UUID): List<Consent> {
-        return consentRepository.findAllByUserId(userId).map {
+    fun getConsentsForUser(userId: UUID): List<Consent> =
+        consentRepository.findAllByUserId(userId).map {
             Consent(
                 id = it.id,
                 type = it.type,
                 accepted = it.accepted,
-                session = sessionService.getSession(it.session, userId)
+                session = sessionService.getSession(it.session, userId),
             )
         }
-    }
 }

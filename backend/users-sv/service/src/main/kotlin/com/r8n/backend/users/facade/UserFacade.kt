@@ -39,11 +39,12 @@ class UserFacade(
             status = user.status.toDto(),
             statusTimestamp = user.statusTimestamp,
             consents = PageImpl(user.consents.map { it.toDto() }).toResponse(),
-            personalIdentifiableInformation = PersonalIdentifiableInformationSectionDto(
-                name = user.name,
-                email = user.email,
-                sessions = sessions.map { it.toDto() }.toResponse(),
-            ),
+            personalIdentifiableInformation =
+                PersonalIdentifiableInformationSectionDto(
+                    name = user.name,
+                    email = user.email,
+                    sessions = sessions.map { it.toDto() }.toResponse(),
+                ),
             opinions = opinionClient.getMineFull(PageRequestDto(0, -1)),
             outgoingRequests = outgoingAccessRequestClient.get(null, null, null, PageRequestDto(0, -1)),
             incomingRequests = incomingAccessRequestClient.get(null, null, null, PageRequestDto(0, -1)),
@@ -52,6 +53,8 @@ class UserFacade(
     }
 
     private fun UserStatusEnum.toDto() = UserStatusEnumDto.valueOf(this.name)
+
     private fun Consent.toDto() = ConsentDto(type, accepted, session.toDto())
+
     private fun UserSession.toDto() = UserSessionDto(id, created, expires, ip, userAgent)
 }
