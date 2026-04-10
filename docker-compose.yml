@@ -74,13 +74,18 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ./deployment/config/docker.env
+      - ./deployment/secrets/docker.secrets.env
     environment:
+      <<: [*tls-common-env, *tls-client-common-env]
+      SERVICE_NAME: users
+      SERVER_SSL_KEY_STORE: /certs/keystore-users.p12
       SERVICES_USERS_PORT: ${SERVICES_USERS_PORT:?}
       LOGGING_FILE_NAME: ${LOGGING_FILE_NAME:?}
     networks:
       - r8n_net
     volumes:
       - ./deployment/users/logs:/var/log/r8n
+      - ./deployment/certs/internal:/certs:ro
 
   gateway:
     build:
