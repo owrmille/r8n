@@ -5,6 +5,7 @@ import com.r8n.backend.opinions.api.OpinionApi
 import com.r8n.backend.opinions.api.dto.OpinionDto
 import com.r8n.backend.opinions.facade.OpinionFacade
 import java.util.UUID
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -44,6 +45,7 @@ class OpinionController(
         mark = mark,
     )
 
+    @PreAuthorize("hasRole('ADMIN')")
     override fun deleteOpinion(
         opinionId: UUID,
     ) {
