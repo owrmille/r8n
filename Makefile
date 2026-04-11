@@ -32,8 +32,8 @@ frontend_npx() { if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NOD
     https-routed-request-opinion https-routed-request-mock \
     docker-database-drop-volume-personal docker-database-drop-volume-campus docker-run-database docker-database-connect \
     build-opinions who-ate-all-the-space clean-the-fuck-out-of-this-campus-machine \
-    frontend-install frontend-install-all frontend-check-node frontend-dev frontend-build \
-    frontend-test frontend-test-unit frontend-test-e2e frontend-clean frontend-clean-all frontend-cert frontend-cert-clean \
+    frontend-install frontend-install-all frontend-check-node frontend-dev frontend-build frontend-lint \
+    frontend-test frontend-test-unit frontend-test-e2e frontend-test-e2e-ui frontend-test-e2e-api frontend-clean frontend-clean-all frontend-cert frontend-cert-clean \
     clean fclean re move-caches-to-goinfre gradle-%-bootJar check-makefile
 
 ##@ Docker
@@ -246,13 +246,21 @@ frontend-check-node: ## Check Node.js version (attempts nvm if too old)
 frontend-build: frontend-install ## Build frontend dist (installs deps if missing)
 	@bash -lc '$(FRONTEND_SHELL) [ -d node_modules ] || frontend_npm ci; frontend_npm run build'
 
+frontend-lint: frontend-check-node ## Run frontend lint
+	@bash -lc '$(FRONTEND_SHELL) frontend_npm run lint'
+
 frontend-test-unit: frontend-check-node ## Run frontend unit tests
 	@bash -lc '$(FRONTEND_SHELL) frontend_npm run test:unit'
 
 frontend-test: frontend-test-unit frontend-test-e2e ## Run all frontend tests
 
-frontend-test-e2e: frontend-check-node ## Run frontend E2E tests
-	@bash -lc '$(FRONTEND_SHELL) frontend_npm run test:e2e'
+frontend-test-e2e: frontend-test-e2e-ui frontend-test-e2e-api ## Run all frontend E2E tests
+
+frontend-test-e2e-ui: frontend-check-node ## Run frontend Playwright UI tests
+	@bash -lc '$(FRONTEND_SHELL) frontend_npm run test:e2e -- --project ui'
+
+frontend-test-e2e-api: frontend-check-node ## Run frontend Playwright API tests
+	@bash -lc '$(FRONTEND_SHELL) frontend_npm run test:e2e -- --project api'
 
 frontend-clean: ## Remove frontend build output, cache, and test artifacts
 	rm -rf $(FRONTEND_DIR)/dist $(FRONTEND_DIR)/node_modules/.vite $(FRONTEND_DIR)/playwright-report $(FRONTEND_DIR)/test-results $(FRONTEND_DIR)/coverage
