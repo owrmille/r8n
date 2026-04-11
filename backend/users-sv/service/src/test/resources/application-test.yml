@@ -35,6 +35,7 @@ services:
 
 r8n:
   security:
+    public-paths: /auth/**
     jwt:
       private-key: |
         -----BEGIN PRIVATE KEY-----
