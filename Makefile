@@ -52,9 +52,6 @@ $(addprefix local-run-,$(SERVICES)): local-run-%: ## Run one backend service loc
 docker-build: docker-secrets-init verify-artifacts docker-database-create-data-folder frontend-build ## Build Docker images
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml build
 
-docker-down: ## Stop Docker stack
-	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml down
-
 ##@ Docker artifacts & jars preparations
 prepare-artifacts: prebuild-jars ## Copy service JARs into deployment/ folders
 	@set -e; \
