@@ -61,7 +61,7 @@ export function clearAuthSession(): void {
   setAuthSession(null);
 }
 
-export function useAuthSession(): AuthSession | null {
+function useAuthSession(): AuthSession | null {
   return useSyncExternalStore(
     (listener) => {
       listeners.add(listener);
