@@ -4,9 +4,10 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Login from "@/pages/Login";
 
-const { loginMock, navigateMock } = vi.hoisted(() => ({
+const { loginMock, navigateMock, setSessionMock } = vi.hoisted(() => ({
   loginMock: vi.fn(),
   navigateMock: vi.fn(),
+  setSessionMock: vi.fn(),
 }));
 
 vi.mock("react-router-dom", async () => {
@@ -24,6 +25,10 @@ vi.mock("@/lib/api", () => ({
   authApi: {
     login: loginMock,
   },
+}));
+
+vi.mock("@/lib/auth/session", () => ({
+  setSession: setSessionMock,
 }));
 
 function renderLoginPage() {
@@ -53,12 +58,13 @@ describe("Login page", () => {
   beforeEach(() => {
     loginMock.mockReset();
     navigateMock.mockReset();
+    setSessionMock.mockReset();
   });
 
-  it("signs in through authApi and redirects to the dashboard", async () => {
+  it("stores the login session in memory before redirecting to the dashboard", async () => {
     loginMock.mockResolvedValue({
       accessToken: "stub-access-token-123",
-      expiresInMilliseconds: 0,
+      expiresInMilliseconds: 60_000,
     });
 
     renderLoginPage();
@@ -79,8 +85,16 @@ describe("Login page", () => {
     });
 
     await waitFor(() => {
+      expect(setSessionMock).toHaveBeenCalledWith({
+        accessToken: "stub-access-token-123",
+        expiresInMilliseconds: 60_000,
+      });
       expect(navigateMock).toHaveBeenCalledWith("/", { replace: true });
     });
+
+    expect(setSessionMock.mock.invocationCallOrder[0]).toBeLessThan(
+      navigateMock.mock.invocationCallOrder[0],
+    );
   });
 
   it("does not call the login API from the unfinished sign-up flow", async () => {

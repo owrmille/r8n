@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { setSession } from "@/lib/auth/session";
 import { authApi } from "@/lib/api";
 import { HttpError } from "@/lib/http-client";
 import { toast } from "@/hooks/use-toast";
@@ -32,7 +33,8 @@ const Login = () => {
         variant: "destructive",
       });
     },
-    onSuccess: () => {
+    onSuccess: (tokens) => {
+      setSession(tokens);
       navigate("/", { replace: true });
     },
   });
