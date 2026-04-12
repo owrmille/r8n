@@ -59,7 +59,6 @@ describe("Login page", () => {
     loginMock.mockResolvedValue({
       accessToken: "stub-access-token-123",
       expiresInMilliseconds: 0,
-      refreshToken: "stub-refresh-token-123",
     });
 
     renderLoginPage();

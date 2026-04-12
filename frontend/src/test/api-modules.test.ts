@@ -19,7 +19,6 @@ describe("API modules", () => {
       createJsonResponse({
         accessToken: "access-token",
         expiresInMilliseconds: 1000,
-        refreshToken: "refresh-token",
       }),
     );
     const client = createHttpClient({
@@ -40,6 +39,53 @@ describe("API modules", () => {
           login: "test",
           password: "1234",
         }),
+        credentials: "include",
+        method: "POST",
+      }),
+    );
+  });
+
+  it("uses cookie credentials for refresh and does not send a refresh token from JavaScript", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      createJsonResponse({
+        accessToken: "access-token",
+        expiresInMilliseconds: 1000,
+      }),
+    );
+    const client = createHttpClient({
+      baseUrl: "/api",
+      fetchFn: fetchMock,
+    });
+    const authApi = createAuthApi(client);
+
+    await authApi.refresh();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/auth/refresh",
+      expect.objectContaining({
+        credentials: "include",
+        method: "POST",
+      }),
+    );
+
+    const [, requestInit] = fetchMock.mock.calls[0];
+    expect(requestInit.body).toBeUndefined();
+  });
+
+  it("uses cookie credentials for logout", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(createJsonResponse({}));
+    const client = createHttpClient({
+      baseUrl: "/api",
+      fetchFn: fetchMock,
+    });
+    const authApi = createAuthApi(client);
+
+    await authApi.logout();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/auth/logout",
+      expect.objectContaining({
+        credentials: "include",
         method: "POST",
       }),
     );
