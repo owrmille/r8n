@@ -5,6 +5,7 @@ import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.cappuccino1A
 import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.cappuccino1G
 import com.r8n.backend.opinions.api.dto.OpinionDto
 import com.r8n.backend.opinions.api.dto.OpinionStatusEnumDto
+import com.r8n.backend.security.ServiceTokenService
 import com.r8n.backend.users.integration.api.UsersInternalApi
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
@@ -18,6 +19,7 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
 import org.springframework.security.test.context.support.WithMockUser
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
@@ -44,7 +46,8 @@ import java.util.UUID
 @Import(TestObjectMapperConfiguration::class)
 class OpinionsIntegrationTests {
     private companion object {
-        val CURRENT_USER_ID: UUID = UUID.fromString("00000000-0000-0000-0000-000000000000")
+        const val USER_ID = "00000000-0000-0000-0000-000000000001"
+        val CURRENT_USER_ID: UUID = UUID.fromString(USER_ID)
         const val CURRENT_USER_NAME = "username"
 
         @Container
@@ -66,6 +69,9 @@ class OpinionsIntegrationTests {
     @MockitoBean
     lateinit var usersInternalApi: UsersInternalApi
 
+    @Autowired
+    lateinit var serviceTokenService: ServiceTokenService
+
     @BeforeEach
     fun setUp() {
         whenever(usersInternalApi.getUserName(eq(bernardReferent.id)))
@@ -75,14 +81,15 @@ class OpinionsIntegrationTests {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(username = USER_ID)
     fun `get opinion works`() {
+        val accessToken = serviceTokenService.generateAccessToken(UUID.fromString(USER_ID), listOf("USER"))
         val requestedId = "30000000-0000-0000-0000-000000000001"
         val result =
             mockMvc
                 .perform(
                     get("/opinions/$requestedId")
-                        .header("Authorization", "Bearer stub-access-token-123"),
+                        .header("Authorization", "Bearer $accessToken"),
                 ).andExpect(status().isOk)
                 .andReturn()
 
@@ -110,11 +117,12 @@ class OpinionsIntegrationTests {
     @WithMockUser
     fun `get opinion for subject works`() {
         val requestedSubjectId = "14141414-1414-1414-1414-141414141414"
+        val accessToken = serviceTokenService.generateAccessToken(UUID.randomUUID(), listOf("USER"))
         val result =
             mockMvc
                 .perform(
                     get("/opinions/for/$requestedSubjectId")
-                        .header("Authorization", "Bearer stub-access-token-123"),
+                        .header("Authorization", "Bearer $accessToken"),
                 ).andExpect(status().isOk)
                 .andReturn()
 
@@ -141,15 +149,17 @@ class OpinionsIntegrationTests {
     @WithMockUser
     fun `create opinion works`() {
         val subjectId = "15151515-1515-1515-1515-151515151515"
+        val accessToken = serviceTokenService.generateAccessToken(CURRENT_USER_ID, listOf("USER"))
         val result =
             mockMvc
                 .perform(
                     post("/opinions")
+                        .with(csrf())
                         .queryParam("subjectId", subjectId)
                         .queryParam("subjective", "new subjective")
                         .queryParam("objective", "new objective")
                         .queryParam("mark", "4.50")
-                        .header("Authorization", "Bearer stub-access-token-123"),
+                        .header("Authorization", "Bearer $accessToken"),
                 ).andExpect(status().isOk)
                 .andReturn()
 
@@ -167,15 +177,17 @@ class OpinionsIntegrationTests {
     @Test
     @WithMockUser
     fun `update opinion works`() {
+        val accessToken = serviceTokenService.generateAccessToken(CURRENT_USER_ID, listOf("USER"))
         val createResult =
             mockMvc
                 .perform(
                     post("/opinions")
+                        .with(csrf())
                         .queryParam("subjectId", "15151515-1515-1515-1515-151515151515")
                         .queryParam("subjective", "to be replaced subjective")
                         .queryParam("objective", "to be replaced objective")
                         .queryParam("mark", "2.10")
-                        .header("Authorization", "Bearer stub-access-token-123"),
+                        .header("Authorization", "Bearer $accessToken"),
                 ).andExpect(status().isOk)
                 .andReturn()
 
@@ -185,10 +197,11 @@ class OpinionsIntegrationTests {
             mockMvc
                 .perform(
                     patch("/opinions/${created.id}")
+                        .with(csrf())
                         .queryParam("subjective", "updated subjective")
                         .queryParam("objective", "updated objective")
                         .queryParam("mark", "4.90")
-                        .header("Authorization", "Bearer stub-access-token-123"),
+                        .header("Authorization", "Bearer $accessToken"),
                 ).andExpect(status().isOk)
                 .andReturn()
 

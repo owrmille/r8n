@@ -1,6 +1,5 @@
 package com.r8n.backend.users.persistence
 
-import com.r8n.backend.users.domain.UserStatusEnum
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -13,27 +12,30 @@ import java.time.Instant
 import java.util.UUID
 
 @Entity
-@Table(schema = "users", name = "users")
-class UserPersistence(
+@Table(schema = "users", name = "users_role_assignments")
+class UserRoleAssignmentPersistence(
     @Id
     @GeneratedValue
     @UuidGenerator
     val id: UUID,
 //
     @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    val status: UserStatusEnum,
+    val user: UUID,
 //
     @Column(nullable = false)
-    val statusTimestamp: Instant,
+    @Enumerated(EnumType.STRING)
+    val role: RoleEnumPersistence,
 //
-    @Column(nullable = true)
-    val passwordHash: String? = null,
+    @Column(nullable = false)
+    val grantedBy: UUID,
+//
+    @Column(nullable = false)
+    val timestamp: Instant,
 )
 
-enum class UserStatusEnum {
-    ACTIVE,
-    SUSPENDED,
-    DELETION_PENDING,
-    DELETED,
+enum class RoleEnumPersistence {
+    ADMIN,
+    MODERATOR,
+    AI_MODERATOR,
+    USER,
 }
