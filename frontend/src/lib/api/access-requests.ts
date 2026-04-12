@@ -1,9 +1,7 @@
 import type { HttpClient, HttpQueryParams } from "@/lib/http-client";
 import { httpClient } from "@/lib/http-client";
 import {
-  createAuthorizationHeaders,
   createPageQuery,
-  type AuthorizedRequestDto,
   type PageRequestDto,
   type PageResponseDto,
   type Uuid,
@@ -34,24 +32,21 @@ export interface AccessRequestsFiltersDto {
   status?: RequestStatusEnumDto;
 }
 
-export interface GetIncomingAccessRequestsRequestDto
-  extends AuthorizedRequestDto {
+export interface GetIncomingAccessRequestsRequestDto {
   filters?: AccessRequestsFiltersDto;
   pageable: PageRequestDto;
 }
 
-export interface GetOutgoingAccessRequestsRequestDto
-  extends AuthorizedRequestDto {
+export interface GetOutgoingAccessRequestsRequestDto {
   filters?: AccessRequestsFiltersDto;
   pageable: PageRequestDto;
 }
 
-export interface AccessRequestActionRequestDto extends AuthorizedRequestDto {
+export interface AccessRequestActionRequestDto {
   requestId: Uuid;
 }
 
-export interface CreateOutgoingAccessRequestRequestDto
-  extends AuthorizedRequestDto {
+export interface CreateOutgoingAccessRequestRequestDto {
   listId: Uuid;
 }
 
@@ -63,7 +58,7 @@ export function createAccessRequestsApi(client: HttpClient = httpClient) {
       return client.post<AccessRequestDto>(
         `/access-requests/incoming/${request.requestId}/accept`,
         {
-          headers: createAuthorizationHeaders(request.accessToken),
+          auth: "required",
         },
       );
     },
@@ -74,7 +69,7 @@ export function createAccessRequestsApi(client: HttpClient = httpClient) {
       return client.get<AccessRequestDto>(
         `/access-requests/outgoing/cancel/${request.requestId}`,
         {
-          headers: createAuthorizationHeaders(request.accessToken),
+          auth: "required",
         },
       );
     },
@@ -85,7 +80,7 @@ export function createAccessRequestsApi(client: HttpClient = httpClient) {
       return client.get<AccessRequestDto>(
         `/access-requests/outgoing/create/${request.listId}`,
         {
-          headers: createAuthorizationHeaders(request.accessToken),
+          auth: "required",
         },
       );
     },
@@ -96,7 +91,7 @@ export function createAccessRequestsApi(client: HttpClient = httpClient) {
       return client.post<AccessRequestDto>(
         `/access-requests/incoming/${request.requestId}/decline`,
         {
-          headers: createAuthorizationHeaders(request.accessToken),
+          auth: "required",
         },
       );
     },
@@ -114,7 +109,7 @@ export function createAccessRequestsApi(client: HttpClient = httpClient) {
       return client.get<PageResponseDto<AccessRequestDto>>(
         "/access-requests/incoming",
         {
-          headers: createAuthorizationHeaders(request.accessToken),
+          auth: "required",
           query,
         },
       );
@@ -133,7 +128,7 @@ export function createAccessRequestsApi(client: HttpClient = httpClient) {
       return client.get<PageResponseDto<AccessRequestDto>>(
         "/access-requests/outgoing",
         {
-          headers: createAuthorizationHeaders(request.accessToken),
+          auth: "required",
           query,
         },
       );
@@ -145,7 +140,7 @@ export function createAccessRequestsApi(client: HttpClient = httpClient) {
       return client.post<AccessRequestDto>(
         `/access-requests/incoming/${request.requestId}/hide`,
         {
-          headers: createAuthorizationHeaders(request.accessToken),
+          auth: "required",
         },
       );
     },

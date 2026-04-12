@@ -1,9 +1,7 @@
 import type { HttpClient, HttpQueryParams } from "@/lib/http-client";
 import { httpClient } from "@/lib/http-client";
 import {
-  createAuthorizationHeaders,
   createPageQuery,
-  type AuthorizedRequestDto,
   type PageRequestDto,
   type PageResponseDto,
   type Uuid,
@@ -30,30 +28,30 @@ export interface OpinionListDto {
   ownerName: string;
 }
 
-export interface GetOpinionListSummaryRequestDto extends AuthorizedRequestDto {
+export interface GetOpinionListSummaryRequestDto {
   listId: Uuid;
 }
 
-export interface GetOpinionListRequestDto extends AuthorizedRequestDto {
+export interface GetOpinionListRequestDto {
   listId: Uuid;
 }
 
-export interface RenameOpinionListRequestDto extends AuthorizedRequestDto {
+export interface RenameOpinionListRequestDto {
   listId: Uuid;
   name: string;
 }
 
-export interface SetOpinionListPrivacyRequestDto extends AuthorizedRequestDto {
+export interface SetOpinionListPrivacyRequestDto {
   listId: Uuid;
   privacy: OpinionListPrivacyEnumDto;
 }
 
-export interface LinkOpinionToListRequestDto extends AuthorizedRequestDto {
+export interface LinkOpinionToListRequestDto {
   listId: Uuid;
   opinionId: Uuid;
 }
 
-export interface UnlinkOpinionFromListRequestDto extends AuthorizedRequestDto {
+export interface UnlinkOpinionFromListRequestDto {
   listId: Uuid;
   opinionId: Uuid;
 }
@@ -64,22 +62,22 @@ export interface SearchOpinionListsFiltersDto {
   nameSubstring?: string;
 }
 
-export interface SearchOpinionListsRequestDto extends AuthorizedRequestDto {
+export interface SearchOpinionListsRequestDto {
   filters?: SearchOpinionListsFiltersDto;
   pageable: PageRequestDto;
 }
 
-export interface SyncOpinionListsRequestDto extends AuthorizedRequestDto {
+export interface SyncOpinionListsRequestDto {
   addedListId: Uuid;
   existingListId: Uuid;
 }
 
-export interface UnsyncOpinionListsRequestDto extends AuthorizedRequestDto {
+export interface UnsyncOpinionListsRequestDto {
   existingListId: Uuid;
   removedListId: Uuid;
 }
 
-export interface GetMyOpinionListsRequestDto extends AuthorizedRequestDto {
+export interface GetMyOpinionListsRequestDto {
   pageable: PageRequestDto;
 }
 
@@ -91,7 +89,7 @@ export function createOpinionListsApi(client: HttpClient = httpClient) {
       return client.get<PageResponseDto<OpinionListSummaryDto>>(
         "/opinion-lists/mine",
         {
-          headers: createAuthorizationHeaders(request.accessToken),
+          auth: "required",
           query: createPageQuery(request.pageable),
         },
       );
@@ -103,20 +101,20 @@ export function createOpinionListsApi(client: HttpClient = httpClient) {
       return client.get<OpinionListSummaryDto>(
         `/opinion-lists/${request.listId}/summary`,
         {
-          headers: createAuthorizationHeaders(request.accessToken),
+          auth: "required",
         },
       );
     },
 
     getById(request: GetOpinionListRequestDto): Promise<OpinionListDto> {
       return client.get<OpinionListDto>(`/opinion-lists/${request.listId}`, {
-        headers: createAuthorizationHeaders(request.accessToken),
+        auth: "required",
       });
     },
 
     linkOpinion(request: LinkOpinionToListRequestDto): Promise<OpinionListDto> {
       return client.post<OpinionListDto>(`/opinion-lists/${request.listId}/link`, {
-        headers: createAuthorizationHeaders(request.accessToken),
+        auth: "required",
         query: {
           opinionId: request.opinionId,
         },
@@ -125,7 +123,7 @@ export function createOpinionListsApi(client: HttpClient = httpClient) {
 
     rename(request: RenameOpinionListRequestDto): Promise<OpinionListDto> {
       return client.patch<OpinionListDto>(`/opinion-lists/${request.listId}/rename`, {
-        headers: createAuthorizationHeaders(request.accessToken),
+        auth: "required",
         query: {
           name: request.name,
         },
@@ -145,7 +143,7 @@ export function createOpinionListsApi(client: HttpClient = httpClient) {
       return client.get<PageResponseDto<OpinionListSummaryDto>>(
         "/opinion-lists/search",
         {
-          headers: createAuthorizationHeaders(request.accessToken),
+          auth: "required",
           query,
         },
       );
@@ -157,7 +155,7 @@ export function createOpinionListsApi(client: HttpClient = httpClient) {
       return client.patch<OpinionListDto>(
         `/opinion-lists/${request.listId}/set-privacy`,
         {
-          headers: createAuthorizationHeaders(request.accessToken),
+          auth: "required",
           query: {
             privacy: request.privacy,
           },
@@ -169,7 +167,7 @@ export function createOpinionListsApi(client: HttpClient = httpClient) {
       return client.post<OpinionListDto>(
         `/opinion-lists/${request.existingListId}/sync`,
         {
-          headers: createAuthorizationHeaders(request.accessToken),
+          auth: "required",
           query: {
             addedListId: request.addedListId,
           },
@@ -183,7 +181,7 @@ export function createOpinionListsApi(client: HttpClient = httpClient) {
       return client.patch<OpinionListDto>(
         `/opinion-lists/${request.listId}/unlink`,
         {
-          headers: createAuthorizationHeaders(request.accessToken),
+          auth: "required",
           query: {
             opinionId: request.opinionId,
           },
@@ -195,7 +193,7 @@ export function createOpinionListsApi(client: HttpClient = httpClient) {
       return client.post<OpinionListDto>(
         `/opinion-lists/${request.existingListId}/unsync`,
         {
-          headers: createAuthorizationHeaders(request.accessToken),
+          auth: "required",
           query: {
             removedListId: request.removedListId,
           },

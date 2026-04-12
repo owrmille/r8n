@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { clearSession, setSession } from "@/lib/auth/session";
 import { createHttpClient } from "@/lib/http-client";
 import { createAccessRequestsApi } from "@/lib/api/access-requests";
 import { createAuthApi } from "@/lib/api/auth";
@@ -14,6 +15,17 @@ function createJsonResponse(body: unknown): Response {
 }
 
 describe("API modules", () => {
+  beforeEach(() => {
+    clearSession();
+    setSession(
+      {
+        accessToken: "stub-access-token-123",
+        expiresInMilliseconds: 60_000,
+      },
+      Date.now(),
+    );
+  });
+
   it("posts login credentials to the auth endpoint", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       createJsonResponse({
@@ -91,7 +103,7 @@ describe("API modules", () => {
     );
   });
 
-  it("adds bearer authorization for protected opinions endpoints", async () => {
+  it("reuses the shared auth flow for protected opinions endpoints", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       createJsonResponse({
         componentMark: null,
@@ -115,7 +127,6 @@ describe("API modules", () => {
     const opinionsApi = createOpinionsApi(client);
 
     await opinionsApi.getForSubject({
-      accessToken: "stub-access-token-123",
       subjectId: "00000000-0000-0000-0000-000000000000",
     });
 
@@ -147,7 +158,6 @@ describe("API modules", () => {
     const opinionListsApi = createOpinionListsApi(client);
 
     await opinionListsApi.search({
-      accessToken: "stub-access-token-123",
       filters: {
         authorNameSubstring: "Jane",
         nameSubstring: "coffee",
@@ -175,28 +185,22 @@ describe("API modules", () => {
     const opinionsApi = createOpinionsApi(client);
 
     await opinionsApi.getById({
-      accessToken: "token",
       id: "11111111-1111-1111-1111-111111111111",
     });
     await opinionsApi.create({
-      accessToken: "token",
       mark: 5,
       subjectId: "22222222-2222-2222-2222-222222222222",
     });
     await opinionsApi.update({
-      accessToken: "token",
       opinionId: "33333333-3333-3333-3333-333333333333",
     });
     await opinionsApi.delete({
-      accessToken: "token",
       opinionId: "44444444-4444-4444-4444-444444444444",
     });
     await opinionsApi.unlinkComponent({
-      accessToken: "token",
       linkId: "55555555-5555-5555-5555-555555555555",
     });
     await opinionsApi.adjustComponentWeight({
-      accessToken: "token",
       linkId: "66666666-6666-6666-6666-666666666666",
       weight: 0.5,
     });
@@ -229,6 +233,9 @@ describe("API modules", () => {
     expect(fetchMock.mock.calls[3][1]).toEqual(
       expect.objectContaining({ method: "DELETE" }),
     );
+    expect(new Headers(fetchMock.mock.calls[0][1].headers).get("Authorization")).toBe(
+      "Bearer stub-access-token-123",
+    );
   });
 
   it("uses backend path parameters and query names for opinion lists", async () => {
@@ -240,40 +247,32 @@ describe("API modules", () => {
     const opinionListsApi = createOpinionListsApi(client);
 
     await opinionListsApi.getSummary({
-      accessToken: "token",
       listId: "11111111-1111-1111-1111-111111111111",
     });
     await opinionListsApi.getById({
-      accessToken: "token",
       listId: "22222222-2222-2222-2222-222222222222",
     });
     await opinionListsApi.linkOpinion({
-      accessToken: "token",
       listId: "33333333-3333-3333-3333-333333333333",
       opinionId: "44444444-4444-4444-4444-444444444444",
     });
     await opinionListsApi.rename({
-      accessToken: "token",
       listId: "55555555-5555-5555-5555-555555555555",
       name: "Trusted cafes",
     });
     await opinionListsApi.setPrivacy({
-      accessToken: "token",
       listId: "66666666-6666-6666-6666-666666666666",
       privacy: "PRIVATE",
     });
     await opinionListsApi.sync({
-      accessToken: "token",
       addedListId: "77777777-7777-7777-7777-777777777777",
       existingListId: "88888888-8888-8888-8888-888888888888",
     });
     await opinionListsApi.unlinkOpinion({
-      accessToken: "token",
       listId: "99999999-9999-9999-9999-999999999999",
       opinionId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
     });
     await opinionListsApi.unsync({
-      accessToken: "token",
       existingListId: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
       removedListId: "cccccccc-cccc-cccc-cccc-cccccccccccc",
     });
@@ -317,27 +316,21 @@ describe("API modules", () => {
       pageable: { page: 0, size: 20 },
     });
     await accessRequestsApi.acceptIncoming({
-      accessToken: "token",
       requestId: "11111111-1111-1111-1111-111111111111",
     });
     await accessRequestsApi.declineIncoming({
-      accessToken: "token",
       requestId: "22222222-2222-2222-2222-222222222222",
     });
     await accessRequestsApi.hideIncoming({
-      accessToken: "token",
       requestId: "33333333-3333-3333-3333-333333333333",
     });
     await accessRequestsApi.getOutgoing({
-      accessToken: "token",
       pageable: { page: 1, size: 10 },
     });
     await accessRequestsApi.createOutgoing({
-      accessToken: "token",
       listId: "44444444-4444-4444-4444-444444444444",
     });
     await accessRequestsApi.cancelOutgoing({
-      accessToken: "token",
       requestId: "55555555-5555-5555-5555-555555555555",
     });
 
@@ -376,22 +369,18 @@ describe("API modules", () => {
     const selectorsApi = createSelectorsApi(client);
 
     await selectorsApi.getForUrl({
-      accessToken: "token",
       pageable: { page: 0, size: 20 },
       url: "https://example.com/cafe",
     });
     await selectorsApi.getForSubject({
-      accessToken: "token",
       pageable: { page: 1, size: 10 },
       subjectId: "11111111-1111-1111-1111-111111111111",
     });
     await selectorsApi.suggest({
-      accessToken: "token",
       selector: ".review-card",
       subjectId: "22222222-2222-2222-2222-222222222222",
     });
     await selectorsApi.disagree({
-      accessToken: "token",
       comment: "Selector is outdated",
       selectorId: "33333333-3333-3333-3333-333333333333",
     });
