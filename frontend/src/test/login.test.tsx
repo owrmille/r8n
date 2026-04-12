@@ -1,8 +1,9 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Login from "@/pages/Login";
+import { clearAuthSession, createQueryClient } from "@/lib/server-state";
 
 const { loginMock, navigateMock } = vi.hoisted(() => ({
   loginMock: vi.fn(),
@@ -27,20 +28,16 @@ vi.mock("@/lib/api", () => ({
 }));
 
 function renderLoginPage() {
-  const queryClient = new QueryClient({
+  const queryClient = createQueryClient({
     defaultOptions: {
-      mutations: {
-        retry: false,
-      },
-      queries: {
-        retry: false,
-      },
+      mutations: { retry: false },
+      queries: { retry: false },
     },
   });
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={["/login"]}>
+      <MemoryRouter initialEntries={["/login"]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
           <Route path="/login" element={<Login />} />
         </Routes>
@@ -53,6 +50,7 @@ describe("Login page", () => {
   beforeEach(() => {
     loginMock.mockReset();
     navigateMock.mockReset();
+    clearAuthSession();
   });
 
   it("signs in through authApi and redirects to the dashboard", async () => {
