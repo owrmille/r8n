@@ -30,13 +30,10 @@ function shouldNotifyMutation(meta?: ApiErrorMeta): boolean {
   return meta?.showErrorToast !== false;
 }
 
-export function createQueryClient(config: QueryClientConfig = {}): QueryClient {
-  const {
-    defaultOptions,
-    queryCache: _queryCache,
-    mutationCache: _mutationCache,
-    ...rest
-  } = config;
+type QueryClientOptions = Omit<QueryClientConfig, "queryCache" | "mutationCache">;
+
+export function createQueryClient(config: QueryClientOptions = {}): QueryClient {
+  const { defaultOptions, ...rest } = config;
 
   const mergedDefaultOptions = {
     ...baseDefaultOptions,
