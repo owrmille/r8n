@@ -177,6 +177,10 @@ generate-jwt-keys-%: ## Generate RSA JWT keypair and update deployment/config/<e
 	./deployment/scripts/generate-jwt-keypair.sh $*
 
 ##@ Docker database
+docker-database-run: docker-database-create-data-folder ## Start only the database container
+	chmod a+x deployment/database/init/01_create_schemas.sh
+	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml up -d database
+
 docker-database-create-data-folder:
 	@mkdir -p ./deployment/database/data
 
@@ -207,6 +211,7 @@ $(addprefix local-stop-,$(SERVICES)): local-stop-%: ## Stop one local backend se
 	case "$*" in \
 		gateway) port="$$GATEWAY_PORT" ;; \
 		opinions) port="$$SERVICES_OPINIONS_PORT" ;; \
+		mock) port="$$SERVICES_MOCK_PORT" ;; \
 		users) port="$$SERVICES_USERS_PORT" ;; \
 	esac; \
 	if [ -n "$$port" ] && command -v lsof >/dev/null 2>&1; then \
