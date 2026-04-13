@@ -33,8 +33,3 @@ r8n:
     jwt:
       private-key: ${JWT_PRIVATE_KEY}
       public-key: ${JWT_PUBLIC_KEY}
-    refresh-cookie:
-      secure: false
-      same-site: Strict
-      path: /auth
-      max-age: 30d
