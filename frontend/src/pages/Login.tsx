@@ -1,13 +1,11 @@
 import { useState, type FormEvent } from "react";
 import { motion } from "framer-motion";
-import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { authApi } from "@/lib/api";
-import { HttpError } from "@/lib/http-client";
+import { useLoginMutation } from "@/lib/server-state";
 import { toast } from "@/hooks/use-toast";
 import logo from "@/assets/logo.png";
 
@@ -18,20 +16,7 @@ const Login = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [gdprAccepted, setGdprAccepted] = useState(false);
   const navigate = useNavigate();
-  const loginMutation = useMutation({
-    mutationFn: authApi.login,
-    onError: (error) => {
-      const description =
-        error instanceof HttpError
-          ? error.message
-          : "Could not sign in. Please try again.";
-
-      toast({
-        title: "Sign in failed",
-        description,
-        variant: "destructive",
-      });
-    },
+  const loginMutation = useLoginMutation({
     onSuccess: () => {
       navigate("/", { replace: true });
     },
