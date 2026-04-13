@@ -4,10 +4,22 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Login from "@/pages/Login";
 
-const { loginMock, navigateMock, setSessionMock } = vi.hoisted(() => ({
+const {
+  clearSessionMock,
+  getAccessTokenMock,
+  getSessionMock,
+  loginMock,
+  navigateMock,
+  setSessionMock,
+  subscribeSessionMock,
+} = vi.hoisted(() => ({
+  clearSessionMock: vi.fn(),
+  getAccessTokenMock: vi.fn(),
+  getSessionMock: vi.fn(),
   loginMock: vi.fn(),
   navigateMock: vi.fn(),
   setSessionMock: vi.fn(),
+  subscribeSessionMock: vi.fn(),
 }));
 
 vi.mock("react-router-dom", async () => {
@@ -28,7 +40,11 @@ vi.mock("@/lib/api", () => ({
 }));
 
 vi.mock("@/lib/auth/session", () => ({
+  clearSession: clearSessionMock,
+  getAccessToken: getAccessTokenMock,
+  getSession: getSessionMock,
   setSession: setSessionMock,
+  subscribeSession: subscribeSessionMock,
 }));
 
 function renderLoginPage() {
@@ -58,7 +74,14 @@ describe("Login page", () => {
   beforeEach(() => {
     loginMock.mockReset();
     navigateMock.mockReset();
+    clearSessionMock.mockReset();
+    getAccessTokenMock.mockReset();
+    getSessionMock.mockReset();
     setSessionMock.mockReset();
+    subscribeSessionMock.mockReset();
+    getAccessTokenMock.mockReturnValue(null);
+    getSessionMock.mockReturnValue(null);
+    subscribeSessionMock.mockImplementation(() => () => {});
   });
 
   it("stores the login session in memory before redirecting to the dashboard", async () => {
