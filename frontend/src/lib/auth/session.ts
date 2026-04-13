@@ -9,10 +9,12 @@ export interface SessionSnapshot {
 }
 
 export type SessionRefreshHandler = () => Promise<SessionTokens>;
+type SessionListener = () => void;
 
 let session: SessionSnapshot | null = null;
 let refreshHandler: SessionRefreshHandler | null = null;
 let refreshPromise: Promise<SessionSnapshot> | null = null;
+const listeners = new Set<SessionListener>();
 
 export function configureSessionRefresh(
   handler: SessionRefreshHandler | null,
@@ -29,12 +31,14 @@ export function setSession(
     expiresAt: now + Math.max(0, tokens.expiresInMilliseconds),
   };
 
+  notifyListeners();
   return cloneSession(session);
 }
 
 export function clearSession(): void {
   session = null;
   refreshPromise = null;
+  notifyListeners();
 }
 
 export function getSession(): SessionSnapshot | null {
@@ -77,10 +81,22 @@ export async function refreshSession(): Promise<SessionSnapshot> {
   return refreshPromise;
 }
 
+export function subscribeSession(listener: SessionListener): () => void {
+  listeners.add(listener);
+
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
 function cloneSession(value: SessionSnapshot | null): SessionSnapshot | null {
   if (!value) {
     return null;
   }
 
   return { ...value };
+}
+
+function notifyListeners(): void {
+  listeners.forEach((listener) => listener());
 }
