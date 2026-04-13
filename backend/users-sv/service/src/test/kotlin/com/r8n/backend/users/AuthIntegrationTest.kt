@@ -181,4 +181,37 @@ class AuthIntegrationTest {
             .andExpect(jsonPath("$.refreshToken").doesNotExist())
             .andExpect(jsonPath("$.expiresInMilliseconds").value(3600000))
     }
+
+    @Test
+    fun `refresh without cookie returns 401`() {
+        mockMvc
+            .perform(post("/auth/refresh"))
+            .andExpect(status().isUnauthorized)
+    }
+
+    @Test
+    fun `refresh with invalid cookie returns 401`() {
+        mockMvc
+            .perform(
+                post("/auth/refresh")
+                    .cookie(Cookie(REFRESH_TOKEN_COOKIE_NAME, "invalid-refresh-token")),
+            ).andExpect(status().isUnauthorized)
+    }
+
+    @Test
+    fun `logout clears refresh token cookie`() {
+        val response =
+            mockMvc
+                .perform(
+                    post("/auth/logout")
+                        .cookie(Cookie(REFRESH_TOKEN_COOKIE_NAME, "refresh-token-to-clear")),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val setCookieHeader = response.response.getHeader(HttpHeaders.SET_COOKIE)!!
+        assertTrue(setCookieHeader.contains("$REFRESH_TOKEN_COOKIE_NAME="))
+        assertTrue(setCookieHeader.contains("Max-Age=0"))
+        assertTrue(setCookieHeader.contains("HttpOnly"))
+        assertTrue(setCookieHeader.contains("Path=/auth"))
+    }
 }
