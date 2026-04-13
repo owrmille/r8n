@@ -1,16 +1,20 @@
 package com.r8n.backend.users
 
+import com.r8n.backend.users.api.AuthApi.Companion.REFRESH_TOKEN_COOKIE_NAME
 import com.r8n.backend.users.api.dto.LoginRequestDto
 import com.r8n.backend.users.provider.database.PIIRepository
 import com.r8n.backend.users.provider.database.UserRepository
 import com.r8n.backend.users.provider.database.UserRoleAssignmentRepository
 import jakarta.persistence.EntityManager
+import jakarta.servlet.http.Cookie
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
+import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.test.context.ActiveProfiles
@@ -65,6 +69,11 @@ class AuthIntegrationTest {
     @Autowired
     lateinit var entityManager: EntityManager
 
+    private fun extractRefreshToken(setCookieHeader: String): String =
+        setCookieHeader
+            .substringAfter("$REFRESH_TOKEN_COOKIE_NAME=")
+            .substringBefore(";")
+
     @Test
     @Transactional
     fun `login with valid credentials returns tokens`() {
@@ -92,15 +101,22 @@ class AuthIntegrationTest {
 
         val loginRequest = LoginRequestDto("test@test.test", "1234")
 
-        mockMvc
-            .perform(
-                post("/auth/login")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(loginRequest)),
-            ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.accessToken").exists())
-            .andExpect(jsonPath("$.refreshToken").exists())
-            .andExpect(jsonPath("$.expiresInMilliseconds").value(3600000))
+        val response =
+            mockMvc
+                .perform(
+                    post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)),
+                ).andExpect(status().isOk)
+                .andExpect(jsonPath("$.accessToken").exists())
+                .andExpect(jsonPath("$.refreshToken").doesNotExist())
+                .andExpect(jsonPath("$.expiresInMilliseconds").value(3600000))
+                .andReturn()
+
+        val setCookieHeader = response.response.getHeader(HttpHeaders.SET_COOKIE)!!
+        assertTrue(setCookieHeader.contains("$REFRESH_TOKEN_COOKIE_NAME="))
+        assertTrue(setCookieHeader.contains("HttpOnly"))
+        assertTrue(setCookieHeader.contains("Path=/auth"))
     }
 
     @Test
@@ -153,17 +169,16 @@ class AuthIntegrationTest {
                 ).andExpect(status().isOk)
                 .andReturn()
 
-        val responseJson = loginResponse.response.contentAsString
-        val refreshToken =
-            objectMapper.readTree(responseJson).get("refreshToken").asString()
+        val setCookieHeader = loginResponse.response.getHeader(HttpHeaders.SET_COOKIE)!!
+        val refreshToken = extractRefreshToken(setCookieHeader)
 
         mockMvc
             .perform(
                 post("/auth/refresh")
-                    .header("X-Refresh-Token", refreshToken),
+                    .cookie(Cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken)),
             ).andExpect(status().isOk)
             .andExpect(jsonPath("$.accessToken").exists())
-            .andExpect(jsonPath("$.refreshToken").exists())
+            .andExpect(jsonPath("$.refreshToken").doesNotExist())
             .andExpect(jsonPath("$.expiresInMilliseconds").value(3600000))
     }
 }
