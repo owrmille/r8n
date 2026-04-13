@@ -4,7 +4,8 @@
 CREATE TABLE users.users (
     id UUID PRIMARY KEY,
     status VARCHAR(32) NOT NULL,
-    status_timestamp TIMESTAMPTZ NOT NULL
+    status_timestamp TIMESTAMPTZ NOT NULL,
+    password_hash VARCHAR(255)
 );
 
 CREATE TABLE users.pii (
@@ -38,9 +39,21 @@ CREATE TABLE users.consents (
 CREATE INDEX idx_consents_user_id ON users.consents(user_id);
 CREATE INDEX idx_consents_session ON users.consents(session);
 
+CREATE TABLE users.users_role_assignments (
+    id UUID PRIMARY KEY,
+    "user" UUID NOT NULL,
+    role VARCHAR(32) NOT NULL,
+    granted_by UUID NOT NULL,
+    timestamp TIMESTAMPTZ NOT NULL,
+    CONSTRAINT fk_role_assignment_user FOREIGN KEY ("user") REFERENCES users.users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_role_assignment_granter FOREIGN KEY (granted_by) REFERENCES users.users(id) ON DELETE CASCADE
+);
+CREATE INDEX idx_users_role_assignments_user_id ON users.users_role_assignments("user");
+
 --changeset inikulin:V2_seed_data context:local,test
-INSERT INTO users.users (id, status, status_timestamp)
-VALUES ('00000000-0000-0000-0000-000000000000', 'ACTIVE', '2024-01-01T12:00:00Z');
+-- password is '1234' hashed with BCrypt
+INSERT INTO users.users (id, status, status_timestamp, password_hash)
+VALUES ('00000000-0000-0000-0000-000000000000', 'ACTIVE', '2024-01-01T12:00:00Z', '$2a$12$lxo9e8RbWABER4/mkU./s.njgArpJleAB9Vdq7C7rlNWIRYEw0Oym');
 INSERT INTO users.pii (user_id, name, email, phone)
 VALUES ('00000000-0000-0000-0000-000000000000', 'Test Testsson', 'test@test.test', '123-456-7890');
 INSERT INTO users.sessions(id, user_id, created, expires, ip, user_agent)
@@ -58,9 +71,7 @@ VALUES ('02020202-0202-0202-0202-020202020202'
 , '2024-01-01T12:00:00Z'
 , '01010101-0101-0101-0101-010101010101'
 );
-
---changeset inikulin:V3_seed_additional_data context:local,test
-INSERT INTO users.users (id, status, status_timestamp)
-VALUES ('10101010-1010-1010-1010-101010101010', 'ACTIVE', '2024-01-01T12:00:00Z');
+INSERT INTO users.users (id, status, status_timestamp, password_hash)
+VALUES ('10101010-1010-1010-1010-101010101010', 'ACTIVE', '2024-01-01T12:00:00Z', '$2a$10$f3pE67YFqJz6Yy7p0vW2ueZ9u0Yk4H9/fS7M8p2k5hWz/96K0V/q');
 INSERT INTO users.pii (user_id, name, email, phone)
 VALUES ('10101010-1010-1010-1010-101010101010', 'coffee expert Bernard', 'bernard@coffee.com', '123-456-7890');
