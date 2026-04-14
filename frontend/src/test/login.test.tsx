@@ -93,7 +93,7 @@ describe("Login page", () => {
     renderLoginPage();
 
     fireEvent.change(screen.getByLabelText("Login"), {
-      target: { value: "test" },
+      target: { value: "test@test.test" },
     });
     fireEvent.change(screen.getByLabelText("Password"), {
       target: { value: "1234" },
@@ -102,7 +102,7 @@ describe("Login page", () => {
 
     await waitFor(() => {
       expect(loginMock).toHaveBeenCalledWith({
-        login: "test",
+        login: "test@test.test",
         password: "1234",
       });
     });
@@ -118,6 +118,13 @@ describe("Login page", () => {
     expect(setSessionMock.mock.invocationCallOrder[0]).toBeLessThan(
       navigateMock.mock.invocationCallOrder[0],
     );
+  });
+
+  it("shows the seeded local development credentials", () => {
+    renderLoginPage();
+
+    expect(screen.getByText("test@test.test / 1234")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("test@test.test")).toBeInTheDocument();
   });
 
   it("does not call the login API from the unfinished sign-up flow", async () => {

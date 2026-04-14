@@ -75,7 +75,7 @@ const Login = () => {
               <Input
                 id="login"
                 type="text"
-                placeholder="test"
+                placeholder="test@test.test"
                 value={login}
                 onChange={(e) => setLogin(e.target.value)}
                 className="rounded-xl"
@@ -98,7 +98,7 @@ const Login = () => {
 
             {!isSignUp && (
               <p className="text-xs text-muted-foreground">
-                Stub credentials for local development: <span className="font-mono">test / 1234</span>
+                Stub credentials for local development: <span className="font-mono">test@test.test / 1234</span>
               </p>
             )}
 
