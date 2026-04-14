@@ -17,10 +17,6 @@ import type {
   GetSelectorsForUrlRequestDto,
 } from "@/lib/api/selectors";
 
-export const authKeys = {
-  session: ["auth", "session"] as const,
-};
-
 export const opinionsKeys = {
   all: ["opinions"] as const,
   detail: (request: GetOpinionByIdRequestDto) => ["opinions", "detail", request.id] as const,
@@ -85,7 +81,6 @@ export const selectorsKeys = {
 };
 
 export const queryKeys = {
-  auth: authKeys,
   opinions: opinionsKeys,
   opinionLists: opinionListsKeys,
   accessRequests: accessRequestsKeys,

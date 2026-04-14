@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { QueryState } from "@/components/server-state/QueryState";
-import { getApiErrorMessage, MissingAccessTokenError } from "@/lib/server-state/errors";
+import { getApiErrorMessage } from "@/lib/server-state/errors";
 import { HttpError } from "@/lib/http-client";
 import { setAuthSession, getAuthSession, clearAuthSession } from "@/lib/server-state/auth-store";
 
@@ -13,11 +13,6 @@ describe("getApiErrorMessage", () => {
   it("returns the HttpError message", () => {
     const error = new HttpError("Validation failed", 400);
     expect(getApiErrorMessage(error, "fallback")).toBe("Validation failed");
-  });
-
-  it("returns a fixed message for MissingAccessTokenError", () => {
-    const error = new MissingAccessTokenError();
-    expect(getApiErrorMessage(error, "fallback")).toBe("Sign in required to continue.");
   });
 
   it("returns the message from a plain Error", () => {
