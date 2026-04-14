@@ -216,4 +216,57 @@ class OpinionsIntegrationTests {
         assertEquals(4.9, actual.mark)
         assertEquals(OpinionStatusEnumDto.DRAFT, actual.status)
     }
+
+    @Test
+    @WithMockUser
+    fun `link component works`() {
+        val accessToken = serviceTokenService.generateAccessToken(CURRENT_USER_ID, listOf("USER"))
+
+        val parentCreateResult =
+            mockMvc
+                .perform(
+                    post("/opinions")
+                        .with(csrf())
+                        .queryParam("subjectId", "15151515-1515-1515-1515-151515151515")
+                        .queryParam("subjective", "parent subjective")
+                        .queryParam("objective", "parent objective")
+                        .queryParam("mark", "2.00")
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+        val parent: OpinionDto = objectMapper.readValue(parentCreateResult.response.contentAsString)
+
+        val childCreateResult =
+            mockMvc
+                .perform(
+                    post("/opinions")
+                        .with(csrf())
+                        .queryParam("subjectId", "15151515-1515-1515-1515-151515151515")
+                        .queryParam("subjective", "child subjective")
+                        .queryParam("objective", "child objective")
+                        .queryParam("mark", "4.00")
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+        val child: OpinionDto = objectMapper.readValue(childCreateResult.response.contentAsString)
+
+        val linkResult =
+            mockMvc
+                .perform(
+                    post("/opinions/link")
+                        .with(csrf())
+                        .queryParam("parentOpinionId", parent.id.toString())
+                        .queryParam("childOpinionId", child.id.toString())
+                        .queryParam("weight", "0.25")
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val actual: OpinionDto = objectMapper.readValue(linkResult.response.contentAsString)
+        assertEquals(parent.id, actual.id)
+        assertEquals(1, actual.components.size)
+        assertEquals(child.id, actual.components.first().opinion)
+        assertEquals(0.25, actual.components.first().weight)
+        assertEquals(1.0, actual.componentMark)
+    }
 }

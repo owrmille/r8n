@@ -32,6 +32,12 @@ class OpinionFacade(
         mark: Double?,
     ): OpinionDto = opinionService.updateOpinion(opinionId, subjective, objective, mark).toDto()
 
+    fun linkComponent(
+        parentOpinionId: UUID,
+        childOpinionId: UUID,
+        weight: Double,
+    ): OpinionDto = opinionService.linkComponent(parentOpinionId, childOpinionId, weight).toDto()
+
     private fun Opinion.toDto() =
         OpinionDto(
             id,

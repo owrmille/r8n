@@ -71,6 +71,22 @@ class OpinionService(
         return savedOpinion.toDomain()
     }
 
+    @Transactional
+    fun linkComponent(
+        parentOpinionId: UUID,
+        childOpinionId: UUID,
+        weight: Double,
+    ): Opinion {
+        if (parentOpinionId == childOpinionId) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "An opinion cannot be linked to itself")
+        }
+        if (!opinionRepository.existsById(parentOpinionId) || !opinionRepository.existsById(childOpinionId)) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND)
+        }
+        componentService.linkComponent(parentOpinionId, childOpinionId, weight)
+        return getOpinion(parentOpinionId)
+    }
+
     private fun OpinionPersistence.toDomain(): Opinion =
         Opinion(
             id!!,
