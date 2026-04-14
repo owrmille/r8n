@@ -1,11 +1,14 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseMutationOptions } from "@tanstack/react-query";
 import { authApi } from "@/lib/api";
 import type {
   AuthenticationTokenDto,
   LoginRequestDto,
 } from "@/lib/api/auth";
-import { setAuthSession } from "@/lib/server-state/auth-store";
+import {
+  clearAuthSession,
+  setAuthSession,
+} from "@/lib/server-state/auth-store";
 import type { ApiErrorMeta } from "@/lib/server-state/query-client";
 
 export function useLoginMutation(
@@ -26,6 +29,27 @@ export function useLoginMutation(
     onSuccess: (data, variables, context) => {
       setAuthSession(data);
       options?.onSuccess?.(data, variables, context);
+    },
+  });
+}
+
+export function useLogoutMutation(
+  options?: UseMutationOptions<void, Error, void, unknown>,
+) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: authApi.logout,
+    ...options,
+    meta: {
+      errorTitle: "Sign out failed",
+      showErrorToast: false,
+      ...options?.meta,
+    } as ApiErrorMeta,
+    onSettled: (data, error, variables, context) => {
+      clearAuthSession();
+      queryClient.clear();
+      options?.onSettled?.(data, error, variables, context);
     },
   });
 }
