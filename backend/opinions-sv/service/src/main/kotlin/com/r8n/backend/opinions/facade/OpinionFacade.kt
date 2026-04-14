@@ -32,6 +32,10 @@ class OpinionFacade(
         mark: Double?,
     ): OpinionDto = opinionService.updateOpinion(opinionId, subjective, objective, mark).toDto()
 
+    fun deleteOpinion(opinionId: UUID) {
+        opinionService.deleteOpinion(opinionId)
+    }
+
     private fun Opinion.toDto() =
         OpinionDto(
             id,
