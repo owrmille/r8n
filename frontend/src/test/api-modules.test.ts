@@ -85,7 +85,11 @@ describe("API modules", () => {
   });
 
   it("uses cookie credentials for logout", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(createJsonResponse({}));
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(null, {
+        status: 204,
+      }),
+    );
     const client = createHttpClient({
       baseUrl: "/api",
       fetchFn: fetchMock,
