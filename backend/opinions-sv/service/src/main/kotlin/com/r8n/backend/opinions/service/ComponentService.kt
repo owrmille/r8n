@@ -13,6 +13,15 @@ class ComponentService(
     private val weightedOpinionReferenceRepository: WeightedOpinionReferenceRepository,
     private val opinionRepository: OpinionRepository,
 ) {
+    fun hasLink(
+        parentOpinionId: UUID,
+        childOpinionId: UUID,
+    ): Boolean =
+        weightedOpinionReferenceRepository.existsByParentOpinionAndChildOpinion(
+            parentOpinionId,
+            childOpinionId,
+        )
+
     fun linkComponent(
         parentOpinionId: UUID,
         childOpinionId: UUID,
