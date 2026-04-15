@@ -116,7 +116,7 @@ class AuthIntegrationTest {
         val setCookieHeader = response.response.getHeader(HttpHeaders.SET_COOKIE)!!
         assertTrue(setCookieHeader.contains("$REFRESH_TOKEN_COOKIE_NAME="))
         assertTrue(setCookieHeader.contains("HttpOnly"))
-        assertTrue(setCookieHeader.contains("Path=/auth"))
+        assertTrue(setCookieHeader.contains("Path=/api/auth"))
     }
 
     @Test
@@ -212,6 +212,6 @@ class AuthIntegrationTest {
         assertTrue(setCookieHeader.contains("$REFRESH_TOKEN_COOKIE_NAME="))
         assertTrue(setCookieHeader.contains("Max-Age=0"))
         assertTrue(setCookieHeader.contains("HttpOnly"))
-        assertTrue(setCookieHeader.contains("Path=/auth"))
+        assertTrue(setCookieHeader.contains("Path=/api/auth"))
     }
 }

@@ -37,5 +37,5 @@ r8n:
     refresh-cookie:
       secure: ${SERVER_SSL_ENABLED}
       same-site: Strict
-      path: /auth
+      path: /api/auth
       max-age: ${SECURITY_REFRESH_COOKIE_MAX_AGE}
