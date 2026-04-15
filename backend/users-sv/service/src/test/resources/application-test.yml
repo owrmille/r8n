@@ -76,3 +76,8 @@ r8n:
         0h9eqIt3ecjtLNxwj5mqvp1Q1pmZyzX445o2713fRMcBmlGSVlcIywPvY06WXpD5
         qwIDAQAB
         -----END PUBLIC KEY-----
+    refresh-cookie:
+      secure: false
+      same-site: Strict
+      path: /auth
+      max-age: 30d

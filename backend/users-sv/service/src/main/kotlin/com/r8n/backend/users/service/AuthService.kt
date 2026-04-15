@@ -1,6 +1,5 @@
 package com.r8n.backend.users.service
 
-import com.r8n.backend.users.api.dto.AuthenticationTokenDto
 import com.r8n.backend.users.api.dto.LoginRequestDto
 import com.r8n.backend.users.provider.database.UserRepository
 import com.r8n.backend.users.provider.database.UserRoleAssignmentRepository
@@ -16,7 +15,7 @@ class AuthService(
     private val passwordEncoder: PasswordEncoder,
     private val tokenService: TokenService,
 ) {
-    fun login(request: LoginRequestDto): AuthenticationTokenDto {
+    fun login(request: LoginRequestDto): AuthenticationTokens {
         val user =
             userRepository.findByEmail(request.login)
                 ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials")
@@ -29,7 +28,7 @@ class AuthService(
         val accessToken = tokenService.generateAccessToken(user.id, roles.ifEmpty { listOf("USER") })
         val refreshToken = tokenService.generateRefreshToken(user.id)
 
-        return AuthenticationTokenDto(
+        return AuthenticationTokens(
             accessToken = accessToken,
             refreshToken = refreshToken,
             expiresInMilliseconds = tokenService.getAccessTokenExpirationMillis(),
@@ -41,14 +40,14 @@ class AuthService(
         // For now, we just let the client discard the token.
     }
 
-    fun refresh(refreshToken: String): AuthenticationTokenDto {
+    fun refresh(refreshToken: String): AuthenticationTokens {
         val userId = tokenService.validateRefreshToken(refreshToken)
 
         val roles = userRoleAssignmentRepository.findAllByUser(userId).map { it.role.name }
         val accessToken = tokenService.generateAccessToken(userId, roles.ifEmpty { listOf("USER") })
         val newRefreshToken = tokenService.generateRefreshToken(userId)
 
-        return AuthenticationTokenDto(
+        return AuthenticationTokens(
             accessToken = accessToken,
             refreshToken = newRefreshToken,
             expiresInMilliseconds = tokenService.getAccessTokenExpirationMillis(),
