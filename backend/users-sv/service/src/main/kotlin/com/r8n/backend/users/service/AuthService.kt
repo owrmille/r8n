@@ -40,8 +40,11 @@ class AuthService(
         // For now, we just let the client discard the token.
     }
 
-    fun refresh(refreshToken: String): AuthenticationTokens {
-        val userId = tokenService.validateRefreshToken(refreshToken)
+    fun refresh(refreshToken: String?): AuthenticationTokens {
+        val userId =
+            tokenService.validateRefreshToken(
+                refreshToken ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing refresh token"),
+            )
 
         val roles = userRoleAssignmentRepository.findAllByUser(userId).map { it.role.name }
         val accessToken = tokenService.generateAccessToken(userId, roles.ifEmpty { listOf("USER") })
