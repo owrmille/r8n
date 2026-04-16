@@ -73,6 +73,16 @@ class OpinionService(
     }
 
     @Transactional
+    fun deleteOpinion(opinionId: UUID) {
+        val opinion =
+            opinionRepository
+                .findById(
+                    opinionId,
+                ).orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
+        opinionRepository.delete(opinion)
+    }
+
+    @Transactional
     fun linkComponent(
         userId: UUID,
         parentOpinionId: UUID,

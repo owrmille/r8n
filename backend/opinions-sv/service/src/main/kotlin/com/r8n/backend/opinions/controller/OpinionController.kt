@@ -43,6 +43,7 @@ class OpinionController(
 
     @PreAuthorize(IS_USER)
     override fun deleteOpinion(opinionId: UUID) {
+        opinionFacade.deleteOpinion(opinionId)
     }
 
     @PreAuthorize(IS_USER)
