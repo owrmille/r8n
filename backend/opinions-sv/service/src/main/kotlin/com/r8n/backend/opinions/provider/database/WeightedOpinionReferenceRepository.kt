@@ -6,4 +6,9 @@ import java.util.UUID
 
 interface WeightedOpinionReferenceRepository : JpaRepository<WeightedOpinionReferencePersistence, UUID> {
     fun findAllByParentOpinionOrderByIdAsc(parentOpinion: UUID): List<WeightedOpinionReferencePersistence>
+
+    fun existsByParentOpinionAndChildOpinion(
+        parentOpinion: UUID,
+        childOpinion: UUID,
+    ): Boolean
 }
