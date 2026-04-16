@@ -2,7 +2,7 @@ plugins {
     id("convention-nonreactive-backend-service")
 }
 
-group = "com.r8n.backend"
+group = "com.r8n.backend.mock"
 version = "0.0.1-SNAPSHOT"
 description = "mock service for everything not cut out into dedicated services yet"
 

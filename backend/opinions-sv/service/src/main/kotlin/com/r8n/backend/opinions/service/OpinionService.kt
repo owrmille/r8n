@@ -4,6 +4,7 @@ import com.r8n.backend.opinions.domain.Opinion
 import com.r8n.backend.opinions.domain.OpinionStatusEnum
 import com.r8n.backend.opinions.persistence.OpinionPersistence
 import com.r8n.backend.opinions.provider.database.OpinionRepository
+import com.r8n.backend.security.CurrentUserIdentifier.getCurrentUserId
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -20,19 +21,34 @@ class OpinionService(
 ) {
     fun getOpinion(id: UUID): Opinion {
         val opinion = opinionRepository.findById(id).orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
+        if (!getCurrentUserId().isOwnerOf(opinion) && !getCurrentUserId().hasReadonlyAccessToOpinion(opinion)) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN)
+        }
         return opinion.toDomain()
+    }
+
+    private fun UUID.isOwnerOf(opinion: OpinionPersistence): Boolean = this == opinion.owner
+
+    private fun UUID.hasReadonlyAccessToOpinion(opinion: OpinionPersistence): Boolean {
+        if (opinion.status != OpinionStatusEnum.PUBLISHED) {
+            return false
+        }
+        // TODO
+        return true
     }
 
     fun getOpinionFor(subjectId: UUID): Opinion {
         val opinion =
             opinionRepository.findFirstBySubjectOrderByTimestampDesc(subjectId)
                 ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+        if (opinion.owner != getCurrentUserId()) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN)
+        }
         return opinion.toDomain()
     }
 
     @Transactional
     fun createOpinion(
-        ownerId: UUID,
         subjectId: UUID,
         subjective: List<String>,
         objective: List<String>,
@@ -41,7 +57,7 @@ class OpinionService(
         val opinion =
             opinionRepository.save(
                 OpinionPersistence(
-                    owner = ownerId,
+                    owner = getCurrentUserId(),
                     subject = subjectId,
                     mark = mark,
                     status = OpinionStatusEnum.DRAFT,
@@ -64,6 +80,9 @@ class OpinionService(
                 .findById(
                     opinionId,
                 ).orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
+        if (opinion.owner != getCurrentUserId()) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN)
+        }
         opinion.mark = mark
         opinion.timestamp = Instant.now()
         val savedOpinion = opinionRepository.save(opinion)
@@ -78,6 +97,9 @@ class OpinionService(
                 .findById(
                     opinionId,
                 ).orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
+        if (opinion.owner != getCurrentUserId()) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN)
+        }
         opinionRepository.delete(opinion)
     }
 

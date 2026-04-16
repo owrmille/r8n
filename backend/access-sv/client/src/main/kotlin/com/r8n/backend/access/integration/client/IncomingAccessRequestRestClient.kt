@@ -1,14 +1,14 @@
-package com.r8n.backend.mock.integration.client
+package com.r8n.backend.access.integration.client
 
 import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
-import com.r8n.backend.mock.api.IncomingAccessRequestApi
-import com.r8n.backend.mock.api.IncomingAccessRequestApi.Companion.ACCEPT_PATH
-import com.r8n.backend.mock.api.IncomingAccessRequestApi.Companion.DECLINE_PATH
-import com.r8n.backend.mock.api.IncomingAccessRequestApi.Companion.GET_PATH
-import com.r8n.backend.mock.api.IncomingAccessRequestApi.Companion.HIDE_PATH
-import com.r8n.backend.mock.api.dto.access.AccessRequestDto
-import com.r8n.backend.mock.api.dto.access.RequestStatusEnumDto
+import com.r8n.backend.access.api.IncomingAccessRequestApi
+import com.r8n.backend.access.api.IncomingAccessRequestApi.Companion.ACCEPT_PATH
+import com.r8n.backend.access.api.IncomingAccessRequestApi.Companion.DECLINE_PATH
+import com.r8n.backend.access.api.IncomingAccessRequestApi.Companion.GET_PATH
+import com.r8n.backend.access.api.IncomingAccessRequestApi.Companion.HIDE_PATH
+import com.r8n.backend.access.api.dto.access.AccessRequestDto
+import com.r8n.backend.access.api.dto.access.RequestStatusEnumDto
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.body
 import java.time.Instant

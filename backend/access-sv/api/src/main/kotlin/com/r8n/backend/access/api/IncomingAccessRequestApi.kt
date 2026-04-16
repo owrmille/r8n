@@ -1,20 +1,22 @@
-package com.r8n.backend.mock.api
+package com.r8n.backend.access.api
 
 import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
-import com.r8n.backend.mock.api.dto.access.AccessRequestDto
-import com.r8n.backend.mock.api.dto.access.RequestStatusEnumDto
+import com.r8n.backend.access.api.dto.access.AccessRequestDto
+import com.r8n.backend.access.api.dto.access.RequestStatusEnumDto
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import java.time.Instant
 import java.util.UUID
 
-interface OutgoingAccessRequestApi {
+interface IncomingAccessRequestApi {
     companion object {
-        const val GET_PATH = "/access-requests/outgoing"
-        const val CREATE_PATH = "/access-requests/outgoing/create/{listId}"
-        const val CANCEL_PATH = "/access-requests/outgoing/cancel/{requestId}"
+        const val GET_PATH = "/access-requests/incoming"
+        const val ACCEPT_PATH = "$GET_PATH/{requestId}/accept"
+        const val DECLINE_PATH = "$GET_PATH/{requestId}/decline"
+        const val HIDE_PATH = "$GET_PATH/{requestId}/hide"
     }
 
     @GetMapping(GET_PATH)
@@ -28,13 +30,18 @@ interface OutgoingAccessRequestApi {
         pageable: PageRequestDto,
     ): PageResponseDto<AccessRequestDto>
 
-    @GetMapping(CREATE_PATH)
-    fun create(
-        @PathVariable listId: UUID,
+    @PostMapping(ACCEPT_PATH)
+    fun accept(
+        @PathVariable requestId: UUID,
     ): AccessRequestDto
 
-    @GetMapping(CANCEL_PATH)
-    fun cancel(
+    @PostMapping(DECLINE_PATH)
+    fun decline(
+        @PathVariable requestId: UUID,
+    ): AccessRequestDto
+
+    @PostMapping(HIDE_PATH)
+    fun hide(
         @PathVariable requestId: UUID,
     ): AccessRequestDto
 }

@@ -1,0 +1,26 @@
+package com.r8n.backend.access.controller
+
+import com.r8n.backend.access.integration.api.AccessInternalApi
+import com.r8n.backend.access.integration.api.PermissionEnumDto
+import com.r8n.backend.access.service.AccessRequestService
+import com.r8n.backend.security.Authority.IS_SERVICE
+import com.r8n.backend.security.CurrentUserIdentifier.getCurrentUserId
+import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.web.bind.annotation.RestController
+import java.util.UUID
+
+@RestController
+class AccessInternalController(
+    private val service: AccessRequestService
+) : AccessInternalApi {
+
+    @PreAuthorize(IS_SERVICE)
+    override fun canAccessOpinion(permission: PermissionEnumDto, opinionId: UUID): Boolean {
+        return service.canAccessOpinion(getCurrentUserId(), opinionId, permission)
+    }
+
+    @PreAuthorize(IS_SERVICE)
+    override fun canAccessOpinionList(permission: PermissionEnumDto, opinionListId: UUID): Boolean {
+        return service.canAccessOpinionList(getCurrentUserId(), opinionListId, permission)
+    }
+}

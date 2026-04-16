@@ -1,4 +1,4 @@
-package com.r8n.backend.mock.api.dto.access
+package com.r8n.backend.access.api.dto.access
 
 import java.time.Instant
 import java.util.UUID

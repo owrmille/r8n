@@ -24,8 +24,8 @@ class AuthController(
         )
     }
 
-    override fun logout() {
-        authService.logout()
+    override fun logout(refreshToken: String?) {
+        authService.logout(refreshToken)
         clearRefreshTokenCookie()
     }
 

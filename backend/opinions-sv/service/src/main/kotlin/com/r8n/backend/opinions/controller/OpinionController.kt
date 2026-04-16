@@ -7,7 +7,6 @@ import com.r8n.backend.opinions.facade.OpinionFacade
 import com.r8n.backend.security.Authority.IS_USER
 import com.r8n.backend.security.Authority.IS_USER_OR_SERVICE
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
@@ -28,9 +27,7 @@ class OpinionController(
         objective: List<String>,
         mark: Double?,
     ): OpinionDto {
-        val auth = SecurityContextHolder.getContext().authentication ?: throw IllegalStateException("Not authenticated")
-        val userId = UUID.fromString(auth.name)
-        return opinionFacade.createOpinion(userId, subjectId, subjective, objective, mark)
+        return opinionFacade.createOpinion(subjectId, subjective, objective, mark)
     }
 
     @PreAuthorize(IS_USER)

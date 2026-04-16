@@ -18,12 +18,11 @@ class OpinionFacade(
     fun getOpinionFor(subjectId: UUID): OpinionDto = opinionService.getOpinionFor(subjectId).toDto()
 
     fun createOpinion(
-        userId: UUID,
         subjectId: UUID,
         subjective: List<String>,
         objective: List<String>,
         mark: Double?,
-    ): OpinionDto = opinionService.createOpinion(userId, subjectId, subjective, objective, mark).toDto()
+    ): OpinionDto = opinionService.createOpinion(subjectId, subjective, objective, mark).toDto()
 
     fun updateOpinion(
         opinionId: UUID,

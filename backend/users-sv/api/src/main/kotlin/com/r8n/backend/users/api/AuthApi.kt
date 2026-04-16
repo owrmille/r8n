@@ -17,7 +17,9 @@ interface AuthApi {
     ): AuthenticationTokenDto
 
     @PostMapping("/auth/logout")
-    fun logout()
+    fun logout(
+        @CookieValue(name = REFRESH_TOKEN_COOKIE_NAME, required = false) refreshToken: String?,
+    )
 
     @PostMapping("/auth/refresh")
     fun refresh(
