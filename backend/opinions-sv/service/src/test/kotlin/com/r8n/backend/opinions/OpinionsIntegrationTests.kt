@@ -23,6 +23,7 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
@@ -215,5 +216,38 @@ class OpinionsIntegrationTests {
         assertEquals(listOf("updated objective"), actual.objective)
         assertEquals(4.9, actual.mark)
         assertEquals(OpinionStatusEnumDto.DRAFT, actual.status)
+    }
+
+    @Test
+    @WithMockUser
+    fun `delete opinion works`() {
+        val accessToken = serviceTokenService.generateAccessToken(CURRENT_USER_ID, listOf("USER"))
+        val createResult =
+            mockMvc
+                .perform(
+                    post("/opinions")
+                        .with(csrf())
+                        .queryParam("subjectId", "15151515-1515-1515-1515-151515151515")
+                        .queryParam("subjective", "to be removed subjective")
+                        .queryParam("objective", "to be removed objective")
+                        .queryParam("mark", "1.10")
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val created: OpinionDto = objectMapper.readValue(createResult.response.contentAsString)
+
+        mockMvc
+            .perform(
+                delete("/opinions/${created.id}")
+                    .with(csrf())
+                    .header("Authorization", "Bearer $accessToken"),
+            ).andExpect(status().isOk)
+
+        mockMvc
+            .perform(
+                get("/opinions/${created.id}")
+                    .header("Authorization", "Bearer $accessToken"),
+            ).andExpect(status().isNotFound)
     }
 }
