@@ -1,13 +1,25 @@
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Login from "@/pages/Login";
-import { clearAuthSession, createQueryClient } from "@/lib/server-state";
 
-const { loginMock, navigateMock } = vi.hoisted(() => ({
+const {
+  clearSessionMock,
+  getAccessTokenMock,
+  getSessionMock,
+  loginMock,
+  navigateMock,
+  setSessionMock,
+  subscribeSessionMock,
+} = vi.hoisted(() => ({
+  clearSessionMock: vi.fn(),
+  getAccessTokenMock: vi.fn(),
+  getSessionMock: vi.fn(),
   loginMock: vi.fn(),
   navigateMock: vi.fn(),
+  setSessionMock: vi.fn(),
+  subscribeSessionMock: vi.fn(),
 }));
 
 vi.mock("react-router-dom", async () => {
@@ -27,17 +39,29 @@ vi.mock("@/lib/api", () => ({
   },
 }));
 
+vi.mock("@/lib/auth/session", () => ({
+  clearSession: clearSessionMock,
+  getAccessToken: getAccessTokenMock,
+  getSession: getSessionMock,
+  setSession: setSessionMock,
+  subscribeSession: subscribeSessionMock,
+}));
+
 function renderLoginPage() {
-  const queryClient = createQueryClient({
+  const queryClient = new QueryClient({
     defaultOptions: {
-      mutations: { retry: false },
-      queries: { retry: false },
+      mutations: {
+        retry: false,
+      },
+      queries: {
+        retry: false,
+      },
     },
   });
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={["/login"]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter initialEntries={["/login"]}>
         <Routes>
           <Route path="/login" element={<Login />} />
         </Routes>
@@ -50,20 +74,26 @@ describe("Login page", () => {
   beforeEach(() => {
     loginMock.mockReset();
     navigateMock.mockReset();
-    clearAuthSession();
+    clearSessionMock.mockReset();
+    getAccessTokenMock.mockReset();
+    getSessionMock.mockReset();
+    setSessionMock.mockReset();
+    subscribeSessionMock.mockReset();
+    getAccessTokenMock.mockReturnValue(null);
+    getSessionMock.mockReturnValue(null);
+    subscribeSessionMock.mockImplementation(() => () => {});
   });
 
-  it("signs in through authApi and redirects to the dashboard", async () => {
+  it("stores the login session in memory before redirecting to the dashboard", async () => {
     loginMock.mockResolvedValue({
       accessToken: "stub-access-token-123",
-      expiresInMilliseconds: 0,
-      refreshToken: "stub-refresh-token-123",
+      expiresInMilliseconds: 60_000,
     });
 
     renderLoginPage();
 
     fireEvent.change(screen.getByLabelText("Login"), {
-      target: { value: "test" },
+      target: { value: "test@test.test" },
     });
     fireEvent.change(screen.getByLabelText("Password"), {
       target: { value: "1234" },
@@ -72,14 +102,29 @@ describe("Login page", () => {
 
     await waitFor(() => {
       expect(loginMock).toHaveBeenCalledWith({
-        login: "test",
+        login: "test@test.test",
         password: "1234",
       });
     });
 
     await waitFor(() => {
+      expect(setSessionMock).toHaveBeenCalledWith({
+        accessToken: "stub-access-token-123",
+        expiresInMilliseconds: 60_000,
+      });
       expect(navigateMock).toHaveBeenCalledWith("/", { replace: true });
     });
+
+    expect(setSessionMock.mock.invocationCallOrder[0]).toBeLessThan(
+      navigateMock.mock.invocationCallOrder[0],
+    );
+  });
+
+  it("shows the seeded local development credentials", () => {
+    renderLoginPage();
+
+    expect(screen.getByText("test@test.test / 1234")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("test@test.test")).toBeInTheDocument();
   });
 
   it("does not call the login API from the unfinished sign-up flow", async () => {

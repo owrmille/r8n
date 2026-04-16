@@ -1,9 +1,7 @@
 import type { HttpClient, HttpQueryParams } from "@/lib/http-client";
 import { httpClient } from "@/lib/http-client";
 import {
-  createAuthorizationHeaders,
   createPageQuery,
-  type AuthorizedRequestDto,
   type PageRequestDto,
   type PageResponseDto,
   type Uuid,
@@ -22,22 +20,22 @@ export interface SupportThreadDto {
   messages: string[];
 }
 
-export interface GetSelectorsForUrlRequestDto extends AuthorizedRequestDto {
+export interface GetSelectorsForUrlRequestDto {
   pageable: PageRequestDto;
   url: string;
 }
 
-export interface GetSelectorsForSubjectRequestDto extends AuthorizedRequestDto {
+export interface GetSelectorsForSubjectRequestDto {
   subjectId: Uuid;
   pageable: PageRequestDto;
 }
 
-export interface SuggestSelectorRequestDto extends AuthorizedRequestDto {
+export interface SuggestSelectorRequestDto {
   selector: string;
   subjectId: Uuid;
 }
 
-export interface DisagreeWithSelectorRequestDto extends AuthorizedRequestDto {
+export interface DisagreeWithSelectorRequestDto {
   comment: string;
   selectorId: Uuid;
 }
@@ -50,7 +48,7 @@ export function createSelectorsApi(client: HttpClient = httpClient) {
       return client.post<SupportThreadDto>(
         `/selectors/${request.selectorId}/disagree`,
         {
-          headers: createAuthorizationHeaders(request.accessToken),
+          auth: "required",
           query: {
             comment: request.comment,
           },
@@ -66,7 +64,7 @@ export function createSelectorsApi(client: HttpClient = httpClient) {
       return client.get<PageResponseDto<SelectorDto>>(
         `/selectors/for-subject/${request.subjectId}`,
         {
-          headers: createAuthorizationHeaders(request.accessToken),
+          auth: "required",
           query,
         },
       );
@@ -81,14 +79,14 @@ export function createSelectorsApi(client: HttpClient = httpClient) {
       };
 
       return client.get<PageResponseDto<SelectorDto>>("/selectors/for-url", {
-        headers: createAuthorizationHeaders(request.accessToken),
+        auth: "required",
         query,
       });
     },
 
     suggest(request: SuggestSelectorRequestDto): Promise<SelectorDto> {
       return client.post<SelectorDto>(`/selectors/for-subject/${request.subjectId}`, {
-        headers: createAuthorizationHeaders(request.accessToken),
+        auth: "required",
         query: {
           selector: request.selector,
         },

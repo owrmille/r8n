@@ -1,3 +1,9 @@
+import {
+  clearSession,
+  getAccessToken,
+  refreshSession,
+} from "@/lib/auth/session";
+
 type PrimitiveQueryValue = string | number | boolean;
 type QueryValue =
   | PrimitiveQueryValue
@@ -7,8 +13,10 @@ type QueryValue =
 
 export type HttpQueryParams = Record<string, QueryValue>;
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+export type HttpRequestAuth = "none" | "required";
 
 export interface HttpRequestOptions<TBody = unknown> {
+  auth?: HttpRequestAuth;
   body?: TBody;
   credentials?: RequestCredentials;
   headers?: HeadersInit;
@@ -88,6 +96,49 @@ export function createHttpClient(config: HttpClientConfig = {}): HttpClient {
     path: string,
     options: HttpRequestOptions<TBody> = {},
   ): Promise<TResponse> {
+    if (options.auth === "required") {
+      return requestWithAuthentication(method, path, options);
+    }
+
+    return executeRequest(method, path, options);
+  }
+
+  async function requestWithAuthentication<TResponse = void, TBody = unknown>(
+    method: HttpMethod,
+    path: string,
+    options: HttpRequestOptions<TBody>,
+    hasRetriedAfterUnauthorized: boolean = false,
+  ): Promise<TResponse> {
+    const accessToken = await resolveAccessToken();
+    const requestHeaders = createHeaders(config.defaultHeaders, options.headers);
+    requestHeaders.set("Authorization", `Bearer ${accessToken}`);
+
+    try {
+      return await executeRequest(method, path, {
+        ...options,
+        headers: requestHeaders,
+      });
+    } catch (error) {
+      if (
+        error instanceof HttpError &&
+        error.status === 401 &&
+        !hasRetriedAfterUnauthorized
+      ) {
+        clearSession();
+        await refreshSession();
+
+        return requestWithAuthentication(method, path, options, true);
+      }
+
+      throw error;
+    }
+  }
+
+  async function executeRequest<TResponse = void, TBody = unknown>(
+    method: HttpMethod,
+    path: string,
+    options: HttpRequestOptions<TBody> = {},
+  ): Promise<TResponse> {
     const { cleanup, signal, timeoutError } = createRequestSignal(
       options.signal,
       options.timeoutMs ?? defaultTimeoutMs,
@@ -134,6 +185,17 @@ export function createHttpClient(config: HttpClientConfig = {}): HttpClient {
     } finally {
       cleanup();
     }
+  }
+
+  async function resolveAccessToken(): Promise<string> {
+    const accessToken = getAccessToken();
+
+    if (accessToken) {
+      return accessToken;
+    }
+
+    const refreshedSession = await refreshSession();
+    return refreshedSession.accessToken;
   }
 
   return {

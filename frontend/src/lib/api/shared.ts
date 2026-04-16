@@ -22,16 +22,6 @@ export interface PageResponseDto<TItem> {
   total: number;
 }
 
-export interface AuthorizedRequestDto {
-  accessToken: string;
-}
-
-export function createAuthorizationHeaders(accessToken: string): HeadersInit {
-  return {
-    Authorization: `Bearer ${accessToken}`,
-  };
-}
-
 export function createPageQuery(pageable: PageRequestDto): HttpQueryParams {
   const query: HttpQueryParams = {
     page: pageable.page,

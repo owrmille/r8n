@@ -13,7 +13,7 @@ import type { ApiErrorMeta } from "@/lib/server-state/query-client";
 import { useApiInvalidation, useAuthorizedMutation, useAuthorizedQuery } from "@/lib/server-state/hooks/authorized";
 
 export function useIncomingAccessRequests(
-  request: Omit<GetIncomingAccessRequestsRequestDto, "accessToken">,
+  request: GetIncomingAccessRequestsRequestDto,
   options?: Omit<
     UseQueryOptions<
       PageResponseDto<AccessRequestDto>,
@@ -26,13 +26,13 @@ export function useIncomingAccessRequests(
 ) {
   return useAuthorizedQuery({
     queryKey: accessRequestsKeys.incoming(request),
-    queryFn: (accessToken) => accessRequestsApi.getIncoming({ ...request, accessToken }),
+    queryFn: () => accessRequestsApi.getIncoming(request),
     ...options,
   });
 }
 
 export function useOutgoingAccessRequests(
-  request: Omit<GetOutgoingAccessRequestsRequestDto, "accessToken">,
+  request: GetOutgoingAccessRequestsRequestDto,
   options?: Omit<
     UseQueryOptions<
       PageResponseDto<AccessRequestDto>,
@@ -45,7 +45,7 @@ export function useOutgoingAccessRequests(
 ) {
   return useAuthorizedQuery({
     queryKey: accessRequestsKeys.outgoing(request),
-    queryFn: (accessToken) => accessRequestsApi.getOutgoing({ ...request, accessToken }),
+    queryFn: () => accessRequestsApi.getOutgoing(request),
     ...options,
   });
 }
@@ -54,15 +54,14 @@ export function useAcceptIncomingAccessRequestMutation(
   options?: UseMutationOptions<
     AccessRequestDto,
     Error,
-    Omit<AccessRequestActionRequestDto, "accessToken">,
+    AccessRequestActionRequestDto,
     unknown
   >,
 ) {
   const invalidate = useApiInvalidation();
 
   return useAuthorizedMutation({
-    mutationFn: (variables, accessToken) =>
-      accessRequestsApi.acceptIncoming({ ...variables, accessToken }),
+    mutationFn: (variables) => accessRequestsApi.acceptIncoming(variables),
     ...options,
     meta: {
       errorTitle: "Request approval failed",
@@ -79,15 +78,14 @@ export function useDeclineIncomingAccessRequestMutation(
   options?: UseMutationOptions<
     AccessRequestDto,
     Error,
-    Omit<AccessRequestActionRequestDto, "accessToken">,
+    AccessRequestActionRequestDto,
     unknown
   >,
 ) {
   const invalidate = useApiInvalidation();
 
   return useAuthorizedMutation({
-    mutationFn: (variables, accessToken) =>
-      accessRequestsApi.declineIncoming({ ...variables, accessToken }),
+    mutationFn: (variables) => accessRequestsApi.declineIncoming(variables),
     ...options,
     meta: {
       errorTitle: "Request decline failed",
@@ -104,15 +102,14 @@ export function useHideIncomingAccessRequestMutation(
   options?: UseMutationOptions<
     AccessRequestDto,
     Error,
-    Omit<AccessRequestActionRequestDto, "accessToken">,
+    AccessRequestActionRequestDto,
     unknown
   >,
 ) {
   const invalidate = useApiInvalidation();
 
   return useAuthorizedMutation({
-    mutationFn: (variables, accessToken) =>
-      accessRequestsApi.hideIncoming({ ...variables, accessToken }),
+    mutationFn: (variables) => accessRequestsApi.hideIncoming(variables),
     ...options,
     meta: {
       errorTitle: "Request hide failed",
@@ -129,15 +126,14 @@ export function useCreateOutgoingAccessRequestMutation(
   options?: UseMutationOptions<
     AccessRequestDto,
     Error,
-    Omit<CreateOutgoingAccessRequestRequestDto, "accessToken">,
+    CreateOutgoingAccessRequestRequestDto,
     unknown
   >,
 ) {
   const invalidate = useApiInvalidation();
 
   return useAuthorizedMutation({
-    mutationFn: (variables, accessToken) =>
-      accessRequestsApi.createOutgoing({ ...variables, accessToken }),
+    mutationFn: (variables) => accessRequestsApi.createOutgoing(variables),
     ...options,
     meta: {
       errorTitle: "Request creation failed",
@@ -154,15 +150,14 @@ export function useCancelOutgoingAccessRequestMutation(
   options?: UseMutationOptions<
     AccessRequestDto,
     Error,
-    Omit<AccessRequestActionRequestDto, "accessToken">,
+    AccessRequestActionRequestDto,
     unknown
   >,
 ) {
   const invalidate = useApiInvalidation();
 
   return useAuthorizedMutation({
-    mutationFn: (variables, accessToken) =>
-      accessRequestsApi.cancelOutgoing({ ...variables, accessToken }),
+    mutationFn: (variables) => accessRequestsApi.cancelOutgoing(variables),
     ...options,
     meta: {
       errorTitle: "Request cancel failed",
