@@ -9,11 +9,6 @@ export interface LoginRequestDto {
 export interface AuthenticationTokenDto {
   accessToken: string;
   expiresInMilliseconds: number;
-  refreshToken: string;
-}
-
-export interface RefreshAuthenticationRequestDto {
-  refreshToken: string;
 }
 
 export function createAuthApi(client: HttpClient = httpClient) {
@@ -21,20 +16,19 @@ export function createAuthApi(client: HttpClient = httpClient) {
     login(request: LoginRequestDto): Promise<AuthenticationTokenDto> {
       return client.post<AuthenticationTokenDto, LoginRequestDto>("/auth/login", {
         body: request,
+        credentials: "include",
       });
     },
 
     logout(): Promise<void> {
-      return client.post<void>("/auth/logout");
+      return client.post<void>("/auth/logout", {
+        credentials: "include",
+      });
     },
 
-    refresh(
-      request: RefreshAuthenticationRequestDto,
-    ): Promise<AuthenticationTokenDto> {
+    refresh(): Promise<AuthenticationTokenDto> {
       return client.post<AuthenticationTokenDto>("/auth/refresh", {
-        query: {
-          refreshToken: request.refreshToken,
-        },
+        credentials: "include",
       });
     },
   };

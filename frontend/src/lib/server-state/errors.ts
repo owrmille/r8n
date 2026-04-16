@@ -7,27 +7,12 @@ export interface ApiErrorToastOptions {
   variant?: "default" | "destructive";
 }
 
-export class MissingAccessTokenError extends Error {
-  constructor() {
-    super("Sign in required");
-    this.name = "MissingAccessTokenError";
-  }
-}
-
-export function isMissingAccessTokenError(error: unknown): boolean {
-  return error instanceof MissingAccessTokenError;
-}
-
 export function getApiErrorMessage(
   error: unknown,
   fallback = "Something went wrong. Please try again.",
 ): string {
   if (error instanceof HttpError) {
     return error.message || fallback;
-  }
-
-  if (error instanceof MissingAccessTokenError) {
-    return "Sign in required to continue.";
   }
 
   if (error instanceof Error && error.message.trim() !== "") {

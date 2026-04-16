@@ -6,11 +6,9 @@ import com.r8n.backend.users.api.dto.LoginRequestDto
 import com.r8n.backend.users.security.RefreshTokenCookieFactory
 import com.r8n.backend.users.service.AuthService
 import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import org.springframework.web.server.ResponseStatusException
 
 @RestController
 class AuthController(
@@ -32,11 +30,7 @@ class AuthController(
     }
 
     override fun refresh(refreshToken: String?): AuthenticationTokenDto {
-        val tokens =
-            authService.refresh(
-                refreshToken
-                    ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing refresh token"),
-            )
+        val tokens = authService.refresh(refreshToken)
         addRefreshTokenCookie(tokens.refreshToken)
         return AuthenticationTokenDto(
             accessToken = tokens.accessToken,

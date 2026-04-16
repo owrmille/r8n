@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { useLogoutMutation } from "@/lib/server-state";
 import {
   Sidebar,
   SidebarContent,
@@ -33,6 +34,11 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const navigate = useNavigate();
+  const logoutMutation = useLogoutMutation({
+    onSettled: () => {
+      navigate("/login", { replace: true });
+    },
+  });
 
   const isActive = (path: string) =>
     path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
@@ -138,7 +144,8 @@ export function AppSidebar() {
                 <p className="truncate text-xs text-muted-foreground">12 reviews</p>
               </div>
               <button
-                onClick={() => navigate("/login")}
+                onClick={() => logoutMutation.mutate()}
+                disabled={logoutMutation.isPending}
                 className="shrink-0 rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-foreground"
                 title="Log out"
               >

@@ -20,7 +20,7 @@ import type { ApiErrorMeta } from "@/lib/server-state/query-client";
 import { useApiInvalidation, useAuthorizedMutation, useAuthorizedQuery } from "@/lib/server-state/hooks/authorized";
 
 export function useMyOpinionLists(
-  request: Omit<GetMyOpinionListsRequestDto, "accessToken">,
+  request: GetMyOpinionListsRequestDto,
   options?: Omit<
     UseQueryOptions<
       PageResponseDto<OpinionListSummaryDto>,
@@ -33,13 +33,13 @@ export function useMyOpinionLists(
 ) {
   return useAuthorizedQuery({
     queryKey: opinionListsKeys.mine(request),
-    queryFn: (accessToken) => opinionListsApi.getMine({ ...request, accessToken }),
+    queryFn: () => opinionListsApi.getMine(request),
     ...options,
   });
 }
 
 export function useOpinionListSummary(
-  request: Omit<GetOpinionListSummaryRequestDto, "accessToken">,
+  request: GetOpinionListSummaryRequestDto,
   options?: Omit<
     UseQueryOptions<OpinionListSummaryDto, Error, OpinionListSummaryDto, QueryKey>,
     "queryKey" | "queryFn"
@@ -47,13 +47,13 @@ export function useOpinionListSummary(
 ) {
   return useAuthorizedQuery({
     queryKey: opinionListsKeys.summary(request),
-    queryFn: (accessToken) => opinionListsApi.getSummary({ ...request, accessToken }),
+    queryFn: () => opinionListsApi.getSummary(request),
     ...options,
   });
 }
 
 export function useOpinionList(
-  request: Omit<GetOpinionListRequestDto, "accessToken">,
+  request: GetOpinionListRequestDto,
   options?: Omit<
     UseQueryOptions<OpinionListDto, Error, OpinionListDto, QueryKey>,
     "queryKey" | "queryFn"
@@ -61,13 +61,13 @@ export function useOpinionList(
 ) {
   return useAuthorizedQuery({
     queryKey: opinionListsKeys.detail(request),
-    queryFn: (accessToken) => opinionListsApi.getById({ ...request, accessToken }),
+    queryFn: () => opinionListsApi.getById(request),
     ...options,
   });
 }
 
 export function useSearchOpinionLists(
-  request: Omit<SearchOpinionListsRequestDto, "accessToken">,
+  request: SearchOpinionListsRequestDto,
   options?: Omit<
     UseQueryOptions<
       PageResponseDto<OpinionListSummaryDto>,
@@ -80,7 +80,7 @@ export function useSearchOpinionLists(
 ) {
   return useAuthorizedQuery({
     queryKey: opinionListsKeys.search(request),
-    queryFn: (accessToken) => opinionListsApi.search({ ...request, accessToken }),
+    queryFn: () => opinionListsApi.search(request),
     ...options,
   });
 }
@@ -89,15 +89,14 @@ export function useRenameOpinionListMutation(
   options?: UseMutationOptions<
     OpinionListDto,
     Error,
-    Omit<RenameOpinionListRequestDto, "accessToken">,
+    RenameOpinionListRequestDto,
     unknown
   >,
 ) {
   const invalidate = useApiInvalidation();
 
   return useAuthorizedMutation({
-    mutationFn: (variables, accessToken) =>
-      opinionListsApi.rename({ ...variables, accessToken }),
+    mutationFn: (variables) => opinionListsApi.rename(variables),
     ...options,
     meta: {
       errorTitle: "Rename failed",
@@ -114,15 +113,14 @@ export function useSetOpinionListPrivacyMutation(
   options?: UseMutationOptions<
     OpinionListDto,
     Error,
-    Omit<SetOpinionListPrivacyRequestDto, "accessToken">,
+    SetOpinionListPrivacyRequestDto,
     unknown
   >,
 ) {
   const invalidate = useApiInvalidation();
 
   return useAuthorizedMutation({
-    mutationFn: (variables, accessToken) =>
-      opinionListsApi.setPrivacy({ ...variables, accessToken }),
+    mutationFn: (variables) => opinionListsApi.setPrivacy(variables),
     ...options,
     meta: {
       errorTitle: "Privacy update failed",
@@ -139,15 +137,14 @@ export function useLinkOpinionToListMutation(
   options?: UseMutationOptions<
     OpinionListDto,
     Error,
-    Omit<LinkOpinionToListRequestDto, "accessToken">,
+    LinkOpinionToListRequestDto,
     unknown
   >,
 ) {
   const invalidate = useApiInvalidation();
 
   return useAuthorizedMutation({
-    mutationFn: (variables, accessToken) =>
-      opinionListsApi.linkOpinion({ ...variables, accessToken }),
+    mutationFn: (variables) => opinionListsApi.linkOpinion(variables),
     ...options,
     meta: {
       errorTitle: "Link opinion failed",
@@ -164,15 +161,14 @@ export function useUnlinkOpinionFromListMutation(
   options?: UseMutationOptions<
     OpinionListDto,
     Error,
-    Omit<UnlinkOpinionFromListRequestDto, "accessToken">,
+    UnlinkOpinionFromListRequestDto,
     unknown
   >,
 ) {
   const invalidate = useApiInvalidation();
 
   return useAuthorizedMutation({
-    mutationFn: (variables, accessToken) =>
-      opinionListsApi.unlinkOpinion({ ...variables, accessToken }),
+    mutationFn: (variables) => opinionListsApi.unlinkOpinion(variables),
     ...options,
     meta: {
       errorTitle: "Unlink opinion failed",
@@ -189,15 +185,14 @@ export function useSyncOpinionListsMutation(
   options?: UseMutationOptions<
     OpinionListDto,
     Error,
-    Omit<SyncOpinionListsRequestDto, "accessToken">,
+    SyncOpinionListsRequestDto,
     unknown
   >,
 ) {
   const invalidate = useApiInvalidation();
 
   return useAuthorizedMutation({
-    mutationFn: (variables, accessToken) =>
-      opinionListsApi.sync({ ...variables, accessToken }),
+    mutationFn: (variables) => opinionListsApi.sync(variables),
     ...options,
     meta: {
       errorTitle: "List sync failed",
@@ -214,15 +209,14 @@ export function useUnsyncOpinionListsMutation(
   options?: UseMutationOptions<
     OpinionListDto,
     Error,
-    Omit<UnsyncOpinionListsRequestDto, "accessToken">,
+    UnsyncOpinionListsRequestDto,
     unknown
   >,
 ) {
   const invalidate = useApiInvalidation();
 
   return useAuthorizedMutation({
-    mutationFn: (variables, accessToken) =>
-      opinionListsApi.unsync({ ...variables, accessToken }),
+    mutationFn: (variables) => opinionListsApi.unsync(variables),
     ...options,
     meta: {
       errorTitle: "List unsync failed",
