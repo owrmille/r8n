@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, expect, it, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { QueryState } from "@/components/server-state/QueryState";
-import { getApiErrorMessage, MissingAccessTokenError } from "@/lib/server-state/errors";
+import { getApiErrorMessage } from "@/lib/server-state/errors";
 import { HttpError } from "@/lib/http-client";
 import { setAuthSession, getAuthSession, clearAuthSession } from "@/lib/server-state/auth-store";
 
@@ -13,11 +13,6 @@ describe("getApiErrorMessage", () => {
   it("returns the HttpError message", () => {
     const error = new HttpError("Validation failed", 400);
     expect(getApiErrorMessage(error, "fallback")).toBe("Validation failed");
-  });
-
-  it("returns a fixed message for MissingAccessTokenError", () => {
-    const error = new MissingAccessTokenError();
-    expect(getApiErrorMessage(error, "fallback")).toBe("Sign in required to continue.");
   });
 
   it("returns the message from a plain Error", () => {
@@ -46,21 +41,27 @@ describe("auth-store", () => {
   });
 
   it("stores and retrieves a session", () => {
-    setAuthSession({ accessToken: "tok-123", refreshToken: "ref-456" });
-    expect(getAuthSession()).toEqual({ accessToken: "tok-123", refreshToken: "ref-456" });
+    setAuthSession({ accessToken: "tok-123", expiresInMilliseconds: 5_000 });
+    expect(getAuthSession()).toEqual({
+      accessToken: "tok-123",
+      expiresAt: expect.any(Number),
+    });
   });
 
-  it("persists the session in sessionStorage", () => {
-    setAuthSession({ accessToken: "tok-123" });
-    const raw = window.sessionStorage.getItem("r8n.auth.session");
-    expect(JSON.parse(raw!)).toEqual({ accessToken: "tok-123" });
+  it("keeps the session only in memory", () => {
+    const setItemSpy = vi.spyOn(Storage.prototype, "setItem");
+    const removeItemSpy = vi.spyOn(Storage.prototype, "removeItem");
+
+    setAuthSession({ accessToken: "tok-123", expiresInMilliseconds: 5_000 });
+
+    expect(setItemSpy).not.toHaveBeenCalled();
+    expect(removeItemSpy).not.toHaveBeenCalled();
   });
 
   it("clears the session", () => {
-    setAuthSession({ accessToken: "tok-123" });
+    setAuthSession({ accessToken: "tok-123", expiresInMilliseconds: 5_000 });
     clearAuthSession();
     expect(getAuthSession()).toBeNull();
-    expect(window.sessionStorage.getItem("r8n.auth.session")).toBeNull();
   });
 });
 

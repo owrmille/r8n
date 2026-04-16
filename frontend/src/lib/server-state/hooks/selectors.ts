@@ -14,7 +14,7 @@ import type { ApiErrorMeta } from "@/lib/server-state/query-client";
 import { useApiInvalidation, useAuthorizedMutation, useAuthorizedQuery } from "@/lib/server-state/hooks/authorized";
 
 export function useSelectorsForUrl(
-  request: Omit<GetSelectorsForUrlRequestDto, "accessToken">,
+  request: GetSelectorsForUrlRequestDto,
   options?: Omit<
     UseQueryOptions<
       PageResponseDto<SelectorDto>,
@@ -27,13 +27,13 @@ export function useSelectorsForUrl(
 ) {
   return useAuthorizedQuery({
     queryKey: selectorsKeys.forUrl(request),
-    queryFn: (accessToken) => selectorsApi.getForUrl({ ...request, accessToken }),
+    queryFn: () => selectorsApi.getForUrl(request),
     ...options,
   });
 }
 
 export function useSelectorsForSubject(
-  request: Omit<GetSelectorsForSubjectRequestDto, "accessToken">,
+  request: GetSelectorsForSubjectRequestDto,
   options?: Omit<
     UseQueryOptions<
       PageResponseDto<SelectorDto>,
@@ -46,7 +46,7 @@ export function useSelectorsForSubject(
 ) {
   return useAuthorizedQuery({
     queryKey: selectorsKeys.forSubject(request),
-    queryFn: (accessToken) => selectorsApi.getForSubject({ ...request, accessToken }),
+    queryFn: () => selectorsApi.getForSubject(request),
     ...options,
   });
 }
@@ -55,15 +55,14 @@ export function useSuggestSelectorMutation(
   options?: UseMutationOptions<
     SelectorDto,
     Error,
-    Omit<SuggestSelectorRequestDto, "accessToken">,
+    SuggestSelectorRequestDto,
     unknown
   >,
 ) {
   const invalidate = useApiInvalidation();
 
   return useAuthorizedMutation({
-    mutationFn: (variables, accessToken) =>
-      selectorsApi.suggest({ ...variables, accessToken }),
+    mutationFn: (variables) => selectorsApi.suggest(variables),
     ...options,
     meta: {
       errorTitle: "Selector suggestion failed",
@@ -80,15 +79,14 @@ export function useDisagreeWithSelectorMutation(
   options?: UseMutationOptions<
     SupportThreadDto,
     Error,
-    Omit<DisagreeWithSelectorRequestDto, "accessToken">,
+    DisagreeWithSelectorRequestDto,
     unknown
   >,
 ) {
   const invalidate = useApiInvalidation();
 
   return useAuthorizedMutation({
-    mutationFn: (variables, accessToken) =>
-      selectorsApi.disagree({ ...variables, accessToken }),
+    mutationFn: (variables) => selectorsApi.disagree(variables),
     ...options,
     meta: {
       errorTitle: "Selector feedback failed",

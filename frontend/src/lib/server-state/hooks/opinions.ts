@@ -16,7 +16,7 @@ import type { ApiErrorMeta } from "@/lib/server-state/query-client";
 import { useApiInvalidation, useAuthorizedMutation, useAuthorizedQuery } from "@/lib/server-state/hooks/authorized";
 
 export function useOpinion(
-  request: Omit<GetOpinionByIdRequestDto, "accessToken">,
+  request: GetOpinionByIdRequestDto,
   options?: Omit<
     UseQueryOptions<OpinionDto, Error, OpinionDto, QueryKey>,
     "queryKey" | "queryFn"
@@ -24,13 +24,13 @@ export function useOpinion(
 ) {
   return useAuthorizedQuery({
     queryKey: opinionsKeys.detail(request),
-    queryFn: (accessToken) => opinionsApi.getById({ ...request, accessToken }),
+    queryFn: () => opinionsApi.getById(request),
     ...options,
   });
 }
 
 export function useOpinionForSubject(
-  request: Omit<GetOpinionForSubjectRequestDto, "accessToken">,
+  request: GetOpinionForSubjectRequestDto,
   options?: Omit<
     UseQueryOptions<OpinionDto, Error, OpinionDto, QueryKey>,
     "queryKey" | "queryFn"
@@ -38,7 +38,7 @@ export function useOpinionForSubject(
 ) {
   return useAuthorizedQuery({
     queryKey: opinionsKeys.forSubject(request),
-    queryFn: (accessToken) => opinionsApi.getForSubject({ ...request, accessToken }),
+    queryFn: () => opinionsApi.getForSubject(request),
     ...options,
   });
 }
@@ -47,15 +47,14 @@ export function useCreateOpinionMutation(
   options?: UseMutationOptions<
     OpinionDto,
     Error,
-    Omit<CreateOpinionRequestDto, "accessToken">,
+    CreateOpinionRequestDto,
     unknown
   >,
 ) {
   const invalidate = useApiInvalidation();
 
   return useAuthorizedMutation({
-    mutationFn: (variables, accessToken) =>
-      opinionsApi.create({ ...variables, accessToken }),
+    mutationFn: (variables) => opinionsApi.create(variables),
     ...options,
     meta: {
       errorTitle: "Opinion creation failed",
@@ -73,15 +72,14 @@ export function useUpdateOpinionMutation(
   options?: UseMutationOptions<
     OpinionDto,
     Error,
-    Omit<UpdateOpinionRequestDto, "accessToken">,
+    UpdateOpinionRequestDto,
     unknown
   >,
 ) {
   const invalidate = useApiInvalidation();
 
   return useAuthorizedMutation({
-    mutationFn: (variables, accessToken) =>
-      opinionsApi.update({ ...variables, accessToken }),
+    mutationFn: (variables) => opinionsApi.update(variables),
     ...options,
     meta: {
       errorTitle: "Opinion update failed",
@@ -99,15 +97,14 @@ export function useDeleteOpinionMutation(
   options?: UseMutationOptions<
     void,
     Error,
-    Omit<DeleteOpinionRequestDto, "accessToken">,
+    DeleteOpinionRequestDto,
     unknown
   >,
 ) {
   const invalidate = useApiInvalidation();
 
   return useAuthorizedMutation({
-    mutationFn: (variables, accessToken) =>
-      opinionsApi.delete({ ...variables, accessToken }),
+    mutationFn: (variables) => opinionsApi.delete(variables),
     ...options,
     meta: {
       errorTitle: "Opinion deletion failed",
@@ -125,15 +122,14 @@ export function useLinkOpinionComponentMutation(
   options?: UseMutationOptions<
     OpinionDto,
     Error,
-    Omit<LinkOpinionComponentRequestDto, "accessToken">,
+    LinkOpinionComponentRequestDto,
     unknown
   >,
 ) {
   const invalidate = useApiInvalidation();
 
   return useAuthorizedMutation({
-    mutationFn: (variables, accessToken) =>
-      opinionsApi.linkComponent({ ...variables, accessToken }),
+    mutationFn: (variables) => opinionsApi.linkComponent(variables),
     ...options,
     meta: {
       errorTitle: "Opinion component link failed",
@@ -151,15 +147,14 @@ export function useUnlinkOpinionComponentMutation(
   options?: UseMutationOptions<
     OpinionDto,
     Error,
-    Omit<UnlinkOpinionComponentRequestDto, "accessToken">,
+    UnlinkOpinionComponentRequestDto,
     unknown
   >,
 ) {
   const invalidate = useApiInvalidation();
 
   return useAuthorizedMutation({
-    mutationFn: (variables, accessToken) =>
-      opinionsApi.unlinkComponent({ ...variables, accessToken }),
+    mutationFn: (variables) => opinionsApi.unlinkComponent(variables),
     ...options,
     meta: {
       errorTitle: "Opinion component unlink failed",
@@ -177,15 +172,14 @@ export function useAdjustOpinionComponentWeightMutation(
   options?: UseMutationOptions<
     OpinionDto,
     Error,
-    Omit<AdjustOpinionComponentWeightRequestDto, "accessToken">,
+    AdjustOpinionComponentWeightRequestDto,
     unknown
   >,
 ) {
   const invalidate = useApiInvalidation();
 
   return useAuthorizedMutation({
-    mutationFn: (variables, accessToken) =>
-      opinionsApi.adjustComponentWeight({ ...variables, accessToken }),
+    mutationFn: (variables) => opinionsApi.adjustComponentWeight(variables),
     ...options,
     meta: {
       errorTitle: "Opinion component update failed",

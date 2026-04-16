@@ -1,10 +1,6 @@
 import type { HttpClient } from "@/lib/http-client";
 import { httpClient } from "@/lib/http-client";
-import {
-  createAuthorizationHeaders,
-  type AuthorizedRequestDto,
-  type Uuid,
-} from "@/lib/api/shared";
+import type { Uuid } from "@/lib/api/shared";
 
 export type OpinionStatusEnumDto =
   | "DRAFT"
@@ -43,44 +39,43 @@ export interface OpinionDto {
   timestamp: string;
 }
 
-export interface GetOpinionByIdRequestDto extends AuthorizedRequestDto {
+export interface GetOpinionByIdRequestDto {
   id: Uuid;
 }
 
-export interface GetOpinionForSubjectRequestDto extends AuthorizedRequestDto {
+export interface GetOpinionForSubjectRequestDto {
   subjectId: Uuid;
 }
 
-export interface CreateOpinionRequestDto extends AuthorizedRequestDto {
+export interface CreateOpinionRequestDto {
   mark?: number | null;
   objective?: readonly string[];
   subjectId: Uuid;
   subjective?: readonly string[];
 }
 
-export interface UpdateOpinionRequestDto extends AuthorizedRequestDto {
+export interface UpdateOpinionRequestDto {
   mark?: number | null;
   objective?: readonly string[];
   opinionId: Uuid;
   subjective?: readonly string[];
 }
 
-export interface DeleteOpinionRequestDto extends AuthorizedRequestDto {
+export interface DeleteOpinionRequestDto {
   opinionId: Uuid;
 }
 
-export interface LinkOpinionComponentRequestDto extends AuthorizedRequestDto {
+export interface LinkOpinionComponentRequestDto {
   childOpinionId: Uuid;
   parentOpinionId: Uuid;
   weight: number;
 }
 
-export interface UnlinkOpinionComponentRequestDto extends AuthorizedRequestDto {
+export interface UnlinkOpinionComponentRequestDto {
   linkId: Uuid;
 }
 
-export interface AdjustOpinionComponentWeightRequestDto
-  extends AuthorizedRequestDto {
+export interface AdjustOpinionComponentWeightRequestDto {
   linkId: Uuid;
   weight: number;
 }
@@ -91,7 +86,7 @@ export function createOpinionsApi(client: HttpClient = httpClient) {
       request: AdjustOpinionComponentWeightRequestDto,
     ): Promise<OpinionDto> {
       return client.patch<OpinionDto>(`/opinions/adjustWeight/${request.linkId}`, {
-        headers: createAuthorizationHeaders(request.accessToken),
+        auth: "required",
         query: {
           weight: request.weight,
         },
@@ -100,7 +95,7 @@ export function createOpinionsApi(client: HttpClient = httpClient) {
 
     create(request: CreateOpinionRequestDto): Promise<OpinionDto> {
       return client.post<OpinionDto>("/opinions", {
-        headers: createAuthorizationHeaders(request.accessToken),
+        auth: "required",
         query: {
           mark: request.mark,
           objective: request.objective,
@@ -112,13 +107,13 @@ export function createOpinionsApi(client: HttpClient = httpClient) {
 
     delete(request: DeleteOpinionRequestDto): Promise<void> {
       return client.delete<void>(`/opinions/${request.opinionId}`, {
-        headers: createAuthorizationHeaders(request.accessToken),
+        auth: "required",
       });
     },
 
     getById(request: GetOpinionByIdRequestDto): Promise<OpinionDto> {
       return client.get<OpinionDto>(`/opinions/${request.id}`, {
-        headers: createAuthorizationHeaders(request.accessToken),
+        auth: "required",
       });
     },
 
@@ -126,7 +121,7 @@ export function createOpinionsApi(client: HttpClient = httpClient) {
       request: GetOpinionForSubjectRequestDto,
     ): Promise<OpinionDto> {
       return client.get<OpinionDto>(`/opinions/for/${request.subjectId}`, {
-        headers: createAuthorizationHeaders(request.accessToken),
+        auth: "required",
       });
     },
 
@@ -134,7 +129,7 @@ export function createOpinionsApi(client: HttpClient = httpClient) {
       request: LinkOpinionComponentRequestDto,
     ): Promise<OpinionDto> {
       return client.post<OpinionDto>("/opinions/link", {
-        headers: createAuthorizationHeaders(request.accessToken),
+        auth: "required",
         query: {
           childOpinionId: request.childOpinionId,
           parentOpinionId: request.parentOpinionId,
@@ -147,13 +142,13 @@ export function createOpinionsApi(client: HttpClient = httpClient) {
       request: UnlinkOpinionComponentRequestDto,
     ): Promise<OpinionDto> {
       return client.delete<OpinionDto>(`/opinions/unlink/${request.linkId}`, {
-        headers: createAuthorizationHeaders(request.accessToken),
+        auth: "required",
       });
     },
 
     update(request: UpdateOpinionRequestDto): Promise<OpinionDto> {
       return client.patch<OpinionDto>(`/opinions/${request.opinionId}`, {
-        headers: createAuthorizationHeaders(request.accessToken),
+        auth: "required",
         query: {
           mark: request.mark,
           objective: request.objective,
