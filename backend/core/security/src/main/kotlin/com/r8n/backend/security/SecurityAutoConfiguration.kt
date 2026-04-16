@@ -15,6 +15,7 @@ import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter
 import java.security.KeyFactory
 import java.security.interfaces.RSAPublicKey
 import java.security.spec.X509EncodedKeySpec
@@ -112,8 +113,20 @@ class SecurityAutoConfiguration {
                     .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                     .csrfTokenRequestHandler(csrfHandler)
                     .ignoringRequestMatchers(
-                        *publicPaths,
+                        *publicPaths.filter { path -> path != "/auth/**" && path != "/auth/login" }.toTypedArray(),
                     )
+            }.headers { headers ->
+                headers
+                    .contentSecurityPolicy { csp ->
+                        csp.policyDirectives("default-src 'self'; frame-ancestors 'none';")
+                    }.referrerPolicy { referrer ->
+                        referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
+                    }.httpStrictTransportSecurity { hsts ->
+                        hsts.includeSubDomains(true).maxAgeInSeconds(31536000)
+                    }.permissionsPolicy { permissions ->
+                        @Suppress("DEPRECATION")
+                        permissions.policy("geolocation=(), microphone=(), camera=()")
+                    }
             }.addFilterBefore(
                 maskingLoggingFilter,
                 UsernamePasswordAuthenticationFilter::class.java,
