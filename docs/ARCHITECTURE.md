@@ -22,7 +22,7 @@ r8n is structured as a **microservices architecture** with 3 backend services, a
                            └──────────────┘
 
 HTTP/HTTPS Configuration:
-- Local development: HTTP only (ports 8080, 8081, 8090)
+- Local deployment: HTTP only (ports 8080, 8081, 8090)
 - Docker/Production: HTTPS only (port 8080 with TLS certificates)
 ```
 
@@ -30,10 +30,10 @@ HTTP/HTTPS Configuration:
 
 ### Tech Stack
 
-- **Language**: Kotlin
-- **Framework**: Spring Boot 3.x
-- **Build Tool**: Gradle with Kotlin DSL
-- **Database**: PostgreSQL 15 with separate schemas per service
+- **Language**: Kotlin 2.2.21
+- **Framework**: Spring Boot 4.0.2
+- **Build Tool**: Gradle 9.3.0 with Kotlin DSL
+- **Database**: PostgreSQL 15
 - **Security**: TLS 1.2+, JWT tokens (when SSL enabled)
 - **Architecture Pattern**: API-First Design, Multi-module Microservices
 
@@ -94,7 +94,7 @@ backend/
 #### 2. Opinions Service (`opinions-sv`)
 - **Local Port**: 8081 (HTTP)
 - **Docker Port**: 8080 (HTTPS internally)
-- **Role**: Core business logic for opinions and reviews
+- **Role**: Core business logic for opinions
 - **Database**: PostgreSQL `opinions` schema
 - **Key Entities**: Opinion, OpinionSubject, Referent, OpinionNote, WeightedOpinionReference
 - **HTTP/HTTPS**: Uses `INTERSERVICE_PROTOCOL` (http=local, https=Docker)
@@ -113,14 +113,20 @@ Each service follows an **API-first design**: the API contracts are defined sepa
 **Example for opinions-sv:**
 ```
 opinions-sv/
-├── api/                          # Defines WHAT the API looks like
-│   └── OpinionApi.kt            # Interface with @RequestMapping
-│   └── dto/                      # Data Transfer Objects
+├── api/ # Public API contracts (exposed to clients)
+│   ├── OpinionApi.kt # Interface with @RequestMapping
+│   └── dto/ # Data Transfer Objects
 │       └── opinion/OpinionDto.kt
 │
-└── service/                      # Implements HOW the API works
+├── api-integration/ # Internal API contracts (for other services)
+│   └── OpinionInternalApi.kt
+│
+├── client/ # REST clients to call other services
+│   └── OpinionRestClient.kt
+│
+└── service/ # Implementation
     └── controller/
-        └── OpinionController.kt  # Implements OpinionApi interface
+        └── OpinionController.kt
 ```
 
 **Benefits:**
@@ -132,7 +138,7 @@ opinions-sv/
 ### Design Patterns Used
 
 1. **API-First**: Separate API contracts from implementation
-2. **Facade Pattern**: Business logic layer between controllers and persistence
+2. **Facade Pattern**: Merges domain models with DTOs from other microservices and converts everything into the service's DTOs. Calls the service layer which creates domain entities, implements business logic (calculating data relying only on objects owned by the current service). The repository+persistence layer handles database interaction without modifying objects.
 3. **Repository Pattern**: Data access abstraction
 4. **Dependency Injection**: Via Spring Framework
 5. **DTO Pattern**: Separate API models from domain entities
@@ -153,16 +159,16 @@ r8n_db/
 
 **Database Configuration:**
 - Connection pooling via HikariCP
-- Flyway or manual migrations (see `deployment/database/init/`)
+- Liquibase or manual migrations (see `deployment/database/init/`)
 - Separate schemas per service for isolation
 - Connection via environment variables
 
 ### Security Architecture
 
 1. **TLS/SSL** in Docker: All inter-service communication encrypted (TLS 1.2+)
-2. **HTTP** in local dev: Plain HTTP for simplicity
-3. **Authorization**: JWT Bearer tokens (stub tokens in development)
-4. **Certificate Generation**: Auto-generated TLS certificates in Docker
+2. **HTTP** in local deployments: Plain HTTP for simplicity
+3. **Authentication**: JWT Bearer tokens (stub tokens in development)
+4. **Certificate Generation**: TLS certificates generated on build machine before Docker deployment
 
 ### Port & Protocol Configuration
 
@@ -185,8 +191,8 @@ r8n_db/
 
 ### Tech Stack
 
-- **Language**: TypeScript
-- **Framework**: Vite + React
+- **Language**: TypeScript 5.8.3
+- **Framework**: Vite 8.0.1 + React 18.3.1
 - **Architecture**: Feature-Sliced Design (FSD)
 - **Styling**: CSS/SASS (custom design system)
 
@@ -229,10 +235,10 @@ frontend/
 **Services (docker-compose.yml):**
 1. **database** (PostgreSQL 15)
    - Port: 5432
-   - Volume: postgres_data
+   - Volume: postgres_data (stored in repository folder)
 
 2. **gateway** (Spring Boot)
-   - Ports: 8080/8080 (externally accessible HTTPS), 8443 (unused)
+   - Ports: 8080 (HTTPS, externally accessible)
    - TLS certificates: /certs/keystore-gateway.p12
    - Intra-service: HTTPS to opinions/mock
 
@@ -339,33 +345,19 @@ Gateway (Port 8080)
 
 ### API Examples
 
+For local HTTP requests, use the Makefile targets (see `make help` for full list):
+
 **Local Development (HTTP):**
 ```bash
-# Via Gateway
-curl "http://localhost:8080/opinions/30000000-0000-0000-0000-000000000001" \
-  -H "Authorization: Bearer stub-access-token-123"
-
-# Direct to services
-curl "http://localhost:8081/opinions/30000000-0000-0000-0000-000000000001" \
-  -H "Authorization: Bearer stub-access-token-123"
-
-curl "http://localhost:8090/opinion-lists/00000000-0000-0000-0000-000000000000/summary" \
-  -H "Authorization: Bearer stub-access-token-123"
+make routed-request-opinion  # Via Gateway
+make routed-request-mock     # Opinions list via Gateway
 ```
 
 **Docker/Production (HTTPS):**
 ```bash
-# Via Gateway (HTTPS on port 8080)
-curl --cacert deployment/certs/gateway.crt \
-  "https://localhost:8080/opinions/30000000-0000-0000-0000-000000000001" \
-  -H "Authorization: Bearer stub-access-token-123"
-
-# Mock service via gateway (HTTPS)
-curl --cacert deployment/certs/gateway.crt \
-  "https://localhost:8080/opinion-lists/00000000-0000-0000-0000-000000000000/summary" \
-  -H "Authorization: Bearer stub-access-token-123"
+make https-routed-request-opinion  # Via Gateway (HTTPS)
+make https-routed-request-mock     # Opinions list via Gateway (HTTPS)
 ```
-
 ## Data Flow Example
 
 ### Request Flow: Get Opinion by ID
@@ -373,9 +365,8 @@ curl --cacert deployment/certs/gateway.crt \
 1. **Client** → GET `/opinions/{id}` to **Gateway**
 2. **Gateway** → Routes to **Opinions Service** (TLS in Docker, plaintext in local)
 3. **Opinions Controller** → Validates input, calls `OpinionFacade`
-4. **OpinionFacade** → Orchestrates business logic
-5. **Provider** → Fetches from **OpinionRepository** (PostgreSQL)
-6. **Response** → Maps to **OpinionDto** → Returns to Gateway → Client
+4. **OpinionFacade** → Orchestrates this service with other services (merges DTOs, converts to service DTOs), prepares response DTO
+5. **Controller** → Returns data to Gateway → Client
 
 ### Mock Flow: Get Opinion List Summary
 
@@ -425,7 +416,7 @@ Based on **42 requirements** (noted as "?" in requirements doc):
   - Prometheus + Grafana monitoring
   - Health check & status page
   - Multi-language support (i18n)
-  - Additional browser support
+  - Playwright for cross-browser testing
 
 ## References
 

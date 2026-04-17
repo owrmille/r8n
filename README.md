@@ -1,10 +1,10 @@
-_This project has been created as part of the 42 curriculum by [login1], [login2], [login3]._ <!-- Replace with actual logins -->
+_This project has been created as part of the 42 curriculum by dbisko, iatopchu, inikulin, lshapkin, mkulikov._
 
 # r8n - Microservices Platform
 
 ## Description
 
-**r8n** is a scalable microservices-based platform built with Spring Boot, Kotlin, and React, designed to demonstrate modern software architecture patterns and distributed systems principles. The platform implements a multi-service architecture with an API Gateway, a core business logic service, and a mock service for testing, all communicating via HTTP/HTTPS with TLS encryption.
+**r8n** is a scalable microservices-based platform built with Spring Boot, Kotlin, and React, designed to demonstrate modern software architecture patterns and distributed systems principles. The platform implements a multi-service architecture with an API Gateway and core business logic services, all communicating via HTTP/HTTPS with TLS encryption.
 
 ### Goals
 - Demonstrate microservices architecture patterns
@@ -14,7 +14,7 @@ _This project has been created as part of the 42 curriculum by [login1], [login2
 - Fulfill 42 curriculum requirements for web development
 
 ### Key Features
-- **Multi-service Backend**: Gateway, Opinions, and Mock services with clear separation of concerns
+- **Multi-service Backend**: Gateway, Opinions, and other services with clear separation of concerns
 - **API-First Design**: Separate API contracts from implementation for clear service boundaries
 - **Secure Communication**: TLS/SSL encryption between services
 - **Database Management**: PostgreSQL with isolated schemas per service
@@ -84,7 +84,6 @@ cd frontend && npm run dev
 - Frontend: http://localhost:5173
 - Gateway API: http://localhost:8080
 - Opinions service: http://localhost:8081
-- Mock service: http://localhost:8090
 
 #### Option 2: Docker/Production (HTTPS with TLS)
 
@@ -131,9 +130,6 @@ curl "http://localhost:8080/opinions/30000000-0000-0000-0000-000000000001" \
 curl "http://localhost:8081/opinions/30000000-0000-0000-0000-000000000001" \
   -H "Authorization: Bearer stub-access-token-123"
 
-# Direct to mock
-curl "http://localhost:8090/opinion-lists/00000000-0000-0000-0000-000000000000/summary" \
-  -H "Authorization: Bearer stub-access-token-123"
 ```
 
 ### Make Commands Reference
@@ -189,7 +185,7 @@ curl "http://localhost:8090/opinion-lists/00000000-0000-0000-0000-000000000000/s
 - Git repository management
 - Build system configuration (Gradle, Make)
 - Docker deployment setup
-- Service implementation (Opinions, Gateway, Mock services)
+- Service implementation (Opinions, Gateway)
 
 ## Team Information
 
@@ -217,7 +213,6 @@ curl "http://localhost:8090/opinion-lists/00000000-0000-0000-0000-000000000000/s
 - **Responsibilities:**
   - Docker deployment configuration
   - Makefile automation targets
-  - Mock service implementation
   - Testing infrastructure setup
 
 ## Project Management
@@ -227,7 +222,7 @@ curl "http://localhost:8090/opinion-lists/00000000-0000-0000-0000-000000000000/s
 **Task Distribution:**
 - Sprint-based development with weekly check-ins
 - Clear separation of concerns (backend team, frontend team, devops)
-- Individual ownership of services (Gateway, Opinions, Mock, Frontend)
+- Individual ownership of services (Gateway, Opinions, Frontend)
 
 **Meeting Structure:**
 - Weekly team meetings for progress review
@@ -415,7 +410,6 @@ r8n_database/
 - Selector-based filtering
 
 **Testing & Development:**
-- Mock service providing stub data
 - Comprehensive test data factories
 - Local development HTTP mode
 - Docker HTTPS production mode
@@ -445,7 +439,6 @@ r8n_database/
 **[login3] - DevOps Engineer:**
 - ✅ Docker Compose setup
 - ✅ Makefile automation
-- ✅ Mock service implementation
 - ✅ TLS certificate generation
 
 ## Modules
@@ -480,7 +473,7 @@ r8n_database/
 - **Points**: 2 (planned)
 
 **✅ Major: Backend as microservices**
-- **Implementation**: Gateway, Opinions, Mock services
+- **Implementation**: Gateway, Opinions
 - **Communication**: HTTP/HTTPS inter-service protocol
 - **Team member**: [login1, login3]
 - **Points**: 2
@@ -618,14 +611,12 @@ r8n_database/
 **Primary Responsibilities:**
 - Docker containerization
 - Build automation and scripting
-- Mock service development
 - Development environment setup
 - TLS certificate management
 
 **Technical Contributions:**
 - **Docker Setup**: Compose configuration, Dockerfile optimization
 - **Make Targets**: Automation scripts for common operations
-- **Mock Service**: Stub controllers and test data factories
 - **CI/CD Setup**: Build automation pipeline
 - **Certificate Management**: TLS cert generation and configuration
 
