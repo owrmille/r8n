@@ -16,3 +16,4 @@ deployment/*/logs/
 docker.secrets.env
 *.txt
 .access_token
+.cookies

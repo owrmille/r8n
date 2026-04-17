@@ -79,5 +79,5 @@ r8n:
     refresh-cookie:
       secure: false
       same-site: Strict
-      path: /api/auth
+      path: /auth
       max-age: 30d

@@ -129,7 +129,10 @@ class TokenService(
             if (tokenPersistence.used) {
                 // Reuse detection!
                 revokeTokenFamily(tokenPersistence.userId)
-                throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token already used. Compromise detected.")
+                throw ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Refresh token already used. Compromise detected.",
+                )
             }
 
             val userId = UUID.fromString(claims.subject)

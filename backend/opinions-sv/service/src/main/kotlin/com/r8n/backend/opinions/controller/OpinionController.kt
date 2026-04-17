@@ -26,9 +26,7 @@ class OpinionController(
         subjective: List<String>,
         objective: List<String>,
         mark: Double?,
-    ): OpinionDto {
-        return opinionFacade.createOpinion(subjectId, subjective, objective, mark)
-    }
+    ): OpinionDto = opinionFacade.createOpinion(subjectId, subjective, objective, mark)
 
     @PreAuthorize(IS_USER)
     override fun updateOpinion(
@@ -48,7 +46,7 @@ class OpinionController(
         parentOpinionId: UUID,
         childOpinionId: UUID,
         weight: Double,
-    ) = OpinionTestDataFactory.getOpinion(parentOpinionId)
+    ): OpinionDto = opinionFacade.linkComponent(parentOpinionId, childOpinionId, weight)
 
     @PreAuthorize(IS_USER)
     override fun unlinkComponent(linkId: UUID): OpinionDto = OpinionTestDataFactory.getOpinion(UUID.fromString("0"))

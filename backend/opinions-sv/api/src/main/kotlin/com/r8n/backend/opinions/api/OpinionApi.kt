@@ -50,8 +50,11 @@ interface OpinionApi {
 
     @PostMapping("/opinions/link")
     fun linkComponent(
+        @RequestParam(required = true)
         parentOpinionId: UUID,
+        @RequestParam(required = true)
         childOpinionId: UUID,
+        @RequestParam(required = true)
         weight: Double,
     ): OpinionDto
 

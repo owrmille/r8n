@@ -47,9 +47,7 @@ import java.util.UUID
 @Import(TestObjectMapperConfiguration::class)
 class OpinionsIntegrationTests {
     private companion object {
-        const val USER_ID = "00000000-0000-0000-0000-000000000001"
-        val CURRENT_USER_ID: UUID = UUID.fromString(USER_ID)
-        const val CURRENT_USER_NAME = "username"
+        val CURRENT_USER_ID = bernardReferent.id
 
         @Container
         @ServiceConnection
@@ -78,18 +76,19 @@ class OpinionsIntegrationTests {
         whenever(usersInternalApi.getUserName(eq(bernardReferent.id)))
             .thenReturn(bernardReferent.name)
         whenever(usersInternalApi.getUserName(eq(CURRENT_USER_ID)))
-            .thenReturn(CURRENT_USER_NAME)
+            .thenReturn(bernardReferent.name)
     }
 
     @Test
-    @WithMockUser(username = USER_ID)
+    @WithMockUser
     fun `get opinion works`() {
-        val accessToken = serviceTokenService.generateAccessToken(UUID.fromString(USER_ID), listOf("USER"))
+        val accessToken = serviceTokenService.generateAccessToken(CURRENT_USER_ID, listOf("USER"))
         val requestedId = "30000000-0000-0000-0000-000000000001"
         val result =
             mockMvc
                 .perform(
                     get("/opinions/$requestedId")
+                        .with(csrf())
                         .header("Authorization", "Bearer $accessToken"),
                 ).andExpect(status().isOk)
                 .andReturn()
@@ -118,11 +117,12 @@ class OpinionsIntegrationTests {
     @WithMockUser
     fun `get opinion for subject works`() {
         val requestedSubjectId = "14141414-1414-1414-1414-141414141414"
-        val accessToken = serviceTokenService.generateAccessToken(UUID.randomUUID(), listOf("USER"))
+        val accessToken = serviceTokenService.generateAccessToken(CURRENT_USER_ID, listOf("USER"))
         val result =
             mockMvc
                 .perform(
                     get("/opinions/for/$requestedSubjectId")
+                        .with(csrf())
                         .header("Authorization", "Bearer $accessToken"),
                 ).andExpect(status().isOk)
                 .andReturn()
@@ -166,7 +166,7 @@ class OpinionsIntegrationTests {
 
         val actual: OpinionDto = objectMapper.readValue(result.response.contentAsString)
         assertEquals(CURRENT_USER_ID, actual.owner)
-        assertEquals(CURRENT_USER_NAME, actual.ownerName)
+        assertEquals(bernardReferent.name, actual.ownerName)
         assertEquals(UUID.fromString(subjectId), actual.subject)
         assertEquals(cappuccino1G.name, actual.subjectName)
         assertEquals(listOf("new subjective"), actual.subjective)
@@ -209,7 +209,7 @@ class OpinionsIntegrationTests {
         val actual: OpinionDto = objectMapper.readValue(updateResult.response.contentAsString)
         assertEquals(created.id, actual.id)
         assertEquals(CURRENT_USER_ID, actual.owner)
-        assertEquals(CURRENT_USER_NAME, actual.ownerName)
+        assertEquals(bernardReferent.name, actual.ownerName)
         assertEquals(UUID.fromString("15151515-1515-1515-1515-151515151515"), actual.subject)
         assertEquals(cappuccino1G.name, actual.subjectName)
         assertEquals(listOf("updated subjective"), actual.subjective)
@@ -249,5 +249,151 @@ class OpinionsIntegrationTests {
                 get("/opinions/${created.id}")
                     .header("Authorization", "Bearer $accessToken"),
             ).andExpect(status().isNotFound)
+    }
+
+    @Test
+    @WithMockUser
+    fun `link component works`() {
+        val accessToken = serviceTokenService.generateAccessToken(CURRENT_USER_ID, listOf("USER"))
+
+        val parentCreateResult =
+            mockMvc
+                .perform(
+                    post("/opinions")
+                        .with(csrf())
+                        .queryParam("subjectId", "15151515-1515-1515-1515-151515151515")
+                        .queryParam("subjective", "parent subjective")
+                        .queryParam("objective", "parent objective")
+                        .queryParam("mark", "2.00")
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+        val parent: OpinionDto = objectMapper.readValue(parentCreateResult.response.contentAsString)
+
+        val childCreateResult =
+            mockMvc
+                .perform(
+                    post("/opinions")
+                        .with(csrf())
+                        .queryParam("subjectId", "15151515-1515-1515-1515-151515151515")
+                        .queryParam("subjective", "child subjective")
+                        .queryParam("objective", "child objective")
+                        .queryParam("mark", "4.00")
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+        val child: OpinionDto = objectMapper.readValue(childCreateResult.response.contentAsString)
+
+        val linkResult =
+            mockMvc
+                .perform(
+                    post("/opinions/link")
+                        .with(csrf())
+                        .queryParam("parentOpinionId", parent.id.toString())
+                        .queryParam("childOpinionId", child.id.toString())
+                        .queryParam("weight", "0.25")
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val actual: OpinionDto = objectMapper.readValue(linkResult.response.contentAsString)
+        assertEquals(parent.id, actual.id)
+        assertEquals(1, actual.components.size)
+        assertEquals(child.id, actual.components.first().opinion)
+        assertEquals(0.25, actual.components.first().weight)
+        assertEquals(1.0, actual.componentMark)
+    }
+
+    @Test
+    @WithMockUser
+    fun `link component is idempotent for duplicate request`() {
+        val accessToken = serviceTokenService.generateAccessToken(CURRENT_USER_ID, listOf("USER"))
+
+        val parentCreateResult =
+            mockMvc
+                .perform(
+                    post("/opinions")
+                        .with(csrf())
+                        .queryParam("subjectId", "15151515-1515-1515-1515-151515151515")
+                        .queryParam("subjective", "parent duplicate subjective")
+                        .queryParam("objective", "parent duplicate objective")
+                        .queryParam("mark", "2.00")
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+        val parent: OpinionDto = objectMapper.readValue(parentCreateResult.response.contentAsString)
+
+        val childCreateResult =
+            mockMvc
+                .perform(
+                    post("/opinions")
+                        .with(csrf())
+                        .queryParam("subjectId", "15151515-1515-1515-1515-151515151515")
+                        .queryParam("subjective", "child duplicate subjective")
+                        .queryParam("objective", "child duplicate objective")
+                        .queryParam("mark", "4.00")
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+        val child: OpinionDto = objectMapper.readValue(childCreateResult.response.contentAsString)
+
+        mockMvc
+            .perform(
+                post("/opinions/link")
+                    .with(csrf())
+                    .queryParam("parentOpinionId", parent.id.toString())
+                    .queryParam("childOpinionId", child.id.toString())
+                    .queryParam("weight", "0.25")
+                    .header("Authorization", "Bearer $accessToken"),
+            ).andExpect(status().isOk)
+
+        val secondLinkResult =
+            mockMvc
+                .perform(
+                    post("/opinions/link")
+                        .with(csrf())
+                        .queryParam("parentOpinionId", parent.id.toString())
+                        .queryParam("childOpinionId", child.id.toString())
+                        .queryParam("weight", "0.25")
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val actual: OpinionDto = objectMapper.readValue(secondLinkResult.response.contentAsString)
+        assertEquals(1, actual.components.size)
+        assertEquals(child.id, actual.components.first().opinion)
+        assertEquals(0.25, actual.components.first().weight)
+        assertEquals(1.0, actual.componentMark)
+    }
+
+    @Test
+    @WithMockUser
+    fun `link component forbidden for non owner`() {
+        val ownerToken = serviceTokenService.generateAccessToken(CURRENT_USER_ID, listOf("USER"))
+        val otherUserToken = serviceTokenService.generateAccessToken(UUID.randomUUID(), listOf("USER"))
+
+        val parentCreateResult =
+            mockMvc
+                .perform(
+                    post("/opinions")
+                        .with(csrf())
+                        .queryParam("subjectId", "15151515-1515-1515-1515-151515151515")
+                        .queryParam("subjective", "parent owner subjective")
+                        .queryParam("objective", "parent owner objective")
+                        .queryParam("mark", "2.00")
+                        .header("Authorization", "Bearer $ownerToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+        val parent: OpinionDto = objectMapper.readValue(parentCreateResult.response.contentAsString)
+
+        mockMvc
+            .perform(
+                post("/opinions/link")
+                    .with(csrf())
+                    .queryParam("parentOpinionId", parent.id.toString())
+                    .queryParam("childOpinionId", "30000000-0000-0000-0000-000000000001")
+                    .queryParam("weight", "0.25")
+                    .header("Authorization", "Bearer $otherUserToken"),
+            ).andExpect(status().isForbidden)
     }
 }

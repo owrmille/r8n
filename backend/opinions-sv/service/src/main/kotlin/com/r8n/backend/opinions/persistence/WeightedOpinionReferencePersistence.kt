@@ -14,14 +14,14 @@ class WeightedOpinionReferencePersistence(
     @Id
     @GeneratedValue
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
-    val id: UUID,
+    var id: UUID? = null,
 //
     @Column(nullable = false)
-    val parentOpinion: UUID,
+    var parentOpinion: UUID,
 //
     @Column(nullable = false)
-    val childOpinion: UUID,
+    var childOpinion: UUID,
 //
     @Column(nullable = false)
-    val weight: Double,
+    var weight: Double,
 )

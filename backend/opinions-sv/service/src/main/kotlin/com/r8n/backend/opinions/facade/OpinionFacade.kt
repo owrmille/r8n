@@ -35,6 +35,12 @@ class OpinionFacade(
         opinionService.deleteOpinion(opinionId)
     }
 
+    fun linkComponent(
+        parentOpinionId: UUID,
+        childOpinionId: UUID,
+        weight: Double,
+    ): OpinionDto = opinionService.linkComponent(parentOpinionId, childOpinionId, weight).toDto()
+
     private fun Opinion.toDto() =
         OpinionDto(
             id,

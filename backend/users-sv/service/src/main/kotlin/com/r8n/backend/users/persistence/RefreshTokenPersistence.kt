@@ -16,25 +16,25 @@ class RefreshTokenPersistence(
     @GeneratedValue
     @UuidGenerator
     val id: UUID? = null,
-
+//
     @Column(nullable = false)
     val tokenId: UUID,
-
+//
     @Column(nullable = false)
     val userId: UUID,
-
+//
     @Column(name = "parent_id")
     val parentId: UUID? = null,
-
+//
     @Column(nullable = false)
     val issuedAt: Instant,
-
+//
     @Column(nullable = false)
     val expiresAt: Instant,
-
+//
     @Column(nullable = false)
     var revoked: Boolean = false,
-
+//
     @Column(nullable = false)
     var used: Boolean = false,
 )
