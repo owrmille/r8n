@@ -46,11 +46,7 @@ class OpinionController(
         parentOpinionId: UUID,
         childOpinionId: UUID,
         weight: Double,
-    ): OpinionDto {
-        val auth = SecurityContextHolder.getContext().authentication ?: throw IllegalStateException("Not authenticated")
-        val userId = UUID.fromString(auth.name)
-        return opinionFacade.linkComponent(userId, parentOpinionId, childOpinionId, weight)
-    }
+    ): OpinionDto = opinionFacade.linkComponent(parentOpinionId, childOpinionId, weight)
 
     @PreAuthorize(IS_USER)
     override fun unlinkComponent(linkId: UUID): OpinionDto = OpinionTestDataFactory.getOpinion(UUID.fromString("0"))

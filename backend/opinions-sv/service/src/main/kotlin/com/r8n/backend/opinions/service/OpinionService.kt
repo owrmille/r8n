@@ -98,7 +98,6 @@ class OpinionService(
 
     @Transactional
     fun linkComponent(
-        userId: UUID,
         parentOpinionId: UUID,
         childOpinionId: UUID,
         weight: Double,
@@ -111,11 +110,15 @@ class OpinionService(
             opinionRepository
                 .findById(parentOpinionId)
                 .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
-        if (parentOpinion.owner != userId) {
+        if (parentOpinion.owner != getCurrentUserId()) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN)
         }
-        if (!opinionRepository.existsById(childOpinionId)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND)
+        val childOpinion =
+            opinionRepository
+                .findById(childOpinionId)
+                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
+        if (childOpinion.owner != getCurrentUserId()) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN)
         }
         if (componentService.hasLink(parentOpinionId, childOpinionId)) {
             return getOpinion(parentOpinionId)

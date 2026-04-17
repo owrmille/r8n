@@ -47,9 +47,7 @@ import java.util.UUID
 @Import(TestObjectMapperConfiguration::class)
 class OpinionsIntegrationTests {
     private companion object {
-        const val USER_ID = "00000000-0000-0000-0000-000000000001"
-        val CURRENT_USER_ID: UUID = UUID.fromString(USER_ID)
-        const val CURRENT_USER_NAME = "username"
+        val CURRENT_USER_ID = bernardReferent.id
 
         @Container
         @ServiceConnection
@@ -78,18 +76,19 @@ class OpinionsIntegrationTests {
         whenever(usersInternalApi.getUserName(eq(bernardReferent.id)))
             .thenReturn(bernardReferent.name)
         whenever(usersInternalApi.getUserName(eq(CURRENT_USER_ID)))
-            .thenReturn(CURRENT_USER_NAME)
+            .thenReturn(bernardReferent.name)
     }
 
     @Test
-    @WithMockUser(username = USER_ID)
+    @WithMockUser
     fun `get opinion works`() {
-        val accessToken = serviceTokenService.generateAccessToken(UUID.fromString(USER_ID), listOf("USER"))
+        val accessToken = serviceTokenService.generateAccessToken(CURRENT_USER_ID, listOf("USER"))
         val requestedId = "30000000-0000-0000-0000-000000000001"
         val result =
             mockMvc
                 .perform(
                     get("/opinions/$requestedId")
+                        .with(csrf())
                         .header("Authorization", "Bearer $accessToken"),
                 ).andExpect(status().isOk)
                 .andReturn()
@@ -118,11 +117,12 @@ class OpinionsIntegrationTests {
     @WithMockUser
     fun `get opinion for subject works`() {
         val requestedSubjectId = "14141414-1414-1414-1414-141414141414"
-        val accessToken = serviceTokenService.generateAccessToken(UUID.randomUUID(), listOf("USER"))
+        val accessToken = serviceTokenService.generateAccessToken(CURRENT_USER_ID, listOf("USER"))
         val result =
             mockMvc
                 .perform(
                     get("/opinions/for/$requestedSubjectId")
+                        .with(csrf())
                         .header("Authorization", "Bearer $accessToken"),
                 ).andExpect(status().isOk)
                 .andReturn()
@@ -166,7 +166,7 @@ class OpinionsIntegrationTests {
 
         val actual: OpinionDto = objectMapper.readValue(result.response.contentAsString)
         assertEquals(CURRENT_USER_ID, actual.owner)
-        assertEquals(CURRENT_USER_NAME, actual.ownerName)
+        assertEquals(bernardReferent.name, actual.ownerName)
         assertEquals(UUID.fromString(subjectId), actual.subject)
         assertEquals(cappuccino1G.name, actual.subjectName)
         assertEquals(listOf("new subjective"), actual.subjective)
@@ -209,7 +209,7 @@ class OpinionsIntegrationTests {
         val actual: OpinionDto = objectMapper.readValue(updateResult.response.contentAsString)
         assertEquals(created.id, actual.id)
         assertEquals(CURRENT_USER_ID, actual.owner)
-        assertEquals(CURRENT_USER_NAME, actual.ownerName)
+        assertEquals(bernardReferent.name, actual.ownerName)
         assertEquals(UUID.fromString("15151515-1515-1515-1515-151515151515"), actual.subject)
         assertEquals(cappuccino1G.name, actual.subjectName)
         assertEquals(listOf("updated subjective"), actual.subjective)

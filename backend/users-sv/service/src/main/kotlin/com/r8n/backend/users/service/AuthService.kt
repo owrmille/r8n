@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
+import java.util.UUID
 
 @Service
 class AuthService(
@@ -35,20 +36,31 @@ class AuthService(
         )
     }
 
-    fun logout() {
-        // In a stateless JWT setup, logout on the server side is often a no-op unless we use a blacklist
-        // For now, we just let the client discard the token.
+    fun logout(refreshToken: String?) {
+        if (refreshToken != null) {
+            try {
+                // When logging out, we want to revoke the whole token family
+                // because this session is explicitly ended.
+                val (userId, _) = tokenService.validateAndRotateRefreshToken(refreshToken)
+                tokenService.revokeTokenFamily(userId)
+            } catch (_: Exception) {
+                // Ignore errors during logout
+            }
+        }
+    }
+
+    fun logoutAll(userId: UUID) {
+        tokenService.revokeAllTokensForUser(userId)
     }
 
     fun refresh(refreshToken: String?): AuthenticationTokens {
-        val userId =
-            tokenService.validateRefreshToken(
+        val (userId, newRefreshToken) =
+            tokenService.validateAndRotateRefreshToken(
                 refreshToken ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing refresh token"),
             )
 
         val roles = userRoleAssignmentRepository.findAllByUser(userId).map { it.role.name }
         val accessToken = tokenService.generateAccessToken(userId, roles.ifEmpty { listOf("USER") })
-        val newRefreshToken = tokenService.generateRefreshToken(userId)
 
         return AuthenticationTokens(
             accessToken = accessToken,

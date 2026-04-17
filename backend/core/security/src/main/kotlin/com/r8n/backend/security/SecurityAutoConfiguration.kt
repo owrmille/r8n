@@ -123,8 +123,7 @@ class SecurityAutoConfiguration {
                         referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
                     }.httpStrictTransportSecurity { hsts ->
                         hsts.includeSubDomains(true).maxAgeInSeconds(31536000)
-                    }.permissionsPolicy { permissions ->
-                        @Suppress("DEPRECATION")
+                    }.permissionsPolicyHeader { permissions ->
                         permissions.policy("geolocation=(), microphone=(), camera=()")
                     }
             }.addFilterBefore(
