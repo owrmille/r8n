@@ -90,3 +90,7 @@ VALUES
     ('14141414-1414-1414-1414-141414141414', 'cappuccino @ Cafe Eins A', '12121212-1212-1212-1212-121212121212'),
     ('15151515-1515-1515-1515-151515151515', 'cappuccino @ Cafe Eins G', '13131313-1313-1313-1313-131313131313')
 ON CONFLICT (id) DO NOTHING;
+
+--changeset iatopchu:V4_unique_component_link_pair
+CREATE UNIQUE INDEX IF NOT EXISTS uq_weighted_opinion_parent_child
+    ON opinions.weighted_opinion_references(parent_opinion, child_opinion);
