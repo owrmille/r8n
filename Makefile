@@ -327,7 +327,7 @@ routed-request-opinion: ## Gateway request to opinions (ENV=local|docker)
 	fi; \
 	curl_args="-i"; \
 	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
-	curl $$curl_args "$$protocol://$$host:$$port/opinions/30000000-0000-0000-0000-000000000001" -H "Authorization: Bearer $$(cat .access_token)"
+	curl $$curl_args "$$protocol://$$host:$$port/opinions/30000000-0000-0000-0000-000000000002" -H "Authorization: Bearer $$(cat .access_token)"
 
 routed-request-mock: ## Gateway request to mock (ENV=local|docker)
 	@if [ ! -f .access_token ]; then $(MAKE) get-token ENV=$(ENV); fi
@@ -365,7 +365,7 @@ routed-request-gdpr: ## HTTP direct request to users (ENV=local|docker)
 
 direct-request-opinion: ## HTTP direct request to opinions (local)
 	@if [ ! -f .access_token ]; then $(MAKE) get-token; fi
-	curl "http://localhost:8081/opinions/30000000-0000-0000-0000-000000000001" -i -H "Authorization: Bearer $$(cat .access_token)"
+	curl "http://localhost:8081/opinions/30000000-0000-0000-0000-000000000002" -i -H "Authorization: Bearer $$(cat .access_token)"
 
 direct-request-mock: ## HTTP direct request to mock (local)
 	@if [ ! -f .access_token ]; then $(MAKE) get-token; fi
