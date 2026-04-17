@@ -228,7 +228,7 @@ frontend-dev: frontend-install ## Start Vite dev server
 LOGIN_USER := test@test.test
 LOGIN_PASS := 1234
 
-get-token: ## Obtain a JWT token using login credentials (ENV=local|docker, default: local)
+get-token: ## Obtain a JWT token and refresh cookie (ENV=local|docker, default: local)
 	@if [ "$(ENV)" = "docker" ]; then \
 		$(LOAD_DOCKER_ENV) \
 		protocol=https; \
@@ -240,17 +240,77 @@ get-token: ## Obtain a JWT token using login credentials (ENV=local|docker, defa
 		host=$${GATEWAY_HOST:-localhost}; \
 		port=$${GATEWAY_PORT:-8080}; \
 	fi; \
-	curl_args="-s -X POST"; \
+	curl_args="-s"; \
 	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
-	token=$$(curl $$curl_args "$$protocol://$$host:$$port/auth/login" \
-		-H "Content-Type: application/json" \
-		-d '{"login": "$(LOGIN_USER)", "password": "$(LOGIN_PASS)"}' | \
-		grep -o '"accessToken":"[^"]*"' | cut -d'"' -f4); \
-	if [ -z "$$token" ]; then \
-		echo "Failed to obtain token from $$protocol://$$host:$$port/auth/login. Is the users-sv running?"; \
+	echo "Fetching CSRF token..."; \
+	csrf_headers=$$(curl $$curl_args -c .cookies -i -X POST "$$protocol://$$host:$$port/auth/login" | tr -d '\r'); \
+	csrf_token=$$(echo "$$csrf_headers" | grep -i "Set-Cookie: XSRF-TOKEN=" | sed 's/.*XSRF-TOKEN=\([^;]*\).*/\1/'); \
+	if [ -z "$$csrf_token" ]; then \
+		echo "Failed to obtain CSRF token. Headers:"; \
+		echo "$$csrf_headers"; \
 		exit 1; \
 	fi; \
-	echo "$$token" > .access_token
+	echo "Logging in..."; \
+	login_response=$$(curl $$curl_args -b .cookies -c .cookies -X POST "$$protocol://$$host:$$port/auth/login" \
+		-H "Content-Type: application/json" \
+		-H "X-XSRF-TOKEN: $$csrf_token" \
+		-d '{"login": "$(LOGIN_USER)", "password": "$(LOGIN_PASS)"}'); \
+	token=$$(echo "$$login_response" | grep -o '"accessToken":"[^"]*"' | cut -d'"' -f4); \
+	if [ -z "$$token" ]; then \
+		echo "Failed to obtain token from $$protocol://$$host:$$port/auth/login. Response:"; \
+		echo "$$login_response"; \
+		exit 1; \
+	fi; \
+	echo "$$token" > .access_token; \
+	echo "Token obtained and cookies saved in .cookies"
+
+refresh-token: ## Refresh the JWT token using the refresh cookie (ENV=local|docker)
+	@if [ "$(ENV)" = "docker" ]; then \
+		$(LOAD_DOCKER_ENV) \
+		protocol=https; \
+		host=localhost; \
+		port=8080; \
+	else \
+		$(LOAD_LOCAL_ENV) \
+		protocol=$${INTERSERVICE_PROTOCOL:-http}; \
+		host=$${GATEWAY_HOST:-localhost}; \
+		port=$${GATEWAY_PORT:-8080}; \
+	fi; \
+	curl_args="-s"; \
+	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
+	if [ ! -f .cookies ]; then echo "No cookies found. Run 'make get-token' first."; exit 1; fi; \
+	csrf_token=$$(grep "XSRF-TOKEN" .cookies | awk '{print $$7}'); \
+	refresh_response=$$(curl $$curl_args -b .cookies -c .cookies -X POST "$$protocol://$$host:$$port/auth/refresh" \
+		-H "X-XSRF-TOKEN: $$csrf_token"); \
+	token=$$(echo "$$refresh_response" | grep -o '"accessToken":"[^"]*"' | cut -d'"' -f4); \
+	if [ -z "$$token" ]; then \
+		echo "Failed to refresh token. Response:"; \
+		echo "$$refresh_response"; \
+		exit 1; \
+	fi; \
+	echo "$$token" > .access_token; \
+	echo "Token refreshed and cookies updated in .cookies"
+
+logout: ## Logout and clear cookies (ENV=local|docker)
+	@if [ "$(ENV)" = "docker" ]; then \
+		$(LOAD_DOCKER_ENV) \
+		protocol=https; \
+		host=localhost; \
+		port=8080; \
+	else \
+		$(LOAD_LOCAL_ENV) \
+		protocol=$${INTERSERVICE_PROTOCOL:-http}; \
+		host=$${GATEWAY_HOST:-localhost}; \
+		port=$${GATEWAY_PORT:-8080}; \
+	fi; \
+	curl_args="-s"; \
+	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
+	if [ ! -f .cookies ]; then echo "No cookies found."; exit 1; fi; \
+	csrf_token=$$(grep "XSRF-TOKEN" .cookies | awk '{print $$7}'); \
+	curl $$curl_args -b .cookies -c .cookies -X POST "$$protocol://$$host:$$port/auth/logout" \
+		-H "X-XSRF-TOKEN: $$csrf_token" -i; \
+	rm -f .access_token .cookies; \
+	echo "Logged out and local session files removed."
 
 routed-request-opinion: ## Gateway request to opinions (ENV=local|docker)
 	@if [ ! -f .access_token ]; then $(MAKE) get-token ENV=$(ENV); fi
