@@ -128,7 +128,7 @@ class TokenService(
 
             if (tokenPersistence.used) {
                 // Reuse detection!
-                revokeTokenFamily(tokenPersistence.userId)
+                revokeAllTokensForUser(tokenPersistence.userId)
                 throw ResponseStatusException(
                     HttpStatus.UNAUTHORIZED,
                     "Refresh token already used. Compromise detected.",
@@ -149,13 +149,6 @@ class TokenService(
             if (e is ResponseStatusException) throw e
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token", e)
         }
-    }
-
-    @Transactional
-    fun revokeTokenFamily(userId: UUID) {
-        val tokens = refreshTokenRepository.findByUserId(userId)
-        tokens.forEach { it.revoked = true }
-        refreshTokenRepository.saveAll(tokens)
     }
 
     @Transactional
