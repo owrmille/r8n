@@ -158,5 +158,10 @@ class TokenService(
         refreshTokenRepository.saveAll(tokens)
     }
 
+    @Transactional
+    fun cleanupExpiredTokens() {
+        refreshTokenRepository.deleteByExpiresAtBefore(Instant.now())
+    }
+
     fun getAccessTokenExpirationMillis(): Long = accessTokenExpiration.toMillis()
 }
