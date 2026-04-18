@@ -3,6 +3,7 @@ package com.r8n.backend.users.service
 import com.r8n.backend.users.api.dto.LoginRequestDto
 import com.r8n.backend.users.provider.database.UserRepository
 import com.r8n.backend.users.provider.database.UserRoleAssignmentRepository
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -18,7 +19,7 @@ class AuthService(
     private val tokenService: TokenService,
 ) {
     private companion object {
-        val log = LoggerFactory.getLogger(AuthService::class.java)
+        val log: Logger = LoggerFactory.getLogger(AuthService::class.java)
     }
     
     fun login(request: LoginRequestDto): AuthenticationTokens {
