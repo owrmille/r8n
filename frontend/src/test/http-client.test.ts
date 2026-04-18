@@ -25,7 +25,7 @@ describe("httpClient", () => {
       fetchFn: fetchMock,
     });
 
-    await client.get<{ ok: boolean }>("/api/opinions", {
+    await client.get<{ ok: boolean }>("/opinions", {
       query: { page: 2, tags: ["safe", "public"], empty: undefined },
     });
 
@@ -50,7 +50,7 @@ describe("httpClient", () => {
       fetchFn: fetchMock,
     });
 
-    await client.post("/api/opinions", {
+    await client.post("/opinions", {
       body: { title: "Readable review" },
       headers: { "X-Trace-Id": "trace-id" },
     });
@@ -100,7 +100,7 @@ describe("httpClient", () => {
       fetchFn: fetchMock,
     });
 
-    await expect(client.get("/api/opinions")).rejects.toEqual(
+    await expect(client.get("/opinions")).rejects.toEqual(
       expect.objectContaining({
         message: "Validation failed",
         name: "HttpError",

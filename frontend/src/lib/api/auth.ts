@@ -14,20 +14,20 @@ export interface AuthenticationTokenDto {
 export function createAuthApi(client: HttpClient = httpClient) {
   return {
     login(request: LoginRequestDto): Promise<AuthenticationTokenDto> {
-      return client.post<AuthenticationTokenDto, LoginRequestDto>("/api/auth/login", {
+      return client.post<AuthenticationTokenDto, LoginRequestDto>("/auth/login", {
         body: request,
         credentials: "include",
       });
     },
 
     logout(): Promise<void> {
-      return client.post<void>("/api/auth/logout", {
+      return client.post<void>("/auth/logout", {
         credentials: "include",
       });
     },
 
     refresh(): Promise<AuthenticationTokenDto> {
-      return client.post<AuthenticationTokenDto>("/api/auth/refresh", {
+      return client.post<AuthenticationTokenDto>("/auth/refresh", {
         credentials: "include",
       });
     },
