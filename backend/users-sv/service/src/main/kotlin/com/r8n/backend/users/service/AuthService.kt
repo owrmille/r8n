@@ -42,7 +42,7 @@ class AuthService(
                 // When logging out, we want to revoke the whole token family
                 // because this session is explicitly ended.
                 val (userId, _) = tokenService.validateAndRotateRefreshToken(refreshToken)
-                tokenService.revokeTokenFamily(userId)
+                tokenService.revokeAllTokensForUser(userId)
             } catch (_: Exception) {
                 // Ignore errors during logout
             }
