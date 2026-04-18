@@ -49,32 +49,34 @@ class TokenCleanupIntegrationTest {
         // Given
         val userId = UUID.fromString("00000000-0000-0000-0000-000000000000")
         val now = Instant.now()
-        
-        val expiredToken = RefreshTokenPersistence(
-            tokenId = UUID.randomUUID(),
-            userId = userId,
-            issuedAt = now.minus(2, ChronoUnit.DAYS),
-            expiresAt = now.minus(1, ChronoUnit.DAYS),
-            revoked = false,
-            used = false
-        )
-        
-        val validToken = RefreshTokenPersistence(
-            tokenId = UUID.randomUUID(),
-            userId = userId,
-            issuedAt = now.minus(1, ChronoUnit.DAYS),
-            expiresAt = now.plus(1, ChronoUnit.DAYS),
-            revoked = false,
-            used = false
-        )
+
+        val expiredToken =
+            RefreshTokenPersistence(
+                tokenId = UUID.randomUUID(),
+                userId = userId,
+                issuedAt = now.minus(2, ChronoUnit.DAYS),
+                expiresAt = now.minus(1, ChronoUnit.DAYS),
+                revoked = false,
+                used = false,
+            )
+
+        val validToken =
+            RefreshTokenPersistence(
+                tokenId = UUID.randomUUID(),
+                userId = userId,
+                issuedAt = now.minus(1, ChronoUnit.DAYS),
+                expiresAt = now.plus(1, ChronoUnit.DAYS),
+                revoked = false,
+                used = false,
+            )
 
         refreshTokenRepository.saveAll(listOf(expiredToken, validToken))
-        
+
         val countBefore = refreshTokenRepository.count()
-        
+
         // When
         tokenService.cleanupExpiredTokens()
-        
+
         // Then
         val remainingTokens = refreshTokenRepository.findAll()
         assertEquals(countBefore - 1, remainingTokens.size.toLong())

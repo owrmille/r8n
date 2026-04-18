@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class TokenCleanupScheduler(
-    private val tokenService: TokenService
+    private val tokenService: TokenService,
 ) {
     private companion object {
         private val log = LoggerFactory.getLogger(TokenCleanupScheduler::class.java)

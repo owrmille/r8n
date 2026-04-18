@@ -21,7 +21,7 @@ class AuthService(
     private companion object {
         val log: Logger = LoggerFactory.getLogger(AuthService::class.java)
     }
-    
+
     fun login(request: LoginRequestDto): AuthenticationTokens {
         val user =
             userRepository.findByEmail(request.login)
