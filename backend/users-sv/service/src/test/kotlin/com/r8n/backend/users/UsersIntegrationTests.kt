@@ -11,10 +11,15 @@ import com.r8n.backend.mock.stub.OpinionListTestDataFactory
 import com.r8n.backend.users.api.dto.ConsentDto
 import com.r8n.backend.users.api.dto.PersonalIdentifiableInformationSectionDto
 import com.r8n.backend.users.api.dto.UserCompleteDataDto
+import com.r8n.backend.users.api.dto.UserProfileDto
 import com.r8n.backend.users.api.dto.UserSessionDto
 import com.r8n.backend.users.api.dto.UserStatusEnumDto
+import com.r8n.backend.users.provider.database.PIIRepository
+import com.r8n.backend.users.provider.database.UserRepository
+import com.r8n.backend.users.provider.database.UserSessionRepository
 import com.r8n.backend.users.service.TokenService
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
@@ -28,6 +33,7 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
 import org.springframework.data.domain.PageImpl
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
@@ -40,6 +46,8 @@ import org.testcontainers.postgresql.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 import tools.jackson.databind.ObjectMapper
 import tools.jackson.module.kotlin.readValue
+import java.sql.Timestamp
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
@@ -77,6 +85,18 @@ class UsersIntegrationTests {
 
     @Autowired
     lateinit var tokenService: TokenService
+
+    @Autowired
+    lateinit var userRepository: UserRepository
+
+    @Autowired
+    lateinit var piiRepository: PIIRepository
+
+    @Autowired
+    lateinit var userSessionRepository: UserSessionRepository
+
+    @Autowired
+    lateinit var jdbcTemplate: JdbcTemplate
 
     @MockitoBean
     lateinit var opinionClient: OpinionListInternalApi
@@ -158,5 +178,52 @@ class UsersIntegrationTests {
                 PageImpl(listOf(supportMessages)).toResponse(),
             )
         assertEquals(expected, actual)
+    }
+
+    @Test
+    @WithMockUser(username = USER_ID)
+    fun `getUserProfile returns profile with current online timestamp`() {
+        // Given
+        val userId = UUID.fromString("10101010-1010-1010-1010-101010101010")
+        val now = Instant.now().truncatedTo(ChronoUnit.MILLIS)
+
+        // Using JdbcTemplate to avoid Hibernate state issues
+        jdbcTemplate.update(
+            "INSERT INTO users.sessions (id, user_id, created, expires, ip, user_agent) VALUES (?, ?, ?, ?, ?, ?)",
+            UUID.randomUUID(),
+            userId,
+            Timestamp.from(now),
+            Timestamp.from(now.plus(1, ChronoUnit.HOURS)),
+            "127.0.0.1",
+            "Test Agent",
+        )
+
+        val beforeRequest = Instant.now().truncatedTo(ChronoUnit.MILLIS)
+
+        val accessToken = tokenService.generateAccessToken(UUID.fromString(USER_ID), listOf("USER"))
+
+        // When
+        val result =
+            mockMvc
+                .perform(
+                    get("/api/users/$userId")
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val actual: UserProfileDto = objectMapper.readValue(result.response.contentAsString)
+
+        // Then
+        assertEquals(userId, actual.id)
+        assertEquals("coffee expert Bernard", actual.name)
+        assertEquals(UserStatusEnumDto.ACTIVE, actual.status)
+        assertEquals("I am a bratwurst expert", actual.about)
+        assertEquals("Munich, Germany", actual.location)
+
+        assertTrue(actual.lastOnline != null, "lastOnline should not be null")
+        assertTrue(
+            !actual.lastOnline!!.isBefore(beforeRequest),
+            "lastOnline (${actual.lastOnline}) should be after or equal to beforeRequest ($beforeRequest)",
+        )
     }
 }

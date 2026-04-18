@@ -49,7 +49,7 @@ class UserService(
 
     fun lastOnline(id: UUID): Instant? {
         val lastSession = userSessionService.lastSessionForUserId(id)
-        return lastSession?.expires?.let { maxOf(Instant.now(), it) }
+        return lastSession?.expires?.let { minOf(Instant.now(), it) }
     }
 
     fun getProfile(id: UUID): UserProfile {
