@@ -32,6 +32,8 @@ logging:
 services:
   mock:
     url: http://localhost:8090
+  access:
+    url: http://localhost:80
 
 r8n:
   security:
