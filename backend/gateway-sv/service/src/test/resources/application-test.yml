@@ -13,15 +13,19 @@ spring:
       server:
         webflux:
           routes:
+            - id: auth
+              uri: http://localhost:8082
+              predicates:
+                - Path=/api/auth/**
             - id: opinions
               uri: http://localhost:8081
               predicates:
-                - Path=/opinions/**
+                - Path=/api/opinions/**
             - id: users
               uri: http://localhost:8082
               predicates:
-                - Path=/users/**
+                - Path=/api/users/**
             - id: mock
               uri: http://localhost:8090
               predicates:
-                - Path=/auth/**,/access-requests/**,/opinion-lists/**,/selectors/**
+                - Path=/api/access-requests/**,/api/opinion-lists/**,/api/selectors/**

@@ -94,3 +94,10 @@ ON CONFLICT (id) DO NOTHING;
 --changeset iatopchu:V4_unique_component_link_pair
 CREATE UNIQUE INDEX IF NOT EXISTS uq_weighted_opinion_parent_child
     ON opinions.weighted_opinion_references(parent_opinion, child_opinion);
+
+--changeset inikulin:V5_seed_test_user context:local,test
+INSERT INTO opinions.opinions (id, owner, subject, mark, status, timestamp)
+VALUES ('30000000-0000-0000-0000-000000000002'
+       , '00000000-0000-0000-0000-000000000000'
+       , '14141414-1414-1414-1414-141414141414'
+       , 4.24, 'DRAFT', '2024-02-01T09:30:00Z');

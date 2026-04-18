@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.GetMapping
 
 interface MessagingApi {
     companion object {
-        const val MESSAGING_PATH = "/messaging"
-        const val SUPPORT_PATH = "$MESSAGING_PATH/support"
+        private const val ROOT_PATH = "/api/messaging"
+        const val SUPPORT_PATH = "$ROOT_PATH/support"
     }
 
     @GetMapping(SUPPORT_PATH)

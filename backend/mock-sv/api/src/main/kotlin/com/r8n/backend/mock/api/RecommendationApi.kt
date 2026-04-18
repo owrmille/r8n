@@ -11,14 +11,15 @@ import java.util.UUID
 
 interface RecommendationApi {
     companion object {
-        const val SUBJECTS_PATH = "/recommendations/subjects/{lookingAtSubjectId}"
-        const val OPINION_LISTS_PATH = "/recommendations/opinion-lists/{lookingAtListId}"
-        const val HIDE_SUBJECT_PATH = "/recommendations/subjects/{id}/hide"
-        const val HIDE_LIST_PATH = "/recommendations/opinion-lists/{id}/hide"
-        const val HIDDEN_SUBJECTS_PATH = "/recommendations/subjects/hidden"
-        const val HIDDEN_LISTS_PATH = "/recommendations/opinion-lists/hidden"
-        const val UNHIDE_SUBJECT_PATH = "/recommendations/subjects/{id}/unhide"
-        const val UNHIDE_LIST_PATH = "/recommendations/opinion-lists/{id}/unhide"
+        private const val ROOT_PATH = "/api/recommendations"
+        const val SUBJECTS_PATH = "$ROOT_PATH/subjects/{lookingAtSubjectId}"
+        const val OPINION_LISTS_PATH = "$ROOT_PATH/opinion-lists/{lookingAtListId}"
+        const val HIDE_SUBJECT_PATH = "$ROOT_PATH/subjects/{id}/hide"
+        const val HIDE_LIST_PATH = "$ROOT_PATH/opinion-lists/{id}/hide"
+        const val HIDDEN_SUBJECTS_PATH = "$ROOT_PATH/subjects/hidden"
+        const val HIDDEN_LISTS_PATH = "$ROOT_PATH/opinion-lists/hidden"
+        const val UNHIDE_SUBJECT_PATH = "$ROOT_PATH/subjects/{id}/unhide"
+        const val UNHIDE_LIST_PATH = "$ROOT_PATH/opinion-lists/{id}/unhide"
     }
 
     @GetMapping(SUBJECTS_PATH)
