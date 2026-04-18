@@ -66,6 +66,7 @@ interface OpinionApi {
     @PatchMapping("/opinions/adjustWeight/{linkId}")
     fun adjustComponentWeight(
         @PathVariable linkId: UUID,
+        @RequestParam(required = true)
         weight: Double,
     ): OpinionDto
 }

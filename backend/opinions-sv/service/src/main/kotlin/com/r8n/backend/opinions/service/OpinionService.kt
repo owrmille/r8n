@@ -114,6 +114,28 @@ class OpinionService(
         return getOpinion(parentOpinionId)
     }
 
+    @Transactional
+    fun adjustComponentWeight(
+        userId: UUID,
+        linkId: UUID,
+        weight: Double,
+    ): Opinion {
+        val parentOpinionId =
+            componentService.getParentOpinionId(linkId)
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+        val parentOpinion =
+            opinionRepository
+                .findById(parentOpinionId)
+                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
+        if (parentOpinion.owner != userId) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN)
+        }
+        if (!componentService.adjustComponentWeight(linkId, weight)) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND)
+        }
+        return getOpinion(parentOpinionId)
+    }
+
     private fun OpinionPersistence.toDomain(): Opinion =
         Opinion(
             id!!,

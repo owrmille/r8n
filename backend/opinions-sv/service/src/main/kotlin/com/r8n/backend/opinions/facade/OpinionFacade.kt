@@ -43,6 +43,12 @@ class OpinionFacade(
         weight: Double,
     ): OpinionDto = opinionService.linkComponent(userId, parentOpinionId, childOpinionId, weight).toDto()
 
+    fun adjustComponentWeight(
+        userId: UUID,
+        linkId: UUID,
+        weight: Double,
+    ): OpinionDto = opinionService.adjustComponentWeight(userId, linkId, weight).toDto()
+
     private fun Opinion.toDto() =
         OpinionDto(
             id,

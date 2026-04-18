@@ -36,6 +36,22 @@ class ComponentService(
         )
     }
 
+    fun getParentOpinionId(linkId: UUID): UUID? =
+        weightedOpinionReferenceRepository
+            .findById(linkId)
+            .map { it.parentOpinion }
+            .orElse(null)
+
+    fun adjustComponentWeight(
+        linkId: UUID,
+        weight: Double,
+    ): Boolean {
+        val link = weightedOpinionReferenceRepository.findById(linkId).orElse(null) ?: return false
+        link.weight = weight
+        weightedOpinionReferenceRepository.save(link)
+        return true
+    }
+
     fun getComponentSection(parentOpinionId: UUID): ComponentSection {
         val components =
             weightedOpinionReferenceRepository
