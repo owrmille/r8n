@@ -9,19 +9,23 @@ import org.springframework.web.bind.annotation.RequestBody
 interface AuthApi {
     companion object {
         const val REFRESH_TOKEN_COOKIE_NAME = "refreshToken"
+        private const val ROOT_PATH = "/api/auth"
+        const val LOGIN_PATH = "$ROOT_PATH/login"
+        const val LOGOUT_PATH = "$ROOT_PATH/logout"
+        const val REFRESH_PATH = "$ROOT_PATH/refresh"
     }
 
-    @PostMapping("/auth/login")
+    @PostMapping(LOGIN_PATH)
     fun login(
         @RequestBody request: LoginRequestDto,
     ): AuthenticationTokenDto
 
-    @PostMapping("/auth/logout")
+    @PostMapping(LOGOUT_PATH)
     fun logout(
         @CookieValue(name = REFRESH_TOKEN_COOKIE_NAME, required = false) refreshToken: String?,
     )
 
-    @PostMapping("/auth/refresh")
+    @PostMapping(REFRESH_PATH)
     fun refresh(
         @CookieValue(name = REFRESH_TOKEN_COOKIE_NAME, required = false) refreshToken: String?,
     ): AuthenticationTokenDto

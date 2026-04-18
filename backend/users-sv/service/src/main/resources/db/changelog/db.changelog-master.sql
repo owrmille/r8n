@@ -90,4 +90,4 @@ CREATE TABLE users.refresh_tokens (
     CONSTRAINT fk_refresh_token_parent FOREIGN KEY (parent_id) REFERENCES users.refresh_tokens(id) ON DELETE CASCADE
 );
 CREATE INDEX idx_refresh_tokens_user_id ON users.refresh_tokens(user_id);
-CREATE INDEX idx_refresh_tokens_token_id ON users.refresh_tokens(token_id);
+CREATE UNIQUE INDEX idx_refresh_tokens_token_id ON users.refresh_tokens(token_id);

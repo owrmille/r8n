@@ -35,7 +35,7 @@ services:
 
 r8n:
   security:
-    public-paths: /auth/**
+    public-paths: /api/auth/**
     jwt:
       private-key: |
         -----BEGIN PRIVATE KEY-----
@@ -79,5 +79,5 @@ r8n:
     refresh-cookie:
       secure: false
       same-site: Strict
-      path: /auth
+      path: /api/auth
       max-age: 30d

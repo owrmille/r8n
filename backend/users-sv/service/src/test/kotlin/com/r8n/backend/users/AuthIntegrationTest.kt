@@ -47,6 +47,12 @@ class AuthIntegrationTest {
                 .withUsername("test")
                 .withPassword("test")
                 .withInitScript("db/init-schema.sql")
+
+        // yes, this is a duplicate from AuthApi, left intentional to detect changes
+        const val LOGIN_PATH = "/api/auth/login"
+        const val REFRESH_PATH = "/api/auth/refresh"
+        const val EMAIL = "test@test.test"
+        const val PASSWORD = "1234"
     }
 
     @Autowired
@@ -78,9 +84,9 @@ class AuthIntegrationTest {
     @Test
     @Transactional
     fun `login with valid credentials returns tokens`() {
-        val pii = piiRepository.findAll().first { it.email == "test@test.test" }
+        val pii = piiRepository.findAll().first { it.email == EMAIL }
         val userId = pii.userId
-        val encodedPassword = passwordEncoder.encode("1234")
+        val encodedPassword = passwordEncoder.encode(PASSWORD)
 
         entityManager
             .createNativeQuery("UPDATE users.users SET password_hash = :passwordHash WHERE id = :userId")
@@ -100,12 +106,12 @@ class AuthIntegrationTest {
 
         entityManager.clear()
 
-        val loginRequest = LoginRequestDto("test@test.test", "1234")
+        val loginRequest = LoginRequestDto(EMAIL, PASSWORD)
 
         val response =
             mockMvc
                 .perform(
-                    post("/auth/login")
+                    post(LOGIN_PATH)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)),
@@ -118,16 +124,16 @@ class AuthIntegrationTest {
         val setCookieHeader = response.response.getHeader(HttpHeaders.SET_COOKIE)!!
         assertTrue(setCookieHeader.contains("$REFRESH_TOKEN_COOKIE_NAME="))
         assertTrue(setCookieHeader.contains("HttpOnly"))
-        assertTrue(setCookieHeader.contains("Path=/auth"))
+        assertTrue(setCookieHeader.contains("Path=/api/auth"))
     }
 
     @Test
     fun `login with invalid password returns 401`() {
-        val loginRequest = LoginRequestDto("test@test.test", "wrong")
+        val loginRequest = LoginRequestDto(EMAIL, "wrong")
 
         mockMvc
             .perform(
-                post("/auth/login")
+                post(LOGIN_PATH)
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(loginRequest)),
@@ -136,11 +142,11 @@ class AuthIntegrationTest {
 
     @Test
     fun `login with unknown user returns 401`() {
-        val loginRequest = LoginRequestDto("unknown@test.test", "1234")
+        val loginRequest = LoginRequestDto("unknown@test.test", PASSWORD)
 
         mockMvc
             .perform(
-                post("/auth/login")
+                post(LOGIN_PATH)
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(loginRequest)),
@@ -150,9 +156,9 @@ class AuthIntegrationTest {
     @Test
     @Transactional
     fun `refresh token rotation works`() {
-        val pii = piiRepository.findAll().first { it.email == "test@test.test" }
+        val pii = piiRepository.findAll().first { it.email == EMAIL }
         val userId = pii.userId
-        val encodedPassword = passwordEncoder.encode("1234")
+        val encodedPassword = passwordEncoder.encode(PASSWORD)
 
         entityManager
             .createNativeQuery("UPDATE users.users SET password_hash = :passwordHash WHERE id = :userId")
@@ -162,13 +168,13 @@ class AuthIntegrationTest {
 
         entityManager.clear()
 
-        val loginRequest = LoginRequestDto("test@test.test", "1234")
+        val loginRequest = LoginRequestDto(EMAIL, PASSWORD)
 
         // 1. Login to get first refresh token
         val loginResponse =
             mockMvc
                 .perform(
-                    post("/auth/login")
+                    post(LOGIN_PATH)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)),
@@ -181,7 +187,7 @@ class AuthIntegrationTest {
         val firstRefreshResponse =
             mockMvc
                 .perform(
-                    post("/auth/refresh")
+                    post(REFRESH_PATH)
                         .with(csrf())
                         .cookie(Cookie(REFRESH_TOKEN_COOKIE_NAME, firstRefreshToken)),
                 ).andExpect(status().isOk)
@@ -193,7 +199,7 @@ class AuthIntegrationTest {
         // 3. Second refresh with NEW token works
         mockMvc
             .perform(
-                post("/auth/refresh")
+                post(REFRESH_PATH)
                     .with(csrf())
                     .cookie(Cookie(REFRESH_TOKEN_COOKIE_NAME, secondRefreshToken)),
             ).andExpect(status().isOk)
@@ -201,7 +207,7 @@ class AuthIntegrationTest {
         // 4. Reuse first refresh token - should FAIL and be rejected (Compromise detection)
         mockMvc
             .perform(
-                post("/auth/refresh")
+                post(REFRESH_PATH)
                     .with(csrf())
                     .cookie(Cookie(REFRESH_TOKEN_COOKIE_NAME, firstRefreshToken)),
             ).andExpect(status().isUnauthorized)
@@ -209,11 +215,11 @@ class AuthIntegrationTest {
 
     @Test
     fun `login requires CSRF`() {
-        val loginRequest = LoginRequestDto("test@test.test", "1234")
+        val loginRequest = LoginRequestDto(EMAIL, PASSWORD)
 
         mockMvc
             .perform(
-                post("/auth/login")
+                post(LOGIN_PATH)
                     // No CSRF
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(loginRequest)),
@@ -224,7 +230,7 @@ class AuthIntegrationTest {
     fun `refresh without cookie returns 401`() {
         mockMvc
             .perform(
-                post("/auth/refresh")
+                post(REFRESH_PATH)
                     .with(csrf()),
             ).andExpect(status().isUnauthorized)
     }
@@ -233,7 +239,7 @@ class AuthIntegrationTest {
     fun `refresh with invalid cookie returns 401`() {
         mockMvc
             .perform(
-                post("/auth/refresh")
+                post(REFRESH_PATH)
                     .with(csrf())
                     .cookie(Cookie(REFRESH_TOKEN_COOKIE_NAME, "invalid-refresh-token")),
             ).andExpect(status().isUnauthorized)
@@ -244,7 +250,7 @@ class AuthIntegrationTest {
         val response =
             mockMvc
                 .perform(
-                    post("/auth/logout")
+                    post("/api/auth/logout")
                         .with(csrf())
                         .cookie(Cookie(REFRESH_TOKEN_COOKIE_NAME, "refresh-token-to-clear")),
                 ).andExpect(status().isOk)
@@ -254,6 +260,6 @@ class AuthIntegrationTest {
         assertTrue(setCookieHeader.contains("$REFRESH_TOKEN_COOKIE_NAME="))
         assertTrue(setCookieHeader.contains("Max-Age=0"))
         assertTrue(setCookieHeader.contains("HttpOnly"))
-        assertTrue(setCookieHeader.contains("Path=/auth"))
+        assertTrue(setCookieHeader.contains("Path=/api/auth"))
     }
 }

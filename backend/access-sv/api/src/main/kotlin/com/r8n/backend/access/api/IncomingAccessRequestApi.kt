@@ -13,10 +13,11 @@ import java.util.UUID
 
 interface IncomingAccessRequestApi {
     companion object {
-        const val GET_PATH = "/access-requests/incoming"
-        const val ACCEPT_PATH = "$GET_PATH/{requestId}/accept"
-        const val DECLINE_PATH = "$GET_PATH/{requestId}/decline"
-        const val HIDE_PATH = "$GET_PATH/{requestId}/hide"
+        private const val ROOT_PATH = "/api/access-requests/incoming"
+        const val GET_PATH = ROOT_PATH
+        const val ACCEPT_PATH = "$ROOT_PATH/{requestId}/accept"
+        const val DECLINE_PATH = "$ROOT_PATH/{requestId}/decline"
+        const val HIDE_PATH = "$ROOT_PATH/{requestId}/hide"
     }
 
     @GetMapping(GET_PATH)
