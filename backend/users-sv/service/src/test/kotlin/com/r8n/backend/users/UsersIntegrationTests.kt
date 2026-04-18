@@ -14,9 +14,6 @@ import com.r8n.backend.users.api.dto.UserCompleteDataDto
 import com.r8n.backend.users.api.dto.UserProfileDto
 import com.r8n.backend.users.api.dto.UserSessionDto
 import com.r8n.backend.users.api.dto.UserStatusEnumDto
-import com.r8n.backend.users.provider.database.PIIRepository
-import com.r8n.backend.users.provider.database.UserRepository
-import com.r8n.backend.users.provider.database.UserSessionRepository
 import com.r8n.backend.users.service.TokenService
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -85,15 +82,6 @@ class UsersIntegrationTests {
 
     @Autowired
     lateinit var tokenService: TokenService
-
-    @Autowired
-    lateinit var userRepository: UserRepository
-
-    @Autowired
-    lateinit var piiRepository: PIIRepository
-
-    @Autowired
-    lateinit var userSessionRepository: UserSessionRepository
 
     @Autowired
     lateinit var jdbcTemplate: JdbcTemplate
