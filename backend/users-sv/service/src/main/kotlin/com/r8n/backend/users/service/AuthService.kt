@@ -3,6 +3,7 @@ package com.r8n.backend.users.service
 import com.r8n.backend.users.api.dto.LoginRequestDto
 import com.r8n.backend.users.provider.database.UserRepository
 import com.r8n.backend.users.provider.database.UserRoleAssignmentRepository
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -16,6 +17,10 @@ class AuthService(
     private val passwordEncoder: PasswordEncoder,
     private val tokenService: TokenService,
 ) {
+    private companion object {
+        val log = LoggerFactory.getLogger(AuthService::class.java)
+    }
+    
     fun login(request: LoginRequestDto): AuthenticationTokens {
         val user =
             userRepository.findByEmail(request.login)
@@ -44,7 +49,7 @@ class AuthService(
                 val (userId, _) = tokenService.validateAndRotateRefreshToken(refreshToken)
                 tokenService.revokeAllTokensForUser(userId)
             } catch (_: Exception) {
-                // Ignore errors during logout
+                log.warn("Failed to revoke refresh token")
             }
         }
     }
