@@ -12,9 +12,10 @@ import java.util.UUID
 
 interface OutgoingAccessRequestApi {
     companion object {
-        const val GET_PATH = "/access-requests/outgoing"
-        const val CREATE_PATH = "/access-requests/outgoing/create/{listId}"
-        const val CANCEL_PATH = "/access-requests/outgoing/cancel/{requestId}"
+        private const val ROOT_PATH = "/api/access-requests/outgoing"
+        const val GET_PATH = ROOT_PATH
+        const val CREATE_PATH = "$ROOT_PATH/create/{listId}"
+        const val CANCEL_PATH = "$ROOT_PATH/cancel/{requestId}"
     }
 
     @GetMapping(GET_PATH)

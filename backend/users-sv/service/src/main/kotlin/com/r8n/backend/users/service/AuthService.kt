@@ -3,10 +3,13 @@ package com.r8n.backend.users.service
 import com.r8n.backend.users.api.dto.LoginRequestDto
 import com.r8n.backend.users.provider.database.UserRepository
 import com.r8n.backend.users.provider.database.UserRoleAssignmentRepository
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
+import java.util.UUID
 
 @Service
 class AuthService(
@@ -15,6 +18,10 @@ class AuthService(
     private val passwordEncoder: PasswordEncoder,
     private val tokenService: TokenService,
 ) {
+    private companion object {
+        val log: Logger = LoggerFactory.getLogger(AuthService::class.java)
+    }
+
     fun login(request: LoginRequestDto): AuthenticationTokens {
         val user =
             userRepository.findByEmail(request.login)
@@ -35,20 +42,31 @@ class AuthService(
         )
     }
 
-    fun logout() {
-        // In a stateless JWT setup, logout on the server side is often a no-op unless we use a blacklist
-        // For now, we just let the client discard the token.
+    fun logout(refreshToken: String?) {
+        if (refreshToken != null) {
+            try {
+                // When logging out, we want to revoke the whole token family
+                // because this session is explicitly ended.
+                val (userId, _) = tokenService.validateAndRotateRefreshToken(refreshToken)
+                tokenService.revokeAllTokensForUser(userId)
+            } catch (_: Exception) {
+                log.warn("Failed to revoke refresh token")
+            }
+        }
+    }
+
+    fun logoutAll(userId: UUID) {
+        tokenService.revokeAllTokensForUser(userId)
     }
 
     fun refresh(refreshToken: String?): AuthenticationTokens {
-        val userId =
-            tokenService.validateRefreshToken(
+        val (userId, newRefreshToken) =
+            tokenService.validateAndRotateRefreshToken(
                 refreshToken ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing refresh token"),
             )
 
         val roles = userRoleAssignmentRepository.findAllByUser(userId).map { it.role.name }
         val accessToken = tokenService.generateAccessToken(userId, roles.ifEmpty { listOf("USER") })
-        val newRefreshToken = tokenService.generateRefreshToken(userId)
 
         return AuthenticationTokens(
             accessToken = accessToken,

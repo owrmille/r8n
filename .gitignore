@@ -17,3 +17,4 @@ docker.secrets.env
 *.txt
 .access_token
 frontend/e2e/auth-state.json
+.cookies
