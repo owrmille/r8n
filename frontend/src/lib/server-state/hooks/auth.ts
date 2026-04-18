@@ -20,7 +20,7 @@ export function useLoginMutation(
   >,
 ) {
   return useMutation({
-    mutationFn: authApi.login,
+    mutationFn: (variables: LoginRequestDto) => authApi.login(variables),
     ...options,
     meta: {
       errorTitle: "Sign in failed",
@@ -39,7 +39,7 @@ export function useLogoutMutation(
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: authApi.logout,
+    mutationFn: () => authApi.logout(),
     ...options,
     meta: {
       errorTitle: "Sign out failed",

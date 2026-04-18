@@ -15,6 +15,7 @@ import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter
 import java.security.KeyFactory
 import java.security.interfaces.RSAPublicKey
 import java.security.spec.X509EncodedKeySpec
@@ -101,6 +102,7 @@ class SecurityAutoConfiguration {
         jwtAuthenticationConverter: JwtAuthenticationConverter,
         maskingLoggingFilter: MaskingLoggingFilter,
         @Value("\${r8n.security.public-paths:}") publicPaths: Array<String>,
+        @Value("\${server.ssl.enabled:false}") sslEnabled: Boolean,
     ): SecurityFilterChain {
         val csrfHandler = CsrfTokenRequestAttributeHandler()
         // Set the name of the attribute the CsrfToken will be populated on
@@ -112,8 +114,26 @@ class SecurityAutoConfiguration {
                     .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                     .csrfTokenRequestHandler(csrfHandler)
                     .ignoringRequestMatchers(
-                        *publicPaths,
+                        *publicPaths
+                            .filter { path ->
+                                path != "/api/auth/**" && path != "/api/auth/login"
+                            }.toTypedArray(),
                     )
+            }.headers { headers ->
+                headers
+                    .contentSecurityPolicy { csp ->
+                        csp.policyDirectives("default-src 'self'; frame-ancestors 'none';")
+                    }.referrerPolicy { referrer ->
+                        referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
+                    }.httpStrictTransportSecurity { hsts ->
+                        if (sslEnabled) {
+                            hsts.includeSubDomains(true).maxAgeInSeconds(31536000)
+                        } else {
+                            hsts.disable()
+                        }
+                    }.permissionsPolicyHeader { permissions ->
+                        permissions.policy("geolocation=(), microphone=(), camera=()")
+                    }
             }.addFilterBefore(
                 maskingLoggingFilter,
                 UsernamePasswordAuthenticationFilter::class.java,

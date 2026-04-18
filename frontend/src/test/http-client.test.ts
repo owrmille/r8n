@@ -152,7 +152,7 @@ describe("httpClient", () => {
       fetchFn: fetchMock,
     });
 
-    const request = client.get("/opinions");
+    const request = client.get("/api/opinions");
     const expectation = expect(request).rejects.toEqual(
       expect.objectContaining({
         message: "Request timed out after 50 ms.",
@@ -187,7 +187,7 @@ describe("httpClient", () => {
       fetchFn: fetchMock,
     });
 
-    await client.get("/opinions", {
+    await client.get("/api/opinions", {
       auth: "required",
     });
 
@@ -214,7 +214,7 @@ describe("httpClient", () => {
       fetchFn: fetchMock,
     });
 
-    await client.get("/opinions", {
+    await client.get("/api/opinions", {
       auth: "required",
     });
 
@@ -259,7 +259,7 @@ describe("httpClient", () => {
       fetchFn: fetchMock,
     });
 
-    await client.get("/opinions", {
+    await client.get("/api/opinions", {
       auth: "required",
     });
 
@@ -293,7 +293,7 @@ describe("httpClient", () => {
     });
 
     await Promise.all([
-      client.get("/opinions", { auth: "required" }),
+      client.get("/api/opinions", { auth: "required" }),
       client.get("/opinion-lists", { auth: "required" }),
     ]);
 
@@ -326,7 +326,7 @@ describe("httpClient", () => {
     });
 
     await expect(
-      client.get("/opinions", {
+      client.get("/api/opinions", {
         auth: "required",
       }),
     ).rejects.toThrow("Refresh rejected by server");

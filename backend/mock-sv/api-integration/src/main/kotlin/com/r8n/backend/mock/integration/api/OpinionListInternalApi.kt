@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping
 
 interface OpinionListInternalApi {
     companion object {
-        const val MINE_FULL_PATH = "/opinion-lists/mine/full"
+        const val MINE_FULL_PATH = "/api/opinion-lists/mine/full"
     }
 
     @GetMapping(MINE_FULL_PATH)

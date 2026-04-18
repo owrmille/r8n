@@ -12,9 +12,10 @@ import java.util.UUID
 
 interface SelectorApi {
     companion object {
-        const val FOR_URL_PATH = "/selectors/for-url"
-        const val FOR_SUBJECT_PATH = "/selectors/for-subject/{subjectId}"
-        const val DISAGREE_PATH = "/selectors/{selectorId}/disagree"
+        private const val ROOT_PATH = "/api/selectors"
+        const val FOR_URL_PATH = "$ROOT_PATH/for-url"
+        const val FOR_SUBJECT_PATH = "$ROOT_PATH/for-subject/{subjectId}"
+        const val DISAGREE_PATH = "$ROOT_PATH/{selectorId}/disagree"
     }
 
     @GetMapping(FOR_URL_PATH)

@@ -18,12 +18,11 @@ class OpinionFacade(
     fun getOpinionFor(subjectId: UUID): OpinionDto = opinionService.getOpinionFor(subjectId).toDto()
 
     fun createOpinion(
-        userId: UUID,
         subjectId: UUID,
         subjective: List<String>,
         objective: List<String>,
         mark: Double?,
-    ): OpinionDto = opinionService.createOpinion(userId, subjectId, subjective, objective, mark).toDto()
+    ): OpinionDto = opinionService.createOpinion(subjectId, subjective, objective, mark).toDto()
 
     fun updateOpinion(
         opinionId: UUID,
@@ -37,11 +36,10 @@ class OpinionFacade(
     }
 
     fun linkComponent(
-        userId: UUID,
         parentOpinionId: UUID,
         childOpinionId: UUID,
         weight: Double,
-    ): OpinionDto = opinionService.linkComponent(userId, parentOpinionId, childOpinionId, weight).toDto()
+    ): OpinionDto = opinionService.linkComponent(parentOpinionId, childOpinionId, weight).toDto()
 
     private fun Opinion.toDto() =
         OpinionDto(
