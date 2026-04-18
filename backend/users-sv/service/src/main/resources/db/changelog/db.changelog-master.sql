@@ -75,3 +75,30 @@ INSERT INTO users.users (id, status, status_timestamp, password_hash)
 VALUES ('10101010-1010-1010-1010-101010101010', 'ACTIVE', '2024-01-01T12:00:00Z', '$2a$10$f3pE67YFqJz6Yy7p0vW2ueZ9u0Yk4H9/fS7M8p2k5hWz/96K0V/q');
 INSERT INTO users.pii (user_id, name, email, phone)
 VALUES ('10101010-1010-1010-1010-101010101010', 'coffee expert Bernard', 'bernard@coffee.com', '123-456-7890');
+
+--changeset ditabisko:V3_seed_additional_users context:local,test
+-- password is '1234' hashed with BCrypt
+INSERT INTO users.users (id, status, status_timestamp, password_hash)
+VALUES ('20202020-2020-2020-2020-202020202020', 'ACTIVE', '2024-01-01T12:00:00Z', '$2a$12$lxo9e8RbWABER4/mkU./s.njgArpJleAB9Vdq7C7rlNWIRYEw0Oym');
+INSERT INTO users.pii (user_id, name, email, phone)
+VALUES ('20202020-2020-2020-2020-202020202020', 'Anna Müller', 'anna@r8n.test', null);
+
+INSERT INTO users.users (id, status, status_timestamp, password_hash)
+VALUES ('30303030-3030-3030-3030-303030303030', 'ACTIVE', '2024-01-01T12:00:00Z', '$2a$12$lxo9e8RbWABER4/mkU./s.njgArpJleAB9Vdq7C7rlNWIRYEw0Oym');
+INSERT INTO users.pii (user_id, name, email, phone)
+VALUES ('30303030-3030-3030-3030-303030303030', 'Lena Koch', 'lena@r8n.test', null);
+
+INSERT INTO users.users (id, status, status_timestamp, password_hash)
+VALUES ('40404040-4040-4040-4040-404040404040', 'ACTIVE', '2024-01-01T12:00:00Z', '$2a$12$lxo9e8RbWABER4/mkU./s.njgArpJleAB9Vdq7C7rlNWIRYEw0Oym');
+INSERT INTO users.pii (user_id, name, email, phone)
+VALUES ('40404040-4040-4040-4040-404040404040', 'Max Weber', 'max@r8n.test', null);
+
+INSERT INTO users.users (id, status, status_timestamp, password_hash)
+VALUES ('50505050-5050-5050-5050-505050505050', 'ACTIVE', '2024-01-01T12:00:00Z', '$2a$12$lxo9e8RbWABER4/mkU./s.njgArpJleAB9Vdq7C7rlNWIRYEw0Oym');
+INSERT INTO users.pii (user_id, name, email, phone)
+VALUES ('50505050-5050-5050-5050-505050505050', 'Sofia Bauer', 'sofia@r8n.test', null);
+
+INSERT INTO users.users (id, status, status_timestamp, password_hash)
+VALUES ('60606060-6060-6060-6060-606060606060', 'ACTIVE', '2024-01-01T12:00:00Z', '$2a$12$lxo9e8RbWABER4/mkU./s.njgArpJleAB9Vdq7C7rlNWIRYEw0Oym');
+INSERT INTO users.pii (user_id, name, email, phone)
+VALUES ('60606060-6060-6060-6060-606060606060', 'Jonas Braun', 'jonas@r8n.test', null);
