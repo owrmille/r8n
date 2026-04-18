@@ -30,12 +30,12 @@ services:
     url: ${INTERSERVICE_PROTOCOL}://${SERVICES_MOCK_HOST}:${SERVICES_MOCK_PORT}
 r8n:
   security:
-    public-paths: /auth/**
+    public-paths: /api/auth/**
     jwt:
       private-key: ${JWT_PRIVATE_KEY}
       public-key: ${JWT_PUBLIC_KEY}
     refresh-cookie:
       secure: ${SERVER_SSL_ENABLED}
       same-site: Strict
-      path: /auth
+      path: /api/auth
       max-age: ${SECURITY_REFRESH_COOKIE_MAX_AGE}
