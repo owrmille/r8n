@@ -5,6 +5,10 @@ import {
   getAccessToken,
   refreshSession,
 } from "@/lib/auth/session";
+import {
+  clearRefreshSessionHint,
+  shouldAttemptAuthRefresh,
+} from "@/lib/server-state/auth-store";
 
 type AuthStatus = "checking" | "authorized" | "unauthorized";
 const IS_E2E_AUTH_BYPASS_ENABLED = import.meta.env.VITE_E2E_BYPASS_AUTH === "true";
@@ -23,6 +27,12 @@ const RequireAuth = () => {
       return;
     }
 
+    if (!shouldAttemptAuthRefresh()) {
+      clearSession();
+      setStatus("unauthorized");
+      return;
+    }
+
     let isCancelled = false;
 
     void refreshSession()
@@ -33,6 +43,7 @@ const RequireAuth = () => {
       })
       .catch(() => {
         clearSession();
+        clearRefreshSessionHint();
 
         if (!isCancelled) {
           setStatus("unauthorized");
