@@ -147,7 +147,10 @@ class UsersIntegrationTests {
                 PersonalIdentifiableInformationSectionDto(
                     "Test Testsson",
                     "test@test.test",
-                    PageImpl(listOf(session)).toResponse(),
+                    phone = "123-456-7890",
+                    sessions = PageImpl(listOf(session)).toResponse(),
+                    about = "I am a coffee expert",
+                    location = "Berlin, Germany",
                 ),
                 PageImpl(listOf(opinions)).toResponse(),
                 PageImpl(listOf(outgoingAccessRequests)).toResponse(),

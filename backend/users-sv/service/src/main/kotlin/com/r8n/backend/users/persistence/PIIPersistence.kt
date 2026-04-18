@@ -24,4 +24,10 @@ class PIIPersistence(
 //
     @Column(nullable = true)
     val phone: String,
+//
+    @Column(nullable = true)
+    val about: String,
+//
+    @Column(nullable = true)
+    val location: String,
 )
