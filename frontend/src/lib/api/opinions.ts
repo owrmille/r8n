@@ -94,7 +94,7 @@ export function createOpinionsApi(client: HttpClient = httpClient) {
     },
 
     create(request: CreateOpinionRequestDto): Promise<OpinionDto> {
-      return client.post<OpinionDto>("/opinions", {
+      return client.post<OpinionDto>("/api/opinions", {
         auth: "required",
         query: {
           mark: request.mark,
@@ -128,7 +128,7 @@ export function createOpinionsApi(client: HttpClient = httpClient) {
     linkComponent(
       request: LinkOpinionComponentRequestDto,
     ): Promise<OpinionDto> {
-      return client.post<OpinionDto>("/opinions/link", {
+      return client.post<OpinionDto>("/api/opinions/link", {
         auth: "required",
         query: {
           childOpinionId: request.childOpinionId,

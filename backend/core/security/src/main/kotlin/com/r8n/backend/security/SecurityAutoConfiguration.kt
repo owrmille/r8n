@@ -114,7 +114,7 @@ class SecurityAutoConfiguration {
                     .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                     .csrfTokenRequestHandler(csrfHandler)
                     .ignoringRequestMatchers(
-                        *publicPaths.filter { path -> path != "/auth/**" && path != "/auth/login" }.toTypedArray(),
+                        *publicPaths.filter { path -> path != "/api/auth/**" && path != "/api/auth/login" }.toTypedArray(),
                     )
             }.headers { headers ->
                 headers

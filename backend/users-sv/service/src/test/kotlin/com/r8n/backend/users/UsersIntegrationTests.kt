@@ -113,7 +113,7 @@ class UsersIntegrationTests {
         val result =
             mockMvc
                 .perform(
-                    get("/users/export")
+                    get("/api/users/export")
                         .header("Authorization", "Bearer $accessToken"),
                 ).andExpect(status().isOk)
                 .andReturn()

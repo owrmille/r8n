@@ -1,7 +1,7 @@
 import { test, expect } from "playwright/test";
 
 test.describe("GDPR / Users API", () => {
-  const GDPR_EXPORT_PATH = "/users/export";
+  const GDPR_EXPORT_PATH = "/api/users/export";
 
   test("should return 401 Unauthorized when no token is provided", async ({ request }) => {
     const response = await request.get(GDPR_EXPORT_PATH);
@@ -10,13 +10,13 @@ test.describe("GDPR / Users API", () => {
 
   test("should return GDPR data when authenticated with valid token", async ({ request }) => {
     // 1. Get CSRF token
-    const csrfResponse = await request.post("/auth/login");
+    const csrfResponse = await request.post("/api/auth/login");
     const cookies = csrfResponse.headers()["set-cookie"] || "";
     const csrfToken = cookies.match(/XSRF-TOKEN=([^;]+)/)?.[1];
     expect(csrfToken).toBeDefined();
 
     // 2. Login to get a valid token
-    const loginResponse = await request.post("/auth/login", {
+    const loginResponse = await request.post("/api/auth/login", {
       data: {
         login: "test@test.test",
         password: "1234",

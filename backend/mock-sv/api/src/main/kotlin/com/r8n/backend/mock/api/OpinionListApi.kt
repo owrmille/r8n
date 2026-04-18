@@ -14,16 +14,17 @@ import java.util.UUID
 
 interface OpinionListApi {
     companion object {
-        const val SUMMARY_PATH = "/opinion-lists/{listId}/summary"
-        const val GET_PATH = "/opinion-lists/{listId}"
-        const val RENAME_PATH = "/opinion-lists/{listId}/rename"
-        const val SET_PRIVACY_PATH = "/opinion-lists/{listId}/set-privacy"
-        const val LINK_PATH = "/opinion-lists/{listId}/link"
-        const val UNLINK_PATH = "/opinion-lists/{listId}/unlink"
-        const val SEARCH_PATH = "/opinion-lists/search"
-        const val SYNC_PATH = "/opinion-lists/{existingListId}/sync"
-        const val UNSYNC_PATH = "/opinion-lists/{existingListId}/unsync"
-        const val MINE_PATH = "/opinion-lists/mine"
+        private const val ROOT_PATH = "/api/opinion-lists"
+        const val SUMMARY_PATH = "$ROOT_PATH/{listId}/summary"
+        const val GET_PATH = "$ROOT_PATH/{listId}"
+        const val RENAME_PATH = "$ROOT_PATH/{listId}/rename"
+        const val SET_PRIVACY_PATH = "$ROOT_PATH/{listId}/set-privacy"
+        const val LINK_PATH = "$ROOT_PATH/{listId}/link"
+        const val UNLINK_PATH = "$ROOT_PATH/{listId}/unlink"
+        const val SEARCH_PATH = "$ROOT_PATH/search"
+        const val SYNC_PATH = "$ROOT_PATH/{existingListId}/sync"
+        const val UNSYNC_PATH = "$ROOT_PATH/{existingListId}/unsync"
+        const val MINE_PATH = "$ROOT_PATH/mine"
     }
 
     @GetMapping(SUMMARY_PATH)

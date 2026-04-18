@@ -87,7 +87,7 @@ class OpinionsIntegrationTests {
         val result =
             mockMvc
                 .perform(
-                    get("/opinions/$requestedId")
+                    get("/api/opinions/$requestedId")
                         .with(csrf())
                         .header("Authorization", "Bearer $accessToken"),
                 ).andExpect(status().isOk)
@@ -121,7 +121,7 @@ class OpinionsIntegrationTests {
         val result =
             mockMvc
                 .perform(
-                    get("/opinions/for/$requestedSubjectId")
+                    get("/api/opinions/for/$requestedSubjectId")
                         .with(csrf())
                         .header("Authorization", "Bearer $accessToken"),
                 ).andExpect(status().isOk)
@@ -154,7 +154,7 @@ class OpinionsIntegrationTests {
         val result =
             mockMvc
                 .perform(
-                    post("/opinions")
+                    post("/api/opinions")
                         .with(csrf())
                         .queryParam("subjectId", subjectId)
                         .queryParam("subjective", "new subjective")
@@ -182,7 +182,7 @@ class OpinionsIntegrationTests {
         val createResult =
             mockMvc
                 .perform(
-                    post("/opinions")
+                    post("/api/opinions")
                         .with(csrf())
                         .queryParam("subjectId", "15151515-1515-1515-1515-151515151515")
                         .queryParam("subjective", "to be replaced subjective")
@@ -197,7 +197,7 @@ class OpinionsIntegrationTests {
         val updateResult =
             mockMvc
                 .perform(
-                    patch("/opinions/${created.id}")
+                    patch("/api/opinions/${created.id}")
                         .with(csrf())
                         .queryParam("subjective", "updated subjective")
                         .queryParam("objective", "updated objective")
@@ -225,7 +225,7 @@ class OpinionsIntegrationTests {
         val createResult =
             mockMvc
                 .perform(
-                    post("/opinions")
+                    post("/api/opinions")
                         .with(csrf())
                         .queryParam("subjectId", "15151515-1515-1515-1515-151515151515")
                         .queryParam("subjective", "to be removed subjective")
@@ -239,14 +239,14 @@ class OpinionsIntegrationTests {
 
         mockMvc
             .perform(
-                delete("/opinions/${created.id}")
+                delete("/api/opinions/${created.id}")
                     .with(csrf())
                     .header("Authorization", "Bearer $accessToken"),
             ).andExpect(status().isOk)
 
         mockMvc
             .perform(
-                get("/opinions/${created.id}")
+                get("/api/opinions/${created.id}")
                     .header("Authorization", "Bearer $accessToken"),
             ).andExpect(status().isNotFound)
     }
@@ -259,7 +259,7 @@ class OpinionsIntegrationTests {
         val parentCreateResult =
             mockMvc
                 .perform(
-                    post("/opinions")
+                    post("/api/opinions")
                         .with(csrf())
                         .queryParam("subjectId", "15151515-1515-1515-1515-151515151515")
                         .queryParam("subjective", "parent subjective")
@@ -273,7 +273,7 @@ class OpinionsIntegrationTests {
         val childCreateResult =
             mockMvc
                 .perform(
-                    post("/opinions")
+                    post("/api/opinions")
                         .with(csrf())
                         .queryParam("subjectId", "15151515-1515-1515-1515-151515151515")
                         .queryParam("subjective", "child subjective")
@@ -287,7 +287,7 @@ class OpinionsIntegrationTests {
         val linkResult =
             mockMvc
                 .perform(
-                    post("/opinions/link")
+                    post("/api/opinions/link")
                         .with(csrf())
                         .queryParam("parentOpinionId", parent.id.toString())
                         .queryParam("childOpinionId", child.id.toString())
@@ -312,7 +312,7 @@ class OpinionsIntegrationTests {
         val parentCreateResult =
             mockMvc
                 .perform(
-                    post("/opinions")
+                    post("/api/opinions")
                         .with(csrf())
                         .queryParam("subjectId", "15151515-1515-1515-1515-151515151515")
                         .queryParam("subjective", "parent duplicate subjective")
@@ -326,7 +326,7 @@ class OpinionsIntegrationTests {
         val childCreateResult =
             mockMvc
                 .perform(
-                    post("/opinions")
+                    post("/api/opinions")
                         .with(csrf())
                         .queryParam("subjectId", "15151515-1515-1515-1515-151515151515")
                         .queryParam("subjective", "child duplicate subjective")
@@ -339,7 +339,7 @@ class OpinionsIntegrationTests {
 
         mockMvc
             .perform(
-                post("/opinions/link")
+                post("/api/opinions/link")
                     .with(csrf())
                     .queryParam("parentOpinionId", parent.id.toString())
                     .queryParam("childOpinionId", child.id.toString())
@@ -350,7 +350,7 @@ class OpinionsIntegrationTests {
         val secondLinkResult =
             mockMvc
                 .perform(
-                    post("/opinions/link")
+                    post("/api/opinions/link")
                         .with(csrf())
                         .queryParam("parentOpinionId", parent.id.toString())
                         .queryParam("childOpinionId", child.id.toString())
@@ -375,7 +375,7 @@ class OpinionsIntegrationTests {
         val parentCreateResult =
             mockMvc
                 .perform(
-                    post("/opinions")
+                    post("/api/opinions")
                         .with(csrf())
                         .queryParam("subjectId", "15151515-1515-1515-1515-151515151515")
                         .queryParam("subjective", "parent owner subjective")
@@ -388,7 +388,7 @@ class OpinionsIntegrationTests {
 
         mockMvc
             .perform(
-                post("/opinions/link")
+                post("/api/opinions/link")
                     .with(csrf())
                     .queryParam("parentOpinionId", parent.id.toString())
                     .queryParam("childOpinionId", "30000000-0000-0000-0000-000000000001")

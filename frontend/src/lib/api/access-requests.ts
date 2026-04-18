@@ -107,7 +107,7 @@ export function createAccessRequestsApi(client: HttpClient = httpClient) {
       };
 
       return client.get<PageResponseDto<AccessRequestDto>>(
-        "/access-requests/incoming",
+        "/api/access-requests/incoming",
         {
           auth: "required",
           query,
@@ -126,7 +126,7 @@ export function createAccessRequestsApi(client: HttpClient = httpClient) {
       };
 
       return client.get<PageResponseDto<AccessRequestDto>>(
-        "/access-requests/outgoing",
+        "/api/access-requests/outgoing",
         {
           auth: "required",
           query,
