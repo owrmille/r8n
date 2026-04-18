@@ -1,6 +1,6 @@
 package com.r8n.backend.access.persistence
 
-import com.r8n.backend.access.api.dto.access.RequestStatusEnumDto
+import com.r8n.backend.access.domain.RequestStatusEnum
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
@@ -12,7 +12,7 @@ interface AccessRequestRepository : JpaRepository<AccessRequestPersistence, UUID
     fun findByRequesterIdAndListIdAndStatusIn(
         requesterId: UUID,
         listId: UUID,
-        statuses: List<RequestStatusEnumDto>
+        statuses: List<RequestStatusEnum>
     ): List<AccessRequestPersistence>
 
     @Query("""
@@ -26,13 +26,13 @@ interface AccessRequestRepository : JpaRepository<AccessRequestPersistence, UUID
         listId: UUID?,
         requesterId: UUID?,
         ownerId: UUID?,
-        status: RequestStatusEnumDto?,
+        status: RequestStatusEnum?,
         pageable: Pageable
     ): Page<AccessRequestPersistence>
 
     fun findFirstByRequesterIdAndListIdAndStatus(
         requesterId: UUID,
         listId: UUID,
-        status: RequestStatusEnumDto
+        status: RequestStatusEnum
     ): Optional<AccessRequestPersistence>
 }

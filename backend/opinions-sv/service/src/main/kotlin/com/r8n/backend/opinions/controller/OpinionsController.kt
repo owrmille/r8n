@@ -1,7 +1,7 @@
 package com.r8n.backend.opinions.controller
 
 import com.r8n.backend.mock.stub.OpinionTestDataFactory
-import com.r8n.backend.opinions.api.OpinionApi
+import com.r8n.backend.opinions.api.OpinionsApi
 import com.r8n.backend.opinions.api.dto.OpinionDto
 import com.r8n.backend.opinions.facade.OpinionFacade
 import com.r8n.backend.security.Authority.IS_USER
@@ -11,9 +11,9 @@ import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
 @RestController
-class OpinionController(
+class OpinionsController(
     private val opinionFacade: OpinionFacade,
-) : OpinionApi {
+) : OpinionsApi {
     @PreAuthorize(IS_USER_OR_SERVICE)
     override fun getOpinionById(id: UUID) = opinionFacade.getOpinion(id)
 

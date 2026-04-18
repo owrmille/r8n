@@ -1,10 +1,11 @@
 package com.r8n.backend.access.service
 
-import com.r8n.backend.access.api.dto.access.RequestStatusEnumDto
-import com.r8n.backend.access.integration.api.PermissionEnumDto
+import com.r8n.backend.access.domain.PermissionEnum
+import com.r8n.backend.access.domain.RequestStatusEnum
 import com.r8n.backend.access.persistence.AccessRequestPersistence
 import com.r8n.backend.access.persistence.AccessRequestRepository
 import com.r8n.backend.mock.api.OpinionListApi
+import com.r8n.backend.opinions.integration.client.OpinionsInternalRestClient
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -16,13 +17,14 @@ import java.util.UUID
 class AccessRequestService(
     private val repository: AccessRequestRepository,
     private val opinionListApi: OpinionListApi,
+    private val opinionsRestClient: OpinionsInternalRestClient,
 ) {
 
     fun getRequests(
         listId: UUID?,
         requesterId: UUID?,
         ownerId: UUID?,
-        status: RequestStatusEnumDto?,
+        status: RequestStatusEnum?,
         pageable: Pageable
     ): Page<AccessRequestPersistence> {
         return repository.findAllByFilters(listId, requesterId, ownerId, status, pageable)
@@ -37,7 +39,7 @@ class AccessRequestService(
         }
 
         val existingRequests = repository.findByRequesterIdAndListIdAndStatusIn(
-            requesterId, listId, listOf(RequestStatusEnumDto.SENT, RequestStatusEnumDto.ACCEPTED)
+            requesterId, listId, listOf(RequestStatusEnum.SENT, RequestStatusEnum.ACCEPTED)
         )
         if (existingRequests.isNotEmpty()) {
             return existingRequests.first()
@@ -48,7 +50,7 @@ class AccessRequestService(
             listId = listId,
             requesterId = requesterId,
             ownerId = list.owner,
-            status = RequestStatusEnumDto.SENT,
+            status = RequestStatusEnum.SENT,
             createdAt = now,
             updatedAt = now
         )
@@ -64,11 +66,11 @@ class AccessRequestService(
             throw IllegalAccessException("Cannot cancel someone else's request")
         }
         
-        if (request.status != RequestStatusEnumDto.SENT) {
+        if (request.status != RequestStatusEnum.SENT) {
             throw IllegalStateException("Can only cancel requests in SENT status")
         }
 
-        request.status = RequestStatusEnumDto.CANCELLED
+        request.status = RequestStatusEnum.CANCELLED
         request.updatedAt = Instant.now()
         return repository.save(request)
     }
@@ -82,11 +84,11 @@ class AccessRequestService(
             throw IllegalAccessException("Only the list owner can accept requests")
         }
 
-        if (request.status != RequestStatusEnumDto.SENT) {
+        if (request.status != RequestStatusEnum.SENT) {
             throw IllegalStateException("Can only accept requests in SENT status")
         }
 
-        request.status = RequestStatusEnumDto.ACCEPTED
+        request.status = RequestStatusEnum.ACCEPTED
         request.updatedAt = Instant.now()
         return repository.save(request)
     }
@@ -100,11 +102,11 @@ class AccessRequestService(
             throw IllegalAccessException("Only the list owner can decline requests")
         }
 
-        if (request.status != RequestStatusEnumDto.SENT) {
+        if (request.status != RequestStatusEnum.SENT) {
             throw IllegalStateException("Can only decline requests in SENT status")
         }
 
-        request.status = RequestStatusEnumDto.REJECTED
+        request.status = RequestStatusEnum.REJECTED
         request.updatedAt = Instant.now()
         return repository.save(request)
     }
@@ -118,30 +120,38 @@ class AccessRequestService(
             throw IllegalAccessException("Only the list owner can hide requests")
         }
 
-        request.status = RequestStatusEnumDto.HIDDEN
+        request.status = RequestStatusEnum.HIDDEN
         request.updatedAt = Instant.now()
         return repository.save(request)
     }
 
-    fun canAccessOpinion(userId: UUID, opinionId: UUID, permission: PermissionEnumDto): Boolean {
-        if (permission != PermissionEnumDto.READ) return false
-        
-        val activeRequests = repository.findAllByFilters(
-            listId = null,
-            requesterId = userId,
-            ownerId = null,
-            status = RequestStatusEnumDto.ACCEPTED,
-            pageable = Pageable.unpaged()
-        )
+    fun canAccessOpinion(userId: UUID, opinionId: UUID, permission: PermissionEnum): Boolean {
+        val ownerId = opinionsRestClient.getOwnerOfOpinion(opinionId)
+        if (permission == PermissionEnum.READ) {
+            // we can also first fetch all owner's lists that contain this opinion and check if the requester has access to any of them
+            // not sure what would be more efficient in the long run
 
-        return activeRequests.any { request ->
-            val list = opinionListApi.getList(request.listId)
-            list.opinionSummaries.any { it.id == opinionId }
+            val activeRequests = repository.findAllByFilters(
+                listId = null,
+                requesterId = userId,
+                ownerId = ownerId,
+                status = RequestStatusEnum.ACCEPTED,
+                pageable = Pageable.unpaged()
+            )
+
+            return activeRequests.any { request ->
+                val list = opinionListApi.getList(request.listId)
+                list.opinionSummaries.any { it.id == opinionId }
+            }
+        } else if (permission == PermissionEnum.EDIT || permission == PermissionEnum.DELETE) {
+            return ownerId == userId
+        } else if (permission == PermissionEnum.APPROVE || permission == PermissionEnum.REJECT) {
+            return
         }
     }
 
-    fun canAccessOpinionList(userId: UUID, listId: UUID, permission: PermissionEnumDto): Boolean {
-        if (permission != PermissionEnumDto.READ) return false
+    fun canAccessOpinionList(userId: UUID, listId: UUID, permission: PermissionEnum): Boolean {
+        if (permission != PermissionEnum.READ) return false
         
         val list = try {
             opinionListApi.getList(listId)
@@ -151,7 +161,7 @@ class AccessRequestService(
         if (list.owner == userId) return true
 
         return repository.findFirstByRequesterIdAndListIdAndStatus(
-            userId, listId, RequestStatusEnumDto.ACCEPTED
+            userId, listId, RequestStatusEnum.ACCEPTED
         ).isPresent
     }
 }

@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import java.util.UUID
 
-interface OpinionApi {
+interface OpinionsApi {
     companion object {
         private const val ROOT_PATH = "/api/opinions"
         const val GET_BY_ID_PATH = "$ROOT_PATH/{id}"

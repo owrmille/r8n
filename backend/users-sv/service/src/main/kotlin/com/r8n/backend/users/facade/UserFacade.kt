@@ -1,10 +1,10 @@
 package com.r8n.backend.users.facade
 
+import com.r8n.backend.access.api.IncomingAccessRequestApi
+import com.r8n.backend.access.api.OutgoingAccessRequestApi
 import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.utils.toResponse
-import com.r8n.backend.mock.api.IncomingAccessRequestApi
 import com.r8n.backend.mock.api.MessagingApi
-import com.r8n.backend.mock.api.OutgoingAccessRequestApi
 import com.r8n.backend.mock.integration.api.OpinionListInternalApi
 import com.r8n.backend.users.api.dto.ConsentDto
 import com.r8n.backend.users.api.dto.PersonalIdentifiableInformationSectionDto

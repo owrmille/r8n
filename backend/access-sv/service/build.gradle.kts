@@ -15,6 +15,8 @@ dependencies {
     implementation(project(":users-api-integration"))
     implementation(project(":users-client"))
     implementation(project(":opinions-api"))
+    implementation(project(":opinions-api-integration"))
+    implementation(project(":opinions-client"))
     implementation(project(":core:security"))
     implementation(project(":core:api"))
     implementation(project(":core:utils"))

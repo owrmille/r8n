@@ -11,6 +11,7 @@ import com.r8n.backend.mock.integration.client.OpinionListRestClient
 import com.r8n.backend.mock.integration.client.RecommendationRestClient
 import com.r8n.backend.mock.integration.client.SelectorRestClient
 import com.r8n.backend.security.SecurityContextTokenInterceptor
+import com.r8n.backend.security.ServiceTokenService
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -23,7 +24,7 @@ class MockRestClientConfiguration {
     @Qualifier("mockRestBaseClient")
     fun mockRestBaseClient(
         @Value("\${services.mock.url}") baseUrl: String,
-        serviceTokenService: com.r8n.backend.security.ServiceTokenService,
+        serviceTokenService: ServiceTokenService,
     ): RestClient =
         RestClient
             .builder()

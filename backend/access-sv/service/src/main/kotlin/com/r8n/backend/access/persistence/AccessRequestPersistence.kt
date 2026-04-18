@@ -1,6 +1,6 @@
 package com.r8n.backend.access.persistence
 
-import com.r8n.backend.access.api.dto.access.RequestStatusEnumDto
+import com.r8n.backend.access.domain.RequestStatusEnum
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -31,7 +31,7 @@ class AccessRequestPersistence(
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    var status: RequestStatusEnumDto,
+    var status: RequestStatusEnum,
 
     @Column(nullable = false)
     var createdAt: Instant,

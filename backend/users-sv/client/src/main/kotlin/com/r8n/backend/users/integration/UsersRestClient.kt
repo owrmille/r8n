@@ -1,6 +1,9 @@
 package com.r8n.backend.users.integration
 
 import com.r8n.backend.users.integration.api.UsersInternalApi
+import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.IS_ADMIN_PATH
+import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.IS_AI_MODERATOR_PATH
+import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.IS_MODERATOR_PATH
 import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.NAME_PATH
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.body
@@ -15,4 +18,25 @@ class UsersRestClient(
             .uri(NAME_PATH, id)
             .retrieve()
             .body<String>()!!
+
+    override fun isModerator(id: UUID): Boolean =
+        restClient
+            .get()
+            .uri(IS_MODERATOR_PATH, id)
+            .retrieve()
+            .body<Boolean>()!!
+
+    override fun isAiModerator(id: UUID): Boolean =
+        restClient
+            .get()
+            .uri(IS_AI_MODERATOR_PATH, id)
+            .retrieve()
+            .body<Boolean>()!!
+
+    override fun isAdmin(id: UUID): Boolean =
+        restClient
+            .get()
+            .uri(IS_ADMIN_PATH, id)
+            .retrieve()
+            .body<Boolean>()!!
 }

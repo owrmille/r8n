@@ -1,11 +1,13 @@
 package com.r8n.backend.users
 
+import com.r8n.backend.access.api.IncomingAccessRequestApi
+import com.r8n.backend.access.api.OutgoingAccessRequestApi
+import com.r8n.backend.access.api.dto.access.AccessRequestDto
+import com.r8n.backend.access.api.dto.access.RequestStatusEnumDto
+import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.core.utils.toResponse
-import com.r8n.backend.mock.api.IncomingAccessRequestApi
 import com.r8n.backend.mock.api.MessagingApi
-import com.r8n.backend.mock.api.OutgoingAccessRequestApi
 import com.r8n.backend.mock.integration.api.OpinionListInternalApi
-import com.r8n.backend.mock.stub.AccessRequestsTestDataFactory
 import com.r8n.backend.mock.stub.MiscTestFactory
 import com.r8n.backend.mock.stub.OpinionListTestDataFactory
 import com.r8n.backend.users.api.dto.ConsentDto
@@ -49,7 +51,16 @@ import java.util.UUID
 @Testcontainers
 @AutoConfigureJsonTesters
 @AutoConfigureMockMvc
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    webEnvironment = WebEnvironment.RANDOM_PORT,
+    properties = [
+        "services.access.url=http://localhost:8080",
+        "services.mock.url=http://localhost:8080",
+        "r8n.security.jwt.private-key=-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDJ6v3R6O+WlMvT\n-----END PRIVATE KEY-----",
+        "r8n.security.jwt.public-key=-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyur90ejvlpTL0w==\n-----END PUBLIC KEY-----",
+        "spring.jpa.hibernate.ddl-auto=create-drop"
+    ]
+)
 @Import(TestObjectMapperConfiguration::class)
 class UsersIntegrationTests {
     private companion object {
@@ -64,8 +75,42 @@ class UsersIntegrationTests {
 
         const val USER_ID = "00000000-0000-0000-0000-000000000000"
         val opinions = OpinionListTestDataFactory.getList()
-        val incomingAccessRequests = AccessRequestsTestDataFactory.get()
-        val outgoingAccessRequests = AccessRequestsTestDataFactory.get()
+        val incomingAccessRequests = PageResponseDto(
+            items = listOf(
+                AccessRequestDto(
+                    id = UUID.randomUUID(),
+                    opinionListId = UUID.randomUUID(),
+                    opinionListName = "Test List",
+                    owner = UUID.fromString(USER_ID),
+                    ownerName = "Test Testsson",
+                    requester = UUID.randomUUID(),
+                    requesterName = "Requester",
+                    timestamp = java.time.Instant.now(),
+                    status = RequestStatusEnumDto.SENT
+                )
+            ),
+            total = 1,
+            page = 0,
+            size = 1
+        )
+        val outgoingAccessRequests = PageResponseDto(
+            items = listOf(
+                AccessRequestDto(
+                    id = UUID.randomUUID(),
+                    opinionListId = UUID.randomUUID(),
+                    opinionListName = "Another List",
+                    owner = UUID.randomUUID(),
+                    ownerName = "Owner",
+                    requester = UUID.fromString(USER_ID),
+                    requesterName = "Test Testsson",
+                    timestamp = java.time.Instant.now(),
+                    status = RequestStatusEnumDto.SENT
+                )
+            ),
+            total = 1,
+            page = 0,
+            size = 1
+        )
         val supportMessages = MiscTestFactory.getSupportMessage()
     }
 
@@ -96,10 +141,10 @@ class UsersIntegrationTests {
             PageImpl(listOf(opinions)).toResponse(),
         )
         whenever(incomingAccessRequestClient.get(anyOrNull(), anyOrNull(), anyOrNull(), any())).thenReturn(
-            PageImpl(listOf(incomingAccessRequests)).toResponse(),
+            incomingAccessRequests,
         )
         whenever(outgoingAccessRequestClient.get(anyOrNull(), anyOrNull(), anyOrNull(), any())).thenReturn(
-            PageImpl(listOf(outgoingAccessRequests)).toResponse(),
+            outgoingAccessRequests,
         )
         whenever(messageClient.getSupportThreads()).thenReturn(
             PageImpl(listOf(supportMessages)).toResponse(),
@@ -150,8 +195,8 @@ class UsersIntegrationTests {
                     PageImpl(listOf(session)).toResponse(),
                 ),
                 PageImpl(listOf(opinions)).toResponse(),
-                PageImpl(listOf(outgoingAccessRequests)).toResponse(),
-                PageImpl(listOf(incomingAccessRequests)).toResponse(),
+                outgoingAccessRequests,
+                incomingAccessRequests,
                 PageImpl(listOf(supportMessages)).toResponse(),
             )
         assertEquals(expected, actual)

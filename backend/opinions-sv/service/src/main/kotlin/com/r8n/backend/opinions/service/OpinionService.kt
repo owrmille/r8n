@@ -48,6 +48,12 @@ class OpinionService(
         return opinion.toDomain()
     }
 
+    fun getOwnerOfOpinion(id: UUID): UUID {
+        return opinionRepository.findById(id)
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
+            .owner
+    }
+
     @Transactional
     fun createOpinion(
         subjectId: UUID,

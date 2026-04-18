@@ -13,4 +13,13 @@ class InterserviceController(
 ) : UsersInternalApi {
     @PreAuthorize(Authority.IS_USER_OR_SERVICE)
     override fun getUserName(id: UUID) = userService.getName(id)
+
+    @PreAuthorize(Authority.IS_USER_OR_SERVICE)
+    override fun isModerator(id: UUID): Boolean = userService.isModerator(id)
+
+    @PreAuthorize(Authority.IS_USER_OR_SERVICE)
+    override fun isAiModerator(id: UUID): Boolean = userService.isAiModerator(id)
+
+    @PreAuthorize(Authority.IS_USER_OR_SERVICE)
+    override fun isAdmin(id: UUID): Boolean = userService.isAdmin(id)
 }

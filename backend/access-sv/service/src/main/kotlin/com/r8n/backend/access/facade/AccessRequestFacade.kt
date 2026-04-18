@@ -2,6 +2,9 @@ package com.r8n.backend.access.facade
 
 import com.r8n.backend.access.api.dto.access.AccessRequestDto
 import com.r8n.backend.access.api.dto.access.RequestStatusEnumDto
+import com.r8n.backend.access.domain.PermissionEnum
+import com.r8n.backend.access.domain.RequestStatusEnum
+import com.r8n.backend.access.integration.api.PermissionEnumDto
 import com.r8n.backend.access.persistence.AccessRequestPersistence
 import com.r8n.backend.access.service.AccessRequestService
 import com.r8n.backend.core.api.PageRequestDto
@@ -33,7 +36,7 @@ class AccessRequestFacade(
             pageable.size,
             Sort.by(pageable.sort.map { Sort.Order(Sort.Direction.valueOf(it.direction.name), it.property) })
         )
-        val page = service.getRequests(forListId, null, ownerId, status, pageRequest)
+        val page = service.getRequests(forListId, null, ownerId, status?.toDomain(), pageRequest)
         return PageResponseDto(
             items = page.content.map { toDto(it) },
             total = page.totalElements,
@@ -54,7 +57,7 @@ class AccessRequestFacade(
             pageable.size,
             Sort.by(pageable.sort.map { Sort.Order(Sort.Direction.valueOf(it.direction.name), it.property) })
         )
-        val page = service.getRequests(forListId, requesterId, null, status, pageRequest)
+        val page = service.getRequests(forListId, requesterId, null, status?.toDomain(), pageRequest)
         return PageResponseDto(
             items = page.content.map { toDto(it) },
             total = page.totalElements,
@@ -109,7 +112,49 @@ class AccessRequestFacade(
             requester = persistence.requesterId,
             requesterName = requesterName,
             timestamp = persistence.createdAt,
-            status = persistence.status
+            status = persistence.status.toDto()
         )
+    }
+
+    fun canAccessOpinion(userId: UUID, opinionId: UUID, permission: PermissionEnumDto): Boolean {
+        return service.canAccessOpinion(userId, opinionId, permission.toDomain())
+    }
+
+    fun canAccessOpinionList(userId: UUID, opinionListId: UUID, permission: PermissionEnumDto): Boolean {
+        return service.canAccessOpinionList(userId, opinionListId, permission.toDomain())
+    }
+
+    private companion object {
+        fun PermissionEnumDto.toDomain() = when (this) {
+            PermissionEnumDto.READ -> PermissionEnum.READ
+            PermissionEnumDto.EDIT -> PermissionEnum.EDIT
+            PermissionEnumDto.DELETE -> PermissionEnum.DELETE
+            PermissionEnumDto.APPROVE -> PermissionEnum.APPROVE
+            PermissionEnumDto.REJECT -> PermissionEnum.REJECT
+        }
+
+        fun PermissionEnum.toDto() = when (this) {
+            PermissionEnum.READ -> PermissionEnumDto.READ
+            PermissionEnum.EDIT -> PermissionEnumDto.EDIT
+            PermissionEnum.DELETE -> PermissionEnumDto.DELETE
+            PermissionEnum.APPROVE -> PermissionEnumDto.APPROVE
+            PermissionEnum.REJECT -> PermissionEnumDto.REJECT
+        }
+
+        fun RequestStatusEnumDto.toDomain() = when (this) {
+            RequestStatusEnumDto.SENT -> RequestStatusEnum.SENT
+            RequestStatusEnumDto.ACCEPTED -> RequestStatusEnum.ACCEPTED
+            RequestStatusEnumDto.REJECTED -> RequestStatusEnum.REJECTED
+            RequestStatusEnumDto.HIDDEN -> RequestStatusEnum.HIDDEN
+            RequestStatusEnumDto.CANCELLED -> RequestStatusEnum.CANCELLED
+        }
+
+        fun RequestStatusEnum.toDto() = when (this) {
+            RequestStatusEnum.SENT -> RequestStatusEnumDto.SENT
+            RequestStatusEnum.ACCEPTED -> RequestStatusEnumDto.ACCEPTED
+            RequestStatusEnum.REJECTED -> RequestStatusEnumDto.REJECTED
+            RequestStatusEnum.HIDDEN -> RequestStatusEnumDto.HIDDEN
+            RequestStatusEnum.CANCELLED -> RequestStatusEnumDto.CANCELLED
+        }
     }
 }
