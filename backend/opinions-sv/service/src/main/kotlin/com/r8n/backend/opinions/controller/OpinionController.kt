@@ -58,7 +58,11 @@ class OpinionController(
     }
 
     @PreAuthorize(IS_USER)
-    override fun unlinkComponent(linkId: UUID): OpinionDto = OpinionTestDataFactory.getOpinion(UUID.fromString("0"))
+    override fun unlinkComponent(linkId: UUID): OpinionDto {
+        val auth = SecurityContextHolder.getContext().authentication ?: throw IllegalStateException("Not authenticated")
+        val userId = UUID.fromString(auth.name)
+        return opinionFacade.unlinkComponent(userId, linkId)
+    }
 
     @PreAuthorize(IS_USER)
     override fun adjustComponentWeight(
