@@ -47,7 +47,9 @@ class AuthIntegrationTest {
                 .withUsername("test")
                 .withPassword("test")
                 .withInitScript("db/init-schema.sql")
-        const val LOGIN_PATH = "/api/auth/login" // yes, this is a duplicate from AuthApi, left intentional to detect changes
+
+        // yes, this is a duplicate from AuthApi, left intentional to detect changes
+        const val LOGIN_PATH = "/api/auth/login"
         const val REFRESH_PATH = "/api/auth/refresh"
         const val EMAIL = "test@test.test"
         const val PASSWORD = "1234"
