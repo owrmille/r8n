@@ -9,11 +9,15 @@ import com.r8n.backend.mock.integration.api.OpinionListInternalApi
 import com.r8n.backend.users.api.dto.ConsentDto
 import com.r8n.backend.users.api.dto.PersonalIdentifiableInformationSectionDto
 import com.r8n.backend.users.api.dto.UserCompleteDataDto
+import com.r8n.backend.users.api.dto.UserProfileDto
 import com.r8n.backend.users.api.dto.UserSessionDto
 import com.r8n.backend.users.api.dto.UserStatusEnumDto
+import com.r8n.backend.users.api.dto.UsernameDto
 import com.r8n.backend.users.domain.Consent
+import com.r8n.backend.users.domain.UserProfile
 import com.r8n.backend.users.domain.UserSession
 import com.r8n.backend.users.domain.UserStatusEnum
+import com.r8n.backend.users.domain.Username
 import com.r8n.backend.users.service.UserService
 import com.r8n.backend.users.service.UserSessionService
 import org.springframework.data.domain.PageImpl
@@ -43,7 +47,10 @@ class UserFacade(
                 PersonalIdentifiableInformationSectionDto(
                     name = user.name,
                     email = user.email,
+                    phone = user.phone,
                     sessions = sessions.map { it.toDto() }.toResponse(),
+                    about = user.about,
+                    location = user.location,
                 ),
             opinions = opinionClient.getMineFull(PageRequestDto(0, -1)),
             outgoingRequests = outgoingAccessRequestClient.get(null, null, null, PageRequestDto(0, -1)),
@@ -51,6 +58,22 @@ class UserFacade(
             messages = messageClient.getSupportThreads(),
         )
     }
+
+    fun getMyName(): UsernameDto = userService.getMyName().toDto()
+
+    private fun Username.toDto() = UsernameDto(id, name)
+
+    fun getUserProfile(id: UUID) = userService.getProfile(id).toDto()
+
+    private fun UserProfile.toDto() =
+        UserProfileDto(
+            id,
+            name,
+            status.toDto(),
+            lastOnline,
+            about,
+            location,
+        )
 
     private fun UserStatusEnum.toDto() = UserStatusEnumDto.valueOf(this.name)
 

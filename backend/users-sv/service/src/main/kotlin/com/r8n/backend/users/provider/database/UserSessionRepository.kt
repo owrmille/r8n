@@ -16,4 +16,6 @@ interface UserSessionRepository : JpaRepository<UserSessionPersistence, UUID> {
         id: UUID,
         userId: UUID,
     ): UserSessionPersistence?
+
+    fun findFirstByUserIdOrderByCreatedDesc(userId: UUID): UserSessionPersistence?
 }

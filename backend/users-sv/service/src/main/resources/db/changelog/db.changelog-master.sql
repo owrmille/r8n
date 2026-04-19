@@ -118,3 +118,12 @@ INSERT INTO users.users (id, status, status_timestamp, password_hash)
 VALUES ('60606060-6060-6060-6060-606060606060', 'ACTIVE', '2024-01-01T12:00:00Z', '$2a$12$lxo9e8RbWABER4/mkU./s.njgArpJleAB9Vdq7C7rlNWIRYEw0Oym');
 INSERT INTO users.pii (user_id, name, email, phone)
 VALUES ('60606060-6060-6060-6060-606060606060', 'Jonas Braun', 'jonas@r8n.test', null);
+
+--changeset inikulin:V4_user_fields
+ALTER TABLE users.pii ADD COLUMN about TEXT;
+ALTER TABLE users.pii ADD COLUMN location VARCHAR(255);
+UPDATE users.pii SET location = 'Berlin, Germany' WHERE user_id = '00000000-0000-0000-0000-000000000000';
+UPDATE users.pii SET about = 'I am a coffee expert' WHERE user_id = '00000000-0000-0000-0000-000000000000';
+UPDATE users.pii SET location = 'Munich, Germany' WHERE user_id = '10101010-1010-1010-1010-101010101010';
+UPDATE users.pii SET about = 'I am a bratwurst expert' WHERE user_id = '10101010-1010-1010-1010-101010101010';
+CREATE UNIQUE INDEX idx_user_name ON users.pii(name);
