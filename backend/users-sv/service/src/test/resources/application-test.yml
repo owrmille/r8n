@@ -81,3 +81,7 @@ r8n:
       same-site: Strict
       path: /api/auth
       max-age: 30d
+  storage:
+    avatar:
+      local-root: ${java.io.tmpdir}/r8n-test/uploads/avatars
+      max-size: 2MB

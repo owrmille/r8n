@@ -39,3 +39,7 @@ r8n:
       same-site: Strict
       path: /api/auth
       max-age: ${SECURITY_REFRESH_COOKIE_MAX_AGE}
+  storage:
+    avatar:
+      local-root: ${AVATAR_STORAGE_LOCAL_ROOT}
+      max-size: ${AVATAR_STORAGE_MAX_SIZE}
