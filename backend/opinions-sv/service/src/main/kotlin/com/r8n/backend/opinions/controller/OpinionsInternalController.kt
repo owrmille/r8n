@@ -1,6 +1,5 @@
 package com.r8n.backend.opinions.controller
 
-import com.r8n.backend.opinions.facade.OpinionFacade
 import com.r8n.backend.opinions.integration.api.OpinionsInternalApi
 import com.r8n.backend.opinions.service.OpinionService
 import com.r8n.backend.security.Authority.IS_SERVICE
@@ -10,7 +9,7 @@ import java.util.UUID
 
 @RestController
 class OpinionsInternalController(
-    private val opinionService: OpinionService
+    private val opinionService: OpinionService,
 ) : OpinionsInternalApi {
     @PreAuthorize(IS_SERVICE)
     override fun getOwnerOfOpinion(id: UUID) = opinionService.getOwnerOfOpinion(id)

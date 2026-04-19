@@ -6,8 +6,8 @@ import com.r8n.backend.users.domain.UserProfile
 import com.r8n.backend.users.domain.Username
 import com.r8n.backend.users.persistence.RoleEnumPersistence
 import com.r8n.backend.users.provider.database.PIIRepository
-import com.r8n.backend.users.provider.database.UserRoleAssignmentRepository
 import com.r8n.backend.users.provider.database.UserRepository
+import com.r8n.backend.users.provider.database.UserRoleAssignmentRepository
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import java.time.Instant

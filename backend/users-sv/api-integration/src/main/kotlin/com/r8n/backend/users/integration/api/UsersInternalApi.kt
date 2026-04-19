@@ -19,11 +19,17 @@ interface UsersInternalApi {
     ): String
 
     @GetMapping(IS_MODERATOR_PATH)
-    fun isModerator(@PathVariable id: UUID): Boolean
+    fun isModerator(
+        @PathVariable id: UUID,
+    ): Boolean
 
     @GetMapping(IS_AI_MODERATOR_PATH)
-    fun isAiModerator(@PathVariable id: UUID): Boolean
+    fun isAiModerator(
+        @PathVariable id: UUID,
+    ): Boolean
 
     @GetMapping(IS_ADMIN_PATH)
-    fun isAdmin(@PathVariable id: UUID): Boolean
+    fun isAdmin(
+        @PathVariable id: UUID,
+    ): Boolean
 }

@@ -11,7 +11,10 @@ import java.util.UUID
 class AccessInternalRestClient(
     private val restClient: RestClient,
 ) : AccessInternalApi {
-    override fun canAccessOpinion(permission: PermissionEnumDto, opinionId: UUID): Boolean =
+    override fun canAccessOpinion(
+        permission: PermissionEnumDto,
+        opinionId: UUID,
+    ): Boolean =
         restClient
             .get()
             .uri(ACCESS_OPINION_PATH, opinionId)
@@ -19,7 +22,10 @@ class AccessInternalRestClient(
             .retrieve()
             .body<Boolean>()!!
 
-    override fun canAccessOpinionList(permission: PermissionEnumDto, opinionListId: UUID): Boolean =
+    override fun canAccessOpinionList(
+        permission: PermissionEnumDto,
+        opinionListId: UUID,
+    ): Boolean =
         restClient
             .get()
             .uri(ACCESS_OPINION_LIST_PATH, opinionListId)

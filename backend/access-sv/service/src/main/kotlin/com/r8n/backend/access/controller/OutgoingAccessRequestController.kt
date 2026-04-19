@@ -15,26 +15,19 @@ import java.util.UUID
 
 @RestController
 class OutgoingAccessRequestController(
-    private val facade: AccessRequestFacade
+    private val facade: AccessRequestFacade,
 ) : OutgoingAccessRequestApi {
-
     @PreAuthorize(IS_USER)
     override fun get(
         forListId: UUID?,
         since: Instant?,
         status: RequestStatusEnumDto?,
         pageable: PageRequestDto,
-    ): PageResponseDto<AccessRequestDto> {
-        return facade.getOutgoing(forListId, since, status, pageable, getCurrentUserId())
-    }
+    ): PageResponseDto<AccessRequestDto> = facade.getOutgoing(forListId, since, status, pageable, getCurrentUserId())
 
     @PreAuthorize(IS_USER)
-    override fun create(listId: UUID): AccessRequestDto {
-        return facade.createRequest(listId, getCurrentUserId())
-    }
+    override fun create(listId: UUID): AccessRequestDto = facade.createRequest(listId, getCurrentUserId())
 
     @PreAuthorize(IS_USER)
-    override fun cancel(requestId: UUID): AccessRequestDto {
-        return facade.cancelRequest(requestId, getCurrentUserId())
-    }
+    override fun cancel(requestId: UUID): AccessRequestDto = facade.cancelRequest(requestId, getCurrentUserId())
 }

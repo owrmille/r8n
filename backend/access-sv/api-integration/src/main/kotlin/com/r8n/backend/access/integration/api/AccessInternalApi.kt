@@ -11,8 +11,14 @@ interface AccessInternalApi {
     }
 
     @GetMapping(ACCESS_OPINION_PATH)
-    fun canAccessOpinion(permission: PermissionEnumDto, opinionId: UUID): Boolean
+    fun canAccessOpinion(
+        permission: PermissionEnumDto,
+        opinionId: UUID,
+    ): Boolean
 
     @GetMapping(ACCESS_OPINION_LIST_PATH)
-    fun canAccessOpinionList(permission: PermissionEnumDto, opinionListId: UUID): Boolean
+    fun canAccessOpinionList(
+        permission: PermissionEnumDto,
+        opinionListId: UUID,
+    ): Boolean
 }

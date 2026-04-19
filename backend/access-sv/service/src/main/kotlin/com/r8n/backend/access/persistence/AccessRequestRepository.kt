@@ -12,27 +12,29 @@ interface AccessRequestRepository : JpaRepository<AccessRequestPersistence, UUID
     fun findByRequesterIdAndListIdAndStatusIn(
         requesterId: UUID,
         listId: UUID,
-        statuses: List<RequestStatusEnum>
+        statuses: List<RequestStatusEnum>,
     ): List<AccessRequestPersistence>
 
-    @Query("""
+    @Query(
+        """
         SELECT ar FROM AccessRequestPersistence ar
         WHERE (:listId IS NULL OR ar.listId = :listId)
         AND (:requesterId IS NULL OR ar.requesterId = :requesterId)
         AND (:ownerId IS NULL OR ar.ownerId = :ownerId)
         AND (:status IS NULL OR ar.status = :status)
-    """)
+    """,
+    )
     fun findAllByFilters(
         listId: UUID?,
         requesterId: UUID?,
         ownerId: UUID?,
         status: RequestStatusEnum?,
-        pageable: Pageable
+        pageable: Pageable,
     ): Page<AccessRequestPersistence>
 
     fun findFirstByRequesterIdAndListIdAndStatus(
         requesterId: UUID,
         listId: UUID,
-        status: RequestStatusEnum
+        status: RequestStatusEnum,
     ): Optional<AccessRequestPersistence>
 }

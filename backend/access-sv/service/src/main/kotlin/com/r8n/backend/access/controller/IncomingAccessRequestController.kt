@@ -15,31 +15,22 @@ import java.util.UUID
 
 @RestController
 class IncomingAccessRequestController(
-    private val facade: AccessRequestFacade
+    private val facade: AccessRequestFacade,
 ) : IncomingAccessRequestApi {
-
     @PreAuthorize(IS_USER)
     override fun get(
         forListId: UUID?,
         since: Instant?,
         status: RequestStatusEnumDto?,
         pageable: PageRequestDto,
-    ): PageResponseDto<AccessRequestDto> {
-        return facade.getIncoming(forListId, since, status, pageable, getCurrentUserId())
-    }
+    ): PageResponseDto<AccessRequestDto> = facade.getIncoming(forListId, since, status, pageable, getCurrentUserId())
 
     @PreAuthorize(IS_USER)
-    override fun accept(requestId: UUID): AccessRequestDto {
-        return facade.acceptRequest(requestId, getCurrentUserId())
-    }
+    override fun accept(requestId: UUID): AccessRequestDto = facade.acceptRequest(requestId, getCurrentUserId())
 
     @PreAuthorize(IS_USER)
-    override fun decline(requestId: UUID): AccessRequestDto {
-        return facade.declineRequest(requestId, getCurrentUserId())
-    }
+    override fun decline(requestId: UUID): AccessRequestDto = facade.declineRequest(requestId, getCurrentUserId())
 
     @PreAuthorize(IS_USER)
-    override fun hide(requestId: UUID): AccessRequestDto {
-        return facade.hideRequest(requestId, getCurrentUserId())
-    }
+    override fun hide(requestId: UUID): AccessRequestDto = facade.hideRequest(requestId, getCurrentUserId())
 }

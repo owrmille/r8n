@@ -3,8 +3,8 @@ package com.r8n.backend.access.integration.configuration
 import com.r8n.backend.access.api.IncomingAccessRequestApi
 import com.r8n.backend.access.api.OutgoingAccessRequestApi
 import com.r8n.backend.access.integration.api.AccessInternalApi
-import com.r8n.backend.access.integration.client.IncomingAccessRequestRestClient
 import com.r8n.backend.access.integration.client.AccessInternalRestClient
+import com.r8n.backend.access.integration.client.IncomingAccessRequestRestClient
 import com.r8n.backend.access.integration.client.OutgoingAccessRequestRestClient
 import com.r8n.backend.security.SecurityContextTokenInterceptor
 import com.r8n.backend.security.ServiceTokenService

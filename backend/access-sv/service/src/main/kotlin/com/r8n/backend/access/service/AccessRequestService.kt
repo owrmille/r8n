@@ -19,53 +19,62 @@ class AccessRequestService(
     private val opinionListApi: OpinionListApi,
     private val opinionsRestClient: OpinionsInternalRestClient,
 ) {
-
     fun getRequests(
         listId: UUID?,
         requesterId: UUID?,
         ownerId: UUID?,
         status: RequestStatusEnum?,
-        pageable: Pageable
-    ): Page<AccessRequestPersistence> {
-        return repository.findAllByFilters(listId, requesterId, ownerId, status, pageable)
-    }
+        pageable: Pageable,
+    ): Page<AccessRequestPersistence> = repository.findAllByFilters(listId, requesterId, ownerId, status, pageable)
 
     @Transactional
-    fun createRequest(listId: UUID, requesterId: UUID): AccessRequestPersistence {
+    fun createRequest(
+        listId: UUID,
+        requesterId: UUID,
+    ): AccessRequestPersistence {
         val list = opinionListApi.getList(listId)
-        
+
         if (list.owner == requesterId) {
             throw IllegalArgumentException("Owner cannot request access to their own list")
         }
 
-        val existingRequests = repository.findByRequesterIdAndListIdAndStatusIn(
-            requesterId, listId, listOf(RequestStatusEnum.SENT, RequestStatusEnum.ACCEPTED)
-        )
+        val existingRequests =
+            repository.findByRequesterIdAndListIdAndStatusIn(
+                requesterId,
+                listId,
+                listOf(RequestStatusEnum.SENT, RequestStatusEnum.ACCEPTED),
+            )
         if (existingRequests.isNotEmpty()) {
             return existingRequests.first()
         }
 
         val now = Instant.now()
-        val request = AccessRequestPersistence(
-            listId = listId,
-            requesterId = requesterId,
-            ownerId = list.owner,
-            status = RequestStatusEnum.SENT,
-            createdAt = now,
-            updatedAt = now
-        )
+        val request =
+            AccessRequestPersistence(
+                listId = listId,
+                requesterId = requesterId,
+                ownerId = list.owner,
+                status = RequestStatusEnum.SENT,
+                createdAt = now,
+                updatedAt = now,
+            )
         return repository.save(request)
     }
 
     @Transactional
-    fun cancelRequest(requestId: UUID, requesterId: UUID): AccessRequestPersistence {
-        val request = repository.findById(requestId)
-            .orElseThrow { NoSuchElementException("Request not found") }
-        
+    fun cancelRequest(
+        requestId: UUID,
+        requesterId: UUID,
+    ): AccessRequestPersistence {
+        val request =
+            repository
+                .findById(requestId)
+                .orElseThrow { NoSuchElementException("Request not found") }
+
         if (request.requesterId != requesterId) {
             throw IllegalAccessException("Cannot cancel someone else's request")
         }
-        
+
         if (request.status != RequestStatusEnum.SENT) {
             throw IllegalStateException("Can only cancel requests in SENT status")
         }
@@ -76,9 +85,14 @@ class AccessRequestService(
     }
 
     @Transactional
-    fun acceptRequest(requestId: UUID, ownerId: UUID): AccessRequestPersistence {
-        val request = repository.findById(requestId)
-            .orElseThrow { NoSuchElementException("Request not found") }
+    fun acceptRequest(
+        requestId: UUID,
+        ownerId: UUID,
+    ): AccessRequestPersistence {
+        val request =
+            repository
+                .findById(requestId)
+                .orElseThrow { NoSuchElementException("Request not found") }
 
         if (request.ownerId != ownerId) {
             throw IllegalAccessException("Only the list owner can accept requests")
@@ -94,9 +108,14 @@ class AccessRequestService(
     }
 
     @Transactional
-    fun declineRequest(requestId: UUID, ownerId: UUID): AccessRequestPersistence {
-        val request = repository.findById(requestId)
-            .orElseThrow { NoSuchElementException("Request not found") }
+    fun declineRequest(
+        requestId: UUID,
+        ownerId: UUID,
+    ): AccessRequestPersistence {
+        val request =
+            repository
+                .findById(requestId)
+                .orElseThrow { NoSuchElementException("Request not found") }
 
         if (request.ownerId != ownerId) {
             throw IllegalAccessException("Only the list owner can decline requests")
@@ -112,9 +131,14 @@ class AccessRequestService(
     }
 
     @Transactional
-    fun hideRequest(requestId: UUID, ownerId: UUID): AccessRequestPersistence {
-        val request = repository.findById(requestId)
-            .orElseThrow { NoSuchElementException("Request not found") }
+    fun hideRequest(
+        requestId: UUID,
+        ownerId: UUID,
+    ): AccessRequestPersistence {
+        val request =
+            repository
+                .findById(requestId)
+                .orElseThrow { NoSuchElementException("Request not found") }
 
         if (request.ownerId != ownerId) {
             throw IllegalAccessException("Only the list owner can hide requests")
@@ -125,19 +149,24 @@ class AccessRequestService(
         return repository.save(request)
     }
 
-    fun canAccessOpinion(userId: UUID, opinionId: UUID, permission: PermissionEnum): Boolean {
+    fun canAccessOpinion(
+        userId: UUID,
+        opinionId: UUID,
+        permission: PermissionEnum,
+    ): Boolean {
         val ownerId = opinionsRestClient.getOwnerOfOpinion(opinionId)
         if (permission == PermissionEnum.READ) {
             // we can also first fetch all owner's lists that contain this opinion and check if the requester has access to any of them
             // not sure what would be more efficient in the long run
 
-            val activeRequests = repository.findAllByFilters(
-                listId = null,
-                requesterId = userId,
-                ownerId = ownerId,
-                status = RequestStatusEnum.ACCEPTED,
-                pageable = Pageable.unpaged()
-            )
+            val activeRequests =
+                repository.findAllByFilters(
+                    listId = null,
+                    requesterId = userId,
+                    ownerId = ownerId,
+                    status = RequestStatusEnum.ACCEPTED,
+                    pageable = Pageable.unpaged(),
+                )
 
             return activeRequests.any { request ->
                 val list = opinionListApi.getList(request.listId)
@@ -150,18 +179,26 @@ class AccessRequestService(
         }
     }
 
-    fun canAccessOpinionList(userId: UUID, listId: UUID, permission: PermissionEnum): Boolean {
+    fun canAccessOpinionList(
+        userId: UUID,
+        listId: UUID,
+        permission: PermissionEnum,
+    ): Boolean {
         if (permission != PermissionEnum.READ) return false
-        
-        val list = try {
-            opinionListApi.getList(listId)
-        } catch (_: Exception) {
-            return false
-        }
+
+        val list =
+            try {
+                opinionListApi.getList(listId)
+            } catch (_: Exception) {
+                return false
+            }
         if (list.owner == userId) return true
 
-        return repository.findFirstByRequesterIdAndListIdAndStatus(
-            userId, listId, RequestStatusEnum.ACCEPTED
-        ).isPresent
+        return repository
+            .findFirstByRequesterIdAndListIdAndStatus(
+                userId,
+                listId,
+                RequestStatusEnum.ACCEPTED,
+            ).isPresent
     }
 }
