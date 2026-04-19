@@ -1,6 +1,5 @@
 package com.r8n.backend.users.api
 
-import com.r8n.backend.users.api.dto.UserCompleteDataDto
 import com.r8n.backend.users.api.dto.UserProfileDto
 import com.r8n.backend.users.api.dto.UsernameDto
 import org.springframework.web.bind.annotation.GetMapping

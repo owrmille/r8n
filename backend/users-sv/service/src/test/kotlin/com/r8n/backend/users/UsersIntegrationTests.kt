@@ -1,27 +1,11 @@
 package com.r8n.backend.users
 
-import com.r8n.backend.core.utils.toResponse
-import com.r8n.backend.mock.api.IncomingAccessRequestApi
-import com.r8n.backend.mock.api.MessagingApi
-import com.r8n.backend.mock.api.OutgoingAccessRequestApi
-import com.r8n.backend.mock.integration.api.OpinionListInternalApi
-import com.r8n.backend.mock.stub.AccessRequestsTestDataFactory
-import com.r8n.backend.mock.stub.MiscTestFactory
-import com.r8n.backend.mock.stub.OpinionListTestDataFactory
-import com.r8n.backend.users.api.dto.ConsentDto
-import com.r8n.backend.users.api.dto.PersonalIdentifiableInformationSectionDto
-import com.r8n.backend.users.api.dto.UserCompleteDataDto
 import com.r8n.backend.users.api.dto.UserProfileDto
-import com.r8n.backend.users.api.dto.UserSessionDto
 import com.r8n.backend.users.api.dto.UserStatusEnumDto
 import com.r8n.backend.users.service.TokenService
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.any
-import org.mockito.kotlin.anyOrNull
-import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.AutoConfigureJsonTesters
 import org.springframework.boot.test.context.SpringBootTest
@@ -29,11 +13,9 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
-import org.springframework.data.domain.PageImpl
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -45,8 +27,6 @@ import tools.jackson.databind.ObjectMapper
 import tools.jackson.module.kotlin.readValue
 import java.sql.Timestamp
 import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
@@ -68,10 +48,6 @@ class UsersIntegrationTests {
                 .withInitScript("db/init-schema.sql")
 
         const val USER_ID = "00000000-0000-0000-0000-000000000000"
-        val opinions = OpinionListTestDataFactory.getList()
-        val incomingAccessRequests = AccessRequestsTestDataFactory.get()
-        val outgoingAccessRequests = AccessRequestsTestDataFactory.get()
-        val supportMessages = MiscTestFactory.getSupportMessage()
     }
 
     @Autowired
@@ -85,34 +61,6 @@ class UsersIntegrationTests {
 
     @Autowired
     lateinit var jdbcTemplate: JdbcTemplate
-
-    @MockitoBean
-    lateinit var opinionClient: OpinionListInternalApi
-
-    @MockitoBean
-    lateinit var incomingAccessRequestClient: IncomingAccessRequestApi
-
-    @MockitoBean
-    lateinit var outgoingAccessRequestClient: OutgoingAccessRequestApi
-
-    @MockitoBean
-    lateinit var messageClient: MessagingApi
-
-    @BeforeEach
-    fun setUp() {
-        whenever(opinionClient.getMineFull(any())).thenReturn(
-            PageImpl(listOf(opinions)).toResponse(),
-        )
-        whenever(incomingAccessRequestClient.get(anyOrNull(), anyOrNull(), anyOrNull(), any())).thenReturn(
-            PageImpl(listOf(incomingAccessRequests)).toResponse(),
-        )
-        whenever(outgoingAccessRequestClient.get(anyOrNull(), anyOrNull(), anyOrNull(), any())).thenReturn(
-            PageImpl(listOf(outgoingAccessRequests)).toResponse(),
-        )
-        whenever(messageClient.getSupportThreads()).thenReturn(
-            PageImpl(listOf(supportMessages)).toResponse(),
-        )
-    }
 
     @Test
     @WithMockUser(username = USER_ID)

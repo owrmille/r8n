@@ -7,4 +7,5 @@ version = "0.0.1-SNAPSHOT"
 description = "user information service API for other services' use"
 
 dependencies {
+    implementation(project(":users-api"))
 }

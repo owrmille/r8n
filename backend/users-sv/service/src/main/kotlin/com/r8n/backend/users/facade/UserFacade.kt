@@ -1,27 +1,17 @@
 package com.r8n.backend.users.facade
 
-import com.r8n.backend.core.api.PageRequestDto
-import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.mock.api.IncomingAccessRequestApi
 import com.r8n.backend.mock.api.MessagingApi
 import com.r8n.backend.mock.api.OutgoingAccessRequestApi
 import com.r8n.backend.mock.integration.api.OpinionListInternalApi
-import com.r8n.backend.users.api.dto.ConsentDto
-import com.r8n.backend.users.api.dto.PersonalIdentifiableInformationSectionDto
-import com.r8n.backend.users.api.dto.UserCompleteDataDto
 import com.r8n.backend.users.api.dto.UserProfileDto
-import com.r8n.backend.users.api.dto.UserSessionDto
 import com.r8n.backend.users.api.dto.UserStatusEnumDto
 import com.r8n.backend.users.api.dto.UsernameDto
-import com.r8n.backend.users.domain.Consent
 import com.r8n.backend.users.domain.UserProfile
-import com.r8n.backend.users.domain.UserSession
 import com.r8n.backend.users.domain.UserStatusEnum
 import com.r8n.backend.users.domain.Username
 import com.r8n.backend.users.service.UserService
 import com.r8n.backend.users.service.UserSessionService
-import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import java.util.UUID
 
