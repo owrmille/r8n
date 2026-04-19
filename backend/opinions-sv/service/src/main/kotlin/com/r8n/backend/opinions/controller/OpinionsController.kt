@@ -1,6 +1,5 @@
 package com.r8n.backend.opinions.controller
 
-import com.r8n.backend.mock.stub.OpinionTestDataFactory
 import com.r8n.backend.opinions.api.OpinionsApi
 import com.r8n.backend.opinions.api.dto.OpinionDto
 import com.r8n.backend.opinions.facade.OpinionFacade
@@ -49,11 +48,11 @@ class OpinionsController(
     ): OpinionDto = opinionFacade.linkComponent(parentOpinionId, childOpinionId, weight)
 
     @PreAuthorize(IS_USER)
-    override fun unlinkComponent(linkId: UUID): OpinionDto = OpinionTestDataFactory.getOpinion(UUID.fromString("0"))
+    override fun unlinkComponent(linkId: UUID): OpinionDto = opinionFacade.unlinkComponent(linkId)
 
     @PreAuthorize(IS_USER)
     override fun adjustComponentWeight(
         linkId: UUID,
         weight: Double,
-    ): OpinionDto = OpinionTestDataFactory.getOpinion(UUID.fromString("0"))
+    ): OpinionDto = opinionFacade.adjustComponentWeight(linkId, weight)
 }
