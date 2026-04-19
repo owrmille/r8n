@@ -9,13 +9,13 @@ import { useMyOpinionLists } from "@/lib/server-state/hooks/opinion-lists";
 
 const Profile = () => {
   const { id } = useParams();
-  const { data: me } = useMe();
+  const { data: me, isLoading: isMeLoading, isError: isMeError } = useMe();
   const isOwnProfile = !id || id === me?.id;
   const targetId = isOwnProfile ? me?.id : id;
 
   const {
     data: profile,
-    isLoading,
+    isLoading: isProfileLoading,
     isError,
     error,
     refetch,
@@ -31,8 +31,8 @@ const Profile = () => {
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 md:px-8 md:py-12">
       <QueryState
-        isLoading={isLoading || (isOwnProfile && !me)}
-        isError={isError}
+        isLoading={isProfileLoading || (isOwnProfile && isMeLoading)}
+        isError={isError || isMeError}
         error={error}
         isEmpty={false}
         onRetry={refetch}
