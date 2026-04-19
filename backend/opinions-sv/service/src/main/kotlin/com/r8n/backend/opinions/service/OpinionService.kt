@@ -133,7 +133,6 @@ class OpinionService(
 
     @Transactional
     fun adjustComponentWeight(
-        userId: UUID,
         linkId: UUID,
         weight: Double,
     ): Opinion {
@@ -144,7 +143,7 @@ class OpinionService(
             opinionRepository
                 .findById(parentOpinionId)
                 .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
-        if (parentOpinion.owner != userId) {
+        if (parentOpinion.owner != getCurrentUserId()) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN)
         }
         if (!componentService.adjustComponentWeight(linkId, weight)) {

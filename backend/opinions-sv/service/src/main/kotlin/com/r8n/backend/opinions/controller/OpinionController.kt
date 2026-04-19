@@ -55,9 +55,5 @@ class OpinionController(
     override fun adjustComponentWeight(
         linkId: UUID,
         weight: Double,
-    ): OpinionDto {
-        val auth = SecurityContextHolder.getContext().authentication ?: throw IllegalStateException("Not authenticated")
-        val userId = UUID.fromString(auth.name)
-        return opinionFacade.adjustComponentWeight(userId, linkId, weight)
-    }
+    ): OpinionDto = opinionFacade.adjustComponentWeight(linkId, weight)
 }
