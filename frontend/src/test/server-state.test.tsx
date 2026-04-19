@@ -3,7 +3,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { QueryState } from "@/components/server-state/QueryState";
 import { getApiErrorMessage } from "@/lib/server-state/errors";
 import { HttpError } from "@/lib/http-client";
-import { setAuthSession, getAuthSession, clearAuthSession } from "@/lib/server-state/auth-store";
+import {
+  setAuthSession,
+  getAuthSession,
+  clearAuthSession,
+  shouldAttemptAuthRefresh,
+} from "@/lib/server-state/auth-store";
 
 // ---------------------------------------------------------------------------
 // getApiErrorMessage
@@ -48,20 +53,26 @@ describe("auth-store", () => {
     });
   });
 
-  it("keeps the session only in memory", () => {
+  it("stores the access token in memory and only persists the refresh hint", () => {
     const setItemSpy = vi.spyOn(Storage.prototype, "setItem");
     const removeItemSpy = vi.spyOn(Storage.prototype, "removeItem");
 
     setAuthSession({ accessToken: "tok-123", expiresInMilliseconds: 5_000 });
 
-    expect(setItemSpy).not.toHaveBeenCalled();
+    expect(setItemSpy).toHaveBeenCalledWith("r8n.refresh-session-expected", "true");
     expect(removeItemSpy).not.toHaveBeenCalled();
+    expect(getAuthSession()).toEqual({
+      accessToken: "tok-123",
+      expiresAt: expect.any(Number),
+    });
+    expect(shouldAttemptAuthRefresh()).toBe(true);
   });
 
   it("clears the session", () => {
     setAuthSession({ accessToken: "tok-123", expiresInMilliseconds: 5_000 });
     clearAuthSession();
     expect(getAuthSession()).toBeNull();
+    expect(shouldAttemptAuthRefresh()).toBe(false);
   });
 });
 
