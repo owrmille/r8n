@@ -1,4 +1,4 @@
-import { Home, Search, User, List, Bell, Settings, PenLine, ListPlus, LogOut } from "lucide-react";
+import { Home, Search, User, List, Bell, Settings, PenLine, ListPlus, LogOut, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { NavLink } from "@/components/NavLink";
@@ -22,6 +22,7 @@ const mainItems = [
   { title: "Discover", url: "/discover", icon: Search },
   { title: "My Lists", url: "/lists", icon: List },
   { title: "Requests", url: "/requests", icon: Bell },
+  { title: "Moderation", url: "/moderation/opinions", icon: ShieldCheck },
 ];
 
 const secondaryItems = [
