@@ -20,7 +20,7 @@ dependencies {
     implementation(project(":core:security"))
     implementation(project(":core:api"))
     implementation(project(":core:utils"))
-    
+
     testImplementation("org.mockito:mockito-core")
     testImplementation("org.mockito:mockito-junit-jupiter")
     testImplementation("com.h2database:h2")

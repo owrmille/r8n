@@ -2,9 +2,9 @@ package com.r8n.backend.access.facade
 
 import com.r8n.backend.access.api.dto.access.AccessRequestDto
 import com.r8n.backend.access.api.dto.access.RequestStatusEnumDto
-import com.r8n.backend.access.domain.PermissionEnum
+import com.r8n.backend.access.domain.OpinionPermissionEnum
 import com.r8n.backend.access.domain.RequestStatusEnum
-import com.r8n.backend.access.integration.api.PermissionEnumDto
+import com.r8n.backend.access.integration.api.dto.OpinionPermissionEnumDto
 import com.r8n.backend.access.persistence.AccessRequestPersistence
 import com.r8n.backend.access.service.AccessRequestService
 import com.r8n.backend.core.api.PageRequestDto
@@ -128,32 +128,32 @@ class AccessRequestFacade(
     fun canAccessOpinion(
         userId: UUID,
         opinionId: UUID,
-        permission: PermissionEnumDto,
+        permission: OpinionPermissionEnumDto,
     ): Boolean = service.canAccessOpinion(userId, opinionId, permission.toDomain())
 
     fun canAccessOpinionList(
         userId: UUID,
         opinionListId: UUID,
-        permission: PermissionEnumDto,
+        permission: OpinionPermissionEnumDto,
     ): Boolean = service.canAccessOpinionList(userId, opinionListId, permission.toDomain())
 
     private companion object {
-        fun PermissionEnumDto.toDomain() =
+        fun OpinionPermissionEnumDto.toDomain() =
             when (this) {
-                PermissionEnumDto.READ -> PermissionEnum.READ
-                PermissionEnumDto.EDIT -> PermissionEnum.EDIT
-                PermissionEnumDto.DELETE -> PermissionEnum.DELETE
-                PermissionEnumDto.APPROVE -> PermissionEnum.APPROVE
-                PermissionEnumDto.REJECT -> PermissionEnum.REJECT
+                OpinionPermissionEnumDto.READ -> OpinionPermissionEnum.READ
+                OpinionPermissionEnumDto.EDIT -> OpinionPermissionEnum.EDIT
+                OpinionPermissionEnumDto.DELETE -> OpinionPermissionEnum.DELETE
+                OpinionPermissionEnumDto.APPROVE -> OpinionPermissionEnum.APPROVE
+                OpinionPermissionEnumDto.REJECT -> OpinionPermissionEnum.REJECT
             }
 
-        fun PermissionEnum.toDto() =
+        fun OpinionPermissionEnum.toDto() =
             when (this) {
-                PermissionEnum.READ -> PermissionEnumDto.READ
-                PermissionEnum.EDIT -> PermissionEnumDto.EDIT
-                PermissionEnum.DELETE -> PermissionEnumDto.DELETE
-                PermissionEnum.APPROVE -> PermissionEnumDto.APPROVE
-                PermissionEnum.REJECT -> PermissionEnumDto.REJECT
+                OpinionPermissionEnum.READ -> OpinionPermissionEnumDto.READ
+                OpinionPermissionEnum.EDIT -> OpinionPermissionEnumDto.EDIT
+                OpinionPermissionEnum.DELETE -> OpinionPermissionEnumDto.DELETE
+                OpinionPermissionEnum.APPROVE -> OpinionPermissionEnumDto.APPROVE
+                OpinionPermissionEnum.REJECT -> OpinionPermissionEnumDto.REJECT
             }
 
         fun RequestStatusEnumDto.toDomain() =

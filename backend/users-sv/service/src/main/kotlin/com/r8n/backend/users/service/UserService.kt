@@ -23,7 +23,9 @@ class UserService(
 ) {
     fun getName(id: UUID) = piiRepository.findByIdOrNull(id)?.name ?: "Unknown"
 
-    fun isModerator(id: UUID): Boolean = hasRole(id, RoleEnumPersistence.MODERATOR)
+    fun isAnyModerator(id: UUID): Boolean = isHumanModerator(id) || isAiModerator(id)
+
+    fun isHumanModerator(id: UUID): Boolean = hasRole(id, RoleEnumPersistence.MODERATOR)
 
     fun isAiModerator(id: UUID): Boolean = hasRole(id, RoleEnumPersistence.AI_MODERATOR)
 

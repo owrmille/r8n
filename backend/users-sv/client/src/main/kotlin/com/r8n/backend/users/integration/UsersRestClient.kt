@@ -3,7 +3,8 @@ package com.r8n.backend.users.integration
 import com.r8n.backend.users.integration.api.UsersInternalApi
 import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.IS_ADMIN_PATH
 import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.IS_AI_MODERATOR_PATH
-import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.IS_MODERATOR_PATH
+import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.IS_ANY_MODERATOR_PATH
+import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.IS_HUMAN_MODERATOR_PATH
 import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.NAME_PATH
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.body
@@ -19,10 +20,17 @@ class UsersRestClient(
             .retrieve()
             .body<String>()!!
 
-    override fun isModerator(id: UUID): Boolean =
+    override fun isAnyModerator(id: UUID): Boolean =
         restClient
             .get()
-            .uri(IS_MODERATOR_PATH, id)
+            .uri(IS_ANY_MODERATOR_PATH, id)
+            .retrieve()
+            .body<Boolean>()!!
+
+    override fun isHumanModerator(id: UUID): Boolean =
+        restClient
+            .get()
+            .uri(IS_HUMAN_MODERATOR_PATH, id)
             .retrieve()
             .body<Boolean>()!!
 

@@ -1,5 +1,7 @@
 package com.r8n.backend.access.integration.api
 
+import com.r8n.backend.access.integration.api.dto.OpinionListPermissionEnumDto
+import com.r8n.backend.access.integration.api.dto.OpinionPermissionEnumDto
 import org.springframework.web.bind.annotation.GetMapping
 import java.util.UUID
 
@@ -12,13 +14,13 @@ interface AccessInternalApi {
 
     @GetMapping(ACCESS_OPINION_PATH)
     fun canAccessOpinion(
-        permission: PermissionEnumDto,
+        permission: OpinionPermissionEnumDto,
         opinionId: UUID,
     ): Boolean
 
     @GetMapping(ACCESS_OPINION_LIST_PATH)
     fun canAccessOpinionList(
-        permission: PermissionEnumDto,
+        permission: OpinionListPermissionEnumDto,
         opinionListId: UUID,
     ): Boolean
 }

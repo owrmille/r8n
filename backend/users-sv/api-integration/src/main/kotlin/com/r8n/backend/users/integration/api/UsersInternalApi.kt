@@ -8,7 +8,8 @@ interface UsersInternalApi {
     companion object {
         private const val ROOT_PATH = "/api/users"
         const val NAME_PATH = "$ROOT_PATH/{id}/name"
-        const val IS_MODERATOR_PATH = "$ROOT_PATH/{id}/is-moderator"
+        const val IS_ANY_MODERATOR_PATH = "$ROOT_PATH/{id}/is-any-moderator"
+        const val IS_HUMAN_MODERATOR_PATH = "$ROOT_PATH/{id}/is-human-moderator"
         const val IS_AI_MODERATOR_PATH = "$ROOT_PATH/{id}/is-ai-moderator"
         const val IS_ADMIN_PATH = "$ROOT_PATH/{id}/is-admin"
     }
@@ -18,8 +19,13 @@ interface UsersInternalApi {
         @PathVariable id: UUID,
     ): String
 
-    @GetMapping(IS_MODERATOR_PATH)
-    fun isModerator(
+    @GetMapping(IS_ANY_MODERATOR_PATH)
+    fun isAnyModerator(
+        @PathVariable id: UUID,
+    ): Boolean
+
+    @GetMapping(IS_HUMAN_MODERATOR_PATH)
+    fun isHumanModerator(
         @PathVariable id: UUID,
     ): Boolean
 
