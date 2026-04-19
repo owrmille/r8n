@@ -19,6 +19,7 @@ import Settings from "./pages/Settings";
 import EditProfile from "./pages/EditProfile";
 import Login from "./pages/Login";
 import CreateProfile from "./pages/CreateProfile";
+import OpinionModeration from "./pages/OpinionModeration";
 import NotFound from "./pages/NotFound";
 
 const queryClient = createQueryClient();
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="/list/:id" element={<OpinionList />} />
               <Route path="/lists" element={<MyLists />} />
               <Route path="/requests" element={<Requests />} />
+              <Route path="/moderation/opinions" element={<OpinionModeration />} />
               <Route path="/discover" element={<Discover />} />
               <Route path="/create" element={<CreateReview />} />
               <Route path="/lists/create" element={<CreateList />} />

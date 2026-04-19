@@ -7,16 +7,25 @@ const {
   clearSessionMock,
   getAccessTokenMock,
   refreshSessionMock,
+  shouldAttemptAuthRefreshMock,
+  clearRefreshSessionHintMock,
 } = vi.hoisted(() => ({
   clearSessionMock: vi.fn(),
   getAccessTokenMock: vi.fn(),
   refreshSessionMock: vi.fn(),
+  shouldAttemptAuthRefreshMock: vi.fn(),
+  clearRefreshSessionHintMock: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/session", () => ({
   clearSession: clearSessionMock,
   getAccessToken: getAccessTokenMock,
   refreshSession: refreshSessionMock,
+}));
+
+vi.mock("@/lib/server-state/auth-store", () => ({
+  clearRefreshSessionHint: clearRefreshSessionHintMock,
+  shouldAttemptAuthRefresh: shouldAttemptAuthRefreshMock,
 }));
 
 function renderProtectedRoute(initialEntry: string = "/protected") {
@@ -34,9 +43,12 @@ function renderProtectedRoute(initialEntry: string = "/protected") {
 
 describe("RequireAuth", () => {
   beforeEach(() => {
+    clearRefreshSessionHintMock.mockReset();
     clearSessionMock.mockReset();
     getAccessTokenMock.mockReset();
+    shouldAttemptAuthRefreshMock.mockReset();
     refreshSessionMock.mockReset();
+    shouldAttemptAuthRefreshMock.mockReturnValue(true);
   });
 
   it("renders the protected route when an in-memory access token is already available", async () => {
@@ -73,6 +85,20 @@ describe("RequireAuth", () => {
       expect(screen.getByText("Login page")).toBeInTheDocument();
     });
 
+    expect(clearSessionMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("redirects to /login without calling refresh when there is no refresh hint", async () => {
+    getAccessTokenMock.mockReturnValue(null);
+    shouldAttemptAuthRefreshMock.mockReturnValue(false);
+
+    renderProtectedRoute();
+
+    await waitFor(() => {
+      expect(screen.getByText("Login page")).toBeInTheDocument();
+    });
+
+    expect(refreshSessionMock).not.toHaveBeenCalled();
     expect(clearSessionMock).toHaveBeenCalledTimes(1);
   });
 });
