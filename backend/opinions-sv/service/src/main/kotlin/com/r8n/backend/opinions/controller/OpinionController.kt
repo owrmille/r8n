@@ -49,7 +49,7 @@ class OpinionController(
     ): OpinionDto = opinionFacade.linkComponent(parentOpinionId, childOpinionId, weight)
 
     @PreAuthorize(IS_USER)
-    override fun unlinkComponent(linkId: UUID): OpinionDto = OpinionTestDataFactory.getOpinion(UUID.fromString("0"))
+    override fun unlinkComponent(linkId: UUID): OpinionDto = opinionFacade.unlinkComponent(linkId)
 
     @PreAuthorize(IS_USER)
     override fun adjustComponentWeight(

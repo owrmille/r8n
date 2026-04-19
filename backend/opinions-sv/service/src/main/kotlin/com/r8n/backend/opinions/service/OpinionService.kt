@@ -131,6 +131,21 @@ class OpinionService(
         return getOpinion(parentOpinionId)
     }
 
+    @Transactional
+    fun unlinkComponent(linkId: UUID): Opinion {
+        val parentOpinionId =
+            componentService.getParentOpinionId(linkId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+        val parentOpinion =
+            opinionRepository
+                .findById(parentOpinionId)
+                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
+        if (parentOpinion.owner != getCurrentUserId()) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN)
+        }
+        componentService.unlinkComponent(linkId)
+        return getOpinion(parentOpinionId)
+    }
+
     private fun OpinionPersistence.toDomain(): Opinion =
         Opinion(
             id!!,
