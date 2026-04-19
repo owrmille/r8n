@@ -6,7 +6,8 @@ import java.util.UUID
 
 interface UsersInternalApi {
     companion object {
-        const val NAME_PATH = "/users/{id}/name"
+        private const val ROOT_PATH = "/api/users"
+        const val NAME_PATH = "$ROOT_PATH/{id}/name"
     }
 
     @GetMapping(NAME_PATH)

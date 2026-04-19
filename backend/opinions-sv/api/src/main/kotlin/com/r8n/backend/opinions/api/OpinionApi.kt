@@ -10,17 +10,29 @@ import org.springframework.web.bind.annotation.RequestParam
 import java.util.UUID
 
 interface OpinionApi {
-    @GetMapping("/opinions/{id}")
+    companion object {
+        private const val ROOT_PATH = "/api/opinions"
+        const val GET_BY_ID_PATH = "$ROOT_PATH/{id}"
+        const val GET_FOR_SUBJECT_PATH = "$ROOT_PATH/for/{subjectId}"
+        const val CREATE_PATH = ROOT_PATH
+        const val UPDATE_PATH = "$ROOT_PATH/{opinionId}"
+        const val DELETE_PATH = "$ROOT_PATH/{opinionId}"
+        const val LINK_PATH = "$ROOT_PATH/link"
+        const val UNLINK_PATH = "$ROOT_PATH/unlink/{linkId}"
+        const val ADJUST_WEIGHT_PATH = "$ROOT_PATH/adjust-weight/{linkId}"
+    }
+
+    @GetMapping(GET_BY_ID_PATH)
     fun getOpinionById(
         @PathVariable id: UUID,
     ): OpinionDto
 
-    @GetMapping("/opinions/for/{subjectId}")
+    @GetMapping(GET_FOR_SUBJECT_PATH)
     fun getOpinionFor(
         @PathVariable subjectId: UUID,
     ): OpinionDto
 
-    @PostMapping("/opinions")
+    @PostMapping(CREATE_PATH)
     fun createOpinion(
         @RequestParam(required = true)
         subjectId: UUID,
@@ -32,7 +44,7 @@ interface OpinionApi {
         mark: Double?,
     ): OpinionDto
 
-    @PatchMapping("/opinions/{opinionId}")
+    @PatchMapping(UPDATE_PATH)
     fun updateOpinion(
         @PathVariable opinionId: UUID,
         @RequestParam(required = false)
@@ -43,12 +55,12 @@ interface OpinionApi {
         mark: Double?,
     ): OpinionDto
 
-    @DeleteMapping("/opinions/{opinionId}")
+    @DeleteMapping(DELETE_PATH)
     fun deleteOpinion(
         @PathVariable opinionId: UUID,
     )
 
-    @PostMapping("/opinions/link")
+    @PostMapping(LINK_PATH)
     fun linkComponent(
         @RequestParam(required = true)
         parentOpinionId: UUID,
@@ -58,12 +70,12 @@ interface OpinionApi {
         weight: Double,
     ): OpinionDto
 
-    @DeleteMapping("/opinions/unlink/{linkId}")
+    @DeleteMapping(UNLINK_PATH)
     fun unlinkComponent(
         @PathVariable linkId: UUID,
     ): OpinionDto
 
-    @PatchMapping("/opinions/adjustWeight/{linkId}")
+    @PatchMapping(ADJUST_WEIGHT_PATH)
     fun adjustComponentWeight(
         @PathVariable linkId: UUID,
         @RequestParam(required = true)
