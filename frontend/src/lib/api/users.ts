@@ -19,11 +19,11 @@ export interface UserProfileDto {
 export function createUsersApi(client: HttpClient = httpClient) {
   return {
     getMe(): Promise<UsernameDto> {
-      return client.get<UsernameDto>("/users/me");
+      return client.get<UsernameDto>("/users/me", { auth: "required" });
     },
 
     getUser(id: Uuid): Promise<UserProfileDto> {
-      return client.get<UserProfileDto>(`/users/${id}`);
+      return client.get<UserProfileDto>(`/users/${id}`, { auth: "required" });
     },
   };
 }
