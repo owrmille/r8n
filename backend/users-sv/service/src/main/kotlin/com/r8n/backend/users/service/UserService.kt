@@ -61,7 +61,7 @@ class UserService(
                 ?: throw NoSuchElementException("PII for user $id not found")
         return UserProfile(
             id,
-            getName(id),
+            pii.name,
             user.status,
             lastOnline(id),
             pii.about,
