@@ -1,6 +1,7 @@
 package com.r8n.backend.users.service
 
 import com.r8n.backend.users.domain.UserSession
+import com.r8n.backend.users.persistence.UserSessionPersistence
 import com.r8n.backend.users.provider.database.UserSessionRepository
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -26,7 +27,7 @@ class UserSessionService(
         userSessionRepository.findByIdAndUserId(id, userId)?.toDomain()
             ?: throw NoSuchElementException("Session $id not found for user $userId")
 
-    private fun com.r8n.backend.users.persistence.UserSessionPersistence.toDomain() =
+    private fun UserSessionPersistence.toDomain() =
         UserSession(
             id = id,
             created = created,
@@ -34,4 +35,7 @@ class UserSessionService(
             ip = ip,
             userAgent = userAgent,
         )
+
+    fun lastSessionForUserId(userId: UUID): UserSession? =
+        userSessionRepository.findFirstByUserIdOrderByCreatedDesc(userId)?.toDomain()
 }

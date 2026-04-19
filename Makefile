@@ -346,6 +346,23 @@ routed-request-mock: ## Gateway request to mock (ENV=local|docker)
 	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
 	curl $$curl_args "$$protocol://$$host:$$port/api/opinion-lists/00000000-0000-0000-0000-000000000000/summary" -H "Authorization: Bearer $$(cat .access_token)"
 
+routed-request-user-profile: ## Gateway request to users-sv (ENV=local|docker)
+	@if [ ! -f .access_token ]; then $(MAKE) get-token ENV=$(ENV); fi
+	@if [ "$(ENV)" = "docker" ]; then \
+		$(LOAD_DOCKER_ENV) \
+		protocol=https; \
+		host=localhost; \
+		port=8080; \
+	else \
+		$(LOAD_LOCAL_ENV) \
+		protocol=$${INTERSERVICE_PROTOCOL:-http}; \
+		host=$${GATEWAY_HOST:-localhost}; \
+		port=$${GATEWAY_PORT:-8080}; \
+	fi; \
+	curl_args="-i"; \
+	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
+	curl $$curl_args "$$protocol://$$host:$$port/api/users/00000000-0000-0000-0000-000000000000" -H "Authorization: Bearer $$(cat .access_token)"
+
 routed-request-gdpr: ## HTTP direct request to users (ENV=local|docker)
 	@if [ ! -f .access_token ]; then $(MAKE) get-token ENV=$(ENV); fi
 	@if [ "$(ENV)" = "docker" ]; then \
