@@ -36,6 +36,10 @@ class ComponentService(
         )
     }
 
+    fun unlinkComponent(linkId: UUID) {
+        weightedOpinionReferenceRepository.deleteById(linkId)
+    }
+
     fun getParentOpinionId(linkId: UUID): UUID? =
         weightedOpinionReferenceRepository
             .findById(linkId)

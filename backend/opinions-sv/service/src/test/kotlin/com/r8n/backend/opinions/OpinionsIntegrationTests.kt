@@ -399,6 +399,110 @@ class OpinionsIntegrationTests {
 
     @Test
     @WithMockUser
+    fun `unlink component works`() {
+        val accessToken = serviceTokenService.generateAccessToken(CURRENT_USER_ID, listOf("USER"))
+
+        val parentCreateResult =
+            mockMvc
+                .perform(
+                    post("/api/opinions")
+                        .with(csrf())
+                        .queryParam("subjectId", "15151515-1515-1515-1515-151515151515")
+                        .queryParam("subjective", "parent unlink subjective")
+                        .queryParam("objective", "parent unlink objective")
+                        .queryParam("mark", "2.00")
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+        val parent: OpinionDto = objectMapper.readValue(parentCreateResult.response.contentAsString)
+
+        val childCreateResult =
+            mockMvc
+                .perform(
+                    post("/api/opinions")
+                        .with(csrf())
+                        .queryParam("subjectId", "15151515-1515-1515-1515-151515151515")
+                        .queryParam("subjective", "child unlink subjective")
+                        .queryParam("objective", "child unlink objective")
+                        .queryParam("mark", "4.00")
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+        val child: OpinionDto = objectMapper.readValue(childCreateResult.response.contentAsString)
+
+        val linkResult =
+            mockMvc
+                .perform(
+                    post("/api/opinions/link")
+                        .with(csrf())
+                        .queryParam("parentOpinionId", parent.id.toString())
+                        .queryParam("childOpinionId", child.id.toString())
+                        .queryParam("weight", "0.25")
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+        val linked: OpinionDto = objectMapper.readValue(linkResult.response.contentAsString)
+        val linkId = linked.components.first().id
+
+        val unlinkResult =
+            mockMvc
+                .perform(
+                    delete("/api/opinions/unlink/$linkId")
+                        .with(csrf())
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+        val actual: OpinionDto = objectMapper.readValue(unlinkResult.response.contentAsString)
+
+        assertEquals(parent.id, actual.id)
+        assertEquals(0, actual.components.size)
+        assertEquals(null, actual.componentMark)
+    }
+
+    @Test
+    @WithMockUser
+    fun `unlink component forbidden for non owner`() {
+        val ownerToken = serviceTokenService.generateAccessToken(CURRENT_USER_ID, listOf("USER"))
+        val otherUserToken = serviceTokenService.generateAccessToken(UUID.randomUUID(), listOf("USER"))
+
+        val parentCreateResult =
+            mockMvc
+                .perform(
+                    post("/api/opinions")
+                        .with(csrf())
+                        .queryParam("subjectId", "15151515-1515-1515-1515-151515151515")
+                        .queryParam("subjective", "parent unlink owner subjective")
+                        .queryParam("objective", "parent unlink owner objective")
+                        .queryParam("mark", "2.00")
+                        .header("Authorization", "Bearer $ownerToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+        val parent: OpinionDto = objectMapper.readValue(parentCreateResult.response.contentAsString)
+
+        val linkResult =
+            mockMvc
+                .perform(
+                    post("/api/opinions/link")
+                        .with(csrf())
+                        .queryParam("parentOpinionId", parent.id.toString())
+                        .queryParam("childOpinionId", "30000000-0000-0000-0000-000000000001")
+                        .queryParam("weight", "0.25")
+                        .header("Authorization", "Bearer $ownerToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+        val linked: OpinionDto = objectMapper.readValue(linkResult.response.contentAsString)
+        val linkId = linked.components.first().id
+
+        mockMvc
+            .perform(
+                delete("/api/opinions/unlink/$linkId")
+                    .with(csrf())
+                    .header("Authorization", "Bearer $otherUserToken"),
+            ).andExpect(status().isForbidden)
+    }
+
+    @Test
+    @WithMockUser
     fun `adjust component weight works`() {
         val accessToken = serviceTokenService.generateAccessToken(CURRENT_USER_ID, listOf("USER"))
 
