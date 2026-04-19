@@ -49,11 +49,7 @@ class OpinionController(
     ): OpinionDto = opinionFacade.linkComponent(parentOpinionId, childOpinionId, weight)
 
     @PreAuthorize(IS_USER)
-    override fun unlinkComponent(linkId: UUID): OpinionDto {
-        val auth = SecurityContextHolder.getContext().authentication ?: throw IllegalStateException("Not authenticated")
-        val userId = UUID.fromString(auth.name)
-        return opinionFacade.unlinkComponent(userId, linkId)
-    }
+    override fun unlinkComponent(linkId: UUID): OpinionDto = opinionFacade.unlinkComponent(linkId)
 
     @PreAuthorize(IS_USER)
     override fun adjustComponentWeight(
