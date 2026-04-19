@@ -10,7 +10,6 @@ export default defineConfig(() => ({
         target: "https://localhost:8080",
         changeOrigin: true,
         secure: true,
-        rewrite: (requestPath) => requestPath.replace(/^\/api/, ""),
       },
     },
     host: "127.0.0.1",

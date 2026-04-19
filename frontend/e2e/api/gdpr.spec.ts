@@ -1,9 +1,9 @@
 import { test, expect } from "playwright/test";
 
 test.describe("GDPR / Export API", () => {
-  const EXPORT_START_PATH = "/export/start";
-  const EXPORT_STATUS_PATH = "/export/status";
-  const EXPORT_DOWNLOAD_PATH = "/export/download";
+  const EXPORT_START_PATH = "/api/export/start";
+  const EXPORT_STATUS_PATH = "/api/export/status";
+  const EXPORT_DOWNLOAD_PATH = "/api/export/download";
 
   test("should return 401 Unauthorized when no token is provided", async ({ request }) => {
     const response = await request.post(EXPORT_START_PATH);
@@ -11,18 +11,26 @@ test.describe("GDPR / Export API", () => {
   });
 
   test("should return GDPR data when authenticated with valid token", async ({ request }) => {
-    // 1. Login to get a valid token
-    const loginResponse = await request.post("/auth/login", {
+    // 1. Get CSRF token
+    const csrfResponse = await request.post("/api/auth/login");
+    const cookies = csrfResponse.headers()["set-cookie"] || "";
+    const csrfToken = cookies.match(/XSRF-TOKEN=([^;]+)/)?.[1];
+    expect(csrfToken).toBeDefined();
+
+    // 2. Login to get a valid token
+    const loginResponse = await request.post("/api/auth/login", {
       data: {
         login: "test@test.test",
         password: "1234",
       },
+      headers: {
+        "X-XSRF-TOKEN": csrfToken!,
+      },
     });
     expect(loginResponse.status()).toBe(200);
-    const loginData = await loginResponse.json();
-    const accessToken = loginData.accessToken;
+    const { accessToken } = await loginResponse.json();
 
-    // 2. Start export
+    // 3. Use the token to get GDPR data
     const startResponse = await request.post(EXPORT_START_PATH, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -30,7 +38,7 @@ test.describe("GDPR / Export API", () => {
     });
     expect(startResponse.status()).toBe(202); // Accepted
 
-    // 3. Check status (with stub data, it should be immediately ready)
+    // 4. Check status (with stub data, it should be immediately ready)
     const statusResponse = await request.get(EXPORT_STATUS_PATH, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -40,7 +48,7 @@ test.describe("GDPR / Export API", () => {
     const status = await statusResponse.json();
     expect(status).toHaveProperty("status", "COMPLETED");
 
-    // 4. Download data
+    // 5. Download data
     const downloadResponse = await request.get(EXPORT_DOWNLOAD_PATH, {
       headers: {
         Authorization: `Bearer ${accessToken}`,

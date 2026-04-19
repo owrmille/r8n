@@ -1,9 +1,11 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import RequireAuth from "@/components/auth/RequireAuth";
 import AppLayout from "@/components/layout/AppLayout";
+import { createQueryClient } from "@/lib/server-state";
 import Index from "./pages/Index";
 import Profile from "./pages/Profile";
 import Supplier from "./pages/Supplier";
@@ -17,9 +19,10 @@ import Settings from "./pages/Settings";
 import EditProfile from "./pages/EditProfile";
 import Login from "./pages/Login";
 import CreateProfile from "./pages/CreateProfile";
+import OpinionModeration from "./pages/OpinionModeration";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = createQueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -30,21 +33,24 @@ const App = () => (
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/create-profile" element={<CreateProfile />} />
-          <Route element={<AppLayout />}>
-            <Route index element={<Index />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/profile/:id" element={<Profile />} />
-            <Route path="/supplier/:id" element={<Supplier />} />
-            <Route path="/supplier" element={<Supplier />} />
-            <Route path="/list/:id" element={<OpinionList />} />
-            <Route path="/lists" element={<MyLists />} />
-            <Route path="/requests" element={<Requests />} />
-            <Route path="/discover" element={<Discover />} />
-            <Route path="/create" element={<CreateReview />} />
-            <Route path="/lists/create" element={<CreateList />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/profile/edit" element={<EditProfile />} />
-            <Route path="*" element={<NotFound />} />
+          <Route element={<RequireAuth />}>
+            <Route element={<AppLayout />}>
+              <Route index element={<Index />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/profile/:id" element={<Profile />} />
+              <Route path="/supplier/:id" element={<Supplier />} />
+              <Route path="/supplier" element={<Supplier />} />
+              <Route path="/list/:id" element={<OpinionList />} />
+              <Route path="/lists" element={<MyLists />} />
+              <Route path="/requests" element={<Requests />} />
+              <Route path="/moderation/opinions" element={<OpinionModeration />} />
+              <Route path="/discover" element={<Discover />} />
+              <Route path="/create" element={<CreateReview />} />
+              <Route path="/lists/create" element={<CreateList />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/profile/edit" element={<EditProfile />} />
+              <Route path="*" element={<NotFound />} />
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>

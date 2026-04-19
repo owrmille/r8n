@@ -1,18 +1,23 @@
 package com.r8n.backend.users
 
+import com.r8n.backend.users.api.AuthApi.Companion.REFRESH_TOKEN_COOKIE_NAME
 import com.r8n.backend.users.api.dto.LoginRequestDto
 import com.r8n.backend.users.provider.database.PIIRepository
 import com.r8n.backend.users.provider.database.UserRepository
 import com.r8n.backend.users.provider.database.UserRoleAssignmentRepository
 import jakarta.persistence.EntityManager
+import jakarta.servlet.http.Cookie
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
+import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
@@ -42,6 +47,12 @@ class AuthIntegrationTest {
                 .withUsername("test")
                 .withPassword("test")
                 .withInitScript("db/init-schema.sql")
+
+        // yes, this is a duplicate from AuthApi, left intentional to detect changes
+        const val LOGIN_PATH = "/api/auth/login"
+        const val REFRESH_PATH = "/api/auth/refresh"
+        const val EMAIL = "test@test.test"
+        const val PASSWORD = "1234"
     }
 
     @Autowired
@@ -65,12 +76,17 @@ class AuthIntegrationTest {
     @Autowired
     lateinit var entityManager: EntityManager
 
+    private fun extractRefreshToken(setCookieHeader: String): String =
+        setCookieHeader
+            .substringAfter("$REFRESH_TOKEN_COOKIE_NAME=")
+            .substringBefore(";")
+
     @Test
     @Transactional
     fun `login with valid credentials returns tokens`() {
-        val pii = piiRepository.findAll().first { it.email == "test@test.test" }
+        val pii = piiRepository.findAll().first { it.email == EMAIL }
         val userId = pii.userId
-        val encodedPassword = passwordEncoder.encode("1234")
+        val encodedPassword = passwordEncoder.encode(PASSWORD)
 
         entityManager
             .createNativeQuery("UPDATE users.users SET password_hash = :passwordHash WHERE id = :userId")
@@ -90,26 +106,35 @@ class AuthIntegrationTest {
 
         entityManager.clear()
 
-        val loginRequest = LoginRequestDto("test@test.test", "1234")
+        val loginRequest = LoginRequestDto(EMAIL, PASSWORD)
 
-        mockMvc
-            .perform(
-                post("/auth/login")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(loginRequest)),
-            ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.accessToken").exists())
-            .andExpect(jsonPath("$.refreshToken").exists())
-            .andExpect(jsonPath("$.expiresInMilliseconds").value(3600000))
+        val response =
+            mockMvc
+                .perform(
+                    post(LOGIN_PATH)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)),
+                ).andExpect(status().isOk)
+                .andExpect(jsonPath("$.accessToken").exists())
+                .andExpect(jsonPath("$.refreshToken").doesNotExist())
+                .andExpect(jsonPath("$.expiresInMilliseconds").value(3600000))
+                .andReturn()
+
+        val setCookieHeader = response.response.getHeader(HttpHeaders.SET_COOKIE)!!
+        assertTrue(setCookieHeader.contains("$REFRESH_TOKEN_COOKIE_NAME="))
+        assertTrue(setCookieHeader.contains("HttpOnly"))
+        assertTrue(setCookieHeader.contains("Path=/api/auth"))
     }
 
     @Test
     fun `login with invalid password returns 401`() {
-        val loginRequest = LoginRequestDto("test@test.test", "wrong")
+        val loginRequest = LoginRequestDto(EMAIL, "wrong")
 
         mockMvc
             .perform(
-                post("/auth/login")
+                post(LOGIN_PATH)
+                    .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(loginRequest)),
             ).andExpect(status().isUnauthorized)
@@ -117,11 +142,12 @@ class AuthIntegrationTest {
 
     @Test
     fun `login with unknown user returns 401`() {
-        val loginRequest = LoginRequestDto("unknown@test.test", "1234")
+        val loginRequest = LoginRequestDto("unknown@test.test", PASSWORD)
 
         mockMvc
             .perform(
-                post("/auth/login")
+                post(LOGIN_PATH)
+                    .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(loginRequest)),
             ).andExpect(status().isUnauthorized)
@@ -129,10 +155,10 @@ class AuthIntegrationTest {
 
     @Test
     @Transactional
-    fun `refresh token flow works`() {
-        val pii = piiRepository.findAll().first { it.email == "test@test.test" }
+    fun `refresh token rotation works`() {
+        val pii = piiRepository.findAll().first { it.email == EMAIL }
         val userId = pii.userId
-        val encodedPassword = passwordEncoder.encode("1234")
+        val encodedPassword = passwordEncoder.encode(PASSWORD)
 
         entityManager
             .createNativeQuery("UPDATE users.users SET password_hash = :passwordHash WHERE id = :userId")
@@ -142,28 +168,98 @@ class AuthIntegrationTest {
 
         entityManager.clear()
 
-        val loginRequest = LoginRequestDto("test@test.test", "1234")
+        val loginRequest = LoginRequestDto(EMAIL, PASSWORD)
 
+        // 1. Login to get first refresh token
         val loginResponse =
             mockMvc
                 .perform(
-                    post("/auth/login")
+                    post(LOGIN_PATH)
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)),
                 ).andExpect(status().isOk)
                 .andReturn()
 
-        val responseJson = loginResponse.response.contentAsString
-        val refreshToken =
-            objectMapper.readTree(responseJson).get("refreshToken").asString()
+        val firstRefreshToken = extractRefreshToken(loginResponse.response.getHeader(HttpHeaders.SET_COOKIE)!!)
+
+        // 2. First refresh
+        val firstRefreshResponse =
+            mockMvc
+                .perform(
+                    post(REFRESH_PATH)
+                        .with(csrf())
+                        .cookie(Cookie(REFRESH_TOKEN_COOKIE_NAME, firstRefreshToken)),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val secondRefreshToken = extractRefreshToken(firstRefreshResponse.response.getHeader(HttpHeaders.SET_COOKIE)!!)
+        assertTrue(firstRefreshToken != secondRefreshToken)
+
+        // 3. Second refresh with NEW token works
+        mockMvc
+            .perform(
+                post(REFRESH_PATH)
+                    .with(csrf())
+                    .cookie(Cookie(REFRESH_TOKEN_COOKIE_NAME, secondRefreshToken)),
+            ).andExpect(status().isOk)
+
+        // 4. Reuse first refresh token - should FAIL and be rejected (Compromise detection)
+        mockMvc
+            .perform(
+                post(REFRESH_PATH)
+                    .with(csrf())
+                    .cookie(Cookie(REFRESH_TOKEN_COOKIE_NAME, firstRefreshToken)),
+            ).andExpect(status().isUnauthorized)
+    }
+
+    @Test
+    fun `login requires CSRF`() {
+        val loginRequest = LoginRequestDto(EMAIL, PASSWORD)
 
         mockMvc
             .perform(
-                post("/auth/refresh")
-                    .header("X-Refresh-Token", refreshToken),
-            ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.accessToken").exists())
-            .andExpect(jsonPath("$.refreshToken").exists())
-            .andExpect(jsonPath("$.expiresInMilliseconds").value(3600000))
+                post(LOGIN_PATH)
+                    // No CSRF
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(loginRequest)),
+            ).andExpect(status().isForbidden)
+    }
+
+    @Test
+    fun `refresh without cookie returns 401`() {
+        mockMvc
+            .perform(
+                post(REFRESH_PATH)
+                    .with(csrf()),
+            ).andExpect(status().isUnauthorized)
+    }
+
+    @Test
+    fun `refresh with invalid cookie returns 401`() {
+        mockMvc
+            .perform(
+                post(REFRESH_PATH)
+                    .with(csrf())
+                    .cookie(Cookie(REFRESH_TOKEN_COOKIE_NAME, "invalid-refresh-token")),
+            ).andExpect(status().isUnauthorized)
+    }
+
+    @Test
+    fun `logout clears refresh token cookie`() {
+        val response =
+            mockMvc
+                .perform(
+                    post("/api/auth/logout")
+                        .with(csrf())
+                        .cookie(Cookie(REFRESH_TOKEN_COOKIE_NAME, "refresh-token-to-clear")),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val setCookieHeader = response.response.getHeader(HttpHeaders.SET_COOKIE)!!
+        assertTrue(setCookieHeader.contains("$REFRESH_TOKEN_COOKIE_NAME="))
+        assertTrue(setCookieHeader.contains("Max-Age=0"))
+        assertTrue(setCookieHeader.contains("HttpOnly"))
+        assertTrue(setCookieHeader.contains("Path=/api/auth"))
     }
 }
