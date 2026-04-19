@@ -8,11 +8,10 @@ version = "0.0.1-SNAPSHOT"
 description = "provides individual opinions"
 
 dependencies {
+    implementation(libs.spring.kafka)
     implementation(project(":opinions-api"))
     implementation(project(":opinions-api-integration"))
-    implementation(project(":opinions-client"))
     implementation(project(":users-api-integration"))
     implementation(project(":users-client"))
     implementation(project(":mock-sv"))
-    testImplementation(project(":mock-api"))
 }

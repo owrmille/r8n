@@ -2,6 +2,7 @@ package com.r8n.backend.access.controller
 
 import com.r8n.backend.access.facade.AccessRequestFacade
 import com.r8n.backend.access.integration.api.AccessInternalApi
+import com.r8n.backend.access.integration.api.dto.OpinionListPermissionEnumDto
 import com.r8n.backend.access.integration.api.dto.OpinionPermissionEnumDto
 import com.r8n.backend.security.Authority.IS_SERVICE
 import com.r8n.backend.security.CurrentUserIdentifier.getCurrentUserId
@@ -21,7 +22,7 @@ class AccessInternalController(
 
     @PreAuthorize(IS_SERVICE)
     override fun canAccessOpinionList(
-        permission: OpinionPermissionEnumDto,
+        permission: OpinionListPermissionEnumDto,
         opinionListId: UUID,
     ): Boolean = facade.canAccessOpinionList(getCurrentUserId(), opinionListId, permission)
 }

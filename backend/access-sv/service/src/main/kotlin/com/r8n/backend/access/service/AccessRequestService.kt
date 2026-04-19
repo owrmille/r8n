@@ -1,6 +1,7 @@
 package com.r8n.backend.access.service
 
 import com.r8n.backend.access.domain.AccessRequest
+import com.r8n.backend.access.domain.OpinionListPermissionEnum
 import com.r8n.backend.access.domain.OpinionPermissionEnum
 import com.r8n.backend.access.domain.RequestStatusEnum
 import com.r8n.backend.access.persistence.AccessRequestPersistence
@@ -18,7 +19,6 @@ import java.util.UUID
 @Service
 class AccessRequestService(
     private val repository: AccessRequestRepository,
-    private val opinionListApi: OpinionListApi,
     private val opinionsRestClient: OpinionsInternalRestClient,
     private val usersClient: UsersInternalApi,
 ) {
@@ -127,7 +127,7 @@ class AccessRequestService(
     fun declineRequest(
         requestId: UUID,
         ownerId: UUID,
-    ): AccessRequest{
+    ): AccessRequest {
         val request =
             repository
                 .findById(requestId)
@@ -161,14 +161,26 @@ class AccessRequestService(
         return repository.save(request).toDomain()
     }
 
-    private fun roleBased(userId: UUID, ownerId: UUID, permission: OpinionPermissionEnum): Boolean? {
-        if (usersClient.isAnyModerator(userId) && (permission == OpinionPermissionEnum.READ || permission == OpinionPermissionEnum.REJECT)) {
+    private fun roleBased(
+        userId: UUID,
+        ownerId: UUID,
+        permission: OpinionPermissionEnum,
+    ): Boolean? {
+        if (usersClient.isAnyModerator(userId) &&
+            (permission == OpinionPermissionEnum.READ || permission == OpinionPermissionEnum.REJECT)
+        ) {
             return true
         }
         if (usersClient.isHumanModerator(userId) && permission == OpinionPermissionEnum.APPROVE) {
             return true
         }
-        if (ownerId == userId && (permission == OpinionPermissionEnum.READ || permission == OpinionPermissionEnum.EDIT || permission == OpinionPermissionEnum.DELETE)) {
+        if (ownerId == userId &&
+            (
+                permission == OpinionPermissionEnum.READ ||
+                    permission == OpinionPermissionEnum.EDIT ||
+                    permission == OpinionPermissionEnum.DELETE
+            )
+        ) {
             return true
         }
         if (permission != OpinionPermissionEnum.READ) {
@@ -208,7 +220,7 @@ class AccessRequestService(
     fun canAccessOpinionList(
         userId: UUID,
         listId: UUID,
-        permission: OpinionPermissionEnum,
+        permission: OpinionListPermissionEnum,
     ): Boolean {
         if (permission != OpinionPermissionEnum.READ) return false
 

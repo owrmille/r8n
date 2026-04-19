@@ -27,13 +27,6 @@ import java.util.UUID
 @AutoConfigureMockMvc
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    properties = [
-        "services.access.url=http://localhost:8080",
-        "services.mock.url=http://localhost:8080",
-        "r8n.security.jwt.private-key=-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDJ6v3R6O+WlMvT\n-----END PRIVATE KEY-----",
-        "r8n.security.jwt.public-key=-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyur90ejvlpTL0w==\n-----END PUBLIC KEY-----",
-        "spring.jpa.hibernate.ddl-auto=create-drop",
-    ],
 )
 @Import(TestObjectMapperConfiguration::class)
 class RolesInternalIntegrationTest {

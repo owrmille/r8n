@@ -21,6 +21,11 @@ include("users-api-integration", "users-sv/api-integration")
 include("users-client", "users-sv/client")
 include("users-sv", "users-sv/service")
 
+include("opinion-lists-api", "opinion-lists-sv/api")
+include("opinion-lists-api-integration", "opinion-lists-sv/api-integration")
+include("opinion-lists-client", "opinion-lists-sv/client")
+include("opinion-lists-sv", "opinion-lists-sv/service")
+
 include("opinions-api", "opinions-sv/api")
 include("opinions-api-integration", "opinions-sv/api-integration")
 include("opinions-client", "opinions-sv/client")

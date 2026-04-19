@@ -2,8 +2,11 @@ package com.r8n.backend.access.facade
 
 import com.r8n.backend.access.api.dto.access.AccessRequestDto
 import com.r8n.backend.access.api.dto.access.RequestStatusEnumDto
+import com.r8n.backend.access.domain.AccessRequest
+import com.r8n.backend.access.domain.OpinionListPermissionEnum
 import com.r8n.backend.access.domain.OpinionPermissionEnum
 import com.r8n.backend.access.domain.RequestStatusEnum
+import com.r8n.backend.access.integration.api.dto.OpinionListPermissionEnumDto
 import com.r8n.backend.access.integration.api.dto.OpinionPermissionEnumDto
 import com.r8n.backend.access.persistence.AccessRequestPersistence
 import com.r8n.backend.access.service.AccessRequestService
@@ -38,7 +41,7 @@ class AccessRequestFacade(
             )
         val page = service.getRequests(forListId, null, ownerId, status?.toDomain(), pageRequest)
         return PageResponseDto(
-            items = page.content.map { toDto(it) },
+            items = page.content.map { it.toDto() },
             total = page.totalElements,
             page = pageable.page,
             size = pageable.size,
@@ -60,7 +63,7 @@ class AccessRequestFacade(
             )
         val page = service.getRequests(forListId, requesterId, null, status?.toDomain(), pageRequest)
         return PageResponseDto(
-            items = page.content.map { toDto(it) },
+            items = page.content.map { it.toDto() },
             total = page.totalElements,
             page = pageable.page,
             size = pageable.size,
@@ -70,58 +73,58 @@ class AccessRequestFacade(
     fun createRequest(
         listId: UUID,
         requesterId: UUID,
-    ): AccessRequestDto = toDto(service.createRequest(listId, requesterId))
+    ): AccessRequestDto = service.createRequest(listId, requesterId).toDto()
 
     fun cancelRequest(
         requestId: UUID,
         requesterId: UUID,
-    ): AccessRequestDto = toDto(service.cancelRequest(requestId, requesterId))
+    ): AccessRequestDto = service.cancelRequest(requestId, requesterId).toDto()
 
     fun acceptRequest(
         requestId: UUID,
         ownerId: UUID,
-    ): AccessRequestDto = toDto(service.acceptRequest(requestId, ownerId))
+    ): AccessRequestDto = service.acceptRequest(requestId, ownerId).toDto()
 
     fun declineRequest(
         requestId: UUID,
         ownerId: UUID,
-    ): AccessRequestDto = toDto(service.declineRequest(requestId, ownerId))
+    ): AccessRequestDto = service.declineRequest(requestId, ownerId).toDto()
 
     fun hideRequest(
         requestId: UUID,
         ownerId: UUID,
-    ): AccessRequestDto = toDto(service.hideRequest(requestId, ownerId))
+    ): AccessRequestDto = service.hideRequest(requestId, ownerId).toDto()
 
-    private fun toDto(persistence: AccessRequestPersistence): AccessRequestDto {
+    private fun AccessRequest.toDto(): AccessRequestDto {
         val requesterName =
             try {
-                usersInternalApi.getUserName(persistence.requesterId)
+                usersInternalApi.getUserName(requesterId)
             } catch (_: Exception) {
                 "Unknown"
             }
         val ownerName =
             try {
-                usersInternalApi.getUserName(persistence.ownerId)
+                usersInternalApi.getUserName(ownerId)
             } catch (_: Exception) {
                 "Unknown"
             }
         val listName =
             try {
-                opinionListApi.getListSummary(persistence.listId).listName
+                opinionListApi.getListSummary(listId).listName
             } catch (_: Exception) {
                 "Unknown"
             }
 
         return AccessRequestDto(
-            id = persistence.id!!,
-            opinionListId = persistence.listId,
+            id = id!!,
+            opinionListId = listId,
             opinionListName = listName,
-            owner = persistence.ownerId,
+            owner = ownerId,
             ownerName = ownerName,
-            requester = persistence.requesterId,
+            requester = requesterId,
             requesterName = requesterName,
-            timestamp = persistence.createdAt,
-            status = persistence.status.toDto(),
+            timestamp = createdAt,
+            status = status.toDto(),
         )
     }
 
@@ -134,10 +137,20 @@ class AccessRequestFacade(
     fun canAccessOpinionList(
         userId: UUID,
         opinionListId: UUID,
-        permission: OpinionPermissionEnumDto,
+        permission: OpinionListPermissionEnumDto,
     ): Boolean = service.canAccessOpinionList(userId, opinionListId, permission.toDomain())
 
     private companion object {
+        fun OpinionListPermissionEnumDto.toDomain() =
+            when (this) {
+                OpinionListPermissionEnumDto.VIEW -> OpinionListPermissionEnum.VIEW
+                OpinionListPermissionEnumDto.ADD_TO -> OpinionListPermissionEnum.ADD_TO
+                OpinionListPermissionEnumDto.REMOVE_FROM -> OpinionListPermissionEnum.REMOVE_FROM
+                OpinionListPermissionEnumDto.HIDE -> OpinionListPermissionEnum.HIDE
+                OpinionListPermissionEnumDto.PUBLISH -> OpinionListPermissionEnum.PUBLISH
+                OpinionListPermissionEnumDto.DELETE -> OpinionListPermissionEnum.DELETE
+            }
+
         fun OpinionPermissionEnumDto.toDomain() =
             when (this) {
                 OpinionPermissionEnumDto.READ -> OpinionPermissionEnum.READ

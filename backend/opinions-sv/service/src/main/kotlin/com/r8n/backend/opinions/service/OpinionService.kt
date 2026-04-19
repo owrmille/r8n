@@ -3,13 +3,16 @@ package com.r8n.backend.opinions.service
 import com.r8n.backend.opinions.domain.Opinion
 import com.r8n.backend.opinions.domain.OpinionStatusEnum
 import com.r8n.backend.opinions.persistence.OpinionPersistence
+import com.r8n.backend.opinions.persistence.OutboxEvent
 import com.r8n.backend.opinions.provider.database.OpinionRepository
+import com.r8n.backend.opinions.provider.database.OutboxRepository
 import com.r8n.backend.security.CurrentUserIdentifier.getCurrentUserId
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
+import tools.jackson.databind.ObjectMapper
 import java.time.Instant
 import java.util.UUID
 
@@ -19,6 +22,8 @@ class OpinionService(
     private val noteService: OpinionNoteService,
     private val componentService: ComponentService,
     private val opinionRepository: OpinionRepository,
+    private val outboxRepo: OutboxRepository,
+    private val objectMapper: ObjectMapper,
 ) {
     fun getOpinion(id: UUID): Opinion {
         val opinion = opinionRepository.findById(id).orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
@@ -72,6 +77,21 @@ class OpinionService(
                 ),
             )
         noteService.create(opinion.id!!, subjective, objective)
+
+        val event =
+            mapOf(
+                "opinionId" to opinion.id,
+                "ownerId" to opinion.owner,
+            )
+
+        outboxRepo.save(
+            OutboxEvent(
+                aggregateType = "opinion",
+                aggregateId = opinion.id.toString(),
+                type = "OpinionCreated",
+                payload = objectMapper.writeValueAsString(event),
+            ),
+        )
         return opinion.toDomain()
     }
 

@@ -19,17 +19,23 @@ class AccessRequestPersistence(
     @GeneratedValue
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
     var id: UUID? = null,
+//
     @Column(nullable = false)
     var listId: UUID,
+//
     @Column(nullable = false)
     var requesterId: UUID,
+//
     @Column(nullable = false)
     var ownerId: UUID,
+//
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     var status: RequestStatusEnum,
+//
     @Column(nullable = false)
     var createdAt: Instant,
+//
     @Column(nullable = false)
     var updatedAt: Instant,
 )

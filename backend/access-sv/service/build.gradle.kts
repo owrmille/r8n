@@ -8,6 +8,8 @@ version = "0.0.1-SNAPSHOT"
 description = "access service for figuring out which user has access to which resources"
 
 dependencies {
+    implementation(libs.spring.kafka)
+
     implementation(project(":access-api"))
     implementation(project(":access-api-integration"))
     implementation(project(":mock-api"))
@@ -20,8 +22,4 @@ dependencies {
     implementation(project(":core:security"))
     implementation(project(":core:api"))
     implementation(project(":core:utils"))
-
-    testImplementation("org.mockito:mockito-core")
-    testImplementation("org.mockito:mockito-junit-jupiter")
-    testImplementation("com.h2database:h2")
 }
