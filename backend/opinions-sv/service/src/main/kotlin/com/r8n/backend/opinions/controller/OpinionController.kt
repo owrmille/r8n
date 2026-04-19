@@ -1,6 +1,5 @@
 package com.r8n.backend.opinions.controller
 
-import com.r8n.backend.mock.stub.OpinionTestDataFactory
 import com.r8n.backend.opinions.api.OpinionApi
 import com.r8n.backend.opinions.api.dto.OpinionDto
 import com.r8n.backend.opinions.facade.OpinionFacade
@@ -55,5 +54,5 @@ class OpinionController(
     override fun adjustComponentWeight(
         linkId: UUID,
         weight: Double,
-    ): OpinionDto = OpinionTestDataFactory.getOpinion(UUID.fromString("0"))
+    ): OpinionDto = opinionFacade.adjustComponentWeight(linkId, weight)
 }
