@@ -4,8 +4,8 @@ import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.mock.api.MessagingApi
 import com.r8n.backend.mock.api.MessagingApi.Companion.SUPPORT_PATH
-import com.r8n.backend.mock.api.MessagingApi.Companion.SUPPORT_THREAD_MESSAGES_PATH
 import com.r8n.backend.mock.api.MessagingApi.Companion.SUPPORT_THREADS_PATH
+import com.r8n.backend.mock.api.MessagingApi.Companion.SUPPORT_THREAD_MESSAGES_PATH
 import com.r8n.backend.mock.api.dto.SupportThreadDto
 import com.r8n.backend.mock.api.dto.messaging.CreateSupportMessageRequestDto
 import com.r8n.backend.mock.api.dto.messaging.CreateSupportThreadRequestDto
