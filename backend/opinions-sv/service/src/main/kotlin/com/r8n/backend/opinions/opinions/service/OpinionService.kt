@@ -1,5 +1,7 @@
 package com.r8n.backend.opinions.opinions.service
 
+import com.r8n.backend.opinions.access.controller.service.AccessService
+import com.r8n.backend.opinions.access.domain.OpinionPermissionEnum
 import com.r8n.backend.opinions.opinions.database.OpinionRepository
 import com.r8n.backend.opinions.opinions.domain.Opinion
 import com.r8n.backend.opinions.opinions.domain.OpinionStatusEnum
@@ -20,41 +22,26 @@ class OpinionService(
     private val noteService: OpinionNoteService,
     private val componentService: ComponentService,
     private val opinionRepository: OpinionRepository,
-    private val objectMapper: ObjectMapper,
+    private val accessService: AccessService,
 ) {
     fun getOpinion(id: UUID): Opinion {
         val opinion = opinionRepository.findById(id).orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
-        if (!getCurrentUserId().isOwnerOf(opinion) && !getCurrentUserId().hasReadonlyAccessToOpinion(opinion)) {
+        val user = getCurrentUserId()
+        if (accessService.canAccessOpinion(user, opinion.id!!, OpinionPermissionEnum.READ)) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN)
         }
         return opinion.toDomain()
-    }
-
-    private fun UUID.isOwnerOf(opinion: OpinionPersistence): Boolean = this == opinion.owner
-
-    private fun UUID.hasReadonlyAccessToOpinion(opinion: OpinionPersistence): Boolean {
-        if (opinion.status != OpinionStatusEnum.PUBLISHED) {
-            return false
-        }
-        // TODO
-        return true
     }
 
     fun getOpinionFor(subjectId: UUID): Opinion {
         val opinion =
             opinionRepository.findFirstBySubjectOrderByTimestampDesc(subjectId)
                 ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
-        if (opinion.owner != getCurrentUserId()) {
+        if (accessService.canAccessOpinion(getCurrentUserId(), opinion.id!!, OpinionPermissionEnum.READ)) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN)
         }
         return opinion.toDomain()
     }
-
-    fun getOwnerOfOpinion(id: UUID): UUID =
-        opinionRepository
-            .findById(id)
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
-            .owner
 
     @Transactional
     fun createOpinion(
@@ -90,7 +77,7 @@ class OpinionService(
                 .findById(
                     opinionId,
                 ).orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
-        if (opinion.owner != getCurrentUserId()) {
+        if (accessService.canAccessOpinion(getCurrentUserId(), opinion.id!!, OpinionPermissionEnum.WRITE)) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN)
         }
         opinion.mark = mark
@@ -107,7 +94,7 @@ class OpinionService(
                 .findById(
                     opinionId,
                 ).orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
-        if (opinion.owner != getCurrentUserId()) {
+        if (accessService.canAccessOpinion(getCurrentUserId(), opinion.id!!, OpinionPermissionEnum.DELETE)) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN)
         }
         opinionRepository.delete(opinion)
@@ -127,14 +114,14 @@ class OpinionService(
             opinionRepository
                 .findById(parentOpinionId)
                 .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
-        if (parentOpinion.owner != getCurrentUserId()) {
+        if (accessService.canAccessOpinion(getCurrentUserId(), parentOpinion.id!!, OpinionPermissionEnum.EDIT)) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN)
         }
         val childOpinion =
             opinionRepository
                 .findById(childOpinionId)
                 .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
-        if (childOpinion.owner != getCurrentUserId()) {
+        if (accessService.canAccessOpinion(getCurrentUserId(), parentOpinion.id!!, OpinionPermissionEnum.READ)) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN)
         }
         if (componentService.hasLink(parentOpinionId, childOpinionId)) {
@@ -156,7 +143,7 @@ class OpinionService(
             opinionRepository
                 .findById(parentOpinionId)
                 .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
-        if (parentOpinion.owner != getCurrentUserId()) {
+        if (accessService.canAccessOpinion(getCurrentUserId(), parentOpinion.id!!, OpinionPermissionEnum.EDIT)) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN)
         }
         componentService.unlinkComponent(linkId)
@@ -175,7 +162,7 @@ class OpinionService(
             opinionRepository
                 .findById(parentOpinionId)
                 .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
-        if (parentOpinion.owner != getCurrentUserId()) {
+        if (accessService.canAccessOpinion(getCurrentUserId(), parentOpinion.id!!, OpinionPermissionEnum.EDIT)) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN)
         }
         if (!componentService.adjustComponentWeight(linkId, weight)) {
