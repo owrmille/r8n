@@ -13,6 +13,7 @@ dependencies {
     implementation(project(":users-api-integration"))
     implementation(project(":users-client"))
     implementation(project(":mock-sv"))
+    implementation(project(":opinions-sv"))
     implementation(libs.spring.kafka)
     testImplementation(project(":mock-api"))
 }

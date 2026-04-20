@@ -9,4 +9,5 @@ data class OpinionListDto(
     val owner: UUID,
     val ownerName: String,
     val opinionSummaries: List<OpinionSummaryDto>,
+    val privacy: OpinionListPrivacyEnumDto,
 )
