@@ -110,6 +110,26 @@ describe("httpClient", () => {
     );
   });
 
+  it("parses blob responses when requested", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response("avatar-bytes", {
+        headers: { "Content-Type": "image/png" },
+        status: 200,
+      }),
+    );
+    const client = createHttpClient({
+      baseUrl: "/api",
+      fetchFn: fetchMock,
+    });
+
+    const response = await client.get<Blob>("/users/user-id/avatar", {
+      responseType: "blob",
+    });
+
+    expect(response.type).toBe("image/png");
+    expect(await response.text()).toBe("avatar-bytes");
+  });
+
   it("times out long requests", async () => {
     vi.useFakeTimers();
 
