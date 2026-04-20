@@ -7,4 +7,5 @@ enum class OpinionListPermissionEnum {
     HIDE,
     PUBLISH,
     DELETE,
+    RENAME,
 }

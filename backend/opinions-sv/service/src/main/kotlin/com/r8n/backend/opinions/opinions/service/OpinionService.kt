@@ -26,8 +26,7 @@ class OpinionService(
 ) {
     fun getOpinion(id: UUID): Opinion {
         val opinion = opinionRepository.findById(id).orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
-        val user = getCurrentUserId()
-        if (accessService.canAccessOpinion(user, opinion.id!!, OpinionPermissionEnum.READ)) {
+        if (accessService.canAccessOpinion(getCurrentUserId(), opinion.id!!, OpinionPermissionEnum.READ)) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN)
         }
         return opinion.toDomain()
@@ -35,11 +34,8 @@ class OpinionService(
 
     fun getOpinionFor(subjectId: UUID): Opinion {
         val opinion =
-            opinionRepository.findFirstBySubjectOrderByTimestampDesc(subjectId)
+            opinionRepository.findFirstBySubjectByOwnerOrderByTimestampDesc(subjectId, getCurrentUserId())
                 ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
-        if (accessService.canAccessOpinion(getCurrentUserId(), opinion.id!!, OpinionPermissionEnum.READ)) {
-            throw ResponseStatusException(HttpStatus.FORBIDDEN)
-        }
         return opinion.toDomain()
     }
 
@@ -77,7 +73,7 @@ class OpinionService(
                 .findById(
                     opinionId,
                 ).orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
-        if (accessService.canAccessOpinion(getCurrentUserId(), opinion.id!!, OpinionPermissionEnum.WRITE)) {
+        if (accessService.canAccessOpinion(getCurrentUserId(), opinion.id!!, OpinionPermissionEnum.EDIT)) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN)
         }
         opinion.mark = mark
@@ -110,18 +106,16 @@ class OpinionService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "An opinion cannot be linked to itself")
         }
 
-        val parentOpinion =
-            opinionRepository
-                .findById(parentOpinionId)
-                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
-        if (accessService.canAccessOpinion(getCurrentUserId(), parentOpinion.id!!, OpinionPermissionEnum.EDIT)) {
+        opinionRepository
+            .findById(parentOpinionId)
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
+        if (accessService.canAccessOpinion(getCurrentUserId(), parentOpinionId, OpinionPermissionEnum.EDIT)) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN)
         }
-        val childOpinion =
-            opinionRepository
-                .findById(childOpinionId)
-                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
-        if (accessService.canAccessOpinion(getCurrentUserId(), parentOpinion.id!!, OpinionPermissionEnum.READ)) {
+        opinionRepository
+            .findById(childOpinionId)
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
+        if (accessService.canAccessOpinion(getCurrentUserId(), parentOpinionId, OpinionPermissionEnum.READ)) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN)
         }
         if (componentService.hasLink(parentOpinionId, childOpinionId)) {
@@ -138,12 +132,12 @@ class OpinionService(
     @Transactional
     fun unlinkComponent(linkId: UUID): Opinion {
         val parentOpinionId =
-            componentService.getParentOpinionId(linkId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
-        val parentOpinion =
-            opinionRepository
-                .findById(parentOpinionId)
-                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
-        if (accessService.canAccessOpinion(getCurrentUserId(), parentOpinion.id!!, OpinionPermissionEnum.EDIT)) {
+            componentService.getParentOpinionId(linkId)
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+        opinionRepository
+            .findById(parentOpinionId)
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
+        if (accessService.canAccessOpinion(getCurrentUserId(), parentOpinionId, OpinionPermissionEnum.EDIT)) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN)
         }
         componentService.unlinkComponent(linkId)
@@ -158,11 +152,10 @@ class OpinionService(
         val parentOpinionId =
             componentService.getParentOpinionId(linkId)
                 ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
-        val parentOpinion =
-            opinionRepository
-                .findById(parentOpinionId)
-                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
-        if (accessService.canAccessOpinion(getCurrentUserId(), parentOpinion.id!!, OpinionPermissionEnum.EDIT)) {
+        opinionRepository
+            .findById(parentOpinionId)
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
+        if (accessService.canAccessOpinion(getCurrentUserId(), parentOpinionId, OpinionPermissionEnum.EDIT)) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN)
         }
         if (!componentService.adjustComponentWeight(linkId, weight)) {

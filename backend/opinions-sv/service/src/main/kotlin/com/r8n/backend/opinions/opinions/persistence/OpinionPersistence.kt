@@ -1,6 +1,6 @@
 package com.r8n.backend.opinions.opinions.persistence
 
-import com.r8n.backend.opinions.domain.OpinionStatusEnum
+import com.r8n.backend.opinions.opinions.domain.OpinionStatusEnum
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType

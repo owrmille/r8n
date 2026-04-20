@@ -10,7 +10,7 @@ import java.util.UUID
 
 @Entity
 @Table(schema = "opinion_lists", name = "opinions_to_lists")
-class OpinionListOpinionAssignmentPersistence(
+class OpinionsToOpinionListsPersistence(
     @Id
     @GeneratedValue
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)

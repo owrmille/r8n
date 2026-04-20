@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service
 import java.util.UUID
 
 @Service
+// no permissions checks needed, all subjects are available to all users
 class SubjectService(
     private val opinionSubjectRepository: OpinionSubjectRepository,
     private val referentRepository: ReferentRepository,

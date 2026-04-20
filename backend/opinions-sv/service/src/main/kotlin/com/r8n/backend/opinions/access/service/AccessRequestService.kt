@@ -1,8 +1,6 @@
-package com.r8n.backend.opinions.access.controller.service
+package com.r8n.backend.opinions.access.service
 
 import com.r8n.backend.opinions.access.domain.AccessRequest
-import com.r8n.backend.opinions.access.domain.OpinionListPermissionEnum
-import com.r8n.backend.opinions.access.domain.OpinionPermissionEnum
 import com.r8n.backend.opinions.access.domain.RequestStatusEnum
 import com.r8n.backend.opinions.access.persistence.AccessRequestPersistence
 import com.r8n.backend.opinions.access.database.persistence.AccessRequestRepository

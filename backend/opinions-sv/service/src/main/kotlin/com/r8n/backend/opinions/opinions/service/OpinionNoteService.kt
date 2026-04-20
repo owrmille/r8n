@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service
 import java.util.UUID
 
 @Service
+// does not check permissions, so should be exposed only to OpinionService or another service that checks them
 class OpinionNoteService(
     private val opinionNoteRepository: OpinionNoteRepository,
 ) {

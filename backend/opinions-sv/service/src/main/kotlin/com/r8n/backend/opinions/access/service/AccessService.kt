@@ -18,7 +18,6 @@ import java.util.UUID
 @Service
 class AccessService(
     private val repository: AccessRequestRepository,
-    private val opinionsRestClient: OpinionsInternalRestClient,
     private val usersClient: UsersInternalApi,
 ) {
     private companion object {
@@ -33,6 +32,15 @@ class AccessService(
                 updatedAt = updatedAt,
             )
     }
+
+    fun ownsOpinion(userId: UUID, opinionId: UUID): Boolean {
+        return false
+    }
+
+    fun ownsOpinionList(userId: UUID, opinionListId: UUID): Boolean {
+        return false
+    }
+
 
     private fun roleBased(
         userId: UUID,

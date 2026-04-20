@@ -5,7 +5,7 @@ import com.r8n.backend.opinions.access.domain.AccessRequest
 import com.r8n.backend.opinions.access.domain.OpinionListPermissionEnum
 import com.r8n.backend.opinions.access.domain.OpinionPermissionEnum
 import com.r8n.backend.opinions.access.domain.RequestStatusEnum
-import com.r8n.backend.opinions.access.controller.service.AccessRequestService
+import com.r8n.backend.opinions.access.service.AccessRequestService
 import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.opinions.api.access.dto.AccessRequestDto
@@ -107,7 +107,7 @@ class AccessRequestFacade(
             }
         val listName =
             try {
-                opinionListApi.getListSummary(listId).listName
+                opinionService.getListSummary(listId).listName
             } catch (_: Exception) {
                 "Unknown"
             }
