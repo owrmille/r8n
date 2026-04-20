@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Camera, Loader2, Trash2 } from "lucide-react";
+import { ArrowLeft, CloudUpload, Loader2, Trash2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import UserAvatar from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
@@ -132,7 +132,7 @@ const EditProfile = () => {
                 {uploadAvatarMutation.isPending ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
-                  <Camera className="h-3.5 w-3.5" />
+                  <CloudUpload className="h-3.5 w-3.5" />
                 )}
               </button>
             </div>
