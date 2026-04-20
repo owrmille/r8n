@@ -54,8 +54,8 @@ describe("auth-store", () => {
   });
 
   it("stores the access token in memory and only persists the refresh hint", () => {
-    const setItemSpy = vi.spyOn(Storage.prototype, "setItem");
-    const removeItemSpy = vi.spyOn(Storage.prototype, "removeItem");
+    const setItemSpy = vi.spyOn(window.localStorage, "setItem");
+    const removeItemSpy = vi.spyOn(window.localStorage, "removeItem");
 
     setAuthSession({ accessToken: "tok-123", expiresInMilliseconds: 5_000 });
 
