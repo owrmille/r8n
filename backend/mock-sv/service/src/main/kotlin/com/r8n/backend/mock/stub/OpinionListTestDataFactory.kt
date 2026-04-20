@@ -4,8 +4,8 @@ import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.bernard
 import com.r8n.backend.opinionlists.api.dto.OpinionListDto
 import com.r8n.backend.opinionlists.api.dto.OpinionListPrivacyEnumDto
 import com.r8n.backend.opinionlists.api.dto.OpinionListSummaryDto
-import com.r8n.backend.opinions.api.dto.OpinionSummaryDto
-import com.r8n.backend.opinions.api.dto.WeightedOpinionReferenceDto
+import com.r8n.backend.opinions.api.opinions.dto.OpinionSummaryDto
+import com.r8n.backend.opinions.api.opinions.dto.WeightedOpinionReferenceDto
 import java.util.UUID
 
 object OpinionListTestDataFactory {

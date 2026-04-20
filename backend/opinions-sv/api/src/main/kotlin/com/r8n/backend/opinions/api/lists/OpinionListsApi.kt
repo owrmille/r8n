@@ -1,0 +1,101 @@
+package com.r8n.backend.opinions.api.lists
+
+import com.r8n.backend.core.api.PageRequestDto
+import com.r8n.backend.core.api.PageResponseDto
+import com.r8n.backend.opinions.api.lists.dto.OpinionListDto
+import com.r8n.backend.opinions.api.lists.dto.OpinionListPrivacyEnumDto
+import com.r8n.backend.opinions.api.lists.dto.OpinionListSummaryDto
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestParam
+import java.util.UUID
+
+interface OpinionListsApi {
+    companion object {
+        private const val ROOT_PATH = "/api/opinion-lists"
+        const val SUMMARY_PATH = "$ROOT_PATH/{listId}/summary"
+        const val GET_PATH = "$ROOT_PATH/{listId}"
+        const val RENAME_PATH = "$ROOT_PATH/{listId}/rename"
+        const val SET_PRIVACY_PATH = "$ROOT_PATH/{listId}/set-privacy"
+        const val LINK_PATH = "$ROOT_PATH/{listId}/link"
+        const val UNLINK_PATH = "$ROOT_PATH/{listId}/unlink"
+        const val SEARCH_PATH = "$ROOT_PATH/search"
+        const val SYNC_PATH = "$ROOT_PATH/{existingListId}/sync"
+        const val UNSYNC_PATH = "$ROOT_PATH/{existingListId}/unsync"
+        const val MINE_PATH = "$ROOT_PATH/mine"
+    }
+
+    @GetMapping(SUMMARY_PATH)
+    fun getListSummary(
+        @PathVariable listId: UUID,
+    ): OpinionListSummaryDto
+
+    @GetMapping(GET_PATH)
+    fun getList(
+        @PathVariable listId: UUID,
+    ): OpinionListDto
+
+    @PatchMapping(RENAME_PATH)
+    fun renameList(
+        @PathVariable
+        listId: UUID,
+        @RequestParam(required = true)
+        name: String,
+    ): OpinionListDto
+
+    @PatchMapping(SET_PRIVACY_PATH)
+    fun changePrivacy(
+        @PathVariable
+        listId: UUID,
+        @RequestParam(required = true)
+        privacy: OpinionListPrivacyEnumDto,
+    ): OpinionListDto
+
+    @PostMapping(LINK_PATH)
+    fun linkOpinion(
+        @PathVariable
+        listId: UUID,
+        @RequestParam(required = true)
+        opinionId: UUID,
+    ): OpinionListDto
+
+    @PatchMapping(UNLINK_PATH)
+    fun unlinkOpinion(
+        @PathVariable
+        listId: UUID,
+        @RequestParam(required = true)
+        opinionId: UUID,
+    ): OpinionListDto
+
+    @GetMapping(SEARCH_PATH)
+    fun search(
+        @RequestParam(required = false)
+        nameSubstring: String?,
+        @RequestParam(required = false)
+        authorId: UUID?,
+        @RequestParam(required = false)
+        authorNameSubstring: String?,
+        pageable: PageRequestDto,
+    ): PageResponseDto<OpinionListSummaryDto>
+
+    @PostMapping(SYNC_PATH)
+    fun syncWithOpinionList(
+        @PathVariable
+        existingListId: UUID,
+        @RequestParam(required = true)
+        addedListId: UUID,
+    ): OpinionListDto
+
+    @PostMapping(UNSYNC_PATH)
+    fun unsyncWithOpinionList(
+        @PathVariable
+        existingListId: UUID,
+        @RequestParam(required = true)
+        removedListId: UUID,
+    ): OpinionListDto
+
+    @GetMapping(MINE_PATH)
+    fun getMine(pageable: PageRequestDto): PageResponseDto<OpinionListSummaryDto>
+}

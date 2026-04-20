@@ -8,5 +8,4 @@ description = "mock service API"
 
 dependencies {
     implementation(project(":opinions-api"))
-    implementation(project(":opinion-lists-api"))
 }

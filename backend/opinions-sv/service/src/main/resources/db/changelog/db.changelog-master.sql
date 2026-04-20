@@ -101,3 +101,20 @@ VALUES ('30000000-0000-0000-0000-000000000002'
        , '00000000-0000-0000-0000-000000000000'
        , '14141414-1414-1414-1414-141414141414'
        , 4.24, 'DRAFT', '2024-02-01T09:30:00Z');
+
+
+--changeset inikulin:V6_access
+CREATE TABLE opinions.access_requests (
+    id UUID PRIMARY KEY,
+    list_id UUID NOT NULL,
+    requester_id UUID NOT NULL,
+    owner_id UUID NOT NULL,
+    status VARCHAR(32) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX idx_access_requests_list_id ON opinions.access_requests(list_id);
+CREATE INDEX idx_access_requests_requester_id ON opinions.access_requests(requester_id);
+CREATE INDEX idx_access_requests_owner_id ON opinions.access_requests(owner_id);
+CREATE INDEX idx_access_requests_status ON opinions.access_requests(status);

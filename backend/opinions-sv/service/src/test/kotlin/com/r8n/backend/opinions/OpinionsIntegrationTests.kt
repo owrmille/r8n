@@ -3,8 +3,8 @@ package com.r8n.backend.opinions
 import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.bernardReferent
 import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.cappuccino1A
 import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.cappuccino1G
-import com.r8n.backend.opinions.api.dto.OpinionDto
-import com.r8n.backend.opinions.api.dto.OpinionStatusEnumDto
+import com.r8n.backend.opinions.api.opinions.dto.OpinionDto
+import com.r8n.backend.opinions.api.opinions.dto.OpinionStatusEnumDto
 import com.r8n.backend.security.ServiceTokenService
 import com.r8n.backend.users.integration.api.UsersInternalApi
 import org.junit.jupiter.api.Assertions.assertEquals

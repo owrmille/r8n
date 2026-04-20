@@ -1,15 +1,15 @@
 package com.r8n.backend.opinions.integration.client
 
-import com.r8n.backend.opinions.api.OpinionsApi
-import com.r8n.backend.opinions.api.OpinionsApi.Companion.ADJUST_WEIGHT_PATH
-import com.r8n.backend.opinions.api.OpinionsApi.Companion.CREATE_PATH
-import com.r8n.backend.opinions.api.OpinionsApi.Companion.DELETE_PATH
-import com.r8n.backend.opinions.api.OpinionsApi.Companion.GET_BY_ID_PATH
-import com.r8n.backend.opinions.api.OpinionsApi.Companion.GET_FOR_SUBJECT_PATH
-import com.r8n.backend.opinions.api.OpinionsApi.Companion.LINK_PATH
-import com.r8n.backend.opinions.api.OpinionsApi.Companion.UNLINK_PATH
-import com.r8n.backend.opinions.api.OpinionsApi.Companion.UPDATE_PATH
-import com.r8n.backend.opinions.api.dto.OpinionDto
+import com.r8n.backend.opinions.api.opinions.OpinionsApi
+import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.ADJUST_WEIGHT_PATH
+import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.CREATE_PATH
+import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.DELETE_PATH
+import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.GET_BY_ID_PATH
+import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.GET_FOR_SUBJECT_PATH
+import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.LINK_PATH
+import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.UNLINK_PATH
+import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.UPDATE_PATH
+import com.r8n.backend.opinions.api.opinions.dto.OpinionDto
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.body
 import java.util.UUID

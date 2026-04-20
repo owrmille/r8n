@@ -8,5 +8,4 @@ description = "user information service API"
 
 dependencies {
     implementation(project(":mock-api"))
-    implementation(project(":access-api"))
 }

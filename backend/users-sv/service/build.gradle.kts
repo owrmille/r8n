@@ -14,6 +14,4 @@ dependencies {
     implementation(project(":mock-api-integration"))
     implementation(project(":mock-client"))
     implementation(project(":mock-sv"))
-    implementation(project(":access-api"))
-    implementation(project(":access-client"))
 }

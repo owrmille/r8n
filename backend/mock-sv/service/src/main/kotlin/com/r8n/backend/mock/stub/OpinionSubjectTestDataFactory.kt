@@ -1,7 +1,7 @@
 package com.r8n.backend.mock.stub
 
-import com.r8n.backend.opinions.api.dto.OpinionSubjectDto
-import com.r8n.backend.opinions.api.dto.ReferentDto
+import com.r8n.backend.opinions.api.opinions.dto.OpinionSubjectDto
+import com.r8n.backend.opinions.api.opinions.dto.ReferentDto
 import java.util.UUID
 
 object OpinionSubjectTestDataFactory {
