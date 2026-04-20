@@ -27,29 +27,6 @@ services:
     networks:
       - r8n_net
 
-  access:
-    build:
-      context: ./deployment/access
-      dockerfile: Dockerfile
-    env_file:
-      - ./deployment/config/docker.env
-      - ./deployment/secrets/docker.secrets.env
-    environment:
-      <<: [*tls-common-env, *tls-client-common-env]
-      SERVICE_NAME: access
-      SERVER_SSL_KEY_STORE: /certs/keystore-opinions.p12
-      SERVICES_OPINIONS_PORT: ${SERVICES_OPINIONS_PORT:?}
-      LOGGING_FILE_NAME: ${LOGGING_FILE_NAME:?}
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
-    networks:
-      - r8n_net
-    volumes:
-      - ./deployment/opinions/logs:/var/log/r8n
-      - ./deployment/certs/internal:/certs:ro
-    depends_on:
-      - database
-      - opinions
-
   opinions:
     build:
       context: ./deployment/opinions
