@@ -43,7 +43,7 @@ class InterserviceSecurityIntegrationTest {
     fun `getUserName requires authentication`() {
         val userId = UUID.randomUUID()
         mockMvc
-            .perform(get("/api/users/$userId/name"))
+            .perform(get("/api/internal/users/$userId/name"))
             .andExpect(status().isUnauthorized)
     }
 
@@ -54,7 +54,7 @@ class InterserviceSecurityIntegrationTest {
 
         mockMvc
             .perform(
-                get("/api/users/$userId/name")
+                get("/api/internal/users/$userId/name")
                     .header("Authorization", "Bearer $token"),
             ).andExpect(status().isOk)
     }
@@ -66,7 +66,7 @@ class InterserviceSecurityIntegrationTest {
 
         mockMvc
             .perform(
-                get("/api/users/$userId/name")
+                get("/api/internal/users/$userId/name")
                     .header("Authorization", "Bearer $token"),
             ).andExpect(status().isOk)
     }

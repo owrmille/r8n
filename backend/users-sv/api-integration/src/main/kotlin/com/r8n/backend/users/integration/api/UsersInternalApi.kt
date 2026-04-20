@@ -10,7 +10,7 @@ import java.util.UUID
 
 interface UsersInternalApi {
     companion object {
-        const val ID_PATH = "/api/users/{id}"
+        const val ID_PATH = "/api/internal/users/{id}"
         const val NAME_PATH = "$ID_PATH/name"
         const val SESSIONS_PATH = "$ID_PATH/sessions"
     }
