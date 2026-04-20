@@ -1,19 +1,19 @@
-package com.r8n.backend.mock.stub
+package com.r8n.backend.opinions.stub
 
-import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.alexanderReferent
-import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.bernardReferent
-import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.brokenTrust
-import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.canadaTariffs
-import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.cappuccino1A
-import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.cappuccino2
-import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.cappuccino3
-import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.donaldReferent
-import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.moreMoney
-import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.president
-import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.venezuelaInvasion
 import com.r8n.backend.opinions.api.opinions.dto.OpinionDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionStatusEnumDto
 import com.r8n.backend.opinions.api.opinions.dto.WeightedOpinionReferenceDto
+import com.r8n.backend.opinions.stub.OpinionSubjectTestDataFactory.alexanderReferent
+import com.r8n.backend.opinions.stub.OpinionSubjectTestDataFactory.bernardReferent
+import com.r8n.backend.opinions.stub.OpinionSubjectTestDataFactory.brokenTrust
+import com.r8n.backend.opinions.stub.OpinionSubjectTestDataFactory.canadaTariffs
+import com.r8n.backend.opinions.stub.OpinionSubjectTestDataFactory.cappuccino1A
+import com.r8n.backend.opinions.stub.OpinionSubjectTestDataFactory.cappuccino2
+import com.r8n.backend.opinions.stub.OpinionSubjectTestDataFactory.cappuccino3
+import com.r8n.backend.opinions.stub.OpinionSubjectTestDataFactory.donaldReferent
+import com.r8n.backend.opinions.stub.OpinionSubjectTestDataFactory.moreMoney
+import com.r8n.backend.opinions.stub.OpinionSubjectTestDataFactory.president
+import com.r8n.backend.opinions.stub.OpinionSubjectTestDataFactory.venezuelaInvasion
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -141,21 +141,24 @@ object OpinionTestDataFactory {
             Instant.now(),
         )
 
-    fun bernardOnCap3(id: UUID = UUID.randomUUID()) =
-        OpinionDto(
-            id,
-            bernardReferent.id,
-            bernardReferent.name,
-            cappuccino3.id,
-            cappuccino3.name,
-            listOf("my favorite"),
-            listOf("5.75€"),
-            4.90,
-            null,
-            emptyList(),
-            OpinionStatusEnumDto.PUBLISHED,
-            Instant.now(),
-        )
+    fun bernardOnCap3(id: UUID = UUID.randomUUID()): OpinionDto {
+        val opinionDto =
+            OpinionDto(
+                id,
+                bernardReferent.id,
+                bernardReferent.name,
+                cappuccino3.id,
+                cappuccino3.name,
+                listOf("my favorite"),
+                listOf("5.75€"),
+                4.90,
+                null,
+                emptyList(),
+                OpinionStatusEnumDto.PUBLISHED,
+                Instant.now(),
+            )
+        return opinionDto
+    }
 
     fun alexanderOnCap1(id: UUID = UUID.randomUUID()) =
         OpinionDto(

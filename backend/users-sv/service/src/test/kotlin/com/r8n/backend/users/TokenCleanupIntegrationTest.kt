@@ -1,8 +1,10 @@
 package com.r8n.backend.users
 
+import com.r8n.backend.opinions.api.access.IncomingAccessRequestApi
+import com.r8n.backend.opinions.api.access.OutgoingAccessRequestApi
+import com.r8n.backend.opinions.integration.api.OpinionListsInternalApi
 import com.r8n.backend.users.persistence.RefreshTokenPersistence
 import com.r8n.backend.users.provider.database.RefreshTokenRepository
-import com.r8n.backend.users.provider.database.UserRepository
 import com.r8n.backend.users.service.TokenService
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -11,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.postgresql.PostgreSQLContainer
@@ -23,6 +26,13 @@ import java.util.UUID
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @Import(TestObjectMapperConfiguration::class)
+@MockitoBean(
+    types = [
+        IncomingAccessRequestApi::class,
+        OutgoingAccessRequestApi::class,
+        OpinionListsInternalApi::class,
+    ],
+)
 class TokenCleanupIntegrationTest {
     private companion object {
         @Container
@@ -40,9 +50,6 @@ class TokenCleanupIntegrationTest {
 
     @Autowired
     lateinit var refreshTokenRepository: RefreshTokenRepository
-
-    @Autowired
-    lateinit var userRepository: UserRepository
 
     @Test
     fun `cleanupExpiredTokens removes only expired tokens`() {

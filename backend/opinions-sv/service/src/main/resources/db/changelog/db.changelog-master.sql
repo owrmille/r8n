@@ -102,7 +102,6 @@ VALUES ('30000000-0000-0000-0000-000000000002'
        , '14141414-1414-1414-1414-141414141414'
        , 4.24, 'DRAFT', '2024-02-01T09:30:00Z');
 
-
 --changeset inikulin:V6_access
 CREATE TABLE opinions.access_requests (
     id UUID PRIMARY KEY,

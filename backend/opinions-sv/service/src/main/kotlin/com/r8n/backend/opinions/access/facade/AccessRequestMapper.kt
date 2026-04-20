@@ -32,21 +32,33 @@ class AccessRequestMapper(
             RequestStatusEnum.CANCELLED -> RequestStatusEnumDto.CANCELLED
         }
 
-    fun toDto(request: AccessRequest): AccessRequestDto = with (request) {
-        AccessRequestDto(
-            id = id!!,
-            opinionListId = listId,
-            opinionListName = try {
-                opinionListService.getListName(listId)
-            } catch (_: Exception) {
-                "UNKNOWN"
-            },
-            owner = ownerId,
-            ownerName = try { userClient.getUserName(ownerId) } catch (_: Exception) { "UNKNOWN" },
-            requester = requesterId,
-            requesterName = try { userClient.getUserName(requesterId) } catch (_: Exception) { "UNKNOWN" },
-            timestamp = updatedAt,
-            status = status.toDto(),
-        )
-    }
+    fun toDto(request: AccessRequest): AccessRequestDto =
+        with(request) {
+            AccessRequestDto(
+                id = id!!,
+                opinionListId = listId,
+                opinionListName =
+                    try {
+                        opinionListService.getListName(listId)
+                    } catch (_: Exception) {
+                        "UNKNOWN"
+                    },
+                owner = ownerId,
+                ownerName =
+                    try {
+                        userClient.getUserName(ownerId)
+                    } catch (_: Exception) {
+                        "UNKNOWN"
+                    },
+                requester = requesterId,
+                requesterName =
+                    try {
+                        userClient.getUserName(requesterId)
+                    } catch (_: Exception) {
+                        "UNKNOWN"
+                    },
+                timestamp = updatedAt,
+                status = status.toDto(),
+            )
+        }
 }

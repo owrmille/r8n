@@ -2,16 +2,9 @@ package com.r8n.backend.opinions.access.facade
 
 import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
-import com.r8n.backend.opinions.access.domain.AccessRequest
-import com.r8n.backend.opinions.access.domain.OpinionListPermissionEnum
-import com.r8n.backend.opinions.access.domain.OpinionPermissionEnum
-import com.r8n.backend.opinions.access.domain.RequestStatusEnum
 import com.r8n.backend.opinions.access.service.AccessRequestService
 import com.r8n.backend.opinions.api.access.dto.AccessRequestDto
 import com.r8n.backend.opinions.api.access.dto.RequestStatusEnumDto
-import com.r8n.backend.opinions.lists.service.OpinionListService
-import com.r8n.backend.opinions.opinions.service.OpinionService
-import com.r8n.backend.users.integration.api.UsersInternalApi
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
@@ -36,11 +29,14 @@ class AccessRequestFacade(
                 pageable.size,
                 Sort.by(pageable.sort.map { Sort.Order(Sort.Direction.valueOf(it.direction.name), it.property) }),
             )
-        val page = service.getRequests(
-            forListId, null, ownerId,
-            accessRequestMapper.toDomain(status),
-            pageRequest,
-        )
+        val page =
+            service.getRequests(
+                forListId,
+                null,
+                ownerId,
+                accessRequestMapper.toDomain(status),
+                pageRequest,
+            )
         return PageResponseDto(
             items = page.content.map { accessRequestMapper.toDto(it) },
             total = page.totalElements,
@@ -62,11 +58,14 @@ class AccessRequestFacade(
                 pageable.size,
                 Sort.by(pageable.sort.map { Sort.Order(Sort.Direction.valueOf(it.direction.name), it.property) }),
             )
-        val page = service.getRequests(
-            forListId, requesterId, null,
-            accessRequestMapper.toDomain(status),
-            pageRequest,
-        )
+        val page =
+            service.getRequests(
+                forListId,
+                requesterId,
+                null,
+                accessRequestMapper.toDomain(status),
+                pageRequest,
+            )
         return PageResponseDto(
             items = page.content.map { accessRequestMapper.toDto(it) },
             total = page.totalElements,

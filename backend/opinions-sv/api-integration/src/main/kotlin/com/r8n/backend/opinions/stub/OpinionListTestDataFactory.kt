@@ -1,7 +1,5 @@
-package com.r8n.backend.opinions.lists.stub
+package com.r8n.backend.opinions.stub
 
-import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory
-import com.r8n.backend.mock.stub.OpinionTestDataFactory
 import com.r8n.backend.opinions.api.lists.dto.OpinionListDto
 import com.r8n.backend.opinions.api.lists.dto.OpinionListPrivacyEnumDto
 import com.r8n.backend.opinions.api.lists.dto.OpinionListSummaryDto

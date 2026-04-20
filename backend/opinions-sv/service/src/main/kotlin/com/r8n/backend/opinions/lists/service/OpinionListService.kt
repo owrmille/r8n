@@ -22,8 +22,10 @@ class OpinionListService(
     private val accessService: AccessService,
 ) {
     fun getListName(listId: UUID): String {
-        val list = opinionListRepository.findById(listId)
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
+        val list =
+            opinionListRepository
+                .findById(listId)
+                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
         val userId = getCurrentUserId()
         if (!accessService.ownsOpinionList(userId, listId) && list.privacy == OpinionListPrivacyEnum.PRIVATE) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND)

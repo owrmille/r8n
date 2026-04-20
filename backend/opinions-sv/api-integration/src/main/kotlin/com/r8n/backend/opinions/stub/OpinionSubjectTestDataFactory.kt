@@ -1,4 +1,4 @@
-package com.r8n.backend.mock.stub
+package com.r8n.backend.opinions.stub
 
 import com.r8n.backend.opinions.api.opinions.dto.OpinionSubjectDto
 import com.r8n.backend.opinions.api.opinions.dto.ReferentDto

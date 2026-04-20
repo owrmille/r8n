@@ -1,15 +1,15 @@
 package com.r8n.backend.users
 
-import com.r8n.backend.access.api.IncomingAccessRequestApi
-import com.r8n.backend.access.api.OutgoingAccessRequestApi
-import com.r8n.backend.access.api.dto.access.AccessRequestDto
-import com.r8n.backend.access.api.dto.access.RequestStatusEnumDto
 import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.mock.api.MessagingApi
-import com.r8n.backend.mock.integration.api.OpinionListInternalApi
 import com.r8n.backend.mock.stub.MiscTestFactory
-import com.r8n.backend.mock.stub.OpinionListTestDataFactory
+import com.r8n.backend.opinions.api.access.IncomingAccessRequestApi
+import com.r8n.backend.opinions.api.access.OutgoingAccessRequestApi
+import com.r8n.backend.opinions.api.access.dto.AccessRequestDto
+import com.r8n.backend.opinions.api.access.dto.RequestStatusEnumDto
+import com.r8n.backend.opinions.integration.api.OpinionListsInternalApi
+import com.r8n.backend.opinions.stub.OpinionListTestDataFactory
 import com.r8n.backend.users.api.dto.ConsentDto
 import com.r8n.backend.users.api.dto.PersonalIdentifiableInformationSectionDto
 import com.r8n.backend.users.api.dto.UserCompleteDataDto
@@ -58,13 +58,6 @@ import java.util.UUID
 @AutoConfigureMockMvc
 @SpringBootTest(
     webEnvironment = WebEnvironment.RANDOM_PORT,
-    properties = [
-        "services.access.url=http://localhost:8080",
-        "services.mock.url=http://localhost:8080",
-        "r8n.security.jwt.private-key=-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDJ6v3R6O+WlMvT\n-----END PRIVATE KEY-----",
-        "r8n.security.jwt.public-key=-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyur90ejvlpTL0w==\n-----END PUBLIC KEY-----",
-        "spring.jpa.hibernate.ddl-auto=create-drop",
-    ],
 )
 @Import(TestObjectMapperConfiguration::class)
 class UsersIntegrationTests {
@@ -136,7 +129,7 @@ class UsersIntegrationTests {
     lateinit var jdbcTemplate: JdbcTemplate
 
     @MockitoBean
-    lateinit var opinionClient: OpinionListInternalApi
+    lateinit var opinionClient: OpinionListsInternalApi
 
     @MockitoBean
     lateinit var incomingAccessRequestClient: IncomingAccessRequestApi

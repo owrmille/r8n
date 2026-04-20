@@ -12,7 +12,7 @@ import org.hibernate.annotations.UuidGenerator
 import java.util.UUID
 
 @Entity
-@Table(schema = "opinion_lists", name = "opinion_lists")
+@Table(schema = "opinions", name = "opinion_lists")
 class OpinionListPersistence(
     @Id
     @GeneratedValue

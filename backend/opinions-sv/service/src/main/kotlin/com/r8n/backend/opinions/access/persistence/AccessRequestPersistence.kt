@@ -13,7 +13,7 @@ import java.time.Instant
 import java.util.UUID
 
 @Entity
-@Table(schema = "access", name = "access_requests")
+@Table(schema = "opinions", name = "access_requests")
 class AccessRequestPersistence(
     @Id
     @GeneratedValue
