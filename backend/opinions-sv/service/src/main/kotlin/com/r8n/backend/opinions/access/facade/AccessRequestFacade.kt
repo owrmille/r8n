@@ -7,11 +7,11 @@ import com.r8n.backend.opinions.api.access.dto.AccessRequestDto
 import com.r8n.backend.opinions.api.access.dto.RequestStatusEnumDto
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 import java.time.Instant
 import java.util.UUID
 
-@Service
+@Component
 class AccessRequestFacade(
     private val service: AccessRequestService,
     private val accessRequestMapper: AccessRequestMapper,

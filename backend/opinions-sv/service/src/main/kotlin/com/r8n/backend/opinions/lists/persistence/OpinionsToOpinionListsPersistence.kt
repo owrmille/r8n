@@ -17,10 +17,10 @@ class OpinionsToOpinionListsPersistence(
     var id: UUID? = null,
 //
     @Column(nullable = false)
-    var opinionListId: UUID,
+    var opinionList: UUID,
 //
     @Column(nullable = false)
-    var opinionId: UUID,
+    var opinion: UUID,
 //
     @Column(nullable = false)
     var weight: Double,

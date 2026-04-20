@@ -2,8 +2,10 @@ package com.r8n.backend.opinions.lists.facade
 
 import com.r8n.backend.opinions.api.lists.dto.OpinionListDto
 import com.r8n.backend.opinions.lists.service.OpinionListService
+import org.springframework.stereotype.Component
 import java.util.UUID
 
+@Component
 class OpinionListFacade(
     private val opinionListService: OpinionListService,
     private val opinionListMapper: OpinionListMapper,

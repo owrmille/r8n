@@ -22,10 +22,10 @@ import com.r8n.backend.users.service.UserService
 import com.r8n.backend.users.service.UserSessionService
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 import java.util.UUID
 
-@Service
+@Component
 class UserFacade(
     private val userService: UserService,
     private val sessionService: UserSessionService,

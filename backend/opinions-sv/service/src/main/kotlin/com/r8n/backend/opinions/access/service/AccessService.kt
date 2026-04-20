@@ -1,6 +1,6 @@
 package com.r8n.backend.opinions.access.service
 
-import com.r8n.backend.opinions.access.database.persistence.AccessRequestRepository
+import com.r8n.backend.opinions.access.database.AccessRequestRepository
 import com.r8n.backend.opinions.access.domain.AccessRequest
 import com.r8n.backend.opinions.access.domain.OpinionListPermissionEnum
 import com.r8n.backend.opinions.access.domain.OpinionPermissionEnum
@@ -28,9 +28,9 @@ class AccessService(
         fun AccessRequestPersistence.toDomain(): AccessRequest =
             AccessRequest(
                 id = id,
-                listId = listId,
-                requesterId = requesterId,
-                ownerId = ownerId,
+                listId = list,
+                requesterId = requester,
+                ownerId = owner,
                 status = status,
                 createdAt = createdAt,
                 updatedAt = updatedAt,
@@ -40,12 +40,12 @@ class AccessService(
     fun ownsOpinion(
         userId: UUID,
         opinionId: UUID,
-    ): Boolean = opinionRepository.existsByIdAndOwnerId(opinionId, userId)
+    ): Boolean = opinionRepository.existsByIdAndOwner(opinionId, userId)
 
     fun ownsOpinionList(
         userId: UUID,
         opinionListId: UUID,
-    ): Boolean = opinionListRepository.existsByIdAndOwnerId(opinionListId, userId)
+    ): Boolean = opinionListRepository.existsByIdAndOwner(opinionListId, userId)
 
     private fun roleBasedForOpinion(
         userId: UUID,
@@ -103,8 +103,8 @@ class AccessService(
             )
 
         return activeRequests.any { request ->
-            val lists = opinionsToOpinionListsRepository.findAllByOpinionListId(request.listId)
-            return lists.any { list -> list.opinionId == opinionId }
+            val lists = opinionsToOpinionListsRepository.findAllByOpinionList(request.list)
+            return lists.any { list -> list.opinion == opinionId }
         }
     }
 
@@ -153,6 +153,6 @@ class AccessService(
 
         // READ-only: has an access request to this list been approved?
 
-        return repository.existsByRequesterIdAndListIdAndStatus(userId, listId, RequestStatusEnum.ACCEPTED)
+        return repository.existsByRequesterAndListAndStatus(userId, listId, RequestStatusEnum.ACCEPTED)
     }
 }

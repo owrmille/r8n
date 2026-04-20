@@ -5,8 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository
 import java.util.UUID
 
 interface OpinionListRepository : JpaRepository<OpinionListPersistence, UUID> {
-    fun existsByIdAndOwnerId(
-        opinionListId: UUID,
-        ownerId: UUID,
+    fun existsByIdAndOwner(
+        id: UUID,
+        owner: UUID,
     ): Boolean
 }

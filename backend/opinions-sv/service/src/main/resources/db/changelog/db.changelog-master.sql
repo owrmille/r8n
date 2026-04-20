@@ -105,15 +105,65 @@ VALUES ('30000000-0000-0000-0000-000000000002'
 --changeset inikulin:V6_access
 CREATE TABLE opinions.access_requests (
     id UUID PRIMARY KEY,
-    list_id UUID NOT NULL,
-    requester_id UUID NOT NULL,
-    owner_id UUID NOT NULL,
+    list UUID NOT NULL,
+    requester UUID NOT NULL,
+    owner UUID NOT NULL,
     status VARCHAR(32) NOT NULL,
     created_at TIMESTAMPTZ NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL
 );
 
-CREATE INDEX idx_access_requests_list_id ON opinions.access_requests(list_id);
-CREATE INDEX idx_access_requests_requester_id ON opinions.access_requests(requester_id);
-CREATE INDEX idx_access_requests_owner_id ON opinions.access_requests(owner_id);
+CREATE INDEX idx_access_requests_id ON opinions.access_requests(id);
+CREATE INDEX idx_access_requests_requester ON opinions.access_requests(requester);
+CREATE INDEX idx_access_requests_owner ON opinions.access_requests(owner);
 CREATE INDEX idx_access_requests_status ON opinions.access_requests(status);
+
+--changeset inikulin:V7_opinion_lists
+CREATE TABLE opinions.opinion_lists (
+    id UUID PRIMARY KEY,
+    owner UUID NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    privacy VARCHAR(32) NOT NULL
+);
+
+CREATE INDEX idx_opinion_lists_owner ON opinions.opinion_lists(owner);
+
+CREATE TABLE opinions.opinions_to_lists (
+    id UUID PRIMARY KEY,
+    opinion_list UUID NOT NULL,
+    opinion UUID NOT NULL,
+    weight DOUBLE PRECISION NOT NULL,
+    CONSTRAINT fk_opinions_to_lists_list FOREIGN KEY (opinion_list) REFERENCES opinions.opinion_lists(id) ON DELETE CASCADE,
+    CONSTRAINT fk_opinions_to_lists_opinion FOREIGN KEY (opinion) REFERENCES opinions.opinions(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_opinions_to_lists_list ON opinions.opinions_to_lists(opinion_list);
+CREATE INDEX idx_opinions_to_lists_opinion ON opinions.opinions_to_lists(opinion);
+
+--changeset inikulin:V8_seed_opinion_lists context:local,test
+-- Bernard's cappuccino rating list
+INSERT INTO opinions.opinion_lists (id, owner, name, privacy)
+VALUES ('70000000-0000-0000-0000-000000000001', '10101010-1010-1010-1010-101010101010', 'Bernard''s cappuccino rating', 'SEARCHABLE')
+ON CONFLICT (id) DO NOTHING;
+
+-- Opinions for the list (Bernard on Cap 1 and Bernard on Cap 3)
+-- Bernard on Cap 1 is already seeded in V2 with ID '30000000-0000-0000-0000-000000000001'
+-- Let's seed Bernard on Cap 3
+INSERT INTO opinions.opinions (id, owner, subject, mark, status, timestamp)
+VALUES ('30000000-0000-0000-0000-000000000003', '10101010-1010-1010-1010-101010101010', '21212121-2121-2121-2121-212121212121', 4.90, 'PUBLISHED', '2024-02-01T10:30:00Z')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO opinions.opinion_notes (id, opinion_id, type, description)
+VALUES ('30000000-0000-0000-0000-000000000104', '30000000-0000-0000-0000-000000000003', 'SUBJECTIVE', 'my favorite')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO opinions.opinion_notes (id, opinion_id, type, description)
+VALUES ('30000000-0000-0000-0000-000000000105', '30000000-0000-0000-0000-000000000003', 'OBJECTIVE', '5.75€')
+ON CONFLICT (id) DO NOTHING;
+
+-- Mapping opinions to the list
+INSERT INTO opinions.opinions_to_lists (id, opinion_list, opinion, weight)
+VALUES 
+    ('80000000-0000-0000-0000-000000000001', '70000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001', 1.0),
+    ('80000000-0000-0000-0000-000000000002', '70000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000003', 1.0)
+ON CONFLICT (id) DO NOTHING;

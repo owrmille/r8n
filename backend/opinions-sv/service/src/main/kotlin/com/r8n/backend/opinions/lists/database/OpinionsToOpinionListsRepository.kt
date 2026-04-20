@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import java.util.UUID
 
 interface OpinionsToOpinionListsRepository : JpaRepository<OpinionsToOpinionListsPersistence, UUID> {
-    fun findAllByOpinionListId(opinionListId: UUID): List<OpinionsToOpinionListsPersistence>
+    fun findAllByOpinionList(opinionListId: UUID): List<OpinionsToOpinionListsPersistence>
 
-    fun findByOpinionId(opinionId: UUID): OpinionsToOpinionListsPersistence?
+    fun findByOpinion(opinionId: UUID): OpinionsToOpinionListsPersistence?
 }

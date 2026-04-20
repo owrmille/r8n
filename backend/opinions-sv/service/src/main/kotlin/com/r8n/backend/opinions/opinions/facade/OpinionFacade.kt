@@ -12,7 +12,7 @@ class OpinionFacade(
 ) {
     fun getOpinion(opinionId: UUID): OpinionDto = opinionMapper.toDto(opinionService.getOpinion(opinionId))
 
-    fun getOpinionFor(subjectId: UUID): OpinionDto = opinionMapper.toDto(opinionService.getOpinionFor(subjectId))
+    fun getOpinionFor(subjectId: UUID): OpinionDto = opinionMapper.toDto(opinionService.getMyOpinionFor(subjectId))
 
     fun createOpinion(
         subjectId: UUID,

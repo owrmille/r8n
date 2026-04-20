@@ -1,6 +1,6 @@
 package com.r8n.backend.opinions.access.service
 
-import com.r8n.backend.opinions.access.database.persistence.AccessRequestRepository
+import com.r8n.backend.opinions.access.database.AccessRequestRepository
 import com.r8n.backend.opinions.access.domain.AccessRequest
 import com.r8n.backend.opinions.access.domain.RequestStatusEnum
 import com.r8n.backend.opinions.access.persistence.AccessRequestPersistence
@@ -32,9 +32,9 @@ class AccessRequestService(
         fun AccessRequestPersistence.toDomain(): AccessRequest =
             AccessRequest(
                 id = id,
-                listId = listId,
-                requesterId = requesterId,
-                ownerId = ownerId,
+                listId = list,
+                requesterId = requester,
+                ownerId = owner,
                 status = status,
                 createdAt = createdAt,
                 updatedAt = updatedAt,
@@ -53,7 +53,7 @@ class AccessRequestService(
         }
 
         val existingRequests =
-            repository.findByRequesterIdAndListIdAndStatusIn(
+            repository.findByRequesterAndListAndStatusIn(
                 requesterId,
                 listId,
                 listOf(RequestStatusEnum.SENT, RequestStatusEnum.ACCEPTED, RequestStatusEnum.HIDDEN),
@@ -68,9 +68,9 @@ class AccessRequestService(
         val now = Instant.now()
         val request =
             AccessRequestPersistence(
-                listId = listId,
-                requesterId = requesterId,
-                ownerId = list.owner,
+                list = listId,
+                requester = requesterId,
+                owner = list.owner,
                 status = RequestStatusEnum.SENT,
                 createdAt = now,
                 updatedAt = now,
@@ -88,7 +88,7 @@ class AccessRequestService(
                 .findById(requestId)
                 .orElseThrow { NoSuchElementException("Request not found") }
 
-        if (request.requesterId != requesterId) {
+        if (request.requester != requesterId) {
             throw IllegalAccessException("Cannot cancel someone else's request")
         }
 
@@ -111,7 +111,7 @@ class AccessRequestService(
             throw IllegalStateException("Cannot accept a cancelled request")
         }
 
-        if (request.ownerId != ownerId) {
+        if (request.owner != ownerId) {
             throw IllegalAccessException("Only the list owner can accept requests")
         }
 
@@ -130,7 +130,7 @@ class AccessRequestService(
                 .findById(requestId)
                 .orElseThrow { NoSuchElementException("Request not found") }
 
-        if (request.ownerId != ownerId) {
+        if (request.owner != ownerId) {
             throw IllegalAccessException("Only the list owner can decline requests")
         }
 
@@ -149,7 +149,7 @@ class AccessRequestService(
                 .findById(requestId)
                 .orElseThrow { NoSuchElementException("Request not found") }
 
-        if (request.ownerId != ownerId) {
+        if (request.owner != ownerId) {
             throw IllegalAccessException("Only the list owner can hide requests")
         }
 

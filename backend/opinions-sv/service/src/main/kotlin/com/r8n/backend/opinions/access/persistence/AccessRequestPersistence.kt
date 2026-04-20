@@ -21,13 +21,13 @@ class AccessRequestPersistence(
     var id: UUID? = null,
 //
     @Column(nullable = false)
-    var listId: UUID,
+    var list: UUID,
 //
     @Column(nullable = false)
-    var requesterId: UUID,
+    var requester: UUID,
 //
     @Column(nullable = false)
-    var ownerId: UUID,
+    var owner: UUID,
 //
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

@@ -31,9 +31,9 @@ class OpinionService(
         return opinion.toDomain()
     }
 
-    fun getOpinionFor(subjectId: UUID): Opinion {
+    fun getMyOpinionFor(subjectId: UUID): Opinion {
         val opinion =
-            opinionRepository.findFirstBySubjectByOwnerOrderByTimestampDesc(subjectId, getCurrentUserId())
+            opinionRepository.findFirstBySubjectAndOwnerOrderByTimestampDesc(subjectId, getCurrentUserId())
                 ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
         return opinion.toDomain()
     }

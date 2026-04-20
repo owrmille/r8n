@@ -12,9 +12,11 @@ import com.r8n.backend.opinions.opinions.domain.WeightedOpinionReference
 import com.r8n.backend.opinions.opinions.service.OpinionService
 import com.r8n.backend.security.CurrentUserIdentifier.getCurrentUserId
 import org.springframework.http.HttpStatus
+import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 
+@Service
 class OpinionListService(
     private val opinionListRepository: OpinionListRepository,
     private val opinionService: OpinionService,
@@ -46,10 +48,10 @@ class OpinionListService(
             throw ResponseStatusException(HttpStatus.NOT_FOUND)
         }
 
-        val assignments = opinionsAssignmentRepository.findAllByOpinionListId(listId)
+        val assignments = opinionsAssignmentRepository.findAllByOpinionList(listId)
         val opinions =
             assignments.map { asmt ->
-                opinionService.getOpinion(asmt.opinionId).copy(weight = asmt.weight)
+                opinionService.getOpinion(asmt.opinion).copy(weight = asmt.weight)
             }
         val opinionsBySubject = opinions.groupBy { it.subject }
 
