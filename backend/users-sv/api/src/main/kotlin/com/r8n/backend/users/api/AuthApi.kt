@@ -3,6 +3,7 @@ package com.r8n.backend.users.api
 import com.r8n.backend.users.api.dto.AuthenticationTokenDto
 import com.r8n.backend.users.api.dto.LoginRequestDto
 import org.springframework.web.bind.annotation.CookieValue
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 
@@ -10,10 +11,14 @@ interface AuthApi {
     companion object {
         const val REFRESH_TOKEN_COOKIE_NAME = "refreshToken"
         private const val ROOT_PATH = "/api/auth"
+        const val CSRF_PATH = "$ROOT_PATH/csrf"
         const val LOGIN_PATH = "$ROOT_PATH/login"
         const val LOGOUT_PATH = "$ROOT_PATH/logout"
         const val REFRESH_PATH = "$ROOT_PATH/refresh"
     }
+
+    @GetMapping(CSRF_PATH)
+    fun csrf()
 
     @PostMapping(LOGIN_PATH)
     fun login(
