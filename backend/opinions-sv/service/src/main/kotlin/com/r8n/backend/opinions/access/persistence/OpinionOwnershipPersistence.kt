@@ -13,5 +13,5 @@ class OpinionOwnershipPersistence(
     val opinionId: UUID,
 //
     @Column(nullable = false)
-    val ownerId: UUID
+    val ownerId: UUID,
 )

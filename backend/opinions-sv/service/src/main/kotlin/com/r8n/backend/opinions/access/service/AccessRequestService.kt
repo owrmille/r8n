@@ -1,10 +1,10 @@
 package com.r8n.backend.opinions.access.service
 
+import com.r8n.backend.opinions.access.database.persistence.AccessRequestRepository
 import com.r8n.backend.opinions.access.domain.AccessRequest
 import com.r8n.backend.opinions.access.domain.RequestStatusEnum
 import com.r8n.backend.opinions.access.persistence.AccessRequestPersistence
-import com.r8n.backend.opinions.access.database.persistence.AccessRequestRepository
-import com.r8n.backend.opinions.integration.client.OpinionsInternalRestClient
+import com.r8n.backend.opinions.lists.service.OpinionListService
 import com.r8n.backend.users.integration.api.UsersInternalApi
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -16,7 +16,7 @@ import java.util.UUID
 @Service
 class AccessRequestService(
     private val repository: AccessRequestRepository,
-    private val opinionsRestClient: OpinionsInternalRestClient,
+    private val opinionListService: OpinionListService,
     private val usersClient: UsersInternalApi,
 ) {
     fun getRequests(
@@ -46,7 +46,7 @@ class AccessRequestService(
         listId: UUID,
         requesterId: UUID,
     ): AccessRequest {
-        val list = opinionListApi.getList(listId)
+        val list = opinionListService.getList(listId)
 
         if (list.owner == requesterId) {
             throw IllegalArgumentException("Owner cannot request access to their own list")

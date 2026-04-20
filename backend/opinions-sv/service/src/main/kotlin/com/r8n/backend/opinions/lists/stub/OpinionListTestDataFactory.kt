@@ -1,9 +1,10 @@
-package com.r8n.backend.mock.stub
+package com.r8n.backend.opinions.lists.stub
 
-import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.bernard
-import com.r8n.backend.opinionlists.api.dto.OpinionListDto
-import com.r8n.backend.opinionlists.api.dto.OpinionListPrivacyEnumDto
-import com.r8n.backend.opinionlists.api.dto.OpinionListSummaryDto
+import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory
+import com.r8n.backend.mock.stub.OpinionTestDataFactory
+import com.r8n.backend.opinions.api.lists.dto.OpinionListDto
+import com.r8n.backend.opinions.api.lists.dto.OpinionListPrivacyEnumDto
+import com.r8n.backend.opinions.api.lists.dto.OpinionListSummaryDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionSummaryDto
 import com.r8n.backend.opinions.api.opinions.dto.WeightedOpinionReferenceDto
 import java.util.UUID
@@ -12,9 +13,9 @@ object OpinionListTestDataFactory {
     fun getListSummary(id: UUID = UUID.randomUUID()) =
         OpinionListSummaryDto(
             id,
-            "${bernard.name}'s cappucino rating",
-            bernard.id,
-            bernard.name,
+            "${OpinionSubjectTestDataFactory.bernard.name}'s cappuccino rating",
+            OpinionSubjectTestDataFactory.bernard.id,
+            OpinionSubjectTestDataFactory.bernard.name,
             3,
             1,
             OpinionListPrivacyEnumDto.SEARCHABLE,
@@ -22,11 +23,9 @@ object OpinionListTestDataFactory {
 
     fun getOpinionSummary1() =
         OpinionSummaryDto(
-            UUID.randomUUID(),
             OpinionTestDataFactory.bernardOnCap1().subject,
             OpinionTestDataFactory.bernardOnCap1().subjectName,
             OpinionTestDataFactory.bernardOnCap1().mark,
-            3.0,
             OpinionTestDataFactory.bernardOnCap1().componentMark,
             listOf(
                 WeightedOpinionReferenceDto(
@@ -44,11 +43,9 @@ object OpinionListTestDataFactory {
 
     fun getOpinionSummary3() =
         OpinionSummaryDto(
-            UUID.randomUUID(),
             OpinionTestDataFactory.bernardOnCap3().subject,
             OpinionTestDataFactory.bernardOnCap3().subjectName,
             OpinionTestDataFactory.bernardOnCap3().mark,
-            4.3,
             OpinionTestDataFactory.bernardOnCap3().componentMark,
             listOf(
                 WeightedOpinionReferenceDto(
@@ -68,10 +65,11 @@ object OpinionListTestDataFactory {
         val opinionListDto =
             OpinionListDto(
                 id,
-                "${bernard.name}'s cappucino rating",
-                bernard.id,
-                bernard.name,
+                "${OpinionSubjectTestDataFactory.bernard.name}'s cappuccino rating",
+                OpinionSubjectTestDataFactory.bernard.id,
+                OpinionSubjectTestDataFactory.bernard.name,
                 listOf(getOpinionSummary1(), getOpinionSummary3()),
+                OpinionListPrivacyEnumDto.SEARCHABLE,
             )
         return opinionListDto
     }

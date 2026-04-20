@@ -44,5 +44,4 @@ class OpinionFacade(
         linkId: UUID,
         weight: Double,
     ): OpinionDto = opinionMapper.toDto(opinionService.adjustComponentWeight(linkId, weight))
-
 }

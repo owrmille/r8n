@@ -8,4 +8,4 @@ data class OpinionList(
     val owner: UUID,
     val opinionSummaries: List<OpinionSummary>,
     val privacy: OpinionListPrivacyEnum,
-    )
+)

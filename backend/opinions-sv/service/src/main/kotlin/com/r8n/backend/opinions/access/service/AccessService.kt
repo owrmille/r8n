@@ -1,24 +1,28 @@
-package com.r8n.backend.opinions.access.controller.service
+package com.r8n.backend.opinions.access.service
 
+import com.r8n.backend.opinions.access.database.persistence.AccessRequestRepository
 import com.r8n.backend.opinions.access.domain.AccessRequest
 import com.r8n.backend.opinions.access.domain.OpinionListPermissionEnum
 import com.r8n.backend.opinions.access.domain.OpinionPermissionEnum
 import com.r8n.backend.opinions.access.domain.RequestStatusEnum
 import com.r8n.backend.opinions.access.persistence.AccessRequestPersistence
-import com.r8n.backend.opinions.access.database.persistence.AccessRequestRepository
-import com.r8n.backend.opinions.integration.client.OpinionsInternalRestClient
+import com.r8n.backend.opinions.lists.database.OpinionListRepository
+import com.r8n.backend.opinions.lists.database.OpinionsToOpinionListsRepository
+import com.r8n.backend.opinions.opinions.database.OpinionRepository
 import com.r8n.backend.users.integration.api.UsersInternalApi
-import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
-import java.time.Instant
+import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 
 @Service
 class AccessService(
     private val repository: AccessRequestRepository,
     private val usersClient: UsersInternalApi,
+    private val opinionRepository: OpinionRepository,
+    private val opinionsToOpinionListsRepository: OpinionsToOpinionListsRepository,
+    private val opinionListRepository: OpinionListRepository,
 ) {
     private companion object {
         fun AccessRequestPersistence.toDomain(): AccessRequest =
@@ -33,16 +37,17 @@ class AccessService(
             )
     }
 
-    fun ownsOpinion(userId: UUID, opinionId: UUID): Boolean {
-        return false
-    }
+    fun ownsOpinion(
+        userId: UUID,
+        opinionId: UUID,
+    ): Boolean = opinionRepository.existsByIdAndOwnerId(opinionId, userId)
 
-    fun ownsOpinionList(userId: UUID, opinionListId: UUID): Boolean {
-        return false
-    }
+    fun ownsOpinionList(
+        userId: UUID,
+        opinionListId: UUID,
+    ): Boolean = opinionListRepository.existsByIdAndOwnerId(opinionListId, userId)
 
-
-    private fun roleBased(
+    private fun roleBasedForOpinion(
         userId: UUID,
         ownerId: UUID,
         permission: OpinionPermissionEnum,
@@ -75,11 +80,16 @@ class AccessService(
         opinionId: UUID,
         permission: OpinionPermissionEnum,
     ): Boolean {
-        val ownerId = opinionsRestClient.getOwnerOfOpinion(opinionId)
-        val roleBased = roleBased(userId, ownerId, permission)
+        val ownerId =
+            opinionRepository
+                .findById(
+                    opinionId,
+                ).orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
+                .owner
+        val roleBased = roleBasedForOpinion(userId, ownerId, permission)
         if (roleBased != null) return roleBased
 
-        // READ-only: has an access request to any of the lists containing this opinion been approved?
+        // READ-only: has an access request [to any of the lists containing this opinion] been approved?
         // we can also first fetch all owner's lists that contain this opinion and check if the requester has access to any of them
         // not sure what would be more efficient in the long run
 
@@ -93,9 +103,38 @@ class AccessService(
             )
 
         return activeRequests.any { request ->
-            val list = opinionListApi.getList(request.listId)
-            list.opinionSummaries.any { it.id == opinionId }
+            val lists = opinionsToOpinionListsRepository.findAllByOpinionListId(request.listId)
+            return lists.any { list -> list.opinionId == opinionId }
         }
+    }
+
+    private fun roleBasedForList(
+        userId: UUID,
+        ownerId: UUID,
+        permission: OpinionListPermissionEnum,
+    ): Boolean? {
+        if (usersClient.isAnyModerator(userId) &&
+            (permission == OpinionListPermissionEnum.VIEW || permission == OpinionListPermissionEnum.HIDE)
+        ) {
+            return true
+        }
+        if (ownerId == userId &&
+            (
+                permission == OpinionListPermissionEnum.VIEW ||
+                    permission == OpinionListPermissionEnum.ADD_TO ||
+                    permission == OpinionListPermissionEnum.REMOVE_FROM ||
+                    permission == OpinionListPermissionEnum.HIDE ||
+                    permission == OpinionListPermissionEnum.PUBLISH ||
+                    permission == OpinionListPermissionEnum.DELETE ||
+                    permission == OpinionListPermissionEnum.RENAME
+            )
+        ) {
+            return true
+        }
+        if (permission != OpinionListPermissionEnum.VIEW) {
+            return false
+        }
+        return null
     }
 
     fun canAccessOpinionList(
@@ -103,21 +142,17 @@ class AccessService(
         listId: UUID,
         permission: OpinionListPermissionEnum,
     ): Boolean {
-        if (permission != OpinionPermissionEnum.READ) return false
+        val ownerId =
+            opinionListRepository
+                .findById(
+                    listId,
+                ).orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
+                .owner
+        val roleBased = roleBasedForList(userId, ownerId, permission)
+        if (roleBased != null) return roleBased
 
-        val list =
-            try {
-                opinionListApi.getList(listId)
-            } catch (_: Exception) {
-                return false
-            }
-        if (list.owner == userId) return true
+        // READ-only: has an access request to this list been approved?
 
-        return repository
-            .findFirstByRequesterIdAndListIdAndStatus(
-                userId,
-                listId,
-                RequestStatusEnum.ACCEPTED,
-            ).isPresent
+        return repository.existsByRequesterIdAndListIdAndStatus(userId, listId, RequestStatusEnum.ACCEPTED)
     }
 }

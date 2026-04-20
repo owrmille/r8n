@@ -17,32 +17,34 @@ class OpinionListMapper(
     private val subjectService: SubjectService,
     private val opinionMapper: OpinionMapper,
 ) {
+    fun toDto(opinionList: OpinionList): OpinionListDto =
+        with(opinionList) {
+            OpinionListDto(
+                id = id,
+                listName = name,
+                owner = owner,
+                ownerName = usersClient.getUserName(owner),
+                opinionSummaries = opinionSummaries.map { toDto(it) },
+                privacy = privacy.toDto(),
+            )
+        }
 
-    fun toDto(opinionList: OpinionList): OpinionListDto = with(opinionList) {
-        OpinionListDto(
-            id = id,
-            listName = name,
-            owner = owner,
-            ownerName = usersClient.getUserName(owner),
-            opinionSummaries = opinionSummaries.map { toDto(it) },
-            privacy = privacy.toDto()
-        )
-    }
-
-    fun toDto(opinionSummary: OpinionSummary) = with(opinionSummary) {
-        OpinionSummaryDto(
-            subject = subject,
-            subjectName = subjectService.getSubjectName(subject),
-            ownMark = ownMark,
-            componentMark = componentMark,
-            opinions = opinions.map { opinionMapper.toDto(it) },
-        )
-    }
+    fun toDto(opinionSummary: OpinionSummary) =
+        with(opinionSummary) {
+            OpinionSummaryDto(
+                subject = subject,
+                subjectName = subjectService.getSubjectName(subject),
+                ownMark = ownMark,
+                componentMark = componentMark,
+                opinions = opinions.map { opinionMapper.toDto(it) },
+            )
+        }
 
     private companion object {
-        fun OpinionListPrivacyEnum.toDto() = when (this) {
-            OpinionListPrivacyEnum.SEARCHABLE -> OpinionListPrivacyEnumDto.SEARCHABLE
-            OpinionListPrivacyEnum.PRIVATE -> OpinionListPrivacyEnumDto.PRIVATE
-        }
+        fun OpinionListPrivacyEnum.toDto() =
+            when (this) {
+                OpinionListPrivacyEnum.SEARCHABLE -> OpinionListPrivacyEnumDto.SEARCHABLE
+                OpinionListPrivacyEnum.PRIVATE -> OpinionListPrivacyEnumDto.PRIVATE
+            }
     }
 }

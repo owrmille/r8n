@@ -1,11 +1,11 @@
 package com.r8n.backend.opinions.integration.client
 
+import com.r8n.backend.core.api.PageRequestDto
+import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.opinions.api.access.OutgoingAccessRequestApi
 import com.r8n.backend.opinions.api.access.OutgoingAccessRequestApi.Companion.CANCEL_PATH
 import com.r8n.backend.opinions.api.access.OutgoingAccessRequestApi.Companion.CREATE_PATH
 import com.r8n.backend.opinions.api.access.OutgoingAccessRequestApi.Companion.GET_PATH
-import com.r8n.backend.core.api.PageRequestDto
-import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.opinions.api.access.dto.AccessRequestDto
 import com.r8n.backend.opinions.api.access.dto.RequestStatusEnumDto
 import org.springframework.web.client.RestClient

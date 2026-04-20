@@ -5,5 +5,13 @@ import org.springframework.data.jpa.repository.JpaRepository
 import java.util.UUID
 
 interface OpinionRepository : JpaRepository<OpinionPersistence, UUID> {
-    fun findFirstBySubjectByOwnerOrderByTimestampDesc(subject: UUID, ownerId: UUID): OpinionPersistence?
+    fun findFirstBySubjectByOwnerOrderByTimestampDesc(
+        subject: UUID,
+        ownerId: UUID,
+    ): OpinionPersistence?
+
+    fun existsByIdAndOwnerId(
+        opinionId: UUID,
+        ownerId: UUID,
+    ): Boolean
 }

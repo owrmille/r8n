@@ -12,5 +12,4 @@ dependencies {
     implementation(project(":opinions-api-integration"))
     implementation(project(":users-api-integration"))
     implementation(project(":users-client"))
-    implementation(project(":mock-sv"))
 }

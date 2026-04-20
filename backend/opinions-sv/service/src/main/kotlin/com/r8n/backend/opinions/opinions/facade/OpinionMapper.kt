@@ -13,22 +13,23 @@ import org.springframework.stereotype.Component
 class OpinionMapper(
     private val usersInternalApi: UsersInternalApi,
 ) {
-    fun toDto(opinion: Opinion): OpinionDto = with(opinion) {
-        OpinionDto(
-            id,
-            owner,
-            usersInternalApi.getUserName(owner),
-            subject,
-            subjectName,
-            subjective,
-            objective,
-            mark,
-            componentSection.componentMark,
-            componentSection.components.map { toDto(it) }.toList(),
-            status.toDto(),
-            timestamp,
-        )
-    }
+    fun toDto(opinion: Opinion): OpinionDto =
+        with(opinion) {
+            OpinionDto(
+                id,
+                owner,
+                usersInternalApi.getUserName(owner),
+                subject,
+                subjectName,
+                subjective,
+                objective,
+                mark,
+                componentSection.componentMark,
+                componentSection.components.map { toDto(it) }.toList(),
+                status.toDto(),
+                timestamp,
+            )
+        }
 
     fun OpinionStatusEnum.toDto(): OpinionStatusEnumDto =
         when (this) {
@@ -46,19 +47,21 @@ class OpinionMapper(
             OpinionStatusEnumDto.REJECTED -> OpinionStatusEnum.REJECTED
         }
 
-    fun toDto(opRef: WeightedOpinionReference) = with (opRef) {
-        WeightedOpinionReferenceDto(
-            id,
-            opinion,
-            weight,
-        )
+    fun toDto(opRef: WeightedOpinionReference) =
+        with(opRef) {
+            WeightedOpinionReferenceDto(
+                id,
+                opinion,
+                weight,
+            )
         }
 
-    fun fromDto(opRef: WeightedOpinionReferenceDto) = with (opRef) {
-        WeightedOpinionReference(
-            id,
-            opinion,
-            weight,
-        )
-    }
+    fun fromDto(opRef: WeightedOpinionReferenceDto) =
+        with(opRef) {
+            WeightedOpinionReference(
+                id,
+                opinion,
+                weight,
+            )
+        }
 }

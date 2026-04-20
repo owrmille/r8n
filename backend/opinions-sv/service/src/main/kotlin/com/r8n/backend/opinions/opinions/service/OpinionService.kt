@@ -1,7 +1,7 @@
 package com.r8n.backend.opinions.opinions.service
 
-import com.r8n.backend.opinions.access.controller.service.AccessService
 import com.r8n.backend.opinions.access.domain.OpinionPermissionEnum
+import com.r8n.backend.opinions.access.service.AccessService
 import com.r8n.backend.opinions.opinions.database.OpinionRepository
 import com.r8n.backend.opinions.opinions.domain.Opinion
 import com.r8n.backend.opinions.opinions.domain.OpinionStatusEnum
@@ -12,7 +12,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
-import tools.jackson.databind.ObjectMapper
 import java.time.Instant
 import java.util.UUID
 

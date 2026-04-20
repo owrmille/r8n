@@ -3,7 +3,7 @@ package com.r8n.backend.opinions.api.lists.dto
 import java.util.UUID
 
 data class OpinionListSummaryDto(
-    val id: UUID,
+    val listId: UUID,
     val listName: String,
     val owner: UUID,
     val ownerName: String,

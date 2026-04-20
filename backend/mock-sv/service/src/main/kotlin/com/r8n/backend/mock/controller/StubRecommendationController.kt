@@ -3,10 +3,10 @@ package com.r8n.backend.mock.controller
 import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.mock.api.RecommendationApi
-import com.r8n.backend.mock.stub.OpinionListTestDataFactory.getListSummary
 import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.cappuccino2
 import com.r8n.backend.mock.stub.OpinionSubjectTestDataFactory.cappuccino3
-import com.r8n.backend.opinionlists.api.dto.OpinionListSummaryDto
+import com.r8n.backend.opinions.api.lists.dto.OpinionListSummaryDto
+import com.r8n.backend.opinions.lists.stub.OpinionListTestDataFactory.getListSummary
 import com.r8n.backend.security.Authority.IS_USER
 import org.springframework.data.domain.PageImpl
 import org.springframework.security.access.prepost.PreAuthorize
