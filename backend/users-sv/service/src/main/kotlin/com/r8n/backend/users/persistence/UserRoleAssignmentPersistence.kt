@@ -38,4 +38,5 @@ enum class RoleEnumPersistence {
     MODERATOR,
     AI_MODERATOR,
     USER,
+    SUPPORT,
 }

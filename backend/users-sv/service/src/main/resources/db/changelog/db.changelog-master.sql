@@ -127,3 +127,13 @@ UPDATE users.pii SET about = 'I am a coffee expert' WHERE user_id = '00000000-00
 UPDATE users.pii SET location = 'Munich, Germany' WHERE user_id = '10101010-1010-1010-1010-101010101010';
 UPDATE users.pii SET about = 'I am a bratwurst expert' WHERE user_id = '10101010-1010-1010-1010-101010101010';
 CREATE UNIQUE INDEX idx_user_name ON users.pii(name);
+
+--changeset codex:V5_seed_support_role context:local,test
+INSERT INTO users.users_role_assignments (id, "user", role, granted_by, timestamp)
+VALUES (
+    '77777777-7777-7777-7777-777777777777',
+    '00000000-0000-0000-0000-000000000000',
+    'SUPPORT',
+    '00000000-0000-0000-0000-000000000000',
+    '2024-01-01T12:00:00Z'
+);
