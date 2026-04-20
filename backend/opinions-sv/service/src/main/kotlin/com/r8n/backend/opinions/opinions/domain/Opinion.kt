@@ -14,4 +14,5 @@ data class Opinion(
     val componentSection: ComponentSection,
     val status: OpinionStatusEnum,
     val timestamp: Instant,
+    val weight: Double? = null, // doesn't go outside, used for summary calculations
 )

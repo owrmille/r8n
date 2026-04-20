@@ -7,6 +7,7 @@ import com.r8n.backend.opinions.lists.database.OpinionsToOpinionListsRepository
 import com.r8n.backend.opinions.lists.domain.OpinionList
 import com.r8n.backend.opinions.lists.domain.OpinionSummary
 import com.r8n.backend.opinions.lists.persistence.OpinionListPersistence
+import com.r8n.backend.opinions.opinions.domain.WeightedOpinionReference
 import com.r8n.backend.opinions.opinions.service.OpinionService
 import com.r8n.backend.security.CurrentUserIdentifier.getCurrentUserId
 import org.springframework.http.HttpStatus
@@ -22,33 +23,57 @@ class OpinionListService(
     fun getList(listId: UUID): OpinionList {
         val list = opinionListRepository.findById(listId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
-        if (accessService.canAccessOpinionList(getCurrentUserId(), listId, OpinionListPermissionEnum.VIEW)) {
+        val userId = getCurrentUserId()
+        if (!accessService.canAccessOpinionList(userId, listId, OpinionListPermissionEnum.VIEW)) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN)
         }
-        val userId = getCurrentUserId()
-        val opinions = opinionsAssignmentRepository.findAllByOpinionListId(listId)
-            .map { opinionService.getOpinion(it.opinionId) }.groupBy { it.subject }
-        var summaries: List<OpinionSummary>
-        if (!accessService.ownsOpinionList(userId, listId)) {
-            // for another user I cannot see what his components are, I can see only his own opinion
-            summaries = opinions.map { (subject, ops) ->
+
+        val assignments = opinionsAssignmentRepository.findAllByOpinionListId(listId)
+        val opinions = assignments.map { asmt ->
+            opinionService.getOpinion(asmt.opinionId).copy(weight = asmt.weight)
+        }
+        val opinionsBySubject = opinions.groupBy { it.subject }
+
+        val summaries = if (accessService.ownsOpinionList(userId, listId)) {
+            opinionsBySubject.map { (subject, ops) ->
                 val own = ops.firstOrNull { it.owner == userId }
+                val weightedMarks = ops.mapNotNull { it.mark?.let { mark -> it.weight!! * mark } }
+                val componentMark = weightedMarks.takeIf { it.isNotEmpty() && it.size == ops.size }?.sum()
+
                 OpinionSummary(
                     subject = subject,
                     ownMark = own?.mark,
-                    componentMark = null,
-                    opinions = listOf(own),
+                    componentMark = componentMark,
+                    opinions = ops.map { WeightedOpinionReference(id = it.id, opinion = it.id, weight = it.weight!!) }
                 )
             }
+        } else {
+            // for another user I cannot see what his components are, I can see only his own opinion
+            opinionsBySubject.mapNotNull { (subject, ops) ->
+                val own = ops.firstOrNull { it.owner == userId }
+                if (own == null) {
+                    null
+                } else {
+                    OpinionSummary(
+                        subject = subject,
+                        ownMark = own.mark,
+                        componentMark = null,
+                        opinions = listOf(WeightedOpinionReference(id = own.id, opinion = own.id, weight = own.weight!!))
+                    )
+                }
+            }
         }
-    }
 
-    private fun toDomain(list: OpinionListPersistence, summaries: List<OpinionSummary>) = with(list) {
-        OpinionList(
-            id = id!!,
-            name = name,
-            owner = owner,
-            opinionSummaries = summaries
-        )
+        return toDomain(list, summaries)
     }
+}
+
+private fun toDomain(list: OpinionListPersistence, summaries: List<OpinionSummary>) = with(list) {
+    OpinionList(
+        id = id!!,
+        name = name,
+        owner = owner,
+        opinionSummaries = summaries,
+        privacy = privacy,
+    )
 }

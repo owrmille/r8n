@@ -21,4 +21,7 @@ class OpinionsToOpinionListsPersistence(
 //
     @Column(nullable = false)
     var opinionId: UUID,
+//
+    @Column(nullable = false)
+    var weight: Double,
 )
