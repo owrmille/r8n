@@ -92,6 +92,33 @@ CREATE TABLE users.refresh_tokens (
 CREATE INDEX idx_refresh_tokens_user_id ON users.refresh_tokens(user_id);
 CREATE UNIQUE INDEX idx_refresh_tokens_token_id ON users.refresh_tokens(token_id);
 
+--changeset ditabisko:V3_seed_additional_users context:local,test
+-- password is '1234' hashed with BCrypt
+INSERT INTO users.users (id, status, status_timestamp, password_hash)
+VALUES ('20202020-2020-2020-2020-202020202020', 'ACTIVE', '2024-01-01T12:00:00Z', '$2a$12$lxo9e8RbWABER4/mkU./s.njgArpJleAB9Vdq7C7rlNWIRYEw0Oym');
+INSERT INTO users.pii (user_id, name, email, phone)
+VALUES ('20202020-2020-2020-2020-202020202020', 'Anna Müller', 'anna@r8n.test', null);
+
+INSERT INTO users.users (id, status, status_timestamp, password_hash)
+VALUES ('30303030-3030-3030-3030-303030303030', 'ACTIVE', '2024-01-01T12:00:00Z', '$2a$12$lxo9e8RbWABER4/mkU./s.njgArpJleAB9Vdq7C7rlNWIRYEw0Oym');
+INSERT INTO users.pii (user_id, name, email, phone)
+VALUES ('30303030-3030-3030-3030-303030303030', 'Lena Koch', 'lena@r8n.test', null);
+
+INSERT INTO users.users (id, status, status_timestamp, password_hash)
+VALUES ('40404040-4040-4040-4040-404040404040', 'ACTIVE', '2024-01-01T12:00:00Z', '$2a$12$lxo9e8RbWABER4/mkU./s.njgArpJleAB9Vdq7C7rlNWIRYEw0Oym');
+INSERT INTO users.pii (user_id, name, email, phone)
+VALUES ('40404040-4040-4040-4040-404040404040', 'Max Weber', 'max@r8n.test', null);
+
+INSERT INTO users.users (id, status, status_timestamp, password_hash)
+VALUES ('50505050-5050-5050-5050-505050505050', 'ACTIVE', '2024-01-01T12:00:00Z', '$2a$12$lxo9e8RbWABER4/mkU./s.njgArpJleAB9Vdq7C7rlNWIRYEw0Oym');
+INSERT INTO users.pii (user_id, name, email, phone)
+VALUES ('50505050-5050-5050-5050-505050505050', 'Sofia Bauer', 'sofia@r8n.test', null);
+
+INSERT INTO users.users (id, status, status_timestamp, password_hash)
+VALUES ('60606060-6060-6060-6060-606060606060', 'ACTIVE', '2024-01-01T12:00:00Z', '$2a$12$lxo9e8RbWABER4/mkU./s.njgArpJleAB9Vdq7C7rlNWIRYEw0Oym');
+INSERT INTO users.pii (user_id, name, email, phone)
+VALUES ('60606060-6060-6060-6060-606060606060', 'Jonas Braun', 'jonas@r8n.test', null);
+
 --changeset inikulin:V4_user_fields
 ALTER TABLE users.pii ADD COLUMN about TEXT;
 ALTER TABLE users.pii ADD COLUMN location VARCHAR(255);
