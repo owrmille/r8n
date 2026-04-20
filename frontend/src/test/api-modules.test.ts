@@ -14,9 +14,24 @@ function createJsonResponse(body: unknown): Response {
   });
 }
 
+function createEmptyResponse(): Response {
+  return new Response(null, {
+    status: 204,
+  });
+}
+
+function clearCookie(name: string): void {
+  document.cookie = `${name}=; Max-Age=0; Path=/`;
+}
+
+function setCookie(name: string, value: string): void {
+  document.cookie = `${name}=${value}; Path=/`;
+}
+
 describe("API modules", () => {
   beforeEach(() => {
     clearSession();
+    clearCookie("XSRF-TOKEN");
     setSession(
       {
         accessToken: "stub-access-token-123",
@@ -26,7 +41,51 @@ describe("API modules", () => {
     );
   });
 
-  it("posts login credentials to the auth endpoint", async () => {
+  it("bootstraps csrf before posting login credentials when the xsrf cookie is missing", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(createEmptyResponse())
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          accessToken: "access-token",
+          expiresInMilliseconds: 1000,
+        }),
+      );
+    const client = createHttpClient({
+      baseUrl: "/api",
+      fetchFn: fetchMock,
+    });
+    const authApi = createAuthApi(client);
+
+    await authApi.login({
+      login: "test",
+      password: "1234",
+    });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "/api/auth/csrf",
+      expect.objectContaining({
+        credentials: "include",
+        method: "GET",
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/api/auth/login",
+      expect.objectContaining({
+        body: JSON.stringify({
+          login: "test",
+          password: "1234",
+        }),
+        credentials: "include",
+        method: "POST",
+      }),
+    );
+  });
+
+  it("skips csrf bootstrap when the xsrf cookie already exists", async () => {
+    setCookie("XSRF-TOKEN", "existing-xsrf-token");
     const fetchMock = vi.fn().mockResolvedValue(
       createJsonResponse({
         accessToken: "access-token",
@@ -44,26 +103,29 @@ describe("API modules", () => {
       password: "1234",
     });
 
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/auth/login",
       expect.objectContaining({
-        body: JSON.stringify({
-          login: "test",
-          password: "1234",
-        }),
-        credentials: "include",
         method: "POST",
       }),
     );
+
+    const [, requestInit] = fetchMock.mock.calls[0];
+    const headers = new Headers(requestInit.headers);
+    expect(headers.get("X-XSRF-TOKEN")).toBe("existing-xsrf-token");
   });
 
-  it("uses cookie credentials for refresh and does not send a refresh token from JavaScript", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      createJsonResponse({
-        accessToken: "access-token",
-        expiresInMilliseconds: 1000,
-      }),
-    );
+  it("bootstraps csrf before refresh and does not send a refresh token from JavaScript", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(createEmptyResponse())
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          accessToken: "access-token",
+          expiresInMilliseconds: 1000,
+        }),
+      );
     const client = createHttpClient({
       baseUrl: "/api",
       fetchFn: fetchMock,
@@ -72,7 +134,16 @@ describe("API modules", () => {
 
     await authApi.refresh();
 
-    expect(fetchMock).toHaveBeenCalledWith(
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "/api/auth/csrf",
+      expect.objectContaining({
+        credentials: "include",
+        method: "GET",
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
       "/api/auth/refresh",
       expect.objectContaining({
         credentials: "include",
@@ -80,16 +151,15 @@ describe("API modules", () => {
       }),
     );
 
-    const [, requestInit] = fetchMock.mock.calls[0];
+    const [, requestInit] = fetchMock.mock.calls[1];
     expect(requestInit.body).toBeUndefined();
   });
 
-  it("uses cookie credentials for logout", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      new Response(null, {
-        status: 204,
-      }),
-    );
+  it("bootstraps csrf before logout", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(createEmptyResponse())
+      .mockResolvedValueOnce(createEmptyResponse());
     const client = createHttpClient({
       baseUrl: "/api",
       fetchFn: fetchMock,
@@ -98,7 +168,16 @@ describe("API modules", () => {
 
     await authApi.logout();
 
-    expect(fetchMock).toHaveBeenCalledWith(
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "/api/auth/csrf",
+      expect.objectContaining({
+        credentials: "include",
+        method: "GET",
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
       "/api/auth/logout",
       expect.objectContaining({
         credentials: "include",
