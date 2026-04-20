@@ -81,6 +81,7 @@ const Dashboard = () => {
                   title={list.listName}
                   description=""
                   reviewCount={list.opinionsCount}
+                  authorId={list.owner}
                   authorName={list.ownerName}
                   hasAccess={true}
                 />

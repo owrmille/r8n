@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, List, ChevronDown, Plus } from "lucide-react";
-import ReviewerAvatar from "@/components/ReviewerAvatar";
+import UserAvatar from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { QueryState } from "@/components/server-state/QueryState";
@@ -351,7 +351,7 @@ const OpinionRow = ({
     <tr className="border-b border-border last:border-0">
       <td className="px-3 py-2.5 text-foreground font-medium">
         <div className="flex items-center gap-2">
-          <ReviewerAvatar name={opinion?.ownerName ?? "?"} size="sm" />
+          <UserAvatar userId={opinion?.owner} name={opinion?.ownerName ?? "?"} size="sm" />
           {opinion?.ownerName ?? "—"}
         </div>
       </td>
