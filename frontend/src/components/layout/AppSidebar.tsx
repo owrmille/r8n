@@ -4,6 +4,7 @@ import logo from "@/assets/logo.png";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useLogoutMutation } from "@/lib/server-state";
+import { useMe } from "@/lib/server-state/hooks/users";
 import {
   Sidebar,
   SidebarContent,
@@ -40,6 +41,7 @@ export function AppSidebar() {
       navigate("/login", { replace: true });
     },
   });
+  const { data: me } = useMe();
 
   const isActive = (path: string) =>
     path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
@@ -136,13 +138,12 @@ export function AppSidebar() {
       <SidebarFooter className="p-4 border-t border-sidebar-border">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-medium shrink-0">
-            JD
+            {me?.name ? me.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase() : "…"}
           </div>
           {!collapsed && (
             <>
               <div className="flex-1 min-w-0">
-                <p className="truncate text-sm font-medium text-sidebar-foreground">Jane Doe</p>
-                <p className="truncate text-xs text-muted-foreground">12 reviews</p>
+                <p className="truncate text-sm font-medium text-sidebar-foreground">{me?.name ?? "…"}</p>
               </div>
               <button
                 onClick={() => logoutMutation.mutate()}

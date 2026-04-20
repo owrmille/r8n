@@ -1,32 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ImagePlus, Search, Plus, Building2, MapPin, Sparkles } from "lucide-react";
+import { ArrowLeft, ImagePlus, Search, Plus, Building2, MapPin } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-
-// Mock existing suppliers/locations in "DB"
-const EXISTING_SUPPLIERS = [
-  { id: "1", name: "Bonanza Coffee", type: "Café", keywords: ["coffee", "espresso", "flat white", "latte", "cappuccino", "americano"] },
-  { id: "2", name: "Dyson", type: "Brand", keywords: ["vacuum", "hair dryer", "air purifier", "v15", "v12", "airwrap"] },
-  { id: "3", name: "IKEA", type: "Shop", keywords: ["furniture", "shelf", "desk", "kallax", "billy", "malm"] },
-  { id: "4", name: "The Barn", type: "Café", keywords: ["coffee", "espresso", "flat white", "filter", "pour over"] },
-  { id: "5", name: "Patagonia", type: "Brand", keywords: ["jacket", "fleece", "outdoor", "backpack", "clothing"] },
-  { id: "6", name: "Five Guys", type: "Restaurant", keywords: ["burger", "fries", "shake", "milkshake", "cheeseburger"] },
-  { id: "7", name: "Ace & Tate", type: "Shop", keywords: ["glasses", "sunglasses", "eyewear", "frames"] },
-];
-
-/** Find suppliers whose name or keywords match the subject text */
-const getSuggestedSuppliers = (subject: string) => {
-  if (subject.length < 2) return [];
-  const lower = subject.toLowerCase();
-  const words = lower.split(/\s+/);
-  return EXISTING_SUPPLIERS.filter((s) =>
-    s.name.toLowerCase().includes(lower) ||
-    words.some((w) => w.length >= 3 && s.keywords.some((k) => k.includes(w) || w.includes(k)))
-  );
-};
+import { useMyOpinionLists, useLinkOpinionToListMutation } from "@/lib/server-state/hooks/opinion-lists";
+import { useCreateOpinionMutation } from "@/lib/server-state/hooks/opinions";
 
 const RatingRow = ({
   label,
@@ -72,6 +52,8 @@ interface LinkedSupplier {
   isNew?: boolean;
 }
 
+const SUPPLIER_TYPES = ["Restaurant", "Café", "Brand", "Shop", "Hotel", "Service"];
+
 const SupplierSearch = ({
   value,
   onChange,
@@ -84,16 +66,6 @@ const SupplierSearch = ({
   const [newType, setNewType] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
-
-  const filtered = query.length > 0
-    ? EXISTING_SUPPLIERS.filter((s) =>
-        s.name.toLowerCase().includes(query.toLowerCase())
-      )
-    : EXISTING_SUPPLIERS;
-
-  const exactMatch = EXISTING_SUPPLIERS.some(
-    (s) => s.name.toLowerCase() === query.toLowerCase()
-  );
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -152,31 +124,12 @@ const SupplierSearch = ({
             className="absolute z-50 mt-1.5 w-full rounded-xl border border-border bg-card shadow-lg overflow-hidden"
           >
             <div className="max-h-48 overflow-y-auto">
-              {filtered.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => {
-                    onChange(s);
-                    setQuery("");
-                    setOpen(false);
-                  }}
-                  className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-muted/50 transition-colors"
-                >
-                  <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <div>
-                    <p className="text-sm text-foreground">{s.name}</p>
-                    <p className="text-[11px] text-muted-foreground">{s.type}</p>
-                  </div>
-                </button>
-              ))}
-              {filtered.length === 0 && (
-                <p className="px-4 py-3 text-xs text-muted-foreground">No results found</p>
-              )}
+              <p className="px-4 py-3 text-xs text-muted-foreground">
+                {query.length > 0 ? "No results found" : "Start typing to search"}
+              </p>
             </div>
 
-            {/* Create new option */}
-            {!exactMatch && query.length > 0 && !showCreateForm && (
+            {query.length > 0 && !showCreateForm && (
               <button
                 type="button"
                 onClick={() => setShowCreateForm(true)}
@@ -191,7 +144,7 @@ const SupplierSearch = ({
               <div className="border-t border-border p-3 space-y-2">
                 <p className="text-xs font-medium text-foreground">Create: {query}</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {["Restaurant", "Café", "Brand", "Shop", "Hotel", "Service"].map((t) => (
+                  {SUPPLIER_TYPES.map((t) => (
                     <button
                       key={t}
                       type="button"
@@ -241,16 +194,46 @@ const CreateReview = () => {
   const [subjectiveText, setSubjectiveText] = useState("");
   const [selectedList, setSelectedList] = useState("");
 
-  const lists = ["Best espresso in Berlin", "Top vacuums 2026", "Date night restaurants"];
+  const { data: listsData } = useMyOpinionLists({ pageable: { page: 0, size: 50 } });
+  const myLists = listsData?.items ?? [];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const createOpinion = useCreateOpinionMutation();
+  const linkOpinion = useLinkOpinionToListMutation();
+
+  const isSubmitting = createOpinion.isPending || linkOpinion.isPending;
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!subjectName || !rating) {
-      toast({ title: "Missing fields", description: "Please fill in the item name and rating." });
+
+    if (!linkedSupplier) {
+      toast({ title: "Missing supplier", description: "Please link this review to a place or brand." });
       return;
     }
-    toast({ title: "Review created", description: `Your review of ${subjectName} has been saved as private.` });
-    navigate("/");
+    if (linkedSupplier.isNew) {
+      toast({ title: "Not supported yet", description: "Creating new suppliers is not yet available." });
+      return;
+    }
+    if (!rating) {
+      toast({ title: "Missing rating", description: "Please provide a rating." });
+      return;
+    }
+
+    try {
+      const opinion = await createOpinion.mutateAsync({
+        subjectId: linkedSupplier.id,
+        mark: rating,
+        subjective: subjectiveText.trim() ? [subjectiveText.trim()] : undefined,
+        objective: objectiveText.trim() ? [objectiveText.trim()] : undefined,
+      });
+
+      if (selectedList) {
+        await linkOpinion.mutateAsync({ listId: selectedList, opinionId: opinion.id });
+      }
+
+      navigate("/");
+    } catch {
+      // errors surfaced via mutation meta errorTitle
+    }
   };
 
   return (
@@ -287,43 +270,6 @@ const CreateReview = () => {
               placeholder="e.g., Flat White, Dyson V15 Detect, Margherita Pizza..."
               className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
             />
-
-            {/* Pairing Suggestions */}
-            <AnimatePresence>
-              {subjectName.length >= 2 && !linkedSupplier && (() => {
-                const suggestions = getSuggestedSuppliers(subjectName);
-                if (suggestions.length === 0) return null;
-                return (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="mt-2 overflow-hidden"
-                  >
-                    <div className="rounded-xl border border-primary/20 bg-primary/5 p-3">
-                      <p className="text-[11px] font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
-                        <Sparkles className="h-3 w-3 text-primary" />
-                        Suggested matches from your network
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {suggestions.map((s) => (
-                          <button
-                            key={s.id}
-                            type="button"
-                            onClick={() => setLinkedSupplier(s)}
-                            className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:border-primary/40 hover:bg-primary/5 transition-all"
-                          >
-                            <Building2 className="h-3 w-3 text-muted-foreground" />
-                            {s.name}
-                            <span className="text-muted-foreground/60">· {s.type}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })()}
-            </AnimatePresence>
           </div>
 
           {/* Link Supplier / Location */}
@@ -334,10 +280,9 @@ const CreateReview = () => {
                 Link to a place or brand
               </span>
             </label>
-            <p className="mb-2 text-xs text-muted-foreground">Optional — connect this to a restaurant, shop, or brand.</p>
+            <p className="mb-2 text-xs text-muted-foreground">Required — connect this review to a restaurant, shop, or brand.</p>
             <SupplierSearch value={linkedSupplier} onChange={setLinkedSupplier} />
           </div>
-
 
           {/* Rating */}
           <div className="space-y-5 rounded-2xl border border-border bg-card p-5">
@@ -417,8 +362,8 @@ const CreateReview = () => {
                 className="flex-1 rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
               >
                 <option value="">None</option>
-                {lists.map((l) => (
-                  <option key={l} value={l}>{l}</option>
+                {myLists.map((l) => (
+                  <option key={l.id} value={l.id}>{l.listName}</option>
                 ))}
               </select>
               <Button
@@ -435,10 +380,10 @@ const CreateReview = () => {
 
           {/* Submit */}
           <div className="flex gap-3 pt-2">
-            <Button type="submit" className="rounded-xl px-8">
-              Publish Review
+            <Button type="submit" className="rounded-xl px-8" disabled={isSubmitting}>
+              {isSubmitting ? "Saving…" : "Publish Review"}
             </Button>
-            <Button type="button" variant="ghost" onClick={() => navigate("/")} className="rounded-xl">
+            <Button type="button" variant="ghost" onClick={() => navigate("/")} className="rounded-xl" disabled={isSubmitting}>
               Cancel
             </Button>
           </div>

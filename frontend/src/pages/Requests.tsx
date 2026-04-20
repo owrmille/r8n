@@ -1,46 +1,63 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, X, Clock, XCircle, Eye, EyeOff, Trash2 } from "lucide-react";
+import { Check, Clock, XCircle, Eye, EyeOff, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ReviewerAvatar from "@/components/ReviewerAvatar";
+import { QueryState } from "@/components/server-state/QueryState";
+import {
+  useIncomingAccessRequests,
+  useOutgoingAccessRequests,
+  useAcceptIncomingAccessRequestMutation,
+  useDeclineIncomingAccessRequestMutation,
+  useHideIncomingAccessRequestMutation,
+  useCancelOutgoingAccessRequestMutation,
+} from "@/lib/server-state/hooks/access-requests";
+import type { RequestStatusEnumDto } from "@/lib/api/access-requests";
 
-const incomingRequests = [
-  { from: "Sophie Chen", list: "Best espresso in Berlin", date: "2h ago" },
-  { from: "Tobias Richter", list: "Date night restaurants", date: "1d ago" },
-  { from: "Marcus Weber", list: "Cheap lunch under €10", date: "3d ago" },
-];
+function formatRelativeTime(timestamp: string): string {
+  const diff = Date.now() - new Date(timestamp).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return `${Math.floor(days / 7)}w ago`;
+}
 
-const outgoingRequests = [
-  { to: "Mia Svensson", list: "Nordic brunch spots", date: "1d ago", status: "pending" as const },
-  { to: "Tobias Richter", list: "Hidden gems in Kreuzberg", date: "3d ago", status: "pending" as const },
-  { to: "Alex Krüger", list: "Best espresso in Berlin", date: "1w ago", status: "approved" as const },
-  { to: "Sophie Chen", list: "Vegan fine dining Berlin", date: "2w ago", status: "declined" as const },
-];
+const STATUS_LABELS: Record<RequestStatusEnumDto, { label: string; icon: React.ReactNode; className: string }> = {
+  SENT: { label: "Pending", icon: <Clock className="h-3 w-3" />, className: "text-muted-foreground" },
+  ACCEPTED: { label: "Approved", icon: <Check className="h-3 w-3" />, className: "text-primary" },
+  REJECTED: { label: "Declined", icon: <XCircle className="h-3 w-3" />, className: "text-destructive" },
+  HIDDEN: { label: "Hidden", icon: <EyeOff className="h-3 w-3" />, className: "text-muted-foreground" },
+  CANCELLED: { label: "Cancelled", icon: <XCircle className="h-3 w-3" />, className: "text-muted-foreground" },
+};
 
 const Requests = () => {
-  const [hiddenIndices, setHiddenIndices] = useState<number[]>([]);
-  const [deletedIndices, setDeletedIndices] = useState<number[]>([]);
   const [showHidden, setShowHidden] = useState(false);
 
-  const handleHide = (index: number) => {
-    setHiddenIndices((prev) => [...prev, index]);
-  };
+  const incoming = useIncomingAccessRequests({
+    filters: { status: "SENT" },
+    pageable: { page: 0, size: 50 },
+  });
 
-  const handleUnhide = (index: number) => {
-    setHiddenIndices((prev) => prev.filter((i) => i !== index));
-  };
+  const hiddenIncoming = useIncomingAccessRequests({
+    filters: { status: "HIDDEN" },
+    pageable: { page: 0, size: 50 },
+  });
 
-  const handleDelete = (index: number) => {
-    setDeletedIndices((prev) => [...prev, index]);
-  };
+  const outgoing = useOutgoingAccessRequests({
+    pageable: { page: 0, size: 50 },
+  });
 
-  const visibleRequests = incomingRequests
-    .map((req, i) => ({ ...req, originalIndex: i }))
-    .filter((req) => !hiddenIndices.includes(req.originalIndex) && !deletedIndices.includes(req.originalIndex));
+  const accept = useAcceptIncomingAccessRequestMutation();
+  const decline = useDeclineIncomingAccessRequestMutation();
+  const hide = useHideIncomingAccessRequestMutation();
+  const cancel = useCancelOutgoingAccessRequestMutation();
 
-  const hiddenRequests = incomingRequests
-    .map((req, i) => ({ ...req, originalIndex: i }))
-    .filter((req) => hiddenIndices.includes(req.originalIndex));
+  const incomingItems = incoming.data?.items ?? [];
+  const hiddenItems = hiddenIncoming.data?.items ?? [];
+  const outgoingItems = outgoing.data?.items ?? [];
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 md:px-8 md:py-12">
@@ -64,11 +81,13 @@ const Requests = () => {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold tracking-tight text-foreground">
             Incoming
-            <span className="ml-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-mono font-semibold text-accent-foreground">
-              {visibleRequests.length}
-            </span>
+            {(incoming.data?.total ?? 0) > 0 && (
+              <span className="ml-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-mono font-semibold text-accent-foreground">
+                {incoming.data?.total}
+              </span>
+            )}
           </h2>
-          {hiddenRequests.length > 0 && (
+          {hiddenItems.length > 0 && (
             <Button
               variant="ghost"
               size="sm"
@@ -76,28 +95,41 @@ const Requests = () => {
               onClick={() => setShowHidden(!showHidden)}
             >
               {showHidden ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-              {showHidden ? "Hide" : "Show"} hidden ({hiddenRequests.length})
+              {showHidden ? "Hide" : "Show"} hidden ({hiddenItems.length})
             </Button>
           )}
         </div>
 
-        {visibleRequests.length > 0 && (
+        <QueryState
+          isLoading={incoming.isLoading}
+          isError={incoming.isError}
+          error={incoming.error}
+          isEmpty={incomingItems.length === 0}
+          emptyMessage="No pending incoming requests."
+          onRetry={incoming.refetch}
+        >
           <div className="rounded-2xl border border-border overflow-hidden">
-            {visibleRequests.map((req) => (
+            {incomingItems.map((req) => (
               <div
-                key={req.originalIndex}
+                key={req.id}
                 className="flex items-center gap-4 border-b border-border last:border-0 px-5 py-4"
               >
-                <ReviewerAvatar name={req.from} size="sm" />
+                <ReviewerAvatar name={req.requesterName} size="sm" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{req.from}</p>
+                  <p className="text-sm font-medium text-foreground truncate">{req.requesterName}</p>
                   <p className="text-xs text-muted-foreground truncate">
-                    Wants access to: <span className="font-medium text-foreground/70">{req.list}</span>
+                    Wants access to: <span className="font-medium text-foreground/70">{req.opinionListName}</span>
                   </p>
                 </div>
-                <span className="text-[10px] text-muted-foreground/60 shrink-0">{req.date}</span>
+                <span className="text-[10px] text-muted-foreground/60 shrink-0">{formatRelativeTime(req.timestamp)}</span>
                 <div className="flex gap-2 shrink-0">
-                  <Button variant="default" size="sm" className="h-8 rounded-lg text-xs">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="h-8 rounded-lg text-xs"
+                    disabled={accept.isPending}
+                    onClick={() => accept.mutate({ requestId: req.id })}
+                  >
                     <Check className="mr-1 h-3 w-3" />
                     Approve
                   </Button>
@@ -105,7 +137,8 @@ const Requests = () => {
                     variant="ghost"
                     size="sm"
                     className="h-8 rounded-lg text-xs text-muted-foreground"
-                    onClick={() => handleHide(req.originalIndex)}
+                    disabled={hide.isPending}
+                    onClick={() => hide.mutate({ requestId: req.id })}
                   >
                     <EyeOff className="mr-1 h-3 w-3" />
                     Hide
@@ -114,7 +147,8 @@ const Requests = () => {
                     variant="ghost"
                     size="sm"
                     className="h-8 rounded-lg text-xs text-destructive hover:text-destructive"
-                    onClick={() => handleDelete(req.originalIndex)}
+                    disabled={decline.isPending}
+                    onClick={() => decline.mutate({ requestId: req.id })}
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
@@ -122,31 +156,32 @@ const Requests = () => {
               </div>
             ))}
           </div>
-        )}
+        </QueryState>
 
-        {showHidden && hiddenRequests.length > 0 && (
+        {showHidden && hiddenItems.length > 0 && (
           <div className="mt-3 rounded-2xl border border-dashed border-border overflow-hidden opacity-60">
-            {hiddenRequests.map((req) => (
+            {hiddenItems.map((req) => (
               <div
-                key={req.originalIndex}
+                key={req.id}
                 className="flex items-center gap-4 border-b border-border last:border-0 px-5 py-4"
               >
-                <ReviewerAvatar name={req.from} size="sm" />
+                <ReviewerAvatar name={req.requesterName} size="sm" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{req.from}</p>
+                  <p className="text-sm font-medium text-foreground truncate">{req.requesterName}</p>
                   <p className="text-xs text-muted-foreground truncate">
-                    Wants access to: <span className="font-medium text-foreground/70">{req.list}</span>
+                    Wants access to: <span className="font-medium text-foreground/70">{req.opinionListName}</span>
                   </p>
                 </div>
-                <span className="text-[10px] text-muted-foreground/60 shrink-0">{req.date}</span>
+                <span className="text-[10px] text-muted-foreground/60 shrink-0">{formatRelativeTime(req.timestamp)}</span>
                 <Button
                   variant="ghost"
                   size="sm"
                   className="h-8 rounded-lg text-xs text-muted-foreground"
-                  onClick={() => handleUnhide(req.originalIndex)}
+                  disabled={accept.isPending}
+                  onClick={() => accept.mutate({ requestId: req.id })}
                 >
-                  <Eye className="mr-1 h-3 w-3" />
-                  Unhide
+                  <Check className="mr-1 h-3 w-3" />
+                  Approve
                 </Button>
               </div>
             ))}
@@ -161,41 +196,50 @@ const Requests = () => {
         transition={{ duration: 0.3, delay: 0.15 }}
       >
         <h2 className="mb-4 text-lg font-semibold tracking-tight text-foreground">Outgoing</h2>
-        <div className="rounded-2xl border border-border overflow-hidden">
-          {outgoingRequests.map((req, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-4 border-b border-border last:border-0 px-5 py-4"
-            >
-              <ReviewerAvatar name={req.to} size="sm" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{req.to}</p>
-                <p className="text-xs text-muted-foreground truncate">{req.list}</p>
-              </div>
-              <span className="text-[10px] text-muted-foreground/60 shrink-0">{req.date}</span>
-              <div className="shrink-0">
-                {req.status === "pending" && (
-                  <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    Pending
-                  </span>
-                )}
-                {req.status === "approved" && (
-                  <span className="inline-flex items-center gap-1 text-xs text-primary">
-                    <Check className="h-3 w-3" />
-                    Approved
-                  </span>
-                )}
-                {req.status === "declined" && (
-                  <span className="inline-flex items-center gap-1 text-xs text-destructive">
-                    <XCircle className="h-3 w-3" />
-                    Declined
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+        <QueryState
+          isLoading={outgoing.isLoading}
+          isError={outgoing.isError}
+          error={outgoing.error}
+          isEmpty={outgoingItems.length === 0}
+          emptyMessage="No outgoing requests."
+          onRetry={outgoing.refetch}
+        >
+          <div className="rounded-2xl border border-border overflow-hidden">
+            {outgoingItems.map((req) => {
+              const statusMeta = STATUS_LABELS[req.status];
+              return (
+                <div
+                  key={req.id}
+                  className="flex items-center gap-4 border-b border-border last:border-0 px-5 py-4"
+                >
+                  <ReviewerAvatar name={req.ownerName} size="sm" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{req.ownerName}</p>
+                    <p className="text-xs text-muted-foreground truncate">{req.opinionListName}</p>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground/60 shrink-0">{formatRelativeTime(req.timestamp)}</span>
+                  <div className="shrink-0 flex items-center gap-2">
+                    <span className={`inline-flex items-center gap-1 text-xs ${statusMeta.className}`}>
+                      {statusMeta.icon}
+                      {statusMeta.label}
+                    </span>
+                    {req.status === "SENT" && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 rounded-lg text-xs text-muted-foreground"
+                        disabled={cancel.isPending}
+                        onClick={() => cancel.mutate({ requestId: req.id })}
+                      >
+                        Cancel
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </QueryState>
       </motion.section>
     </div>
   );

@@ -1,11 +1,13 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Search } from "lucide-react";
-import ReviewCard from "@/components/ReviewCard";
 import OpinionListCard from "@/components/OpinionListCard";
 import ReviewerAvatar from "@/components/ReviewerAvatar";
-import { Button } from "@/components/ui/button";
+import { QueryState } from "@/components/server-state/QueryState";
 import { Link } from "react-router-dom";
+import { useSearchOpinionLists } from "@/lib/server-state/hooks/opinion-lists";
 
+// Trending reviewers: no user search endpoint yet
 const trendingReviewers = [
   { id: "alex-kruger", name: "Alex Krüger", reviews: 47, bio: "Berlin food writer" },
   { id: "mia-svensson", name: "Mia Svensson", reviews: 31, bio: "Nordic cuisine enthusiast" },
@@ -13,25 +15,16 @@ const trendingReviewers = [
   { id: "sophie-chen", name: "Sophie Chen", reviews: 19, bio: "Coffee & dessert focused" },
 ];
 
-const featuredLists = [
-  {
-    title: "Michelin-worthy but unstarred",
-    description: "Restaurants that deserve recognition but fly under the radar.",
-    reviewCount: 9,
-    authorName: "Alex Krüger",
-    hasAccess: false,
-    accessStatus: "none" as const,
-  },
-  {
-    title: "Vegan fine dining Berlin",
-    description: "Plant-based restaurants that don't compromise on technique or flavor.",
-    reviewCount: 6,
-    authorName: "Sophie Chen",
-    hasAccess: false,
-  },
-];
-
 const Discover = () => {
+  const [query, setQuery] = useState("");
+
+  const { data, isLoading, isError, error, refetch } = useSearchOpinionLists({
+    filters: query.length >= 2 ? { nameSubstring: query } : undefined,
+    pageable: { page: 0, size: 20 },
+  });
+
+  const lists = data?.items ?? [];
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 md:px-8 md:py-12">
       <motion.div
@@ -49,49 +42,73 @@ const Discover = () => {
         <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <input
           type="text"
-          placeholder="Search restaurants or reviewers..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search lists by name..."
           className="w-full rounded-xl border border-border bg-card py-3 pl-11 pr-4 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
         />
       </div>
 
-      {/* Suggested Reviewers */}
-      <motion.section
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.1 }}
-        className="mb-12"
-      >
-        <h2 className="mb-4 text-lg font-semibold tracking-tight text-foreground">Suggested Reviewers</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {trendingReviewers.map((r, i) => (
-            <Link
-              key={i}
-              to={`/profile/${r.id}`}
-              className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-shadow hover:shadow-premium"
-            >
-              <ReviewerAvatar name={r.name} size="md" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{r.name}</p>
-                <p className="text-xs text-muted-foreground">{r.bio}</p>
-              </div>
-              <span className="text-xs font-mono text-muted-foreground">{r.reviews}</span>
-            </Link>
-          ))}
-        </div>
-      </motion.section>
+      {/* Suggested Reviewers — no user search endpoint yet */}
+      {!query && (
+        <motion.section
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="mb-12"
+        >
+          <h2 className="mb-4 text-lg font-semibold tracking-tight text-foreground">Suggested Reviewers</h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {trendingReviewers.map((r) => (
+              <Link
+                key={r.id}
+                to={`/profile/${r.id}`}
+                className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-shadow hover:shadow-premium"
+              >
+                <ReviewerAvatar name={r.name} size="md" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{r.name}</p>
+                  <p className="text-xs text-muted-foreground">{r.bio}</p>
+                </div>
+                <span className="text-xs font-mono text-muted-foreground">{r.reviews}</span>
+              </Link>
+            ))}
+          </div>
+        </motion.section>
+      )}
 
-      {/* Featured Lists */}
+      {/* Lists */}
       <motion.section
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.15 }}
       >
-        <h2 className="mb-4 text-lg font-semibold tracking-tight text-foreground">Featured Lists</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {featuredLists.map((list, i) => (
-            <OpinionListCard key={i} {...list} />
-          ))}
-        </div>
+        <h2 className="mb-4 text-lg font-semibold tracking-tight text-foreground">
+          {query.length >= 2 ? `Results for "${query}"` : "Lists"}
+        </h2>
+
+        <QueryState
+          isLoading={isLoading}
+          isError={isError}
+          error={error}
+          isEmpty={lists.length === 0}
+          emptyMessage={query.length >= 2 ? "No lists match your search." : "No lists found."}
+          onRetry={refetch}
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            {lists.map((list) => (
+              <Link key={list.id} to={`/list/${list.id}`}>
+                <OpinionListCard
+                  title={list.listName}
+                  description=""
+                  reviewCount={list.opinionsCount}
+                  authorName={list.ownerName}
+                  hasAccess={false}
+                />
+              </Link>
+            ))}
+          </div>
+        </QueryState>
       </motion.section>
     </div>
   );

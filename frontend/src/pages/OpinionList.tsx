@@ -1,113 +1,53 @@
 import { useState, useCallback } from "react";
+import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, List, ChevronDown, Plus } from "lucide-react";
-import { Link } from "react-router-dom";
 import ReviewerAvatar from "@/components/ReviewerAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { QueryState } from "@/components/server-state/QueryState";
 import { cn } from "@/lib/utils";
-
-interface UserReview {
-  user: string;
-  subjectiveOpinion: string;
-  objectiveFacts: string;
-  rating: number;
-  trust: number;
-  status: string;
-}
-
-const CURRENT_USER = "jane doe";
-
-interface ListItem {
-  id: string;
-  name: string;
-  weightedRating: number;
-  location: string;
-  allLocations: string[];
-  reviews: UserReview[];
-}
-
-const listData = {
-  title: "Ivan · Cappuccino",
-  description: "A curated collection of cappuccino reviews across Berlin.",
-  authorName: "Ivan",
-  connectedTo: "carl_cappuccino and 4 others",
-};
-
-const listItems: ListItem[] = [
-  {
-    id: "cappuccino1",
-    name: "Cappuccino",
-    weightedRating: 4.42,
-    location: "Cafe Eins, 78 Third St, Berlin",
-    allLocations: ["123 Main St, Berlin", "78 Third St, Berlin"],
-    reviews: [
-      { user: "ivan", subjectiveOpinion: "Balanced, slightly nutty", objectiveFacts: "Milk ~65°C, medium roast", rating: 4.5, trust: 1.0, status: "awaiting premoderation since Jan 30, 2026" },
-      { user: "maria", subjectiveOpinion: "Very smooth", objectiveFacts: "No bitterness", rating: 5.0, trust: 0.8, status: "published Jan 5, 2026" },
-      { user: "carl", subjectiveOpinion: "Too flat", objectiveFacts: "Over-foamed milk", rating: 2.1, trust: 0.2, status: "published Jan 15, 2026" },
-    ],
-  },
-  {
-    id: "thicc",
-    name: "Cappuccino extra thicc",
-    weightedRating: 4.10,
-    location: "Cafe Zwei, 33 Fourth St, Berlin",
-    allLocations: ["1 Double St, Berlin", "5b Crossing St, Berlin", "33 Fourth St, Berlin"],
-    reviews: [
-      { user: "maria", subjectiveOpinion: "Rich and creamy", objectiveFacts: "Double shot, oat milk", rating: 4.1, trust: 0.8, status: "published Feb 2, 2026" },
-    ],
-  },
-  {
-    id: "cappuccino2",
-    name: "Cappuccino",
-    weightedRating: 4.0,
-    location: "Cafe Zwei, 33 Fourth St, Berlin",
-    allLocations: ["1 Double St, Berlin", "5b Crossing St, Berlin", "33 Fourth St, Berlin"],
-    reviews: [
-      { user: "ivan", subjectiveOpinion: "Decent, a bit acidic", objectiveFacts: "Light roast, 60°C milk", rating: 4.0, trust: 1.0, status: "published Jan 20, 2026" },
-      { user: "maria", subjectiveOpinion: "Underwhelming", objectiveFacts: "Thin crema", rating: 3.3, trust: 0.8, status: "published Jan 22, 2026" },
-      { user: "carl", subjectiveOpinion: "Solid choice", objectiveFacts: "Good temperature, balanced", rating: 4.7, trust: 0.2, status: "published Jan 25, 2026" },
-    ],
-  },
-];
+import { useOpinionList, useLinkOpinionToListMutation } from "@/lib/server-state/hooks/opinion-lists";
+import { useOpinion, useCreateOpinionMutation, useAdjustOpinionComponentWeightMutation } from "@/lib/server-state/hooks/opinions";
+import type { OpinionSummaryDto, WeightedOpinionReferenceDto } from "@/lib/api/opinions";
+import type { Uuid } from "@/lib/api/shared";
 
 const OpinionListPage = () => {
+  const { id: listId } = useParams<{ id: string }>();
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
-  const [items, setItems] = useState<ListItem[]>(listItems);
 
-  const toggleItem = (id: string) => {
-    setExpandedItem(expandedItem === id ? null : id);
-  };
+  const { data, isLoading, isError, error, refetch } = useOpinionList(
+    { listId: listId! },
+    { enabled: !!listId },
+  );
 
-  const handleTrustChange = useCallback((itemId: string, reviewIndex: number, newTrust: number) => {
-    setItems(prev => prev.map(item => {
-      if (item.id !== itemId) return item;
-      const updatedReviews = item.reviews.map((r, i) =>
-        i === reviewIndex ? { ...r, trust: Math.min(1, Math.max(0, newTrust)) } : r
-      );
-      const totalWeight = updatedReviews.reduce((sum, r) => sum + r.trust, 0);
-      const weightedRating = totalWeight > 0
-        ? updatedReviews.reduce((sum, r) => sum + r.rating * r.trust, 0) / totalWeight
-        : 0;
-      return { ...item, reviews: updatedReviews, weightedRating };
-    }));
-  }, []);
+  const adjustWeight = useAdjustOpinionComponentWeightMutation();
+  const createOpinion = useCreateOpinionMutation();
+  const linkOpinion = useLinkOpinionToListMutation();
 
-  const handleAddReview = useCallback((itemId: string, review: UserReview) => {
-    setItems(prev => prev.map(item => {
-      if (item.id !== itemId) return item;
-      const updatedReviews = [...item.reviews, review];
-      const totalWeight = updatedReviews.reduce((sum, r) => sum + r.trust, 0);
-      const weightedRating = totalWeight > 0
-        ? updatedReviews.reduce((sum, r) => sum + r.rating * r.trust, 0) / totalWeight
-        : 0;
-      return { ...item, reviews: updatedReviews, weightedRating };
-    }));
-  }, []);
+  const summaries = data?.opinionSummaries ?? [];
+
+  const handleAdjustWeight = useCallback((linkId: Uuid, weight: number) => {
+    adjustWeight.mutate({ linkId, weight });
+  }, [adjustWeight]);
+
+  const handleAddReview = useCallback(async (
+    subjectId: Uuid,
+    mark: number,
+    subjective: string,
+    objective: string,
+  ) => {
+    const opinion = await createOpinion.mutateAsync({
+      subjectId,
+      mark,
+      subjective: [subjective],
+      objective: [objective],
+    });
+    await linkOpinion.mutateAsync({ listId: listId!, opinionId: opinion.id });
+  }, [createOpinion, linkOpinion, listId]);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 md:px-8 md:py-12">
-      {/* Back */}
       <Link
         to="/lists"
         className="mb-6 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
@@ -116,106 +56,121 @@ const OpinionListPage = () => {
         Back to lists
       </Link>
 
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="mb-8"
+      <QueryState
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        isEmpty={false}
+        onRetry={refetch}
       >
-        <div className="flex items-center gap-3 mb-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/8">
-            <List className="h-5 w-5 text-primary" />
+        <>
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="mb-8"
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/8">
+                <List className="h-5 w-5 text-primary" />
+              </div>
+              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground font-body">
+                {data?.ownerName} · {data?.listName}
+              </h1>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {summaries.length} {summaries.length === 1 ? "subject" : "subjects"}
+            </p>
+          </motion.div>
+
+          <div className="flex flex-wrap gap-2 mb-6">
+            <Button variant="default" size="sm" className="rounded-lg text-xs" asChild>
+              <Link to="/review/create">
+                <Plus className="mr-1 h-3 w-3" /> Add new
+              </Link>
+            </Button>
           </div>
-          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground font-body">
-            {listData.title}
-          </h1>
-        </div>
-        <p className="text-sm text-muted-foreground mb-2">{listData.description}</p>
-        <p className="text-xs text-muted-foreground">
-          Connected to <span className="font-medium text-foreground">{listData.connectedTo}</span>
-        </p>
-      </motion.div>
 
-      {/* Actions */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        <Button variant="default" size="sm" className="rounded-lg text-xs">
-          <Plus className="mr-1 h-3 w-3" /> Add new
-        </Button>
-      </div>
-
-      {/* Items table */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.1 }}
-        className="rounded-2xl border border-border overflow-hidden bg-card"
-      >
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border bg-muted/30">
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground text-xs">Name</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground text-xs">My rating</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground text-xs">Weighted rating</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground text-xs hidden md:table-cell">Location</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground text-xs hidden lg:table-cell">All locations</th>
-              <th className="px-4 py-3 w-8"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item) => (
-              <ItemRow
-                key={item.id}
-                item={item}
-                isExpanded={expandedItem === item.id}
-                onToggle={() => toggleItem(item.id)}
-                onTrustChange={handleTrustChange}
-                onAddReview={handleAddReview}
-              />
-            ))}
-          </tbody>
-        </table>
-      </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+            className="rounded-2xl border border-border overflow-hidden bg-card"
+          >
+            {summaries.length === 0 ? (
+              <p className="px-5 py-8 text-center text-sm text-muted-foreground">No subjects in this list yet.</p>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-muted/30">
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground text-xs">Name</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground text-xs">My rating</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground text-xs">Weighted rating</th>
+                    <th className="px-4 py-3 w-8"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {summaries.map((summary) => (
+                    <ItemRow
+                      key={summary.id}
+                      listId={listId!}
+                      summary={summary}
+                      isExpanded={expandedItem === summary.id}
+                      onToggle={() => setExpandedItem(expandedItem === summary.id ? null : summary.id)}
+                      onAdjustWeight={handleAdjustWeight}
+                      onAddReview={handleAddReview}
+                      isAdjustingWeight={adjustWeight.isPending}
+                      isAddingReview={createOpinion.isPending || linkOpinion.isPending}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </motion.div>
+        </>
+      </QueryState>
     </div>
   );
 };
 
 const ItemRow = ({
-  item,
+  summary,
   isExpanded,
   onToggle,
-  onTrustChange,
+  onAdjustWeight,
   onAddReview,
+  isAdjustingWeight,
+  isAddingReview,
 }: {
-  item: ListItem;
+  summary: OpinionSummaryDto;
   isExpanded: boolean;
   onToggle: () => void;
-  onTrustChange: (itemId: string, reviewIndex: number, newTrust: number) => void;
-  onAddReview: (itemId: string, review: UserReview) => void;
+  onAdjustWeight: (linkId: Uuid, weight: number) => void;
+  onAddReview: (subjectId: Uuid, mark: number, subjective: string, objective: string) => Promise<void>;
+  isAdjustingWeight: boolean;
+  isAddingReview: boolean;
 }) => {
   const [showForm, setShowForm] = useState(false);
   const [subjective, setSubjective] = useState("");
   const [objective, setObjective] = useState("");
   const [rating, setRating] = useState("");
 
-  const hasMyReview = item.reviews.some(r => r.user.toLowerCase() === CURRENT_USER);
+  const hasMyReview = summary.ownMark !== null;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const ratingNum = parseFloat(rating);
     if (!subjective.trim() || !objective.trim() || isNaN(ratingNum) || ratingNum < 0 || ratingNum > 10) return;
-    onAddReview(item.id, {
-      user: CURRENT_USER,
-      subjectiveOpinion: subjective.trim(),
-      objectiveFacts: objective.trim(),
-      rating: ratingNum,
-      trust: 1.0,
-      status: `published ${new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`,
-    });
-    setShowForm(false);
-    setSubjective("");
-    setObjective("");
-    setRating("");
+    try {
+      await onAddReview(summary.subject, ratingNum, subjective.trim(), objective.trim());
+      setShowForm(false);
+      setSubjective("");
+      setObjective("");
+      setRating("");
+    } catch {
+      // error surfaced via mutation meta errorTitle toast — keep form open so user can retry
+    }
   };
+
   return (
     <>
       <tr
@@ -225,26 +180,12 @@ const ItemRow = ({
         )}
         onClick={onToggle}
       >
-        <td className="px-4 py-3 font-medium text-foreground">{item.name}</td>
+        <td className="px-4 py-3 font-medium text-foreground">{summary.subjectName}</td>
         <td className="px-4 py-3 font-mono text-foreground">
-          {(() => {
-            const myReview = item.reviews.find(r => r.user.toLowerCase() === CURRENT_USER);
-            return myReview ? myReview.rating.toFixed(1) : "—";
-          })()}
+          {summary.ownMark !== null ? summary.ownMark.toFixed(1) : "—"}
         </td>
         <td className="px-4 py-3 font-mono font-semibold text-foreground">
-          {item.weightedRating.toFixed(2)}
-        </td>
-        <td className="px-4 py-3 text-muted-foreground hidden md:table-cell text-xs">
-          <span className="text-primary hover:underline cursor-pointer">{item.location}</span>
-        </td>
-        <td className="px-4 py-3 text-xs hidden lg:table-cell">
-          {item.allLocations.map((loc, i) => (
-            <span key={i}>
-              {i > 0 && ", "}
-              <span className="text-primary hover:underline cursor-pointer">{loc}</span>
-            </span>
-          ))}
+          {summary.synchronizedMark.toFixed(2)}
         </td>
         <td className="px-4 py-3">
           <ChevronDown
@@ -259,7 +200,7 @@ const ItemRow = ({
       <AnimatePresence>
         {isExpanded && (
           <tr>
-            <td colSpan={6} className="p-0">
+            <td colSpan={4} className="p-0">
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
@@ -269,9 +210,7 @@ const ItemRow = ({
               >
                 <div className="border-t border-border bg-muted/10 px-4 py-4">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-medium text-foreground">
-                      {item.name} · {item.location.split(",")[0]}
-                    </span>
+                    <span className="text-sm font-medium text-foreground">{summary.subjectName}</span>
                     {!hasMyReview && (
                       <Button
                         variant="outline"
@@ -284,48 +223,33 @@ const ItemRow = ({
                     )}
                   </div>
 
-                  <div className="rounded-xl border border-border overflow-hidden bg-card">
-                    <table className="w-full text-xs">
-                      <thead>
-                        <tr className="border-b border-border bg-muted/20">
-                          <th className="px-3 py-2 text-left font-medium text-muted-foreground">User</th>
-                          <th className="px-3 py-2 text-left font-medium text-muted-foreground">Subjective opinion</th>
-                          <th className="px-3 py-2 text-left font-medium text-muted-foreground hidden sm:table-cell">Objective facts</th>
-                          <th className="px-3 py-2 text-left font-medium text-muted-foreground">Rating</th>
-                          <th className="px-3 py-2 text-left font-medium text-muted-foreground hidden md:table-cell">Trust</th>
-                          <th className="px-3 py-2 text-left font-medium text-muted-foreground hidden lg:table-cell">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {item.reviews.map((review, i) => (
-                          <tr key={i} className="border-b border-border last:border-0">
-                            <td className="px-3 py-2.5 text-foreground font-medium">{review.user}</td>
-                            <td className="px-3 py-2.5 text-muted-foreground">{review.subjectiveOpinion}</td>
-                            <td className="px-3 py-2.5 text-muted-foreground hidden sm:table-cell">{review.objectiveFacts}</td>
-                            <td className="px-3 py-2.5 font-mono font-medium text-foreground">{review.rating.toFixed(1)}</td>
-                            <td className="px-3 py-1.5 font-mono text-muted-foreground hidden md:table-cell">
-                              <Input
-                                type="number"
-                                min={0}
-                                max={1}
-                                step={0.1}
-                                value={review.trust}
-                                onChange={(e) => {
-                                  const val = parseFloat(e.target.value);
-                                  if (!isNaN(val)) onTrustChange(item.id, i, val);
-                                }}
-                                onClick={(e) => e.stopPropagation()}
-                                className="h-7 w-16 px-2 text-xs font-mono bg-transparent border-border"
-                              />
-                            </td>
-                            <td className="px-3 py-2.5 text-muted-foreground hidden lg:table-cell">{review.status}</td>
+                  {summary.opinions.length > 0 && (
+                    <div className="rounded-xl border border-border overflow-hidden bg-card">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="border-b border-border bg-muted/20">
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground">User</th>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground">Subjective opinion</th>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground hidden sm:table-cell">Objective facts</th>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground">Rating</th>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground hidden md:table-cell">Trust</th>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground hidden lg:table-cell">Status</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody>
+                          {summary.opinions.map((ref) => (
+                            <OpinionRow
+                              key={ref.id}
+                              ref_={ref}
+                              onWeightChange={onAdjustWeight}
+                              isAdjustingWeight={isAdjustingWeight}
+                            />
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
 
-                  {/* Add review form */}
                   <AnimatePresence>
                     {showForm && (
                       <motion.div
@@ -372,10 +296,20 @@ const ItemRow = ({
                               />
                             </div>
                             <div className="flex gap-2">
-                              <Button size="sm" className="h-8 rounded-lg text-xs" onClick={handleSubmit}>
+                              <Button
+                                size="sm"
+                                className="h-8 rounded-lg text-xs"
+                                disabled={isAddingReview}
+                                onClick={handleSubmit}
+                              >
                                 Submit
                               </Button>
-                              <Button variant="ghost" size="sm" className="h-8 rounded-lg text-xs" onClick={() => setShowForm(false)}>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 rounded-lg text-xs"
+                                onClick={() => setShowForm(false)}
+                              >
                                 Cancel
                               </Button>
                             </div>
@@ -391,6 +325,62 @@ const ItemRow = ({
         )}
       </AnimatePresence>
     </>
+  );
+};
+
+const OpinionRow = ({
+  ref_,
+  onWeightChange,
+  isAdjustingWeight,
+}: {
+  ref_: WeightedOpinionReferenceDto;
+  onWeightChange: (linkId: Uuid, weight: number) => void;
+  isAdjustingWeight: boolean;
+}) => {
+  const { data: opinion, isLoading } = useOpinion({ id: ref_.opinion });
+
+  if (isLoading) {
+    return (
+      <tr className="border-b border-border last:border-0">
+        <td colSpan={6} className="px-3 py-2.5 text-muted-foreground">Loading…</td>
+      </tr>
+    );
+  }
+
+  return (
+    <tr className="border-b border-border last:border-0">
+      <td className="px-3 py-2.5 text-foreground font-medium">
+        <div className="flex items-center gap-2">
+          <ReviewerAvatar name={opinion?.ownerName ?? "?"} size="sm" />
+          {opinion?.ownerName ?? "—"}
+        </div>
+      </td>
+      <td className="px-3 py-2.5 text-muted-foreground">{opinion?.subjective.join(", ") ?? "—"}</td>
+      <td className="px-3 py-2.5 text-muted-foreground hidden sm:table-cell">{opinion?.objective.join(", ") ?? "—"}</td>
+      <td className="px-3 py-2.5 font-mono font-medium text-foreground">
+        {opinion?.mark !== null && opinion?.mark !== undefined ? opinion.mark.toFixed(1) : "—"}
+      </td>
+      <td className="px-3 py-1.5 font-mono text-muted-foreground hidden md:table-cell">
+        <Input
+          type="number"
+          min={0}
+          max={1}
+          step={0.1}
+          key={ref_.weight}
+          defaultValue={ref_.weight}
+          disabled={isAdjustingWeight}
+          onChange={(e) => {
+            const val = parseFloat(e.target.value);
+            if (!isNaN(val)) onWeightChange(ref_.id, Math.min(1, Math.max(0, val)));
+          }}
+          onClick={(e) => e.stopPropagation()}
+          className="h-7 w-16 px-2 text-xs font-mono bg-transparent border-border"
+        />
+      </td>
+      <td className="px-3 py-2.5 text-muted-foreground hidden lg:table-cell capitalize">
+        {opinion?.status.toLowerCase().replace("_", " ") ?? "—"}
+      </td>
+    </tr>
   );
 };
 
