@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const USER_ID = "00000000-0000-0000-0000-000000000000";
 const ACCESS_TOKEN = "stub-access-token-123";
+const AVATAR_MAX_SIZE_BYTES = 1024;
 
 const { toastMock } = vi.hoisted(() => ({
   toastMock: vi.fn(),
@@ -72,6 +73,7 @@ describe("EditProfile avatar controls", () => {
 
     fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
+    vi.stubEnv("VITE_AVATAR_MAX_SIZE_BYTES", String(AVATAR_MAX_SIZE_BYTES));
 
     ({ default: EditProfile } = await import("@/pages/EditProfile"));
     ({ createQueryClient } = await import("@/lib/server-state/query-client"));
@@ -99,6 +101,7 @@ describe("EditProfile avatar controls", () => {
     clearAuthSession();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
   });
 
   it("uploads a valid selected image file", async () => {
@@ -155,6 +158,31 @@ describe("EditProfile avatar controls", () => {
     expect(toastMock).toHaveBeenCalledWith({
       title: "Image not uploaded",
       description: "Please choose a PNG, JPEG, or WebP image.",
+    });
+  });
+
+  it("rejects images larger than the configured size before upload", async () => {
+    fetchMock
+      .mockResolvedValueOnce(createUserResponse())
+      .mockResolvedValueOnce(new Response(null, { status: 404 }));
+    const { fileInput } = renderEditProfile();
+    const file = new File(
+      [new Uint8Array(AVATAR_MAX_SIZE_BYTES + 1)],
+      "avatar.png",
+      { type: "image/png" },
+    );
+
+    await waitForInitialAvatarFetch();
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    expect(screen.getByText("PNG, JPEG, or WebP. Max 1KB.")).toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalledWith(
+      "/api/users/me/avatar",
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(toastMock).toHaveBeenCalledWith({
+      title: "Image not uploaded",
+      description: "Profile image must be 1KB or smaller.",
     });
   });
 

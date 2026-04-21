@@ -12,12 +12,40 @@ import {
   useUserAvatar,
 } from "@/lib/server-state/hooks/users";
 
-const MAX_AVATAR_SIZE_BYTES = 2 * 1024 * 1024;
+const MAX_AVATAR_SIZE_BYTES = readPositiveIntegerEnv(
+  "VITE_AVATAR_MAX_SIZE_BYTES",
+  import.meta.env.VITE_AVATAR_MAX_SIZE_BYTES,
+);
+const MAX_AVATAR_SIZE_LABEL = formatFileSize(MAX_AVATAR_SIZE_BYTES);
 const ALLOWED_AVATAR_TYPES = new Set([
   "image/jpeg",
   "image/png",
   "image/webp",
 ]);
+
+function readPositiveIntegerEnv(name: string, value: string | undefined): number {
+  const parsedValue = Number(value);
+
+  if (!Number.isInteger(parsedValue) || parsedValue <= 0) {
+    throw new Error(`${name} must be a positive integer.`);
+  }
+
+  return parsedValue;
+}
+
+function formatFileSize(bytes: number): string {
+  const megabytes = bytes / (1024 * 1024);
+  if (Number.isInteger(megabytes)) {
+    return `${megabytes}MB`;
+  }
+
+  const kilobytes = bytes / 1024;
+  if (Number.isInteger(kilobytes)) {
+    return `${kilobytes}KB`;
+  }
+
+  return `${bytes}B`;
+}
 
 function validateAvatarFile(file: File): string | undefined {
   if (!ALLOWED_AVATAR_TYPES.has(file.type)) {
@@ -25,7 +53,7 @@ function validateAvatarFile(file: File): string | undefined {
   }
 
   if (file.size > MAX_AVATAR_SIZE_BYTES) {
-    return "Profile image must be 2MB or smaller.";
+    return `Profile image must be ${MAX_AVATAR_SIZE_LABEL} or smaller.`;
   }
 
   return undefined;
@@ -138,7 +166,9 @@ const EditProfile = () => {
             </div>
             <div>
               <p className="text-sm font-medium text-foreground">Profile image</p>
-              <p className="text-xs text-muted-foreground">PNG, JPEG, or WebP. Max 2MB.</p>
+              <p className="text-xs text-muted-foreground">
+                PNG, JPEG, or WebP. Max {MAX_AVATAR_SIZE_LABEL}.
+              </p>
               {avatar && (
                 <button
                   type="button"
