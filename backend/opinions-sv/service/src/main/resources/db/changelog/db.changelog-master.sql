@@ -107,7 +107,6 @@ CREATE TABLE opinions.access_requests (
     id UUID PRIMARY KEY,
     list UUID NOT NULL,
     requester UUID NOT NULL,
-    owner UUID NOT NULL,
     status VARCHAR(32) NOT NULL,
     created_at TIMESTAMPTZ NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL
@@ -115,7 +114,6 @@ CREATE TABLE opinions.access_requests (
 
 CREATE INDEX idx_access_requests_id ON opinions.access_requests(id);
 CREATE INDEX idx_access_requests_requester ON opinions.access_requests(requester);
-CREATE INDEX idx_access_requests_owner ON opinions.access_requests(owner);
 CREATE INDEX idx_access_requests_status ON opinions.access_requests(status);
 
 --changeset inikulin:V7_opinion_lists
@@ -141,14 +139,10 @@ CREATE INDEX idx_opinions_to_lists_list ON opinions.opinions_to_lists(opinion_li
 CREATE INDEX idx_opinions_to_lists_opinion ON opinions.opinions_to_lists(opinion);
 
 --changeset inikulin:V8_seed_opinion_lists context:local,test
--- Bernard's cappuccino rating list
 INSERT INTO opinions.opinion_lists (id, owner, name, privacy)
 VALUES ('70000000-0000-0000-0000-000000000001', '10101010-1010-1010-1010-101010101010', 'Bernard''s cappuccino rating', 'SEARCHABLE')
 ON CONFLICT (id) DO NOTHING;
 
--- Opinions for the list (Bernard on Cap 1 and Bernard on Cap 3)
--- Bernard on Cap 1 is already seeded in V2 with ID '30000000-0000-0000-0000-000000000001'
--- Let's seed Bernard on Cap 3
 INSERT INTO opinions.opinions (id, owner, subject, mark, status, timestamp)
 VALUES ('30000000-0000-0000-0000-000000000003', '10101010-1010-1010-1010-101010101010', '21212121-2121-2121-2121-212121212121', 4.90, 'PUBLISHED', '2024-02-01T10:30:00Z')
 ON CONFLICT (id) DO NOTHING;
@@ -161,9 +155,18 @@ INSERT INTO opinions.opinion_notes (id, opinion_id, type, description)
 VALUES ('30000000-0000-0000-0000-000000000105', '30000000-0000-0000-0000-000000000003', 'OBJECTIVE', '5.75€')
 ON CONFLICT (id) DO NOTHING;
 
--- Mapping opinions to the list
 INSERT INTO opinions.opinions_to_lists (id, opinion_list, opinion, weight)
 VALUES 
-    ('80000000-0000-0000-0000-000000000001', '70000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001', 1.0),
-    ('80000000-0000-0000-0000-000000000002', '70000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000003', 1.0)
+    ('30000000-0000-0000-0000-000000000001', '70000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001', 1.0)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO OPINIONS.ACCESS_REQUESTS(id, list, requester, status, created_at, updated_at)
+VALUES (
+ '30000000-0000-0000-0000-100000000001'
+, '70000000-0000-0000-0000-000000000001'
+, '00000000-0000-0000-0000-000000000000'
+, 'APPROVED'
+, '2024-02-01T09:30:00Z'
+, '2024-02-01T09:30:00Z'
+)
 ON CONFLICT (id) DO NOTHING;

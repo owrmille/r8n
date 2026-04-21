@@ -5,7 +5,6 @@ import com.r8n.backend.opinions.access.domain.AccessRequest
 import com.r8n.backend.opinions.access.domain.RequestStatusEnum
 import com.r8n.backend.opinions.access.persistence.AccessRequestPersistence
 import com.r8n.backend.opinions.lists.service.OpinionListService
-import com.r8n.backend.users.integration.api.UsersInternalApi
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -17,7 +16,6 @@ import java.util.UUID
 class AccessRequestService(
     private val repository: AccessRequestRepository,
     private val opinionListService: OpinionListService,
-    private val usersClient: UsersInternalApi,
 ) {
     fun getRequests(
         listId: UUID?,
@@ -25,21 +23,18 @@ class AccessRequestService(
         ownerId: UUID?,
         status: RequestStatusEnum?,
         pageable: Pageable,
-    ): Page<AccessRequest> =
-        repository.findAllByFilters(listId, requesterId, ownerId, status, pageable).map { it.toDomain() }
+    ): Page<AccessRequest> = repository.findAllByFilters(listId, requesterId, status, pageable).map { it.toDomain() }
 
-    private companion object {
-        fun AccessRequestPersistence.toDomain(): AccessRequest =
-            AccessRequest(
-                id = id,
-                listId = list,
-                requesterId = requester,
-                ownerId = owner,
-                status = status,
-                createdAt = createdAt,
-                updatedAt = updatedAt,
-            )
-    }
+    private fun AccessRequestPersistence.toDomain(): AccessRequest =
+        AccessRequest(
+            id = id,
+            listId = list,
+            requesterId = requester,
+            status = status,
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+            ownerId = opinionListService.getListOwner(list),
+        )
 
     @Transactional
     fun createRequest(
@@ -70,7 +65,6 @@ class AccessRequestService(
             AccessRequestPersistence(
                 list = listId,
                 requester = requesterId,
-                owner = list.owner,
                 status = RequestStatusEnum.SENT,
                 createdAt = now,
                 updatedAt = now,
@@ -98,10 +92,7 @@ class AccessRequestService(
     }
 
     @Transactional
-    fun acceptRequest(
-        requestId: UUID,
-        ownerId: UUID,
-    ): AccessRequest {
+    fun acceptRequest(requestId: UUID): AccessRequest {
         val request =
             repository
                 .findById(requestId)
@@ -111,28 +102,17 @@ class AccessRequestService(
             throw IllegalStateException("Cannot accept a cancelled request")
         }
 
-        if (request.owner != ownerId) {
-            throw IllegalAccessException("Only the list owner can accept requests")
-        }
-
         request.status = RequestStatusEnum.ACCEPTED
         request.updatedAt = Instant.now()
         return repository.save(request).toDomain()
     }
 
     @Transactional
-    fun declineRequest(
-        requestId: UUID,
-        ownerId: UUID,
-    ): AccessRequest {
+    fun declineRequest(requestId: UUID): AccessRequest {
         val request =
             repository
                 .findById(requestId)
                 .orElseThrow { NoSuchElementException("Request not found") }
-
-        if (request.owner != ownerId) {
-            throw IllegalAccessException("Only the list owner can decline requests")
-        }
 
         request.status = RequestStatusEnum.REJECTED
         request.updatedAt = Instant.now()
@@ -140,18 +120,11 @@ class AccessRequestService(
     }
 
     @Transactional
-    fun hideRequest(
-        requestId: UUID,
-        ownerId: UUID,
-    ): AccessRequest {
+    fun hideRequest(requestId: UUID): AccessRequest {
         val request =
             repository
                 .findById(requestId)
                 .orElseThrow { NoSuchElementException("Request not found") }
-
-        if (request.owner != ownerId) {
-            throw IllegalAccessException("Only the list owner can hide requests")
-        }
 
         request.status = RequestStatusEnum.HIDDEN
         request.updatedAt = Instant.now()

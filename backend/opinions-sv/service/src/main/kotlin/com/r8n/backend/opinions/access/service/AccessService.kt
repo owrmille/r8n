@@ -24,18 +24,23 @@ class AccessService(
     private val opinionsToOpinionListsRepository: OpinionsToOpinionListsRepository,
     private val opinionListRepository: OpinionListRepository,
 ) {
-    private companion object {
-        fun AccessRequestPersistence.toDomain(): AccessRequest =
-            AccessRequest(
-                id = id,
-                listId = list,
-                requesterId = requester,
-                ownerId = owner,
-                status = status,
-                createdAt = createdAt,
-                updatedAt = updatedAt,
-            )
-    }
+    // duplicate from OpinionListService to break a circular dependency (bad solution)
+    private fun getListOwner(listId: UUID): UUID =
+        opinionListRepository
+            .findById(listId)
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
+            .owner
+
+    private fun AccessRequestPersistence.toDomain(): AccessRequest =
+        AccessRequest(
+            id = id,
+            listId = list,
+            requesterId = requester,
+            ownerId = getListOwner(list),
+            status = status,
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+        )
 
     fun ownsOpinion(
         userId: UUID,
@@ -97,7 +102,6 @@ class AccessService(
             repository.findAllByFilters(
                 listId = null,
                 requesterId = userId,
-                ownerId = ownerId,
                 status = RequestStatusEnum.ACCEPTED,
                 pageable = Pageable.unpaged(),
             )

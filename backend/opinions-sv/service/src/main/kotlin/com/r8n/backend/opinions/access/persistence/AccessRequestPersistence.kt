@@ -27,9 +27,6 @@ class AccessRequestPersistence(
     var requester: UUID,
 //
     @Column(nullable = false)
-    var owner: UUID,
-//
-    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     var status: RequestStatusEnum,
 //

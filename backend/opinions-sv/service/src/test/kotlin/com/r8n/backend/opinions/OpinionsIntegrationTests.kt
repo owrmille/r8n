@@ -47,7 +47,7 @@ import java.util.UUID
 @Import(TestObjectMapperConfiguration::class)
 class OpinionsIntegrationTests {
     private companion object {
-        val CURRENT_USER_ID = bernardReferent.id
+        val CURRENT_USER_ID: UUID = UUID.fromString("00000000-0000-0000-0000-000000000000")
 
         @Container
         @ServiceConnection

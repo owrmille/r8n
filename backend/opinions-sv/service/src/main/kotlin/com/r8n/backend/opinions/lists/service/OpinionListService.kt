@@ -23,6 +23,12 @@ class OpinionListService(
     private val opinionsAssignmentRepository: OpinionsToOpinionListsRepository,
     private val accessService: AccessService,
 ) {
+    fun getListOwner(listId: UUID): UUID =
+        opinionListRepository
+            .findById(listId)
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
+            .owner
+
     fun getListName(listId: UUID): String {
         val list =
             opinionListRepository
