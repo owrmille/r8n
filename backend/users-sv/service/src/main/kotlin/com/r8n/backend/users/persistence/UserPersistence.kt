@@ -30,10 +30,3 @@ class UserPersistence(
     @Column(nullable = true)
     val passwordHash: String? = null,
 )
-
-enum class UserStatusEnum {
-    ACTIVE,
-    SUSPENDED,
-    DELETION_PENDING,
-    DELETED,
-}

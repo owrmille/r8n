@@ -1,6 +1,5 @@
 package com.r8n.backend.users.api
 
-import com.r8n.backend.users.api.dto.UserCompleteDataDto
 import com.r8n.backend.users.api.dto.UserProfileDto
 import com.r8n.backend.users.api.dto.UsernameDto
 import org.springframework.http.MediaType
@@ -16,15 +15,11 @@ import java.util.UUID
 interface UsersApi {
     companion object {
         private const val ROOT_PATH = "/api/users"
-        const val EXPORT_PATH = "$ROOT_PATH/export"
         const val ME_PATH = "$ROOT_PATH/me"
         const val USER_PATH = "$ROOT_PATH/{id}"
         const val MY_AVATAR_PATH = "$ME_PATH/avatar"
         const val USER_AVATAR_PATH = "$USER_PATH/avatar"
     }
-
-    @GetMapping(EXPORT_PATH)
-    fun exportAll(): UserCompleteDataDto
 
     @GetMapping(ME_PATH)
     fun getMyName(): UsernameDto

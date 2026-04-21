@@ -32,7 +32,6 @@ logging:
 services:
   mock:
     url: http://localhost:8090
-
 r8n:
   security:
     public-paths: /api/auth/**

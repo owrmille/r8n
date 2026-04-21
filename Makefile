@@ -29,12 +29,13 @@ frontend_npx() { if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NOD
     docker-certs docker-certs-force internal-certs internal-certs-force internal-certs-clean docker-certs-clean docker-secrets-clean docker-secrets-init edge-certs edge-certs-force \
     docker-down docker-logs clean-artifacts ensure-log-dirs clean-logs \
     get-token refresh-token logout routed-request-opinion routed-request-mock routed-request-user-profile routed-request-gdpr direct-request-opinion direct-request-mock \
-    https-routed-request-opinion https-routed-request-mock \
+    https-routed-request-opinion https-routed-request-mock https-routed-request-gdpr \
     docker-database-create-data-folder docker-database-drop-volume-personal docker-database-drop-volume-campus docker-database-run docker-database-connect \
     build-opinions who-ate-all-the-space clean-the-fuck-out-of-this-campus-machine \
     frontend-install frontend-install-all frontend-check-node frontend-dev frontend-build frontend-lint \
     frontend-test frontend-test-unit frontend-test-e2e frontend-test-e2e-ui frontend-test-e2e-api frontend-clean frontend-clean-all frontend-cert frontend-cert-clean \
-    test-github-backend test-github-frontend test-github-e2e test-github test-backend lint-backend test-frontend-prepare test-frontend test-e2e \
+    lint-backend test-backend test-frontend-prepare test-frontend test-e2e \
+    test-github-backend test-github-frontend test-github-e2e test-github \
     clean fclean re move-caches-to-goinfre gradle-%-bootJar check-makefile
 
 ##@ Docker
@@ -364,7 +365,7 @@ routed-request-user-profile: ## Gateway request to users-sv (ENV=local|docker)
 	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
 	curl $$curl_args "$$protocol://$$host:$$port/api/users/00000000-0000-0000-0000-000000000000" -H "Authorization: Bearer $$(cat .access_token)"
 
-routed-request-gdpr: ## HTTP direct request to users (ENV=local|docker)
+routed-request-gdpr: ## Gateway GDPR export request with timeout (ENV=local|docker)
 	@if [ ! -f .access_token ]; then $(MAKE) get-token ENV=$(ENV); fi
 	@if [ "$(ENV)" = "docker" ]; then \
 		$(LOAD_DOCKER_ENV) \
@@ -379,7 +380,34 @@ routed-request-gdpr: ## HTTP direct request to users (ENV=local|docker)
 	fi; \
 	curl_args="-i"; \
 	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
-	curl $$curl_args "$$protocol://$$host:$$port/api/users/export" -H "Authorization: Bearer $$(cat .access_token)"
+	\
+	echo "=== Step 1: Starting GDPR export..."; \
+	curl $$curl_args -X POST "$$protocol://$$host:$$port/api/export/start" \
+		-H "Authorization: Bearer $$(cat .access_token)"; \
+	echo ""; \
+	\
+	echo "=== Step 2: Polling for export status (timeout 30s)..."; \
+	timeout=30; \
+	while [ $$timeout -gt 0 ]; do \
+		status=$$(curl $$curl_args "$$protocol://$$host:$$port/api/export/status" \
+			-H "Authorization: Bearer $$(cat .access_token)" | grep -o '"status":"[^"]*"' | cut -d'"' -f4); \
+		echo "Status: $$status ($$timeout s remaining)"; \
+		if [ "$$status" = "COMPLETED" ]; then \
+			break; \
+		fi; \
+		sleep 2; \
+		timeout=$$((timeout - 2)); \
+	done; \
+	\
+	if [ $$timeout -le 0 ]; then \
+		echo "Timeout waiting for export to be ready"; \
+		exit 1; \
+	fi; \
+	\
+	echo "=== Step 3: Downloading export data..."; \
+	curl $$curl_args "$$protocol://$$host:$$port/api/export/download" \
+		-H "Authorization: Bearer $$(cat .access_token)" | head -c 500; \
+	echo "..."
 
 direct-request-opinion: ## HTTP direct request to opinions (local)
 	@if [ ! -f .access_token ]; then $(MAKE) get-token; fi
