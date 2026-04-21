@@ -1,6 +1,9 @@
 package com.r8n.backend.export
 
 import com.r8n.backend.core.utils.toResponse
+import com.r8n.backend.export.api.ExportApi
+import com.r8n.backend.export.api.dto.ExportStateDto
+import com.r8n.backend.export.api.dto.ExportStatus
 import com.r8n.backend.export.api.dto.UserCompleteDataDto
 import com.r8n.backend.mock.api.IncomingAccessRequestApi
 import com.r8n.backend.mock.api.MessagingApi
@@ -9,11 +12,13 @@ import com.r8n.backend.mock.integration.api.OpinionListInternalApi
 import com.r8n.backend.mock.stub.AccessRequestsTestDataFactory
 import com.r8n.backend.mock.stub.MiscTestFactory
 import com.r8n.backend.mock.stub.OpinionListTestDataFactory
+import com.r8n.backend.security.ServiceTokenService
 import com.r8n.backend.users.api.dto.ConsentDto
 import com.r8n.backend.users.api.dto.PersonalIdentifiableInformationSectionDto
+import com.r8n.backend.users.api.dto.UserDto
 import com.r8n.backend.users.api.dto.UserSessionDto
 import com.r8n.backend.users.api.dto.UserStatusEnumDto
-import com.r8n.backend.security.ServiceTokenService
+import com.r8n.backend.users.integration.api.UsersInternalApi
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -32,6 +37,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import tools.jackson.databind.ObjectMapper
 import tools.jackson.module.kotlin.readValue
@@ -75,8 +81,34 @@ class ExportIntegrationTests {
     @MockitoBean
     lateinit var messageClient: MessagingApi
 
+    @MockitoBean
+    lateinit var usersInternalApi: UsersInternalApi
+
     @BeforeEach
     fun setUp() {
+        val timestamp = LocalDateTime.of(2024, 1, 1, 12, 0).toInstant(ZoneOffset.UTC)
+        val session =
+            UserSessionDto(
+                UUID.fromString("01010101-0101-0101-0101-010101010101"),
+                timestamp,
+                timestamp.plus(1, ChronoUnit.DAYS),
+                "127.0.0.1",
+                "Test User Agent",
+            )
+        val userDto =
+            UserDto(
+                UUID.fromString(USER_ID),
+                "Test Testsson",
+                "test@test.test",
+                UserStatusEnumDto.ACTIVE,
+                timestamp,
+                listOf(ConsentDto("PRIVACY_POLICY", timestamp, session)),
+            )
+
+        whenever(usersInternalApi.getUser(any())).thenReturn(userDto)
+        whenever(usersInternalApi.getSessionsForUser(any(), anyOrNull())).thenReturn(
+            PageImpl(listOf(session)).toResponse(),
+        )
         whenever(opinionClient.getMineFull(any())).thenReturn(
             PageImpl(listOf(opinions)).toResponse(),
         )
@@ -93,20 +125,40 @@ class ExportIntegrationTests {
 
     @Test
     @WithMockUser(username = USER_ID)
-    fun `exportAll returns complete user data`() {
+    fun `export process follows three steps`() {
         val accessToken = serviceTokenService.generateAccessToken(UUID.fromString(USER_ID), listOf("USER"))
-        val result =
+
+        // 1. Request export creation
+        mockMvc
+            .perform(
+                post(ExportApi.START_PATH)
+                    .header("Authorization", "Bearer $accessToken"),
+            ).andExpect(status().isAccepted)
+
+        // 2. Check status
+        val statusResult =
             mockMvc
                 .perform(
-                    get("/api/users/export")
+                    get(ExportApi.STATUS_PATH)
                         .header("Authorization", "Bearer $accessToken"),
                 ).andExpect(status().isOk)
                 .andReturn()
 
-        val actual: UserCompleteDataDto = objectMapper.readValue(result.response.contentAsString)
+        val exportState: ExportStateDto = objectMapper.readValue(statusResult.response.contentAsString)
+        assertEquals(ExportStatus.COMPLETED, exportState.status)
+
+        // 3. Download data
+        val downloadResult =
+            mockMvc
+                .perform(
+                    get(ExportApi.DOWNLOAD_PATH)
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val actual: UserCompleteDataDto = objectMapper.readValue(downloadResult.response.contentAsString)
 
         val timestamp = LocalDateTime.of(2024, 1, 1, 12, 0).toInstant(ZoneOffset.UTC)
-
         val session =
             UserSessionDto(
                 UUID.fromString("01010101-0101-0101-0101-010101010101"),
@@ -132,10 +184,7 @@ class ExportIntegrationTests {
                 PersonalIdentifiableInformationSectionDto(
                     "Test Testsson",
                     "test@test.test",
-                    phone = "123-456-7890",
                     sessions = PageImpl(listOf(session)).toResponse(),
-                    about = "I am a coffee expert",
-                    location = "Berlin, Germany",
                 ),
                 PageImpl(listOf(opinions)).toResponse(),
                 PageImpl(listOf(outgoingAccessRequests)).toResponse(),
