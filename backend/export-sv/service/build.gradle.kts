@@ -10,9 +10,9 @@ dependencies {
     implementation(project(":export-api"))
     implementation(project(":users-api-integration"))
     implementation(project(":users-client"))
-    implementation(project(":mock-api"))
-    implementation(project(":mock-api-integration"))
-    implementation(project(":mock-client"))
+    implementation(project(":opinions-api"))
+    implementation(project(":opinions-api-integration"))
+    implementation(project(":opinions-client"))
     implementation(project(":mock-sv"))
     testImplementation(project(":core:security"))
 }
