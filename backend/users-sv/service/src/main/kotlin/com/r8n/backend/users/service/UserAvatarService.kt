@@ -52,16 +52,16 @@ class UserAvatarService(
             ?.let { avatarStorage.delete(it) }
     }
 
-    fun getAvatar(userId: UUID): UserAvatarFile {
+    fun getAvatar(userId: UUID): UserAvatarFile? {
         val avatar =
             profileAvatarRepository.findByIdOrNull(userId)
-                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Avatar not found")
+                ?: return null
 
         val content =
             try {
                 avatarStorage.load(avatar.objectKey)
             } catch (e: NoSuchFileException) {
-                throw ResponseStatusException(HttpStatus.NOT_FOUND, "Avatar not found", e)
+                return null
             }
 
         return UserAvatarFile(

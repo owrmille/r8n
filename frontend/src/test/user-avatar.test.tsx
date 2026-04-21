@@ -47,7 +47,7 @@ describe("UserAvatar", () => {
   });
 
   it("shows initials when the user has no avatar", async () => {
-    fetchMock.mockResolvedValueOnce(new Response(null, { status: 404 }));
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 204 }));
 
     renderWithClient(<UserAvatar userId={USER_ID} name="Jane Doe" />);
 

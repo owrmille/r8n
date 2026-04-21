@@ -36,7 +36,7 @@ class UserController(
 
     @PreAuthorize(IS_USER)
     override fun getUserAvatar(id: UUID): ResponseEntity<ByteArray> {
-        val avatar = userAvatarService.getAvatar(id)
+        val avatar = userAvatarService.getAvatar(id) ?: return ResponseEntity.noContent().build()
         return ResponseEntity
             .ok()
             .contentType(MediaType.parseMediaType(avatar.contentType))

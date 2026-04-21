@@ -107,7 +107,7 @@ describe("EditProfile avatar controls", () => {
   it("uploads a valid selected image file", async () => {
     fetchMock
       .mockResolvedValueOnce(createUserResponse())
-      .mockResolvedValueOnce(new Response(null, { status: 404 }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
       .mockResolvedValueOnce(createEmptyResponse())
       .mockResolvedValueOnce(createUserResponse())
       .mockResolvedValueOnce(createAvatarResponse());
@@ -144,7 +144,7 @@ describe("EditProfile avatar controls", () => {
   it("rejects unsupported file types before upload", async () => {
     fetchMock
       .mockResolvedValueOnce(createUserResponse())
-      .mockResolvedValueOnce(new Response(null, { status: 404 }));
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
     const { fileInput } = renderEditProfile();
     const file = new File(["not-image"], "avatar.txt", { type: "text/plain" });
 
@@ -164,7 +164,7 @@ describe("EditProfile avatar controls", () => {
   it("rejects images larger than the configured size before upload", async () => {
     fetchMock
       .mockResolvedValueOnce(createUserResponse())
-      .mockResolvedValueOnce(new Response(null, { status: 404 }));
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
     const { fileInput } = renderEditProfile();
     const file = new File(
       [new Uint8Array(AVATAR_MAX_SIZE_BYTES + 1)],
@@ -192,7 +192,7 @@ describe("EditProfile avatar controls", () => {
       .mockResolvedValueOnce(createAvatarResponse())
       .mockResolvedValueOnce(createEmptyResponse())
       .mockResolvedValueOnce(createUserResponse())
-      .mockResolvedValueOnce(new Response(null, { status: 404 }));
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
     renderEditProfile();
 
     fireEvent.click(await screen.findByRole("button", { name: /remove image/i }));

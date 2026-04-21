@@ -41,7 +41,7 @@ export function useUserAvatar(
     queryKey: usersKeys.avatar(id),
     queryFn: async () => {
       try {
-        return await usersApi.getUserAvatar(id);
+        return (await usersApi.getUserAvatar(id)) ?? null;
       } catch (error) {
         if (error instanceof HttpError && error.status === 404) {
           return null;

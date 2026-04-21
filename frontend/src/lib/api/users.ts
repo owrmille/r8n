@@ -30,8 +30,8 @@ export function createUsersApi(client: HttpClient = httpClient) {
       return client.get<UserProfileDto>(`/users/${id}`, { auth: "required" });
     },
 
-    getUserAvatar(id: Uuid): Promise<Blob> {
-      return client.get<Blob>(`/users/${id}/avatar`, {
+    getUserAvatar(id: Uuid): Promise<Blob | undefined> {
+      return client.get<Blob | undefined>(`/users/${id}/avatar`, {
         auth: "required",
         headers: { Accept: "image/*" },
         responseType: "blob",

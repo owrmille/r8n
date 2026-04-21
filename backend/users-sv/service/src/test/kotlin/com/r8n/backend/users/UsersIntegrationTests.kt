@@ -306,6 +306,6 @@ class UsersIntegrationTests {
             .perform(
                 get("/api/users/$USER_ID/avatar")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer ${userAccessToken()}"),
-            ).andExpect(status().isNotFound)
+            ).andExpect(status().isNoContent)
     }
 }
