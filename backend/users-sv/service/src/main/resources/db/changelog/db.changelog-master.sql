@@ -128,7 +128,7 @@ UPDATE users.pii SET location = 'Munich, Germany' WHERE user_id = '10101010-1010
 UPDATE users.pii SET about = 'I am a bratwurst expert' WHERE user_id = '10101010-1010-1010-1010-101010101010';
 CREATE UNIQUE INDEX idx_user_name ON users.pii(name);
 
---changeset codex:V5_seed_support_role context:local,test
+--changeset iatopchu:V5_seed_support_role context:local,test
 INSERT INTO users.users_role_assignments (id, "user", role, granted_by, timestamp)
 VALUES (
     '77777777-7777-7777-7777-777777777777',
@@ -136,4 +136,23 @@ VALUES (
     'SUPPORT',
     '00000000-0000-0000-0000-000000000000',
     '2024-01-01T12:00:00Z'
+);
+
+--changeset iatopchu:V6_move_support_role_to_secondary_seed_user context:local,test
+DELETE FROM users.users_role_assignments
+WHERE "user" = '00000000-0000-0000-0000-000000000000'
+  AND role = 'SUPPORT';
+
+INSERT INTO users.users_role_assignments (id, "user", role, granted_by, timestamp)
+SELECT
+    '78787878-7878-7878-7878-787878787878',
+    '10101010-1010-1010-1010-101010101010',
+    'SUPPORT',
+    '10101010-1010-1010-1010-101010101010',
+    '2024-01-01T12:00:00Z'
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM users.users_role_assignments
+    WHERE "user" = '10101010-1010-1010-1010-101010101010'
+      AND role = 'SUPPORT'
 );
