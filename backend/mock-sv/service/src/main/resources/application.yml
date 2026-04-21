@@ -2,7 +2,7 @@ spring:
   application.name: mock-sv
   liquibase:
     enabled: true
-    change-log: db/changelog/db.changelog-master.sql
+    change-log: db/changelog/mock/db.changelog-master.sql
     default-schema: mock
   datasource:
     driver-class-name: org.postgresql.Driver
