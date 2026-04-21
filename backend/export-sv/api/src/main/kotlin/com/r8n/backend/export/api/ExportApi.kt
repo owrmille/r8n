@@ -8,9 +8,10 @@ import org.springframework.web.bind.annotation.PostMapping
 
 interface ExportApi {
     companion object {
-        const val START_PATH = "/export/start"
-        const val STATUS_PATH = "/export/status"
-        const val DOWNLOAD_PATH = "/export/download"
+        private const val BASE_PATH = "/api/export"
+        const val START_PATH = "$BASE_PATH/start"
+        const val STATUS_PATH = "$BASE_PATH/status"
+        const val DOWNLOAD_PATH = "$BASE_PATH/download"
     }
 
     @PostMapping(START_PATH)

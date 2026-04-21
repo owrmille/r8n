@@ -1,10 +1,5 @@
 package com.r8n.backend.users
 
-import com.r8n.backend.mock.api.IncomingAccessRequestApi
-import com.r8n.backend.mock.api.MessagingApi
-import com.r8n.backend.mock.api.OutgoingAccessRequestApi
-import com.r8n.backend.mock.integration.api.OpinionListInternalApi
-import org.mockito.kotlin.mock
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import tools.jackson.databind.json.JsonMapper
@@ -18,16 +13,4 @@ class TestObjectMapperConfiguration {
             .builder()
             .addModule(KotlinModule.Builder().build())
             .build()
-
-    @Bean
-    fun opinionListInternalApi(): OpinionListInternalApi = mock()
-
-    @Bean
-    fun incomingAccessRequestApi(): IncomingAccessRequestApi = mock()
-
-    @Bean
-    fun outgoingAccessRequestApi(): OutgoingAccessRequestApi = mock()
-
-    @Bean
-    fun messagingApi(): MessagingApi = mock()
 }

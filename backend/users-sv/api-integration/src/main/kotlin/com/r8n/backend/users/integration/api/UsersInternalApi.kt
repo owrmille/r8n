@@ -27,7 +27,7 @@ interface UsersInternalApi {
 
     @GetMapping(SESSIONS_PATH)
     fun getSessionsForUser(
-        @PathVariable userId: UUID,
+        @PathVariable id: UUID,
         page: PageRequestDto? = null,
     ): PageResponseDto<UserSessionDto>
 }

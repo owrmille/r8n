@@ -31,7 +31,7 @@ logging:
 
 services:
   mock:
-    url: ${INTERSERVICE_PROTOCOL}://${SERVICES_MOCK_HOST}:${SERVICES_MOCK_PORT}
+    url: http://localhost:8090
 r8n:
   security:
     public-paths: /api/auth/**

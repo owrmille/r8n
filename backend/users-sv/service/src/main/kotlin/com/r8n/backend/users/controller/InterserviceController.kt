@@ -8,6 +8,8 @@ import com.r8n.backend.users.api.dto.ConsentDto
 import com.r8n.backend.users.api.dto.UserDto
 import com.r8n.backend.users.api.dto.UserSessionDto
 import com.r8n.backend.users.api.dto.UserStatusEnumDto
+import com.r8n.backend.users.domain.Consent
+import com.r8n.backend.users.domain.UserSession
 import com.r8n.backend.users.integration.api.UsersInternalApi
 import com.r8n.backend.users.service.ConsentService
 import com.r8n.backend.users.service.UserService
@@ -43,24 +45,24 @@ class InterserviceController(
 
     @PreAuthorize(Authority.IS_USER_OR_SERVICE)
     override fun getSessionsForUser(
-        userId: UUID,
+        id: UUID,
         page: PageRequestDto?,
     ): PageResponseDto<UserSessionDto> {
         val pageable = if (page != null) Pageable.ofSize(page.size).withPage(page.page) else Pageable.unpaged()
-        val sessions = sessionService.getSessionsForUser(userId, pageable)
+        val sessions = sessionService.getSessionsForUser(id, pageable)
         return sessions.map { it.toDto() }.toResponse()
     }
 
     private fun com.r8n.backend.users.domain.UserStatusEnum.toDto() = UserStatusEnumDto.valueOf(this.name)
 
-    private fun com.r8n.backend.users.domain.Consent.toDto() =
+    private fun Consent.toDto() =
         ConsentDto(
             type = type,
             accepted = accepted,
             session = session.toDto(),
         )
 
-    private fun com.r8n.backend.users.domain.UserSession.toDto() =
+    private fun UserSession.toDto() =
         UserSessionDto(
             id = id,
             created = created,
