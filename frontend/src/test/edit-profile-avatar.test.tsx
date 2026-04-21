@@ -1,45 +1,52 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import type { ReactElement } from "react";
 import { MemoryRouter } from "react-router-dom";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import EditProfile from "@/pages/EditProfile";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const {
-  deleteAvatarMutateMock,
-  toastMock,
-  uploadAvatarMutateMock,
-  useDeleteMyAvatarMutationMock,
-  useMeMock,
-  useUploadMyAvatarMutationMock,
-  useUserAvatarMock,
-} = vi.hoisted(() => ({
-  deleteAvatarMutateMock: vi.fn(),
+const USER_ID = "00000000-0000-0000-0000-000000000000";
+const ACCESS_TOKEN = "stub-access-token-123";
+
+const { toastMock } = vi.hoisted(() => ({
   toastMock: vi.fn(),
-  uploadAvatarMutateMock: vi.fn(),
-  useDeleteMyAvatarMutationMock: vi.fn(),
-  useMeMock: vi.fn(),
-  useUploadMyAvatarMutationMock: vi.fn(),
-  useUserAvatarMock: vi.fn(),
-}));
-
-vi.mock("@/components/UserAvatar", () => ({
-  default: ({ name }: { name: string }) => (
-    <div data-testid="user-avatar">{name}</div>
-  ),
 }));
 
 vi.mock("@/hooks/use-toast", () => ({
   toast: toastMock,
 }));
 
-vi.mock("@/lib/server-state/hooks/users", () => ({
-  useDeleteMyAvatarMutation: useDeleteMyAvatarMutationMock,
-  useMe: useMeMock,
-  useUploadMyAvatarMutation: useUploadMyAvatarMutationMock,
-  useUserAvatar: useUserAvatarMock,
-}));
+let EditProfile: typeof import("@/pages/EditProfile")["default"];
+let createQueryClient: typeof import("@/lib/server-state/query-client")["createQueryClient"];
+let clearAuthSession: typeof import("@/lib/server-state/auth-store")["clearAuthSession"];
+let setAuthSession: typeof import("@/lib/server-state/auth-store")["setAuthSession"];
+let fetchMock: ReturnType<typeof vi.fn>;
+
+function createUserResponse() {
+  return new Response(
+    JSON.stringify({
+      id: USER_ID,
+      name: "Test Testsson",
+    }),
+    {
+      headers: { "Content-Type": "application/json" },
+      status: 200,
+    },
+  );
+}
+
+function createAvatarResponse() {
+  return new Response("avatar-bytes", {
+    headers: { "Content-Type": "image/png" },
+    status: 200,
+  });
+}
+
+function createEmptyResponse() {
+  return new Response(null, { status: 204 });
+}
 
 function renderEditProfile() {
-  const renderResult = render(
+  const renderResult = renderWithClient(
     <MemoryRouter>
       <EditProfile />
     </MemoryRouter>,
@@ -60,58 +67,148 @@ function renderEditProfile() {
 }
 
 describe("EditProfile avatar controls", () => {
-  beforeEach(() => {
-    deleteAvatarMutateMock.mockReset();
+  beforeEach(async () => {
+    vi.resetModules();
+
+    fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    ({ default: EditProfile } = await import("@/pages/EditProfile"));
+    ({ createQueryClient } = await import("@/lib/server-state/query-client"));
+    ({ clearAuthSession, setAuthSession } = await import("@/lib/server-state/auth-store"));
+
+    setAuthSession({
+      accessToken: ACCESS_TOKEN,
+      expiresInMilliseconds: 60_000,
+    });
+
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      value: vi.fn(),
+    });
+    Object.defineProperty(URL, "revokeObjectURL", {
+      configurable: true,
+      value: vi.fn(),
+    });
+    vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:avatar-url");
+    vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
     toastMock.mockReset();
-    uploadAvatarMutateMock.mockReset();
-    useMeMock.mockReturnValue({
-      data: {
-        id: "00000000-0000-0000-0000-000000000000",
-        name: "Test Testsson",
-      },
-    });
-    useUserAvatarMock.mockReturnValue({ data: null });
-    useUploadMyAvatarMutationMock.mockReturnValue({
-      isPending: false,
-      mutate: uploadAvatarMutateMock,
-    });
-    useDeleteMyAvatarMutationMock.mockReturnValue({
-      isPending: false,
-      mutate: deleteAvatarMutateMock,
-    });
   });
 
-  it("uploads a valid selected image file", () => {
+  afterEach(() => {
+    clearAuthSession();
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("uploads a valid selected image file", async () => {
+    fetchMock
+      .mockResolvedValueOnce(createUserResponse())
+      .mockResolvedValueOnce(new Response(null, { status: 404 }))
+      .mockResolvedValueOnce(createEmptyResponse())
+      .mockResolvedValueOnce(createUserResponse())
+      .mockResolvedValueOnce(createAvatarResponse());
     const { fileInput } = renderEditProfile();
     const file = new File(["avatar"], "avatar.png", { type: "image/png" });
 
+    await waitForInitialAvatarFetch();
     fireEvent.change(fileInput, { target: { files: [file] } });
 
-    expect(uploadAvatarMutateMock).toHaveBeenCalledWith({ file });
-    expect(toastMock).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/users/me/avatar",
+        expect.objectContaining({ method: "POST" }),
+      );
+    });
+
+    const uploadRequest = fetchMock.mock.calls.find(
+      ([url, requestInit]) =>
+        url === "/api/users/me/avatar" && requestInit.method === "POST",
+    )?.[1];
+    expect(uploadRequest?.body).toBeInstanceOf(FormData);
+
+    const uploadHeaders = new Headers(uploadRequest?.headers);
+    expect(uploadHeaders.get("Authorization")).toBe(`Bearer ${ACCESS_TOKEN}`);
+    expect(uploadHeaders.get("Content-Type")).toBeNull();
+    await waitFor(() => {
+      expect(toastMock).toHaveBeenCalledWith({
+        title: "Profile image updated",
+        description: "Your new image has been saved.",
+      });
+    });
   });
 
-  it("rejects unsupported file types before upload", () => {
+  it("rejects unsupported file types before upload", async () => {
+    fetchMock
+      .mockResolvedValueOnce(createUserResponse())
+      .mockResolvedValueOnce(new Response(null, { status: 404 }));
     const { fileInput } = renderEditProfile();
     const file = new File(["not-image"], "avatar.txt", { type: "text/plain" });
 
+    await waitForInitialAvatarFetch();
     fireEvent.change(fileInput, { target: { files: [file] } });
 
-    expect(uploadAvatarMutateMock).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalledWith(
+      "/api/users/me/avatar",
+      expect.objectContaining({ method: "POST" }),
+    );
     expect(toastMock).toHaveBeenCalledWith({
       title: "Image not uploaded",
       description: "Please choose a PNG, JPEG, or WebP image.",
     });
   });
 
-  it("deletes the current profile image", () => {
-    useUserAvatarMock.mockReturnValue({
-      data: new Blob(["avatar"], { type: "image/png" }),
-    });
+  it("deletes the current profile image", async () => {
+    fetchMock
+      .mockResolvedValueOnce(createUserResponse())
+      .mockResolvedValueOnce(createAvatarResponse())
+      .mockResolvedValueOnce(createEmptyResponse())
+      .mockResolvedValueOnce(createUserResponse())
+      .mockResolvedValueOnce(new Response(null, { status: 404 }));
     renderEditProfile();
 
-    fireEvent.click(screen.getByRole("button", { name: /remove image/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /remove image/i }));
 
-    expect(deleteAvatarMutateMock).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/users/me/avatar",
+        expect.objectContaining({ method: "DELETE" }),
+      );
+    });
+    const deleteRequest = fetchMock.mock.calls.find(
+      ([url, requestInit]) =>
+        url === "/api/users/me/avatar" && requestInit.method === "DELETE",
+    )?.[1];
+    const deleteHeaders = new Headers(deleteRequest?.headers);
+    expect(deleteHeaders.get("Authorization")).toBe(`Bearer ${ACCESS_TOKEN}`);
+    expect(toastMock).toHaveBeenCalledWith({
+      title: "Profile image removed",
+      description: "Your profile now shows initials again.",
+    });
   });
 });
+
+function renderWithClient(ui: ReactElement) {
+  const queryClient = createQueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      {ui}
+    </QueryClientProvider>,
+  );
+}
+
+async function waitForInitialAvatarFetch() {
+  await waitFor(() => {
+    expect(fetchMock).toHaveBeenCalledWith(
+      `/api/users/${USER_ID}/avatar`,
+      expect.objectContaining({ method: "GET" }),
+    );
+  });
+}
