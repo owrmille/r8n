@@ -12,7 +12,9 @@ import com.r8n.backend.mock.integration.api.OpinionListInternalApi
 import com.r8n.backend.users.api.dto.PersonalIdentifiableInformationSectionDto
 import com.r8n.backend.users.integration.api.UsersInternalApi
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.server.ResponseStatusException
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -65,7 +67,7 @@ class DataExportFacade(
     fun getExportStatus(userId: UUID): ExportStateDto {
         val job =
             exportJobs[userId]
-                ?: throw NoSuchElementException("No export job found for user $userId")
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "No export job found for user $userId")
 
         return ExportStateDto(
             userId = job.userId,
@@ -79,14 +81,17 @@ class DataExportFacade(
     fun getExportData(userId: UUID): UserCompleteDataDto {
         val job =
             exportJobs[userId]
-                ?: throw NoSuchElementException("No export job found for user $userId")
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "No export job found for user $userId")
 
         if (job.status != ExportJobStatus.COMPLETED) {
-            throw IllegalStateException("Export not completed yet. Status: ${job.status}")
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Export not completed yet. Status: ${job.status}",
+            )
         }
 
         return job.result
-            ?: throw NoSuchElementException("Completed export has no data for user $userId")
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Completed export has no data for user $userId")
     }
 
     fun getUserCompleteDataDto(id: UUID): UserCompleteDataDto {
