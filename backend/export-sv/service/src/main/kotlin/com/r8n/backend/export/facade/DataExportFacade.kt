@@ -43,10 +43,12 @@ class DataExportFacade(
         IN_PROGRESS,
         COMPLETED,
         FAILED,
+        CANCELLED,
     }
 
     fun startExport(userId: UUID) {
         logger.debug("Starting export for user: $userId")
+        cancelExistingJob(userId)
         exportJobs[userId] = ExportJob(userId, ExportJobStatus.PENDING, Instant.now())
 
         // For now, process synchronously to ensure security context is properly propagated
@@ -128,7 +130,14 @@ class DataExportFacade(
             ExportJobStatus.IN_PROGRESS -> ExportStatus.IN_PROGRESS
             ExportJobStatus.COMPLETED -> ExportStatus.COMPLETED
             ExportJobStatus.FAILED -> ExportStatus.FAILED
+            ExportJobStatus.CANCELLED -> ExportStatus.FAILED
         }
+
+    private fun cancelExistingJob(userId: UUID) {
+        exportJobs[userId]?.let {
+            exportJobs[userId] = it.copy(status = ExportJobStatus.CANCELLED)
+        }
+    }
 
     private fun updateExportStatus(
         userId: UUID,
