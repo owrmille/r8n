@@ -76,7 +76,7 @@ class DataExportFacade(
             status = job.status.toApiStatus(),
             createdAt = job.createdAt,
             completedAt = job.completedAt,
-            estimatedCompletionTime = job.completedAt ?: job.createdAt.plusSeconds(300), // 5 min estimate
+            estimatedCompletionTime = null,
         )
     }
 
