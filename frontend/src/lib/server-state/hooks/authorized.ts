@@ -6,13 +6,19 @@ import type {
   UseQueryResult,
 } from "@tanstack/react-query";
 
+const IS_E2E_AUTH_BYPASS_ENABLED =
+  import.meta.env.VITE_E2E_BYPASS_AUTH === "true";
+
 export function useAuthorizedQuery<TData, TError = Error, TQueryKey extends readonly unknown[] = readonly unknown[]>(
   options: Omit<UseQueryOptions<TData, TError, TData, TQueryKey>, "queryFn"> & {
     queryFn: () => Promise<TData>;
   },
 ): UseQueryResult<TData, TError> {
+  const enabled = IS_E2E_AUTH_BYPASS_ENABLED ? false : (options.enabled ?? true);
+
   return useQuery({
     ...options,
+    enabled,
     queryFn: () => options.queryFn(),
   });
 }
