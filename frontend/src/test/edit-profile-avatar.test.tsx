@@ -50,7 +50,7 @@ function renderEditProfile() {
   ) as HTMLInputElement | null;
 
   if (!fileInput) {
-    throw new Error("Expected profile photo file input to be rendered.");
+    throw new Error("Expected profile image file input to be rendered.");
   }
 
   return {
@@ -99,18 +99,18 @@ describe("EditProfile avatar controls", () => {
 
     expect(uploadAvatarMutateMock).not.toHaveBeenCalled();
     expect(toastMock).toHaveBeenCalledWith({
-      title: "Photo not uploaded",
+      title: "Image not uploaded",
       description: "Please choose a PNG, JPEG, or WebP image.",
     });
   });
 
-  it("deletes the current profile photo", () => {
+  it("deletes the current profile image", () => {
     useUserAvatarMock.mockReturnValue({
       data: new Blob(["avatar"], { type: "image/png" }),
     });
     renderEditProfile();
 
-    fireEvent.click(screen.getByRole("button", { name: /remove photo/i }));
+    fireEvent.click(screen.getByRole("button", { name: /remove image/i }));
 
     expect(deleteAvatarMutateMock).toHaveBeenCalledTimes(1);
   });

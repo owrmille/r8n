@@ -25,7 +25,7 @@ function validateAvatarFile(file: File): string | undefined {
   }
 
   if (file.size > MAX_AVATAR_SIZE_BYTES) {
-    return "Profile photo must be 2MB or smaller.";
+    return "Profile image must be 2MB or smaller.";
   }
 
   return undefined;
@@ -45,15 +45,15 @@ const EditProfile = () => {
   const uploadAvatarMutation = useUploadMyAvatarMutation({
     onSuccess: () => {
       toast({
-        title: "Profile photo updated",
-        description: "Your new photo has been saved.",
+        title: "Profile image updated",
+        description: "Your new image has been saved.",
       });
     },
   });
   const deleteAvatarMutation = useDeleteMyAvatarMutation({
     onSuccess: () => {
       toast({
-        title: "Profile photo removed",
+        title: "Profile image removed",
         description: "Your profile now shows initials again.",
       });
     },
@@ -73,7 +73,7 @@ const EditProfile = () => {
     const validationError = validateAvatarFile(file);
     if (validationError) {
       toast({
-        title: "Photo not uploaded",
+        title: "Image not uploaded",
         description: validationError,
       });
       return;
@@ -124,7 +124,7 @@ const EditProfile = () => {
               />
               <button
                 type="button"
-                aria-label="Upload profile photo"
+                aria-label="Upload profile image"
                 disabled={!me?.id || isAvatarMutating}
                 onClick={() => fileInputRef.current?.click()}
                 className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
@@ -137,7 +137,7 @@ const EditProfile = () => {
               </button>
             </div>
             <div>
-              <p className="text-sm font-medium text-foreground">Profile photo</p>
+              <p className="text-sm font-medium text-foreground">Profile image</p>
               <p className="text-xs text-muted-foreground">PNG, JPEG, or WebP. Max 2MB.</p>
               {avatar && (
                 <button
@@ -151,7 +151,7 @@ const EditProfile = () => {
                   ) : (
                     <Trash2 className="h-3 w-3" />
                   )}
-                  Remove photo
+                  Remove image
                 </button>
               )}
             </div>
