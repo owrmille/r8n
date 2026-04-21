@@ -1,6 +1,7 @@
 package com.r8n.backend.users.controller
 
 import com.r8n.backend.security.Authority.IS_USER
+import com.r8n.backend.security.CurrentUserIdentifier.getCurrentUserId
 import com.r8n.backend.users.api.UsersApi
 import com.r8n.backend.users.api.dto.UserCompleteDataDto
 import com.r8n.backend.users.api.dto.UsernameDto
@@ -45,13 +46,13 @@ class UserController(
 
     @PreAuthorize(IS_USER)
     override fun uploadMyAvatar(file: MultipartFile): ResponseEntity<Void> {
-        userAvatarService.uploadMyAvatar(file)
+        userAvatarService.uploadAvatar(getCurrentUserId(), file)
         return ResponseEntity.noContent().build()
     }
 
     @PreAuthorize(IS_USER)
     override fun deleteMyAvatar(): ResponseEntity<Void> {
-        userAvatarService.deleteMyAvatar()
+        userAvatarService.deleteAvatar(getCurrentUserId())
         return ResponseEntity.noContent().build()
     }
 }

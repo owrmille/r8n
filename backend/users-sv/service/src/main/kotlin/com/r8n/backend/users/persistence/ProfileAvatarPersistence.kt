@@ -23,7 +23,8 @@ class ProfileAvatarPersistence(
     val objectKey: String,
 //
     @Column(nullable = false)
-    val contentType: String,
+    @Enumerated(EnumType.STRING)
+    val contentType: AvatarContentTypePersistence,
 //
     @Column(nullable = false)
     val fileSize: Long,
@@ -34,4 +35,18 @@ class ProfileAvatarPersistence(
 
 enum class AvatarStorageBackendPersistence {
     LOCAL,
+}
+
+enum class AvatarContentTypePersistence(
+    val mediaType: String,
+) {
+    JPEG("image/jpeg"),
+    PNG("image/png"),
+    WEBP("image/webp"),
+    ;
+
+    companion object {
+        fun fromMediaType(mediaType: String): AvatarContentTypePersistence? =
+            entries.firstOrNull { it.mediaType == mediaType }
+    }
 }

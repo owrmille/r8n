@@ -1,6 +1,6 @@
 package com.r8n.backend.users.service
 
-import com.r8n.backend.security.CurrentUserIdentifier.getCurrentUserId
+import com.r8n.backend.users.persistence.AvatarContentTypePersistence
 import com.r8n.backend.users.persistence.ProfileAvatarPersistence
 import com.r8n.backend.users.provider.database.ProfileAvatarRepository
 import org.springframework.beans.factory.annotation.Value
@@ -21,22 +21,14 @@ class UserAvatarService(
     private val avatarStorage: AvatarStorage,
     @Value("\${r8n.storage.avatar.max-size}") private val maxSize: DataSize,
 ) {
-    private companion object {
-        val ALLOWED_CONTENT_TYPES = setOf("image/jpeg", "image/png", "image/webp")
-    }
-
     @Transactional
-    fun uploadMyAvatar(file: MultipartFile) {
-        uploadAvatar(getCurrentUserId(), file)
-    }
-
-    private fun uploadAvatar(
+    fun uploadAvatar(
         userId: UUID,
         file: MultipartFile,
     ) {
-        val content = validateAvatarFile(file)
+        val avatarFile = validateAvatarFile(file)
         val previousAvatar = profileAvatarRepository.findByIdOrNull(userId)
-        val storedAvatar = avatarStorage.store(userId, content)
+        val storedAvatar = avatarStorage.store(userId, avatarFile.content)
 
         try {
             profileAvatarRepository.save(
@@ -44,8 +36,8 @@ class UserAvatarService(
                     userId = userId,
                     storageBackend = storedAvatar.storageBackend,
                     objectKey = storedAvatar.objectKey,
-                    contentType = file.contentType!!,
-                    fileSize = content.size.toLong(),
+                    contentType = avatarFile.contentType,
+                    fileSize = avatarFile.content.size.toLong(),
                     updatedAt = Instant.now(),
                 ),
             )
@@ -74,23 +66,19 @@ class UserAvatarService(
 
         return UserAvatarFile(
             content = content,
-            contentType = avatar.contentType,
+            contentType = avatar.contentType.mediaType,
         )
     }
 
     @Transactional
-    fun deleteMyAvatar() {
-        deleteAvatar(getCurrentUserId())
-    }
-
-    private fun deleteAvatar(userId: UUID) {
+    fun deleteAvatar(userId: UUID) {
         val avatar = profileAvatarRepository.findByIdOrNull(userId) ?: return
 
         profileAvatarRepository.delete(avatar)
         avatarStorage.delete(avatar.objectKey)
     }
 
-    private fun validateAvatarFile(file: MultipartFile): ByteArray {
+    private fun validateAvatarFile(file: MultipartFile): ValidatedAvatarFile {
         if (file.isEmpty) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Avatar file is empty")
         }
@@ -103,24 +91,26 @@ class UserAvatarService(
             file.contentType
                 ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Avatar content type is missing")
 
-        if (contentType !in ALLOWED_CONTENT_TYPES) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Avatar content type is not supported")
-        }
+        val avatarContentType =
+            AvatarContentTypePersistence.fromMediaType(contentType)
+                ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Avatar content type is not supported")
 
         val content = file.bytes
-        if (!content.matchesContentType(contentType)) {
+        if (!content.matchesContentType(avatarContentType)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Avatar file content does not match its content type")
         }
 
-        return content
+        return ValidatedAvatarFile(
+            content = content,
+            contentType = avatarContentType,
+        )
     }
 
-    private fun ByteArray.matchesContentType(contentType: String): Boolean =
+    private fun ByteArray.matchesContentType(contentType: AvatarContentTypePersistence): Boolean =
         when (contentType) {
-            "image/jpeg" -> isJpeg()
-            "image/png" -> isPng()
-            "image/webp" -> isWebp()
-            else -> false
+            AvatarContentTypePersistence.JPEG -> isJpeg()
+            AvatarContentTypePersistence.PNG -> isPng()
+            AvatarContentTypePersistence.WEBP -> isWebp()
         }
 
     private fun ByteArray.isJpeg(): Boolean =
@@ -143,4 +133,9 @@ class UserAvatarService(
 data class UserAvatarFile(
     val content: ByteArray,
     val contentType: String,
+)
+
+private data class ValidatedAvatarFile(
+    val content: ByteArray,
+    val contentType: AvatarContentTypePersistence,
 )
