@@ -5,10 +5,8 @@ import com.r8n.backend.mock.api.MessagingApi
 import com.r8n.backend.mock.api.OutgoingAccessRequestApi
 import com.r8n.backend.mock.integration.api.OpinionListInternalApi
 import com.r8n.backend.users.api.dto.UserProfileDto
-import com.r8n.backend.users.api.dto.UserStatusEnumDto
 import com.r8n.backend.users.api.dto.UsernameDto
 import com.r8n.backend.users.domain.UserProfile
-import com.r8n.backend.users.domain.UserStatusEnum
 import com.r8n.backend.users.domain.Username
 import com.r8n.backend.users.service.UserService
 import com.r8n.backend.users.service.UserSessionService
@@ -39,6 +37,4 @@ class UserFacade(
             about,
             location,
         )
-
-    private fun UserStatusEnum.toDto() = UserStatusEnumDto.valueOf(this.name)
 }
