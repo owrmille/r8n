@@ -10,7 +10,6 @@ import com.r8n.backend.opinions.lists.database.OpinionListRepository
 import com.r8n.backend.opinions.lists.database.OpinionsToOpinionListsRepository
 import com.r8n.backend.opinions.opinions.database.OpinionRepository
 import com.r8n.backend.users.integration.api.UsersInternalApi
-import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -94,21 +93,16 @@ class AccessService(
         val roleBased = roleBasedForOpinion(userId, ownerId, permission)
         if (roleBased != null) return roleBased
 
-        // READ-only: has an access request [to any of the lists containing this opinion] been approved?
-        // we can also first fetch all owner's lists that contain this opinion and check if the requester has access to any of them
-        // not sure what would be more efficient in the long run
+        // READ-only: fetch all owner's lists that contain this opinion and check if the requester has access to any of them
 
-        val activeRequests =
-            repository.findAllByFilters(
-                listId = null,
-                requesterId = userId,
-                status = RequestStatusEnum.ACCEPTED,
-                pageable = Pageable.unpaged(),
+        val listsContainingOpinion = opinionsToOpinionListsRepository.findAllByOpinion(opinionId)
+
+        return listsContainingOpinion.any { listAssignment ->
+            repository.existsByRequesterAndListAndStatus(
+                userId,
+                listAssignment.opinionList,
+                RequestStatusEnum.ACCEPTED,
             )
-
-        return activeRequests.any { request ->
-            val lists = opinionsToOpinionListsRepository.findAllByOpinionList(request.list)
-            return lists.any { list -> list.opinion == opinionId }
         }
     }
 

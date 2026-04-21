@@ -5,13 +5,14 @@ import com.r8n.backend.export.api.ExportApi
 import com.r8n.backend.export.api.dto.ExportStateDto
 import com.r8n.backend.export.api.dto.ExportStatus
 import com.r8n.backend.export.api.dto.UserCompleteDataDto
-import com.r8n.backend.mock.api.IncomingAccessRequestApi
 import com.r8n.backend.mock.api.MessagingApi
-import com.r8n.backend.mock.api.OutgoingAccessRequestApi
-import com.r8n.backend.mock.integration.api.OpinionListInternalApi
-import com.r8n.backend.mock.stub.AccessRequestsTestDataFactory
 import com.r8n.backend.mock.stub.MiscTestFactory
-import com.r8n.backend.mock.stub.OpinionListTestDataFactory
+import com.r8n.backend.opinions.api.access.IncomingAccessRequestApi
+import com.r8n.backend.opinions.api.access.OutgoingAccessRequestApi
+import com.r8n.backend.opinions.api.access.dto.AccessRequestDto
+import com.r8n.backend.opinions.api.access.dto.RequestStatusEnumDto
+import com.r8n.backend.opinions.integration.api.OpinionListsInternalApi
+import com.r8n.backend.opinions.stub.OpinionListTestDataFactory
 import com.r8n.backend.security.ServiceTokenService
 import com.r8n.backend.users.api.dto.ConsentDto
 import com.r8n.backend.users.api.dto.PersonalIdentifiableInformationSectionDto
@@ -41,6 +42,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import tools.jackson.databind.ObjectMapper
 import tools.jackson.module.kotlin.readValue
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
@@ -53,6 +55,26 @@ import java.util.UUID
 @Import(TestObjectMapperConfiguration::class)
 class ExportIntegrationTests {
     private companion object {
+        object AccessRequestsTestDataFactory {
+            fun get(
+                listId: UUID? = null,
+                status: RequestStatusEnumDto = RequestStatusEnumDto.SENT,
+            ): AccessRequestDto {
+                val listId = listId ?: UUID.randomUUID()
+                return AccessRequestDto(
+                    UUID.randomUUID(),
+                    listId,
+                    "the most complete rating of ${listId}s",
+                    UUID.randomUUID(),
+                    "world's leading expert in ${listId}s",
+                    UUID.randomUUID(),
+                    "world's biggest fan of ${listId}s",
+                    Instant.now(),
+                    status,
+                )
+            }
+        }
+
         const val USER_ID = "00000000-0000-0000-0000-000000000000"
         val opinions = OpinionListTestDataFactory.getList()
         val incomingAccessRequests = AccessRequestsTestDataFactory.get()
@@ -70,7 +92,7 @@ class ExportIntegrationTests {
     lateinit var serviceTokenService: ServiceTokenService
 
     @MockitoBean
-    lateinit var opinionClient: OpinionListInternalApi
+    lateinit var opinionClient: OpinionListsInternalApi
 
     @MockitoBean
     lateinit var incomingAccessRequestClient: IncomingAccessRequestApi

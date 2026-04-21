@@ -7,5 +7,5 @@ import java.util.UUID
 interface OpinionsToOpinionListsRepository : JpaRepository<OpinionsToOpinionListsPersistence, UUID> {
     fun findAllByOpinionList(opinionListId: UUID): List<OpinionsToOpinionListsPersistence>
 
-    fun findByOpinion(opinionId: UUID): OpinionsToOpinionListsPersistence?
+    fun findAllByOpinion(opinionId: UUID): List<OpinionsToOpinionListsPersistence>
 }
