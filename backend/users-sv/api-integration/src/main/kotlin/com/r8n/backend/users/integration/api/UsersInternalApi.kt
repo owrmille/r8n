@@ -10,12 +10,13 @@ import java.util.UUID
 
 interface UsersInternalApi {
     companion object {
-        private const val ROOT_PATH = "/api/internal/sers"
-        const val NAME_PATH = "$ROOT_PATH/{id}/name"
-        const val IS_ANY_MODERATOR_PATH = "$ROOT_PATH/{id}/is-any-moderator"
-        const val IS_HUMAN_MODERATOR_PATH = "$ROOT_PATH/{id}/is-human-moderator"
-        const val IS_AI_MODERATOR_PATH = "$ROOT_PATH/{id}/is-ai-moderator"
-        const val IS_ADMIN_PATH = "$ROOT_PATH/{id}/is-admin"
+        const val ID_PATH = "/api/internal/users/{id}"
+        const val NAME_PATH = "$ID_PATH/name"
+        const val SESSIONS_PATH = "$ID_PATH/sessions"
+        const val IS_ANY_MODERATOR_PATH = "$ID_PATH/is-any-moderator"
+        const val IS_HUMAN_MODERATOR_PATH = "$ID_PATH/is-human-moderator"
+        const val IS_AI_MODERATOR_PATH = "$ID_PATH/is-ai-moderator"
+        const val IS_ADMIN_PATH = "$ID_PATH/is-admin"
     }
 
     @GetMapping(NAME_PATH)

@@ -1,14 +1,9 @@
 package com.r8n.backend.users.facade
 
-import com.r8n.backend.core.api.PageRequestDto
-import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.mock.api.MessagingApi
 import com.r8n.backend.opinions.api.access.IncomingAccessRequestApi
 import com.r8n.backend.opinions.api.access.OutgoingAccessRequestApi
 import com.r8n.backend.opinions.integration.api.OpinionListsInternalApi
-import com.r8n.backend.users.api.dto.ConsentDto
-import com.r8n.backend.users.api.dto.PersonalIdentifiableInformationSectionDto
-import com.r8n.backend.users.api.dto.UserCompleteDataDto
 import com.r8n.backend.users.api.dto.UserProfileDto
 import com.r8n.backend.users.api.dto.UserStatusEnumDto
 import com.r8n.backend.users.api.dto.UsernameDto
