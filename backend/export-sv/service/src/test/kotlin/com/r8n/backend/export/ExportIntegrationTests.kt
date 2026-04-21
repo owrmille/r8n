@@ -13,7 +13,7 @@ import com.r8n.backend.users.api.dto.ConsentDto
 import com.r8n.backend.users.api.dto.PersonalIdentifiableInformationSectionDto
 import com.r8n.backend.users.api.dto.UserSessionDto
 import com.r8n.backend.users.api.dto.UserStatusEnumDto
-import com.r8n.backend.users.service.TokenService
+import com.r8n.backend.security.ServiceTokenService
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -61,7 +61,7 @@ class ExportIntegrationTests {
     lateinit var objectMapper: ObjectMapper
 
     @Autowired
-    lateinit var tokenService: TokenService
+    lateinit var serviceTokenService: ServiceTokenService
 
     @MockitoBean
     lateinit var opinionClient: OpinionListInternalApi
@@ -94,7 +94,7 @@ class ExportIntegrationTests {
     @Test
     @WithMockUser(username = USER_ID)
     fun `exportAll returns complete user data`() {
-        val accessToken = tokenService.generateAccessToken(UUID.fromString(USER_ID), listOf("USER"))
+        val accessToken = serviceTokenService.generateAccessToken(UUID.fromString(USER_ID), listOf("USER"))
         val result =
             mockMvc
                 .perform(

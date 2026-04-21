@@ -14,5 +14,5 @@ dependencies {
     implementation(project(":mock-api-integration"))
     implementation(project(":mock-client"))
     implementation(project(":mock-sv"))
-    testImplementation(project(":users-sv"))
+    testImplementation(project(":core:security"))
 }
