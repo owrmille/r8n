@@ -84,9 +84,18 @@ class AccessRequestFacade(
         requesterId: UUID,
     ): AccessRequestDto = accessRequestMapper.toDto(service.cancelRequest(requestId, requesterId))
 
-    fun acceptRequest(requestId: UUID): AccessRequestDto = accessRequestMapper.toDto(service.acceptRequest(requestId))
+    fun acceptRequest(
+        requestId: UUID,
+        ownerId: UUID,
+    ): AccessRequestDto = accessRequestMapper.toDto(service.acceptRequest(requestId, ownerId))
 
-    fun declineRequest(requestId: UUID): AccessRequestDto = accessRequestMapper.toDto(service.declineRequest(requestId))
+    fun declineRequest(
+        requestId: UUID,
+        ownerId: UUID,
+    ): AccessRequestDto = accessRequestMapper.toDto(service.declineRequest(requestId, ownerId))
 
-    fun hideRequest(requestId: UUID): AccessRequestDto = accessRequestMapper.toDto(service.hideRequest(requestId))
+    fun hideRequest(
+        requestId: UUID,
+        ownerId: UUID,
+    ): AccessRequestDto = accessRequestMapper.toDto(service.hideRequest(requestId, ownerId))
 }

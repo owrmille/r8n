@@ -10,38 +10,54 @@ class OpinionFacade(
     private val opinionService: OpinionService,
     private val opinionMapper: OpinionMapper,
 ) {
-    fun getOpinion(opinionId: UUID): OpinionDto = opinionMapper.toDto(opinionService.getOpinion(opinionId))
+    fun getOpinion(
+        opinionId: UUID,
+        requesterId: UUID,
+    ): OpinionDto = opinionMapper.toDto(opinionService.getOpinion(opinionId, requesterId))
 
-    fun getOpinionFor(subjectId: UUID): OpinionDto = opinionMapper.toDto(opinionService.getMyOpinionFor(subjectId))
+    fun getOpinionFor(
+        subjectId: UUID,
+        requesterId: UUID,
+    ): OpinionDto = opinionMapper.toDto(opinionService.getOpinionFor(subjectId, requesterId))
 
     fun createOpinion(
         subjectId: UUID,
         subjective: List<String>,
         objective: List<String>,
         mark: Double?,
-    ): OpinionDto = opinionMapper.toDto(opinionService.createOpinion(subjectId, subjective, objective, mark))
+        creatorId: UUID,
+    ): OpinionDto = opinionMapper.toDto(opinionService.createOpinion(subjectId, subjective, objective, mark, creatorId))
 
     fun updateOpinion(
         opinionId: UUID,
         subjective: List<String>,
         objective: List<String>,
         mark: Double?,
-    ): OpinionDto = opinionMapper.toDto(opinionService.updateOpinion(opinionId, subjective, objective, mark))
+        ownerId: UUID,
+    ): OpinionDto = opinionMapper.toDto(opinionService.updateOpinion(opinionId, subjective, objective, mark, ownerId))
 
-    fun deleteOpinion(opinionId: UUID) {
-        opinionService.deleteOpinion(opinionId)
+    fun deleteOpinion(
+        opinionId: UUID,
+        ownerId: UUID,
+    ) {
+        opinionService.deleteOpinion(opinionId, ownerId)
     }
 
     fun linkComponent(
         parentOpinionId: UUID,
         childOpinionId: UUID,
         weight: Double,
-    ): OpinionDto = opinionMapper.toDto(opinionService.linkComponent(parentOpinionId, childOpinionId, weight))
+        ownerId: UUID,
+    ): OpinionDto = opinionMapper.toDto(opinionService.linkComponent(parentOpinionId, childOpinionId, weight, ownerId))
 
-    fun unlinkComponent(linkId: UUID): OpinionDto = opinionMapper.toDto(opinionService.unlinkComponent(linkId))
+    fun unlinkComponent(
+        linkId: UUID,
+        ownerId: UUID,
+    ): OpinionDto = opinionMapper.toDto(opinionService.unlinkComponent(linkId, ownerId))
 
     fun adjustComponentWeight(
         linkId: UUID,
         weight: Double,
-    ): OpinionDto = opinionMapper.toDto(opinionService.adjustComponentWeight(linkId, weight))
+        ownerId: UUID,
+    ): OpinionDto = opinionMapper.toDto(opinionService.adjustComponentWeight(linkId, weight, ownerId))
 }

@@ -1,6 +1,5 @@
 package com.r8n.backend.users.service
 
-import com.r8n.backend.security.CurrentUserIdentifier.getCurrentUserId
 import com.r8n.backend.users.domain.User
 import com.r8n.backend.users.domain.UserProfile
 import com.r8n.backend.users.domain.Username
@@ -58,10 +57,7 @@ class UserService(
         )
     }
 
-    fun getMyName(): Username {
-        val id = getCurrentUserId()
-        return Username(id, getName(id))
-    }
+    fun getMyName(userId: UUID): Username = Username(userId, getName(userId))
 
     fun lastOnline(id: UUID): Instant? {
         val lastSession = userSessionService.lastSessionForUserId(id)

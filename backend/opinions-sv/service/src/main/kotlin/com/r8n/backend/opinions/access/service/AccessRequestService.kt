@@ -41,7 +41,7 @@ class AccessRequestService(
         listId: UUID,
         requesterId: UUID,
     ): AccessRequest {
-        val list = opinionListService.getList(listId)
+        val list = opinionListService.getList(listId, requesterId)
 
         if (list.owner == requesterId) {
             throw IllegalArgumentException("Owner cannot request access to their own list")
@@ -86,20 +86,31 @@ class AccessRequestService(
             throw IllegalAccessException("Cannot cancel someone else's request")
         }
 
+        if (request.status == RequestStatusEnum.CANCELLED) {
+            throw IllegalStateException("Request already cancelled")
+        }
+
         request.status = RequestStatusEnum.CANCELLED
         request.updatedAt = Instant.now()
         return repository.save(request).toDomain()
     }
 
     @Transactional
-    fun acceptRequest(requestId: UUID): AccessRequest {
+    fun acceptRequest(
+        requestId: UUID,
+        ownerId: UUID,
+    ): AccessRequest {
         val request =
             repository
                 .findById(requestId)
                 .orElseThrow { NoSuchElementException("Request not found") }
 
-        if (request.status == RequestStatusEnum.CANCELLED) {
-            throw IllegalStateException("Cannot accept a cancelled request")
+        if (opinionListService.getListOwner(request.list) != ownerId) {
+            throw SecurityException("Only the owner can accept a request")
+        }
+
+        if (request.status != RequestStatusEnum.SENT) {
+            throw IllegalStateException("Can only accept a pending request")
         }
 
         request.status = RequestStatusEnum.ACCEPTED
@@ -108,11 +119,23 @@ class AccessRequestService(
     }
 
     @Transactional
-    fun declineRequest(requestId: UUID): AccessRequest {
+    fun declineRequest(requestId: UUID, ownerId: UUID): AccessRequest {
         val request =
             repository
                 .findById(requestId)
                 .orElseThrow { NoSuchElementException("Request not found") }
+
+        if (opinionListService.getListOwner(request.list) != ownerId) {
+            throw SecurityException("Only the owner can decline a request")
+        }
+
+        if (request.status == RequestStatusEnum.REJECTED) {
+            throw IllegalStateException("Request already rejected")
+        }
+
+        if (request.status == RequestStatusEnum.CANCELLED) {
+            throw IllegalStateException("Cannot decline a cancelled request")
+        }
 
         request.status = RequestStatusEnum.REJECTED
         request.updatedAt = Instant.now()
@@ -120,11 +143,19 @@ class AccessRequestService(
     }
 
     @Transactional
-    fun hideRequest(requestId: UUID): AccessRequest {
+    fun hideRequest(requestId: UUID, ownerId: UUID): AccessRequest {
         val request =
             repository
                 .findById(requestId)
                 .orElseThrow { NoSuchElementException("Request not found") }
+
+        if (opinionListService.getListOwner(request.list) != ownerId) {
+            throw SecurityException("Only the owner can hide a request")
+        }
+
+        if (request.status != RequestStatusEnum.SENT) {
+            throw IllegalStateException("Can only hide a pending request")
+        }
 
         request.status = RequestStatusEnum.HIDDEN
         request.updatedAt = Instant.now()

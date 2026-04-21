@@ -1,5 +1,6 @@
 package com.r8n.backend.export
 
+import com.r8n.backend.core.utils.TestObjectMapperConfiguration
 import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.export.api.ExportApi
 import com.r8n.backend.export.api.dto.ExportStateDto

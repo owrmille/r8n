@@ -39,7 +39,7 @@ class AccessRequestMapper(
                 opinionListId = listId,
                 opinionListName =
                     try {
-                        opinionListService.getListName(listId)
+                        opinionListService.getListName(listId, requesterId)
                     } catch (_: Exception) {
                         "UNKNOWN"
                     },

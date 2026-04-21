@@ -52,19 +52,19 @@ class AccessService(
     ): Boolean = opinionListRepository.existsByIdAndOwner(opinionListId, userId)
 
     private fun roleBasedForOpinion(
-        userId: UUID,
+        requesterId: UUID,
         ownerId: UUID,
         permission: OpinionPermissionEnum,
     ): Boolean? {
-        if (usersClient.isAnyModerator(userId) &&
+        if (usersClient.isAnyModerator(requesterId) &&
             (permission == OpinionPermissionEnum.READ || permission == OpinionPermissionEnum.REJECT)
         ) {
             return true
         }
-        if (usersClient.isHumanModerator(userId) && permission == OpinionPermissionEnum.APPROVE) {
+        if (usersClient.isHumanModerator(requesterId) && permission == OpinionPermissionEnum.APPROVE) {
             return true
         }
-        if (ownerId == userId &&
+        if (ownerId == requesterId &&
             (
                 permission == OpinionPermissionEnum.READ ||
                     permission == OpinionPermissionEnum.EDIT ||
@@ -80,7 +80,7 @@ class AccessService(
     }
 
     fun canAccessOpinion(
-        userId: UUID,
+        requesterId: UUID,
         opinionId: UUID,
         permission: OpinionPermissionEnum,
     ): Boolean {
@@ -90,7 +90,7 @@ class AccessService(
                     opinionId,
                 ).orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
                 .owner
-        val roleBased = roleBasedForOpinion(userId, ownerId, permission)
+        val roleBased = roleBasedForOpinion(requesterId, ownerId, permission)
         if (roleBased != null) return roleBased
 
         // READ-only: fetch all owner's lists that contain this opinion and check if the requester has access to any of them
@@ -99,7 +99,7 @@ class AccessService(
 
         return listsContainingOpinion.any { listAssignment ->
             repository.existsByRequesterAndListAndStatus(
-                userId,
+                requesterId,
                 listAssignment.opinionList,
                 RequestStatusEnum.ACCEPTED,
             )

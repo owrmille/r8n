@@ -10,7 +10,6 @@ import com.r8n.backend.opinions.lists.domain.OpinionSummary
 import com.r8n.backend.opinions.lists.persistence.OpinionListPersistence
 import com.r8n.backend.opinions.opinions.domain.WeightedOpinionReference
 import com.r8n.backend.opinions.opinions.service.OpinionService
-import com.r8n.backend.security.CurrentUserIdentifier.getCurrentUserId
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -29,42 +28,46 @@ class OpinionListService(
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
             .owner
 
-    fun getListName(listId: UUID): String {
+    fun getListName(
+        listId: UUID,
+        userId: UUID,
+    ): String {
         val list =
             opinionListRepository
                 .findById(listId)
                 .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
-        val userId = getCurrentUserId()
         if (!accessService.ownsOpinionList(userId, listId) && list.privacy == OpinionListPrivacyEnum.PRIVATE) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND)
         }
         return list.name
     }
 
-    fun getList(listId: UUID): OpinionList {
+    fun getList(
+        listId: UUID,
+        requesterId: UUID,
+    ): OpinionList {
         val list =
             opinionListRepository
                 .findById(listId)
                 .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
-        val userId = getCurrentUserId()
-        if (!accessService.canAccessOpinionList(userId, listId, OpinionListPermissionEnum.VIEW)) {
+        if (!accessService.canAccessOpinionList(requesterId, listId, OpinionListPermissionEnum.VIEW)) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN)
         }
-        if (!accessService.ownsOpinionList(userId, listId) && list.privacy == OpinionListPrivacyEnum.PRIVATE) {
+        if (!accessService.ownsOpinionList(requesterId, listId) && list.privacy == OpinionListPrivacyEnum.PRIVATE) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND)
         }
 
         val assignments = opinionsAssignmentRepository.findAllByOpinionList(listId)
         val opinions =
             assignments.map { asmt ->
-                opinionService.getOpinion(asmt.opinion).copy(weight = asmt.weight)
+                opinionService.getOpinion(asmt.opinion, requesterId).copy(weight = asmt.weight)
             }
         val opinionsBySubject = opinions.groupBy { it.subject }
 
         val summaries =
-            if (accessService.ownsOpinionList(userId, listId)) {
+            if (accessService.ownsOpinionList(requesterId, listId)) {
                 opinionsBySubject.map { (subject, ops) ->
-                    val own = ops.firstOrNull { it.owner == userId }
+                    val own = ops.firstOrNull { it.owner == requesterId }
                     val weightedMarks = ops.mapNotNull { it.mark?.let { mark -> it.weight!! * mark } }
                     val componentMark = weightedMarks.takeIf { it.isNotEmpty() && it.size == ops.size }?.sum()
 
@@ -85,7 +88,7 @@ class OpinionListService(
             } else {
                 // for another user I cannot see what his components are, I can see only his own opinion
                 opinionsBySubject.mapNotNull { (subject, ops) ->
-                    val own = ops.firstOrNull { it.owner == userId }
+                    val own = ops.firstOrNull { it.owner == list.owner }
                     if (own == null) {
                         null
                     } else {

@@ -10,5 +10,8 @@ class OpinionListFacade(
     private val opinionListService: OpinionListService,
     private val opinionListMapper: OpinionListMapper,
 ) {
-    fun getList(listId: UUID): OpinionListDto = opinionListMapper.toDto(opinionListService.getList(listId))
+    fun getList(
+        listId: UUID,
+        requesterId: UUID,
+    ): OpinionListDto = opinionListMapper.toDto(opinionListService.getList(listId, requesterId))
 }

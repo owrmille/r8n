@@ -1,4 +1,4 @@
-package com.r8n.backend.export
+package com.r8n.backend.core.utils
 
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean

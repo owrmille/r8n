@@ -26,11 +26,11 @@ class IncomingAccessRequestController(
     ): PageResponseDto<AccessRequestDto> = facade.getIncoming(forListId, since, status, pageable, getCurrentUserId())
 
     @PreAuthorize(IS_USER)
-    override fun accept(requestId: UUID): AccessRequestDto = facade.acceptRequest(requestId)
+    override fun accept(requestId: UUID): AccessRequestDto = facade.acceptRequest(requestId, getCurrentUserId())
 
     @PreAuthorize(IS_USER)
-    override fun decline(requestId: UUID): AccessRequestDto = facade.declineRequest(requestId)
+    override fun decline(requestId: UUID): AccessRequestDto = facade.declineRequest(requestId, getCurrentUserId())
 
     @PreAuthorize(IS_USER)
-    override fun hide(requestId: UUID): AccessRequestDto = facade.hideRequest(requestId)
+    override fun hide(requestId: UUID): AccessRequestDto = facade.hideRequest(requestId, getCurrentUserId())
 }

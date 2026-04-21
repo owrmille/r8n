@@ -8,6 +8,7 @@ import com.r8n.backend.opinions.api.lists.dto.OpinionListSummaryDto
 import com.r8n.backend.opinions.lists.facade.OpinionListFacade
 import com.r8n.backend.opinions.stub.OpinionListTestDataFactory
 import com.r8n.backend.security.Authority
+import com.r8n.backend.security.CurrentUserIdentifier.getCurrentUserId
 import org.springframework.data.domain.PageImpl
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
@@ -21,7 +22,7 @@ class StubOpinionListController(
     override fun getListSummary(listId: UUID): OpinionListSummaryDto = OpinionListTestDataFactory.getListSummary(listId)
 
     @PreAuthorize(Authority.IS_USER)
-    override fun getList(listId: UUID) = opinionListFacade.getList(listId)
+    override fun getList(listId: UUID) = opinionListFacade.getList(listId, getCurrentUserId())
 
     @PreAuthorize(Authority.IS_USER)
     override fun renameList(
