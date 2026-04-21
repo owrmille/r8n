@@ -47,7 +47,9 @@ import java.util.UUID
 @Import(TestObjectMapperConfiguration::class)
 class OpinionsIntegrationTests {
     private companion object {
-        val CURRENT_USER_ID: UUID = UUID.fromString("00000000-0000-0000-0000-000000000000")
+        val STRANGER: UUID = UUID.fromString("00000000-0000-0000-0000-000000000000")
+        val REQUESTER: UUID = UUID.fromString("09090909-0909-0909-0909-090909090909")
+        val OWNER: UUID = UUID.fromString("10101010-1010-1010-1010-101010101010")
 
         @Container
         @ServiceConnection
@@ -73,16 +75,16 @@ class OpinionsIntegrationTests {
 
     @BeforeEach
     fun setUp() {
-        whenever(usersInternalApi.getUserName(eq(bernardReferent.id)))
+        whenever(usersInternalApi.getUserName(eq(OWNER)))
             .thenReturn(bernardReferent.name)
-        whenever(usersInternalApi.getUserName(eq(CURRENT_USER_ID)))
+        whenever(usersInternalApi.getUserName(eq(REQUESTER)))
             .thenReturn(bernardReferent.name)
     }
 
     @Test
     @WithMockUser
     fun `get opinion works`() {
-        val accessToken = serviceTokenService.generateAccessToken(CURRENT_USER_ID, listOf("USER"))
+        val accessToken = serviceTokenService.generateAccessToken(REQUESTER, listOf("USER"))
         val requestedId = "30000000-0000-0000-0000-000000000001"
         val result =
             mockMvc
@@ -117,7 +119,7 @@ class OpinionsIntegrationTests {
     @WithMockUser
     fun `get opinion for subject works`() {
         val requestedSubjectId = "14141414-1414-1414-1414-141414141414"
-        val accessToken = serviceTokenService.generateAccessToken(CURRENT_USER_ID, listOf("USER"))
+        val accessToken = serviceTokenService.generateAccessToken(OWNER, listOf("USER"))
         val result =
             mockMvc
                 .perform(
@@ -150,7 +152,7 @@ class OpinionsIntegrationTests {
     @WithMockUser
     fun `create opinion works`() {
         val subjectId = "15151515-1515-1515-1515-151515151515"
-        val accessToken = serviceTokenService.generateAccessToken(CURRENT_USER_ID, listOf("USER"))
+        val accessToken = serviceTokenService.generateAccessToken(REQUESTER, listOf("USER"))
         val result =
             mockMvc
                 .perform(
@@ -165,7 +167,7 @@ class OpinionsIntegrationTests {
                 .andReturn()
 
         val actual: OpinionDto = objectMapper.readValue(result.response.contentAsString)
-        assertEquals(CURRENT_USER_ID, actual.owner)
+        assertEquals(REQUESTER, actual.owner)
         assertEquals(bernardReferent.name, actual.ownerName)
         assertEquals(UUID.fromString(subjectId), actual.subject)
         assertEquals(cappuccino1G.name, actual.subjectName)
@@ -178,7 +180,7 @@ class OpinionsIntegrationTests {
     @Test
     @WithMockUser
     fun `update opinion works`() {
-        val accessToken = serviceTokenService.generateAccessToken(CURRENT_USER_ID, listOf("USER"))
+        val accessToken = serviceTokenService.generateAccessToken(OWNER, listOf("USER"))
         val createResult =
             mockMvc
                 .perform(
@@ -208,7 +210,7 @@ class OpinionsIntegrationTests {
 
         val actual: OpinionDto = objectMapper.readValue(updateResult.response.contentAsString)
         assertEquals(created.id, actual.id)
-        assertEquals(CURRENT_USER_ID, actual.owner)
+        assertEquals(OWNER, actual.owner)
         assertEquals(bernardReferent.name, actual.ownerName)
         assertEquals(UUID.fromString("15151515-1515-1515-1515-151515151515"), actual.subject)
         assertEquals(cappuccino1G.name, actual.subjectName)
@@ -221,7 +223,7 @@ class OpinionsIntegrationTests {
     @Test
     @WithMockUser
     fun `delete opinion works`() {
-        val accessToken = serviceTokenService.generateAccessToken(CURRENT_USER_ID, listOf("USER"))
+        val accessToken = serviceTokenService.generateAccessToken(REQUESTER, listOf("USER"))
         val createResult =
             mockMvc
                 .perform(
@@ -254,7 +256,7 @@ class OpinionsIntegrationTests {
     @Test
     @WithMockUser
     fun `link component works`() {
-        val accessToken = serviceTokenService.generateAccessToken(CURRENT_USER_ID, listOf("USER"))
+        val accessToken = serviceTokenService.generateAccessToken(REQUESTER, listOf("USER"))
 
         val parentCreateResult =
             mockMvc
@@ -307,7 +309,7 @@ class OpinionsIntegrationTests {
     @Test
     @WithMockUser
     fun `link component is idempotent for duplicate request`() {
-        val accessToken = serviceTokenService.generateAccessToken(CURRENT_USER_ID, listOf("USER"))
+        val accessToken = serviceTokenService.generateAccessToken(REQUESTER, listOf("USER"))
 
         val parentCreateResult =
             mockMvc
@@ -369,7 +371,7 @@ class OpinionsIntegrationTests {
     @Test
     @WithMockUser
     fun `link component forbidden for non owner`() {
-        val ownerToken = serviceTokenService.generateAccessToken(CURRENT_USER_ID, listOf("USER"))
+        val ownerToken = serviceTokenService.generateAccessToken(REQUESTER, listOf("USER"))
         val otherUserToken = serviceTokenService.generateAccessToken(UUID.randomUUID(), listOf("USER"))
 
         val parentCreateResult =
@@ -400,7 +402,7 @@ class OpinionsIntegrationTests {
     @Test
     @WithMockUser
     fun `unlink component works`() {
-        val accessToken = serviceTokenService.generateAccessToken(CURRENT_USER_ID, listOf("USER"))
+        val accessToken = serviceTokenService.generateAccessToken(REQUESTER, listOf("USER"))
 
         val parentCreateResult =
             mockMvc
@@ -462,7 +464,7 @@ class OpinionsIntegrationTests {
     @Test
     @WithMockUser
     fun `unlink component forbidden for non owner`() {
-        val ownerToken = serviceTokenService.generateAccessToken(CURRENT_USER_ID, listOf("USER"))
+        val ownerToken = serviceTokenService.generateAccessToken(REQUESTER, listOf("USER"))
         val otherUserToken = serviceTokenService.generateAccessToken(UUID.randomUUID(), listOf("USER"))
 
         val parentCreateResult =
@@ -504,7 +506,7 @@ class OpinionsIntegrationTests {
     @Test
     @WithMockUser
     fun `adjust component weight works`() {
-        val accessToken = serviceTokenService.generateAccessToken(CURRENT_USER_ID, listOf("USER"))
+        val accessToken = serviceTokenService.generateAccessToken(OWNER, listOf("USER"))
 
         val parentCreateResult =
             mockMvc
@@ -570,8 +572,8 @@ class OpinionsIntegrationTests {
     @Test
     @WithMockUser
     fun `adjust component weight forbidden for non owner`() {
-        val ownerToken = serviceTokenService.generateAccessToken(CURRENT_USER_ID, listOf("USER"))
-        val otherUserToken = serviceTokenService.generateAccessToken(UUID.randomUUID(), listOf("USER"))
+        val ownerToken = serviceTokenService.generateAccessToken(OWNER, listOf("USER"))
+        val otherUserToken = serviceTokenService.generateAccessToken(STRANGER, listOf("USER"))
 
         val parentCreateResult =
             mockMvc
