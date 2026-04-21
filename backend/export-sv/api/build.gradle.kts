@@ -12,5 +12,4 @@ dependencies {
     api(project(":users-api"))
     api(project(":users-api-integration"))
     api(project(":mock-api"))
-    api(project(":core:api"))
 }
