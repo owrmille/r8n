@@ -390,9 +390,9 @@ routed-request-gdpr: ## Gateway GDPR export request with timeout (ENV=local|dock
 	timeout=30; \
 	while [ $$timeout -gt 0 ]; do \
 		status=$$(curl $$curl_args "$$protocol://$$host:$$port/api/export/status" \
-			-H "Authorization: Bearer $$(cat .access_token)" | grep -o '"state":"[^"]*"' | cut -d'"' -f4); \
+			-H "Authorization: Bearer $$(cat .access_token)" | grep -o '"status":"[^"]*"' | cut -d'"' -f4); \
 		echo "Status: $$status ($$timeout s remaining)"; \
-		if [ "$$status" = "READY" ]; then \
+		if [ "$$status" = "COMPLETED" ]; then \
 			break; \
 		fi; \
 		sleep 2; \
