@@ -10,6 +10,8 @@ vi.mock("@/lib/server-state/hooks/users", () => ({
   useUserAvatar: useUserAvatarMock,
 }));
 
+const USER_ID = "11111111-1111-1111-1111-111111111111";
+
 describe("UserAvatar", () => {
   beforeEach(() => {
     useUserAvatarMock.mockReset();
@@ -28,7 +30,7 @@ describe("UserAvatar", () => {
   it("shows initials when the user has no avatar", () => {
     useUserAvatarMock.mockReturnValue({ data: null });
 
-    render(<UserAvatar userId="user-id" name="Jane Doe" />);
+    render(<UserAvatar userId={USER_ID} name="Jane Doe" />);
 
     expect(screen.getByText("JD")).toBeInTheDocument();
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
@@ -39,7 +41,7 @@ describe("UserAvatar", () => {
       data: new Blob(["avatar"], { type: "image/png" }),
     });
 
-    render(<UserAvatar userId="user-id" name="Jane Doe" />);
+    render(<UserAvatar userId={USER_ID} name="Jane Doe" />);
 
     expect(screen.getByRole("img", { name: "Jane Doe" })).toHaveAttribute(
       "src",

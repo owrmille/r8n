@@ -121,8 +121,9 @@ describe("httpClient", () => {
       baseUrl: "/api",
       fetchFn: fetchMock,
     });
+    const userId = "11111111-1111-1111-1111-111111111111";
 
-    const response = await client.get<Blob>("/users/user-id/avatar", {
+    const response = await client.get<Blob>(`/users/${userId}/avatar`, {
       responseType: "blob",
     });
 
