@@ -6,15 +6,24 @@ import com.r8n.backend.users.api.dto.LoginRequestDto
 import com.r8n.backend.users.security.RefreshTokenCookieFactory
 import com.r8n.backend.users.service.AuthService
 import org.springframework.http.HttpHeaders
+import org.springframework.http.ResponseCookie
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
+import java.util.UUID
 
 @RestController
 class AuthController(
     private val authService: AuthService,
     private val refreshTokenCookieFactory: RefreshTokenCookieFactory,
 ) : AuthApi {
+    override fun csrf() {
+        currentResponse().addHeader(
+            HttpHeaders.SET_COOKIE,
+            createXsrfCookie().toString(),
+        )
+    }
+
     override fun login(request: LoginRequestDto): AuthenticationTokenDto {
         val tokens = authService.login(request)
         addRefreshTokenCookie(tokens.refreshToken)
@@ -52,7 +61,19 @@ class AuthController(
         )
     }
 
+    private fun createXsrfCookie() =
+        ResponseCookie
+            .from("XSRF-TOKEN", UUID.randomUUID().toString())
+            .httpOnly(false)
+            .secure(currentRequest().isSecure)
+            .path("/")
+            .build()
+
+    private fun currentRequest() = currentRequestAttributes().request
+
     private fun currentResponse() =
-        (RequestContextHolder.currentRequestAttributes() as ServletRequestAttributes).response
+        currentRequestAttributes().response
             ?: throw IllegalStateException("No current HTTP response")
+
+    private fun currentRequestAttributes() = RequestContextHolder.currentRequestAttributes() as ServletRequestAttributes
 }

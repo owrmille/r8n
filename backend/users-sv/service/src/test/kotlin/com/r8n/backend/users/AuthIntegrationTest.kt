@@ -23,6 +23,7 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -59,6 +60,7 @@ class AuthIntegrationTest {
                 .withInitScript("db/init-schema.sql")
 
         // yes, this is a duplicate from AuthApi, left intentional to detect changes
+        const val CSRF_PATH = "/api/auth/csrf"
         const val LOGIN_PATH = "/api/auth/login"
         const val REFRESH_PATH = "/api/auth/refresh"
         const val EMAIL = "test@test.test"
@@ -87,6 +89,19 @@ class AuthIntegrationTest {
         setCookieHeader
             .substringAfter("$REFRESH_TOKEN_COOKIE_NAME=")
             .substringBefore(";")
+
+    @Test
+    fun `csrf endpoint initializes xsrf cookie without authentication`() {
+        val response =
+            mockMvc
+                .perform(get(CSRF_PATH))
+                .andExpect(status().isOk)
+                .andReturn()
+
+        val setCookieHeader = response.response.getHeader(HttpHeaders.SET_COOKIE)!!
+        assertTrue(setCookieHeader.contains("XSRF-TOKEN="))
+        assertTrue(setCookieHeader.contains("Path=/"))
+    }
 
     @Test
     @Transactional

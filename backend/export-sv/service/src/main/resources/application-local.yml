@@ -1,0 +1,34 @@
+server:
+  port: ${SERVICES_EXPORT_PORT}
+
+spring:
+  application.name: export-sv
+  liquibase:
+    enabled: true
+    change-log: db/changelog/db.changelog-master.sql
+    default-schema: export
+
+datasource:
+  driver-class-name: org.postgresql.Driver
+  url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_HOST_PORT}/${DATABASE_NAME}?currentSchema=export
+  username: ${DATABASE_USERNAME}
+  password: ${DATABASE_PASSWORD}
+
+jpa:
+  defer-datasource-initialization: false
+  hibernate:
+    ddl-auto: validate
+  sql:
+    init:
+      mode: never
+
+services:
+  users:
+    url: ${INTERSERVICE_PROTOCOL}://${SERVICES_USERS_HOST}:${SERVICES_USERS_PORT}
+  mock:
+    url: ${INTERSERVICE_PROTOCOL}://${SERVICES_MOCK_HOST}:${SERVICES_MOCK_PORT}
+
+r8n:
+  security:
+    jwt:
+      public-key: ${JWT_PUBLIC_KEY}

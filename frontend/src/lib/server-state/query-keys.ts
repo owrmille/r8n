@@ -80,9 +80,16 @@ export const selectorsKeys = {
   ] as const,
 };
 
+export const usersKeys = {
+  all: ["users"] as const,
+  me: () => ["users", "me"] as const,
+  detail: (id: string) => ["users", "detail", id] as const,
+};
+
 export const queryKeys = {
   opinions: opinionsKeys,
   opinionLists: opinionListsKeys,
   accessRequests: accessRequestsKeys,
   selectors: selectorsKeys,
+  users: usersKeys,
 };
