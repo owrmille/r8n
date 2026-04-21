@@ -1,5 +1,6 @@
 package com.r8n.backend.users.service
 
+import com.r8n.backend.security.CurrentUserIdentifier.getCurrentUserId
 import com.r8n.backend.users.persistence.ProfileAvatarPersistence
 import com.r8n.backend.users.provider.database.ProfileAvatarRepository
 import org.springframework.beans.factory.annotation.Value
@@ -25,7 +26,11 @@ class UserAvatarService(
     }
 
     @Transactional
-    fun uploadAvatar(
+    fun uploadMyAvatar(file: MultipartFile) {
+        uploadAvatar(getCurrentUserId(), file)
+    }
+
+    private fun uploadAvatar(
         userId: UUID,
         file: MultipartFile,
     ) {
@@ -74,7 +79,11 @@ class UserAvatarService(
     }
 
     @Transactional
-    fun deleteAvatar(userId: UUID) {
+    fun deleteMyAvatar() {
+        deleteAvatar(getCurrentUserId())
+    }
+
+    private fun deleteAvatar(userId: UUID) {
         val avatar = profileAvatarRepository.findByIdOrNull(userId) ?: return
 
         profileAvatarRepository.delete(avatar)
