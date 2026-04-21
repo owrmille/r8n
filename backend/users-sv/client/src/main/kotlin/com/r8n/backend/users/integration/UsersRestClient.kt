@@ -30,7 +30,7 @@ class UsersRestClient(
             .body(UserDto::class.java)!!
 
     override fun getSessionsForUser(
-        userId: UUID,
+        id: UUID,
         page: PageRequestDto?,
     ): PageResponseDto<UserSessionDto> =
         restClient
@@ -40,7 +40,7 @@ class UsersRestClient(
                     .path(SESSIONS_PATH)
                     .queryParam("page", page?.page ?: 0)
                     .queryParam("size", page?.size ?: 20)
-                    .build(userId)
+                    .build(id)
             }.retrieve()
             .body(object : ParameterizedTypeReference<PageResponseDto<UserSessionDto>>() {})!!
 }
