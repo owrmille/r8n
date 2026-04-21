@@ -29,6 +29,9 @@ logging:
   level:
     root: ERROR
 
+services:
+  mock:
+    url: ${INTERSERVICE_PROTOCOL}://${SERVICES_MOCK_HOST}:${SERVICES_MOCK_PORT}
 r8n:
   security:
     public-paths: /api/auth/**

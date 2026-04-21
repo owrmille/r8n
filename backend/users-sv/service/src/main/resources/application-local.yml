@@ -25,6 +25,9 @@ spring:
   sql:
     init:
       mode: never
+services:
+  mock:
+    url: ${INTERSERVICE_PROTOCOL}://${SERVICES_MOCK_HOST}:${SERVICES_MOCK_PORT}
 r8n:
   security:
     jwt:
