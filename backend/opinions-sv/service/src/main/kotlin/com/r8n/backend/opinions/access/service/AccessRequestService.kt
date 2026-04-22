@@ -23,7 +23,7 @@ class AccessRequestService(
         ownerId: UUID?,
         status: RequestStatusEnum?,
         pageable: Pageable,
-    ): Page<AccessRequest> = repository.findAllByFilters(listId, requesterId, status, pageable).map { it.toDomain() }
+    ): Page<AccessRequest> = repository.findAllByFilters(listId, requesterId, ownerId, status, pageable).map { it.toDomain() }
 
     private fun AccessRequestPersistence.toDomain(): AccessRequest =
         AccessRequest(
@@ -119,7 +119,10 @@ class AccessRequestService(
     }
 
     @Transactional
-    fun declineRequest(requestId: UUID, ownerId: UUID): AccessRequest {
+    fun declineRequest(
+        requestId: UUID,
+        ownerId: UUID,
+    ): AccessRequest {
         val request =
             repository
                 .findById(requestId)
@@ -143,7 +146,10 @@ class AccessRequestService(
     }
 
     @Transactional
-    fun hideRequest(requestId: UUID, ownerId: UUID): AccessRequest {
+    fun hideRequest(
+        requestId: UUID,
+        ownerId: UUID,
+    ): AccessRequest {
         val request =
             repository
                 .findById(requestId)
