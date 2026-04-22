@@ -46,20 +46,22 @@ class AccessRequestRepositoryTest {
         val owner2 = UUID.randomUUID()
         val requester = UUID.randomUUID()
 
-        val list1 = opinionListRepository.save(
-            OpinionListPersistence(
-                owner = owner1,
-                name = "List 1",
-                privacy = OpinionListPrivacyEnum.SEARCHABLE
+        val list1 =
+            opinionListRepository.save(
+                OpinionListPersistence(
+                    owner = owner1,
+                    name = "List 1",
+                    privacy = OpinionListPrivacyEnum.SEARCHABLE,
+                ),
             )
-        )
-        val list2 = opinionListRepository.save(
-            OpinionListPersistence(
-                owner = owner2,
-                name = "List 2",
-                privacy = OpinionListPrivacyEnum.SEARCHABLE
+        val list2 =
+            opinionListRepository.save(
+                OpinionListPersistence(
+                    owner = owner2,
+                    name = "List 2",
+                    privacy = OpinionListPrivacyEnum.SEARCHABLE,
+                ),
             )
-        )
 
         repository.save(
             AccessRequestPersistence(
@@ -67,8 +69,8 @@ class AccessRequestRepositoryTest {
                 requester = requester,
                 status = RequestStatusEnum.SENT,
                 createdAt = Instant.now(),
-                updatedAt = Instant.now()
-            )
+                updatedAt = Instant.now(),
+            ),
         )
         repository.save(
             AccessRequestPersistence(
@@ -76,8 +78,8 @@ class AccessRequestRepositoryTest {
                 requester = requester,
                 status = RequestStatusEnum.SENT,
                 createdAt = Instant.now(),
-                updatedAt = Instant.now()
-            )
+                updatedAt = Instant.now(),
+            ),
         )
 
         val owner1Requests = repository.findAllByFilters(null, null, owner1, null, Pageable.unpaged())

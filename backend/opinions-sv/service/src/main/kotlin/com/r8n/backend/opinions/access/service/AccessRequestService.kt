@@ -23,7 +23,10 @@ class AccessRequestService(
         ownerId: UUID?,
         status: RequestStatusEnum?,
         pageable: Pageable,
-    ): Page<AccessRequest> = repository.findAllByFilters(listId, requesterId, ownerId, status, pageable).map { it.toDomain() }
+    ): Page<AccessRequest> =
+        repository.findAllByFilters(listId, requesterId, ownerId, status, pageable).map {
+            it.toDomain()
+        }
 
     private fun AccessRequestPersistence.toDomain(): AccessRequest =
         AccessRequest(
