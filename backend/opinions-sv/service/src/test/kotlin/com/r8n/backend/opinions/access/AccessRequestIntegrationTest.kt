@@ -1,8 +1,10 @@
 package com.r8n.backend.opinions.access
 
+import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.opinions.TestObjectMapperConfiguration
 import com.r8n.backend.opinions.access.database.AccessRequestRepository
 import com.r8n.backend.opinions.api.access.dto.AccessRequestDto
+import com.r8n.backend.opinions.api.access.dto.RequestStatusEnumDto
 import com.r8n.backend.opinions.lists.database.OpinionListRepository
 import com.r8n.backend.opinions.lists.database.OpinionsToOpinionListsRepository
 import com.r8n.backend.opinions.lists.domain.OpinionListPrivacyEnum
@@ -20,6 +22,7 @@ import com.r8n.backend.opinions.opinions.persistence.OpinionSubjectPersistence
 import com.r8n.backend.opinions.opinions.persistence.ReferentPersistence
 import com.r8n.backend.security.ServiceTokenService
 import com.r8n.backend.users.integration.api.UsersInternalApi
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
@@ -225,6 +228,23 @@ class AccessRequestIntegrationTest {
                     .header("Authorization", "Bearer $ownerToken")
                     .with(csrf()),
             ).andExpect(status().isOk)
+
+        // Step 4b: Requester asks for its status, and it shows up as pending for him, not hidden
+        val outgoingResult =
+            mockMvc
+                .perform(
+                    get("/api/access-requests/outgoing")
+                        .header("Authorization", "Bearer $requesterToken")
+                        .param("forListId", listId.toString())
+                        .param("page", "0")
+                        .param("size", "10")
+                        .with(csrf()),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val outgoingPage: PageResponseDto<AccessRequestDto> = objectMapper.readValue(outgoingResult.response.contentAsString)
+        val hiddenRequest = outgoingPage.items.find { it.id == requestId }
+        assertEquals(RequestStatusEnumDto.SENT, hiddenRequest?.status, "Requester should see SENT status even if HIDDEN by owner")
 
         // Step 5: Requester tries to access the opinion and fails (403 Forbidden)
         mockMvc
