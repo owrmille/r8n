@@ -13,6 +13,10 @@ interface UsersInternalApi {
         const val ID_PATH = "/api/internal/users/{id}"
         const val NAME_PATH = "$ID_PATH/name"
         const val SESSIONS_PATH = "$ID_PATH/sessions"
+        const val IS_ANY_MODERATOR_PATH = "$ID_PATH/is-any-moderator"
+        const val IS_HUMAN_MODERATOR_PATH = "$ID_PATH/is-human-moderator"
+        const val IS_AI_MODERATOR_PATH = "$ID_PATH/is-ai-moderator"
+        const val IS_ADMIN_PATH = "$ID_PATH/is-admin"
     }
 
     @GetMapping(NAME_PATH)
@@ -30,4 +34,24 @@ interface UsersInternalApi {
         @PathVariable id: UUID,
         page: PageRequestDto? = null,
     ): PageResponseDto<UserSessionDto>
+
+    @GetMapping(IS_ANY_MODERATOR_PATH)
+    fun isAnyModerator(
+        @PathVariable id: UUID,
+    ): Boolean
+
+    @GetMapping(IS_HUMAN_MODERATOR_PATH)
+    fun isHumanModerator(
+        @PathVariable id: UUID,
+    ): Boolean
+
+    @GetMapping(IS_AI_MODERATOR_PATH)
+    fun isAiModerator(
+        @PathVariable id: UUID,
+    ): Boolean
+
+    @GetMapping(IS_ADMIN_PATH)
+    fun isAdmin(
+        @PathVariable id: UUID,
+    ): Boolean
 }

@@ -15,15 +15,15 @@ import com.r8n.backend.users.service.UserService
 import com.r8n.backend.users.service.UserSessionService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 import java.util.UUID
 
-@Service
+@Component
 class UserFacade(
     private val userService: UserService,
     private val sessionService: UserSessionService,
 ) {
-    fun getMyName(): UsernameDto = userService.getMyName().toDto()
+    fun getMyName(userId: UUID): UsernameDto = userService.getMyName(userId).toDto()
 
     private fun Username.toDto() = UsernameDto(id, name)
 

@@ -44,7 +44,9 @@ import java.util.UUID
 @Testcontainers
 @AutoConfigureJsonTesters
 @AutoConfigureMockMvc
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    webEnvironment = WebEnvironment.RANDOM_PORT,
+)
 @Import(TestObjectMapperConfiguration::class)
 class UsersIntegrationTests {
     private companion object {

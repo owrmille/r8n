@@ -1,9 +1,11 @@
 package com.r8n.backend.users
 
+import com.r8n.backend.opinions.api.access.IncomingAccessRequestApi
+import com.r8n.backend.opinions.api.access.OutgoingAccessRequestApi
+import com.r8n.backend.opinions.integration.api.OpinionListsInternalApi
 import com.r8n.backend.users.api.AuthApi.Companion.REFRESH_TOKEN_COOKIE_NAME
 import com.r8n.backend.users.api.dto.LoginRequestDto
 import com.r8n.backend.users.provider.database.PIIRepository
-import com.r8n.backend.users.provider.database.UserRepository
 import com.r8n.backend.users.provider.database.UserRoleAssignmentRepository
 import jakarta.persistence.EntityManager
 import jakarta.servlet.http.Cookie
@@ -19,6 +21,7 @@ import org.springframework.http.MediaType
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
@@ -38,6 +41,13 @@ import java.util.UUID
 @AutoConfigureMockMvc
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(TestObjectMapperConfiguration::class)
+@MockitoBean(
+    types = [
+        IncomingAccessRequestApi::class,
+        OutgoingAccessRequestApi::class,
+        OpinionListsInternalApi::class,
+    ],
+)
 class AuthIntegrationTest {
     private companion object {
         @Container
@@ -62,9 +72,6 @@ class AuthIntegrationTest {
 
     @Autowired
     lateinit var objectMapper: ObjectMapper
-
-    @Autowired
-    lateinit var userRepository: UserRepository
 
     @Autowired
     lateinit var piiRepository: PIIRepository
@@ -185,7 +192,7 @@ class AuthIntegrationTest {
 
         val loginRequest = LoginRequestDto(EMAIL, PASSWORD)
 
-        // 1. Login to get first refresh token
+        // 1. Login to get the first refresh token
         val loginResponse =
             mockMvc
                 .perform(
@@ -211,7 +218,7 @@ class AuthIntegrationTest {
         val secondRefreshToken = extractRefreshToken(firstRefreshResponse.response.getHeader(HttpHeaders.SET_COOKIE)!!)
         assertTrue(firstRefreshToken != secondRefreshToken)
 
-        // 3. Second refresh with NEW token works
+        // 3. Second refresh with a NEW token works
         mockMvc
             .perform(
                 post(REFRESH_PATH)
@@ -219,7 +226,7 @@ class AuthIntegrationTest {
                     .cookie(Cookie(REFRESH_TOKEN_COOKIE_NAME, secondRefreshToken)),
             ).andExpect(status().isOk)
 
-        // 4. Reuse first refresh token - should FAIL and be rejected (Compromise detection)
+        // 4. Reuse the first refresh token - should FAIL and be rejected (Compromise detection)
         mockMvc
             .perform(
                 post(REFRESH_PATH)

@@ -23,6 +23,18 @@ class InterserviceController(
     override fun getUserName(id: UUID) = userService.getName(id)
 
     @PreAuthorize(Authority.IS_USER_OR_SERVICE)
+    override fun isAnyModerator(id: UUID): Boolean = userService.isAnyModerator(id)
+
+    @PreAuthorize(Authority.IS_USER_OR_SERVICE)
+    override fun isHumanModerator(id: UUID): Boolean = userService.isHumanModerator(id)
+
+    @PreAuthorize(Authority.IS_USER_OR_SERVICE)
+    override fun isAiModerator(id: UUID): Boolean = userService.isAiModerator(id)
+
+    @PreAuthorize(Authority.IS_USER_OR_SERVICE)
+    override fun isAdmin(id: UUID): Boolean = userService.isAdmin(id)
+
+    @PreAuthorize(Authority.IS_USER_OR_SERVICE)
     override fun getUser(id: UUID): UserDto = userFacade.getUser(id)
 
     @PreAuthorize(Authority.IS_USER_OR_SERVICE)

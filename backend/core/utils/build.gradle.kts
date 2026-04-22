@@ -9,4 +9,5 @@ description = "misc stuff for backend"
 dependencies {
     implementation(project(":core:api"))
     implementation(libs.spring.data.commons)
+    implementation(libs.spring.boot.starter.test)
 }

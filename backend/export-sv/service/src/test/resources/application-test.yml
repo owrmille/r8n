@@ -10,6 +10,8 @@ spring:
 services:
   users:
     url: http://localhost:8080
+  opinions:
+    url: http://localhost:8083
   mock:
     url: http://localhost:8090
 

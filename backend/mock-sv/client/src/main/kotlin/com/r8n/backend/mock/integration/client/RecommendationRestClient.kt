@@ -11,8 +11,8 @@ import com.r8n.backend.mock.api.RecommendationApi.Companion.OPINION_LISTS_PATH
 import com.r8n.backend.mock.api.RecommendationApi.Companion.SUBJECTS_PATH
 import com.r8n.backend.mock.api.RecommendationApi.Companion.UNHIDE_LIST_PATH
 import com.r8n.backend.mock.api.RecommendationApi.Companion.UNHIDE_SUBJECT_PATH
-import com.r8n.backend.mock.api.dto.about.OpinionSubjectDto
-import com.r8n.backend.mock.api.dto.list.OpinionListSummaryDto
+import com.r8n.backend.opinions.api.lists.dto.OpinionListSummaryDto
+import com.r8n.backend.opinions.api.opinions.dto.OpinionSubjectDto
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.body
 import java.util.UUID
