@@ -112,11 +112,11 @@ const OpinionListPage = () => {
                 <tbody>
                   {summaries.map((summary) => (
                     <ItemRow
-                      key={summary.id}
+                      key={summary.subject}
                       listId={listId!}
                       summary={summary}
-                      isExpanded={expandedItem === summary.id}
-                      onToggle={() => setExpandedItem(expandedItem === summary.id ? null : summary.id)}
+                      isExpanded={expandedItem === summary.subject}
+                      onToggle={() => setExpandedItem(expandedItem === summary.subject ? null : summary.subject)}
                       onAdjustWeight={handleAdjustWeight}
                       onAddReview={handleAddReview}
                       isAdjustingWeight={adjustWeight.isPending}
@@ -185,7 +185,7 @@ const ItemRow = ({
           {summary.ownMark !== null ? summary.ownMark.toFixed(1) : "—"}
         </td>
         <td className="px-4 py-3 font-mono font-semibold text-foreground">
-          {summary.synchronizedMark.toFixed(2)}
+          {summary.componentMark !== null ? summary.componentMark.toFixed(2) : "—"}
         </td>
         <td className="px-4 py-3">
           <ChevronDown

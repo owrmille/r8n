@@ -119,7 +119,7 @@ const Profile = () => {
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {lists.map((list) => (
-                    <Link key={list.id} to={`/list/${list.id}`}>
+                    <Link key={list.listId} to={`/list/${list.listId}`}>
                       <div className="rounded-2xl border border-border bg-card p-4 hover:bg-muted/30 transition-colors">
                         <p className="font-medium text-foreground text-sm">{list.listName}</p>
                       </div>
