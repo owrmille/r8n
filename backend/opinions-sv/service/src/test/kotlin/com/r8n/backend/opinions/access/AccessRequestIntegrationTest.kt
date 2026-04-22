@@ -242,9 +242,16 @@ class AccessRequestIntegrationTest {
                 ).andExpect(status().isOk)
                 .andReturn()
 
-        val outgoingPage: PageResponseDto<AccessRequestDto> = objectMapper.readValue(outgoingResult.response.contentAsString)
+        val outgoingPage: PageResponseDto<AccessRequestDto> =
+            objectMapper.readValue(
+                outgoingResult.response.contentAsString,
+            )
         val hiddenRequest = outgoingPage.items.find { it.id == requestId }
-        assertEquals(RequestStatusEnumDto.SENT, hiddenRequest?.status, "Requester should see SENT status even if HIDDEN by owner")
+        assertEquals(
+            RequestStatusEnumDto.SENT,
+            hiddenRequest?.status,
+            "Requester should see SENT status even if HIDDEN by owner",
+        )
 
         // Step 5: Requester tries to access the opinion and fails (403 Forbidden)
         mockMvc
