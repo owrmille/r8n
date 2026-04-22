@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Search } from "lucide-react";
 import OpinionListCard from "@/components/OpinionListCard";
-import ReviewerAvatar from "@/components/ReviewerAvatar";
+import UserAvatar from "@/components/UserAvatar";
 import { QueryState } from "@/components/server-state/QueryState";
 import { Link } from "react-router-dom";
 import { useSearchOpinionLists } from "@/lib/server-state/hooks/opinion-lists";
@@ -65,7 +65,7 @@ const Discover = () => {
                 to={`/profile/${r.id}`}
                 className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-shadow hover:shadow-premium"
               >
-                <ReviewerAvatar name={r.name} size="md" />
+                <UserAvatar name={r.name} size="md" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">{r.name}</p>
                   <p className="text-xs text-muted-foreground">{r.bio}</p>
@@ -102,6 +102,7 @@ const Discover = () => {
                   title={list.listName}
                   description=""
                   reviewCount={list.opinionsCount}
+                  authorId={list.owner}
                   authorName={list.ownerName}
                   hasAccess={false}
                 />

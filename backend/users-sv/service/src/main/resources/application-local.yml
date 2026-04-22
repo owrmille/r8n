@@ -33,3 +33,7 @@ r8n:
     jwt:
       private-key: ${JWT_PRIVATE_KEY}
       public-key: ${JWT_PUBLIC_KEY}
+  storage:
+    avatar:
+      local-root: ${AVATAR_STORAGE_LOCAL_ROOT}
+      max-size: ${AVATAR_STORAGE_MAX_SIZE}

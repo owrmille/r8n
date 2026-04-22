@@ -28,15 +28,15 @@ frontend_npx() { if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NOD
     prebuild-jars prepare-artifacts verify-artifacts docker-build docker-up \
     docker-certs docker-certs-force internal-certs internal-certs-force internal-certs-clean docker-certs-clean docker-secrets-clean docker-secrets-init edge-certs edge-certs-force \
     docker-down docker-logs clean-artifacts ensure-log-dirs clean-logs \
-    routed-request-opinion routed-request-mock routed-request-gdpr direct-request-opinion direct-request-mock get-token \
+    get-token refresh-token logout routed-request-opinion routed-request-mock routed-request-user-profile routed-request-gdpr direct-request-opinion direct-request-mock \
     https-routed-request-opinion https-routed-request-mock https-routed-request-gdpr \
-    docker-database-drop-volume-personal docker-database-drop-volume-campus docker-database-create-data-folder docker-database-run docker-database-connect \
+    docker-database-create-data-folder docker-database-drop-volume-personal docker-database-drop-volume-campus docker-database-run docker-database-connect \
     build-opinions who-ate-all-the-space clean-the-fuck-out-of-this-campus-machine \
     frontend-install frontend-install-all frontend-check-node frontend-dev frontend-build frontend-lint \
     frontend-test frontend-test-unit frontend-test-e2e frontend-test-e2e-ui frontend-test-e2e-api frontend-clean frontend-clean-all frontend-cert frontend-cert-clean \
-    clean fclean re move-caches-to-goinfre gradle-%-bootJar check-makefile \
-    lint-backend test-backend test-frontend test-frontend-prepare test-e2e \
-    test-github test-github-backend test-github-frontend test-github-e2e
+    lint-backend test-backend test-frontend-prepare test-frontend test-e2e \
+    test-github-backend test-github-frontend test-github-e2e test-github \
+    clean fclean re move-caches-to-goinfre gradle-%-bootJar check-makefile
 
 ##@ Docker
 docker-up: docker-build ensure-log-dirs docker-certs ## Start local Docker stack (builds images, ensures logs, generates certs)
@@ -223,7 +223,7 @@ $(addprefix local-stop-,$(SERVICES)): local-stop-%: ## Stop one local backend se
 
 ##@ Frontend
 frontend-dev: frontend-install ## Start Vite dev server
-	@bash -lc '$(FRONTEND_SHELL) NODE_EXTRA_CA_CERTS="$(FRONTEND_GATEWAY_CERT)" frontend_npm run dev'
+	@bash -lc '$(LOAD_LOCAL_ENV) $(FRONTEND_SHELL) NODE_EXTRA_CA_CERTS="$(FRONTEND_GATEWAY_CERT)" frontend_npm run dev'
 
 ##@ Smoke tests
 
@@ -422,23 +422,23 @@ frontend-check-node: ## Check Node.js version (attempts nvm if too old)
 	@FRONTEND_NODE_VERSION="$(FRONTEND_NODE_VERSION)" ./scripts/frontend-check-node.sh
 
 frontend-build: frontend-install ## Build frontend dist (installs deps if missing)
-	@bash -lc '$(FRONTEND_SHELL) [ -d node_modules ] || frontend_npm ci; frontend_npm run build'
+	@bash -lc '$(LOAD_LOCAL_ENV) $(FRONTEND_SHELL) [ -d node_modules ] || frontend_npm ci; frontend_npm run build'
 
 frontend-lint: frontend-check-node ## Run frontend lint
-	@bash -lc '$(FRONTEND_SHELL) frontend_npm run lint'
+	@bash -lc '$(LOAD_LOCAL_ENV) $(FRONTEND_SHELL) frontend_npm run lint'
 
 frontend-test-unit: frontend-check-node ## Run frontend unit tests
-	@bash -lc '$(FRONTEND_SHELL) frontend_npm run test:unit'
+	@bash -lc '$(LOAD_LOCAL_ENV) $(FRONTEND_SHELL) frontend_npm run test:unit'
 
 frontend-test: frontend-test-unit frontend-test-e2e ## Run all frontend tests
 
 frontend-test-e2e: frontend-test-e2e-ui frontend-test-e2e-api ## Run all frontend E2E tests
 
 frontend-test-e2e-ui: frontend-check-node ## Run frontend Playwright UI tests
-	@bash -lc '$(FRONTEND_SHELL) frontend_npm run test:e2e -- --project ui'
+	@bash -lc '$(LOAD_LOCAL_ENV) $(FRONTEND_SHELL) frontend_npm run test:e2e -- --project ui'
 
 frontend-test-e2e-api: frontend-check-node ## Run frontend Playwright API tests
-	@bash -lc '$(FRONTEND_SHELL) frontend_npm run test:e2e -- --project api'
+	@bash -lc '$(LOAD_LOCAL_ENV) $(FRONTEND_SHELL) frontend_npm run test:e2e -- --project api'
 
 frontend-clean: ## Remove frontend build output, cache, and test artifacts
 	rm -rf $(FRONTEND_DIR)/dist $(FRONTEND_DIR)/node_modules/.vite $(FRONTEND_DIR)/playwright-report $(FRONTEND_DIR)/test-results $(FRONTEND_DIR)/coverage
@@ -497,9 +497,11 @@ test-frontend-prepare:
 	cd frontend && npm ci
 
 test-frontend: test-frontend-prepare
+	$(LOAD_LOCAL_ENV) \
 	cd frontend && npm run type-check && npx eslint . --max-warnings=0 && npm run test:unit -- --run && npm run build-only
 
 test-e2e:
+	$(LOAD_LOCAL_ENV) \
 	cd frontend && npm run test:e2e
 
 ##@ entrypoints

@@ -16,6 +16,10 @@ export interface UserProfileDto {
   location: string | null;
 }
 
+export interface UploadMyAvatarRequestDto {
+  file: File;
+}
+
 export function createUsersApi(client: HttpClient = httpClient) {
   return {
     getMe(): Promise<UsernameDto> {
@@ -24,6 +28,28 @@ export function createUsersApi(client: HttpClient = httpClient) {
 
     getUser(id: Uuid): Promise<UserProfileDto> {
       return client.get<UserProfileDto>(`/users/${id}`, { auth: "required" });
+    },
+
+    getUserAvatar(id: Uuid): Promise<Blob | undefined> {
+      return client.get<Blob | undefined>(`/users/${id}/avatar`, {
+        auth: "required",
+        headers: { Accept: "image/*" },
+        responseType: "blob",
+      });
+    },
+
+    uploadMyAvatar(request: UploadMyAvatarRequestDto): Promise<void> {
+      const formData = new FormData();
+      formData.append("file", request.file);
+
+      return client.post<void, FormData>("/users/me/avatar", {
+        auth: "required",
+        body: formData,
+      });
+    },
+
+    deleteMyAvatar(): Promise<void> {
+      return client.delete<void>("/users/me/avatar", { auth: "required" });
     },
   };
 }
