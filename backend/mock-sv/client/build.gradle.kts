@@ -8,6 +8,7 @@ description = "mock service integration package as entry point for other service
 
 dependencies {
     implementation(project(":core:security"))
+    implementation(project(":messaging-api"))
     implementation(project(":mock-api"))
     implementation(project(":mock-api-integration"))
 }

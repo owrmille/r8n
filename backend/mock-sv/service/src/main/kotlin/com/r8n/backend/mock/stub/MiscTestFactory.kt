@@ -1,6 +1,6 @@
 package com.r8n.backend.mock.stub
 
-import com.r8n.backend.mock.api.dto.SupportThreadDto
+import com.r8n.backend.messaging.api.dto.SupportThreadDto
 import java.util.UUID
 
 object MiscTestFactory {

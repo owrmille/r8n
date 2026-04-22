@@ -1,12 +1,12 @@
-package com.r8n.backend.mock.api
+package com.r8n.backend.messaging.api
 
 import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
-import com.r8n.backend.mock.api.dto.SupportThreadDto
-import com.r8n.backend.mock.api.dto.messaging.CreateSupportMessageRequestDto
-import com.r8n.backend.mock.api.dto.messaging.CreateSupportThreadRequestDto
-import com.r8n.backend.mock.api.dto.messaging.SupportMessageDto
-import com.r8n.backend.mock.api.dto.messaging.SupportThreadSummaryDto
+import com.r8n.backend.messaging.api.dto.SupportThreadDto
+import com.r8n.backend.messaging.api.dto.messaging.CreateSupportMessageRequestDto
+import com.r8n.backend.messaging.api.dto.messaging.CreateSupportThreadRequestDto
+import com.r8n.backend.messaging.api.dto.messaging.SupportMessageDto
+import com.r8n.backend.messaging.api.dto.messaging.SupportThreadSummaryDto
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping

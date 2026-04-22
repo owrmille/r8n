@@ -1,14 +1,12 @@
 package com.r8n.backend.mock.integration.configuration
 
 import com.r8n.backend.mock.api.IncomingAccessRequestApi
-import com.r8n.backend.mock.api.MessagingApi
 import com.r8n.backend.mock.api.OpinionListApi
 import com.r8n.backend.mock.api.OutgoingAccessRequestApi
 import com.r8n.backend.mock.api.RecommendationApi
 import com.r8n.backend.mock.api.SelectorApi
 import com.r8n.backend.mock.integration.api.OpinionListInternalApi
 import com.r8n.backend.mock.integration.client.IncomingAccessRequestRestClient
-import com.r8n.backend.mock.integration.client.MessagingRestClient
 import com.r8n.backend.mock.integration.client.OpinionListInternalRestClient
 import com.r8n.backend.mock.integration.client.OpinionListRestClient
 import com.r8n.backend.mock.integration.client.OutgoingAccessRequestRestClient
@@ -59,11 +57,6 @@ class MockRestClientConfiguration {
     fun selectorRestClient(
         @Qualifier("mockRestBaseClient") mockRestBaseClient: RestClient,
     ): SelectorApi = SelectorRestClient(mockRestBaseClient)
-
-    @Bean
-    fun messagingRestClient(
-        @Qualifier("mockRestBaseClient") mockRestBaseClient: RestClient,
-    ): MessagingApi = MessagingRestClient(mockRestBaseClient)
 
     @Bean
     fun opinionListInternalRestClient(

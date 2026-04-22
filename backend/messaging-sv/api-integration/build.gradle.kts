@@ -2,11 +2,10 @@ plugins {
     id("convention-api")
 }
 
-group = "com.r8n.backend.mock"
+group = "com.r8n.backend.messaging"
 version = "0.0.1-SNAPSHOT"
-description = "mock service API"
+description = "messaging service API for other services' use"
 
 dependencies {
     implementation(project(":messaging-api"))
-    implementation(project(":opinions-api"))
 }

@@ -2,11 +2,11 @@ package com.r8n.backend.mock.integration.client
 
 import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
+import com.r8n.backend.messaging.api.dto.SupportThreadDto
 import com.r8n.backend.mock.api.SelectorApi
 import com.r8n.backend.mock.api.SelectorApi.Companion.DISAGREE_PATH
 import com.r8n.backend.mock.api.SelectorApi.Companion.FOR_SUBJECT_PATH
 import com.r8n.backend.mock.api.SelectorApi.Companion.FOR_URL_PATH
-import com.r8n.backend.mock.api.dto.SupportThreadDto
 import com.r8n.backend.mock.api.dto.about.SelectorDto
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.body

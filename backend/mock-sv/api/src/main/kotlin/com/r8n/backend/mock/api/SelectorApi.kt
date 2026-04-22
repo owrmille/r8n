@@ -2,7 +2,7 @@ package com.r8n.backend.mock.api
 
 import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
-import com.r8n.backend.mock.api.dto.SupportThreadDto
+import com.r8n.backend.messaging.api.dto.SupportThreadDto
 import com.r8n.backend.mock.api.dto.about.SelectorDto
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
