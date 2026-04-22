@@ -7,10 +7,16 @@ export interface UsernameDto {
   name: string;
 }
 
+export type UserStatusEnumDto =
+  | "ACTIVE"
+  | "SUSPENDED"
+  | "DELETION_PENDING"
+  | "DELETED";
+
 export interface UserProfileDto {
   id: Uuid;
   name: string;
-  status: string;
+  status: UserStatusEnumDto;
   lastOnline: string | null;
   about: string | null;
   location: string | null;
