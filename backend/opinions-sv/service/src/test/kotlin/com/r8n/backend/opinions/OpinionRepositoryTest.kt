@@ -1,8 +1,8 @@
 package com.r8n.backend.opinions
 
-import com.r8n.backend.opinions.domain.OpinionStatusEnum
-import com.r8n.backend.opinions.persistence.OpinionPersistence
-import com.r8n.backend.opinions.provider.database.OpinionRepository
+import com.r8n.backend.opinions.opinions.database.OpinionRepository
+import com.r8n.backend.opinions.opinions.domain.OpinionStatusEnum
+import com.r8n.backend.opinions.opinions.persistence.OpinionPersistence
 import com.r8n.backend.users.integration.api.UsersInternalApi
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test

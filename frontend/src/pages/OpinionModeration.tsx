@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Check, X } from "lucide-react";
 import RatingBadge from "@/components/RatingBadge";
-import ReviewerAvatar from "@/components/ReviewerAvatar";
+import UserAvatar from "@/components/UserAvatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -193,7 +193,7 @@ const OpinionModeration = () => {
                   <div className="border-b border-border px-5 py-4 md:px-6">
                     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                       <div className="flex items-start gap-3">
-                        <ReviewerAvatar name={opinion.reviewerName} size="md" />
+                        <UserAvatar name={opinion.reviewerName} size="md" />
                         <div className="min-w-0">
                           <div className="mb-2 flex flex-wrap items-center gap-2">
                             <h3 className="text-base font-semibold text-foreground">{opinion.subjectName}</h3>

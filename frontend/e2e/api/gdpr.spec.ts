@@ -1,10 +1,12 @@
 import { test, expect } from "playwright/test";
 
-test.describe("GDPR / Users API", () => {
-  const GDPR_EXPORT_PATH = "/api/users/export";
+test.describe("GDPR / Export API", () => {
+  const EXPORT_START_PATH = "/api/export/start";
+  const EXPORT_STATUS_PATH = "/api/export/status";
+  const EXPORT_DOWNLOAD_PATH = "/api/export/download";
 
   test("should return 401 Unauthorized when no token is provided", async ({ request }) => {
-    const response = await request.get(GDPR_EXPORT_PATH);
+    const response = await request.post(EXPORT_START_PATH);
     expect(response.status()).toBe(401);
   });
 
@@ -29,14 +31,31 @@ test.describe("GDPR / Users API", () => {
     const { accessToken } = await loginResponse.json();
 
     // 3. Use the token to get GDPR data
-    const response = await request.get(GDPR_EXPORT_PATH, {
+    const startResponse = await request.post(EXPORT_START_PATH, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
     });
+    expect(startResponse.status()).toBe(202); // Accepted
 
-    expect(response.status()).toBe(200);
-    const data = await response.json();
+    // 4. Check status (with stub data, it should be immediately ready)
+    const statusResponse = await request.get(EXPORT_STATUS_PATH, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    expect(statusResponse.status()).toBe(200);
+    const status = await statusResponse.json();
+    expect(status).toHaveProperty("status", "COMPLETED");
+
+    // 5. Download data
+    const downloadResponse = await request.get(EXPORT_DOWNLOAD_PATH, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    expect(downloadResponse.status()).toBe(200);
+    const data = await downloadResponse.json();
     expect(data).toHaveProperty("id", "00000000-0000-0000-0000-000000000000");
     expect(data).toHaveProperty("status", "ACTIVE");
     expect(data).toHaveProperty("personalIdentifiableInformation");

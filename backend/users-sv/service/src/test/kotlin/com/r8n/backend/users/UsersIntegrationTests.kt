@@ -1,27 +1,12 @@
 package com.r8n.backend.users
 
-import com.r8n.backend.core.utils.toResponse
-import com.r8n.backend.messaging.api.MessagingApi
-import com.r8n.backend.mock.api.IncomingAccessRequestApi
-import com.r8n.backend.mock.api.OutgoingAccessRequestApi
-import com.r8n.backend.mock.integration.api.OpinionListInternalApi
-import com.r8n.backend.mock.stub.AccessRequestsTestDataFactory
-import com.r8n.backend.mock.stub.MiscTestFactory
-import com.r8n.backend.mock.stub.OpinionListTestDataFactory
-import com.r8n.backend.users.api.dto.ConsentDto
-import com.r8n.backend.users.api.dto.PersonalIdentifiableInformationSectionDto
-import com.r8n.backend.users.api.dto.UserCompleteDataDto
 import com.r8n.backend.users.api.dto.UserProfileDto
-import com.r8n.backend.users.api.dto.UserSessionDto
 import com.r8n.backend.users.api.dto.UserStatusEnumDto
 import com.r8n.backend.users.service.TokenService
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.any
-import org.mockito.kotlin.anyOrNull
-import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.AutoConfigureJsonTesters
 import org.springframework.boot.test.context.SpringBootTest
@@ -29,13 +14,19 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
-import org.springframework.data.domain.PageImpl
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.mock.web.MockMultipartFile
 import org.springframework.security.test.context.support.WithMockUser
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
@@ -45,16 +36,17 @@ import tools.jackson.databind.ObjectMapper
 import tools.jackson.module.kotlin.readValue
 import java.sql.Timestamp
 import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
+import java.util.Base64
 import java.util.UUID
 
 @ActiveProfiles("test")
 @Testcontainers
 @AutoConfigureJsonTesters
 @AutoConfigureMockMvc
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    webEnvironment = WebEnvironment.RANDOM_PORT,
+)
 @Import(TestObjectMapperConfiguration::class)
 class UsersIntegrationTests {
     private companion object {
@@ -68,10 +60,10 @@ class UsersIntegrationTests {
                 .withInitScript("db/init-schema.sql")
 
         const val USER_ID = "00000000-0000-0000-0000-000000000000"
-        val opinions = OpinionListTestDataFactory.getList()
-        val incomingAccessRequests = AccessRequestsTestDataFactory.get()
-        val outgoingAccessRequests = AccessRequestsTestDataFactory.get()
-        val supportMessages = MiscTestFactory.getSupportMessage()
+        val PNG_BYTES: ByteArray =
+            Base64.getDecoder().decode(
+                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/axq6L8AAAAASUVORK5CYII=",
+            )
     }
 
     @Autowired
@@ -86,87 +78,12 @@ class UsersIntegrationTests {
     @Autowired
     lateinit var jdbcTemplate: JdbcTemplate
 
-    @MockitoBean
-    lateinit var opinionClient: OpinionListInternalApi
-
-    @MockitoBean
-    lateinit var incomingAccessRequestClient: IncomingAccessRequestApi
-
-    @MockitoBean
-    lateinit var outgoingAccessRequestClient: OutgoingAccessRequestApi
-
-    @MockitoBean
-    lateinit var messageClient: MessagingApi
-
     @BeforeEach
     fun setUp() {
-        whenever(opinionClient.getMineFull(any())).thenReturn(
-            PageImpl(listOf(opinions)).toResponse(),
-        )
-        whenever(incomingAccessRequestClient.get(anyOrNull(), anyOrNull(), anyOrNull(), any())).thenReturn(
-            PageImpl(listOf(incomingAccessRequests)).toResponse(),
-        )
-        whenever(outgoingAccessRequestClient.get(anyOrNull(), anyOrNull(), anyOrNull(), any())).thenReturn(
-            PageImpl(listOf(outgoingAccessRequests)).toResponse(),
-        )
-        whenever(messageClient.getSupportThreads()).thenReturn(
-            PageImpl(listOf(supportMessages)).toResponse(),
-        )
+        jdbcTemplate.update("DELETE FROM users.profile_avatars")
     }
 
-    @Test
-    @WithMockUser(username = USER_ID)
-    fun `exportAll returns complete user data`() {
-        val accessToken = tokenService.generateAccessToken(UUID.fromString(USER_ID), listOf("USER"))
-        val result =
-            mockMvc
-                .perform(
-                    get("/api/users/export")
-                        .header("Authorization", "Bearer $accessToken"),
-                ).andExpect(status().isOk)
-                .andReturn()
-
-        val actual: UserCompleteDataDto = objectMapper.readValue(result.response.contentAsString)
-
-        val timestamp = LocalDateTime.of(2024, 1, 1, 12, 0).toInstant(ZoneOffset.UTC)
-
-        val session =
-            UserSessionDto(
-                UUID.fromString("01010101-0101-0101-0101-010101010101"),
-                timestamp,
-                timestamp.plus(
-                    1,
-                    ChronoUnit.DAYS,
-                ),
-                "127.0.0.1",
-                "Test User Agent",
-            )
-
-        val expected =
-            UserCompleteDataDto(
-                UUID.fromString(USER_ID),
-                UserStatusEnumDto.ACTIVE,
-                timestamp,
-                PageImpl(
-                    listOf(
-                        ConsentDto("PRIVACY_POLICY", timestamp, session),
-                    ),
-                ).toResponse(),
-                PersonalIdentifiableInformationSectionDto(
-                    "Test Testsson",
-                    "test@test.test",
-                    phone = "123-456-7890",
-                    sessions = PageImpl(listOf(session)).toResponse(),
-                    about = "I am a coffee expert",
-                    location = "Berlin, Germany",
-                ),
-                PageImpl(listOf(opinions)).toResponse(),
-                PageImpl(listOf(outgoingAccessRequests)).toResponse(),
-                PageImpl(listOf(incomingAccessRequests)).toResponse(),
-                PageImpl(listOf(supportMessages)).toResponse(),
-            )
-        assertEquals(expected, actual)
-    }
+    private fun userAccessToken() = tokenService.generateAccessToken(UUID.fromString(USER_ID), listOf("USER"))
 
     @Test
     @WithMockUser(username = USER_ID)
@@ -213,5 +130,83 @@ class UsersIntegrationTests {
             !actual.lastOnline!!.isBefore(beforeRequest),
             "lastOnline (${actual.lastOnline}) should be after or equal to beforeRequest ($beforeRequest)",
         )
+    }
+
+    @Test
+    fun `avatar upload and fetch returns image bytes`() {
+        val avatar =
+            MockMultipartFile(
+                "file",
+                "avatar.png",
+                MediaType.IMAGE_PNG_VALUE,
+                PNG_BYTES,
+            )
+
+        mockMvc
+            .perform(
+                multipart("/api/users/me/avatar")
+                    .file(avatar)
+                    .with(csrf())
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer ${userAccessToken()}"),
+            ).andExpect(status().isNoContent)
+
+        mockMvc
+            .perform(
+                get("/api/users/$USER_ID/avatar")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer ${userAccessToken()}"),
+            ).andExpect(status().isOk)
+            .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaType.IMAGE_PNG_VALUE))
+            .andExpect(content().bytes(PNG_BYTES))
+    }
+
+    @Test
+    fun `avatar upload rejects unsupported content type`() {
+        val avatar =
+            MockMultipartFile(
+                "file",
+                "avatar.txt",
+                MediaType.TEXT_PLAIN_VALUE,
+                "not an image".toByteArray(),
+            )
+
+        mockMvc
+            .perform(
+                multipart("/api/users/me/avatar")
+                    .file(avatar)
+                    .with(csrf())
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer ${userAccessToken()}"),
+            ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `avatar delete removes current user avatar`() {
+        val avatar =
+            MockMultipartFile(
+                "file",
+                "avatar.png",
+                MediaType.IMAGE_PNG_VALUE,
+                PNG_BYTES,
+            )
+
+        mockMvc
+            .perform(
+                multipart("/api/users/me/avatar")
+                    .file(avatar)
+                    .with(csrf())
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer ${userAccessToken()}"),
+            ).andExpect(status().isNoContent)
+
+        mockMvc
+            .perform(
+                delete("/api/users/me/avatar")
+                    .with(csrf())
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer ${userAccessToken()}"),
+            ).andExpect(status().isNoContent)
+
+        mockMvc
+            .perform(
+                get("/api/users/$USER_ID/avatar")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer ${userAccessToken()}"),
+            ).andExpect(status().isNoContent)
     }
 }

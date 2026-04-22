@@ -13,8 +13,10 @@ deployment/certs/
 deployment/config/docker.local.env
 deployment/database/data
 deployment/*/logs/
+deployment/*/avatar-storage/
 docker.secrets.env
 *.txt
 .access_token
 frontend/e2e/auth-state.json
+BOOT-INF/
 .cookies

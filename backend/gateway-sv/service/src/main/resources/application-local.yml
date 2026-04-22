@@ -20,11 +20,15 @@ spring:
             - id: opinions
               uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_OPINIONS_HOST}:${SERVICES_OPINIONS_PORT}
               predicates:
-                - Path=/api/opinions/**
+                - Path=/api/access-requests/**,/api/opinion-lists/**,/api/opinions/**
             - id: users
               uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_USERS_HOST}:${SERVICES_USERS_PORT}
               predicates:
                 - Path=/api/users/**
+            - id: export
+              uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_EXPORT_HOST}:${SERVICES_EXPORT_PORT}
+              predicates:
+                - Path=/api/export/**
             - id: messaging
               uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_MESSAGING_HOST}:${SERVICES_MESSAGING_PORT}
               predicates:
@@ -32,4 +36,4 @@ spring:
             - id: mock
               uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_MOCK_HOST}:${SERVICES_MOCK_PORT}
               predicates:
-                - Path=/api/access-requests/**,/api/opinion-lists/**,/api/selectors/**
+                - Path=/api/selectors/**

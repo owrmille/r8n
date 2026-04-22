@@ -5,7 +5,9 @@ import com.r8n.backend.users.persistence.UserSessionPersistence
 import com.r8n.backend.users.provider.database.UserSessionRepository
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 
 @Service
@@ -25,7 +27,7 @@ class UserSessionService(
         userId: UUID,
     ): UserSession =
         userSessionRepository.findByIdAndUserId(id, userId)?.toDomain()
-            ?: throw NoSuchElementException("Session $id not found for user $userId")
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Session $id not found for user $userId")
 
     private fun UserSessionPersistence.toDomain() =
         UserSession(

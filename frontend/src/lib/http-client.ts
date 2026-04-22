@@ -14,6 +14,7 @@ type QueryValue =
 export type HttpQueryParams = Record<string, QueryValue>;
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 export type HttpRequestAuth = "none" | "required";
+export type HttpResponseType = "json" | "text" | "blob";
 
 export interface HttpRequestOptions<TBody = unknown> {
   auth?: HttpRequestAuth;
@@ -21,6 +22,7 @@ export interface HttpRequestOptions<TBody = unknown> {
   credentials?: RequestCredentials;
   headers?: HeadersInit;
   query?: HttpQueryParams;
+  responseType?: HttpResponseType;
   signal?: AbortSignal;
   timeoutMs?: number;
 }
@@ -157,7 +159,7 @@ export function createHttpClient(config: HttpClientConfig = {}): HttpClient {
         signal,
       });
 
-      const responseBody = await parseResponseBody(response);
+      const responseBody = await parseResponseBody(response, options.responseType);
 
       if (!response.ok) {
         throw new HttpError(
@@ -339,9 +341,29 @@ function isAbortError(error: unknown): boolean {
   return error instanceof Error && error.name === "AbortError";
 }
 
-async function parseResponseBody(response: Response): Promise<unknown> {
+async function parseResponseBody(
+  response: Response,
+  responseType?: HttpResponseType,
+): Promise<unknown> {
   if (response.status === 204 || response.status === 205) {
     return undefined;
+  }
+
+  if (responseType === "blob") {
+    return response.blob();
+  }
+
+  if (responseType === "text") {
+    const text = await response.text();
+    return text === "" ? undefined : text;
+  }
+
+  if (responseType === "json") {
+    try {
+      return await response.json();
+    } catch {
+      throw new HttpError("Server returned invalid JSON.", response.status);
+    }
   }
 
   const contentType = response.headers.get("content-type") ?? "";

@@ -7,7 +7,7 @@ object SelectorTestDataFactory {
     fun getSelector() =
         SelectorDto(
             UUID.randomUUID(),
-            OpinionSubjectTestDataFactory.cappuccino1A.id,
+            UUID.fromString("14141414-1414-1414-1414-141414141414"),
             "maps.google.com/*",
             "maps.google.com",
             """

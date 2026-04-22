@@ -20,7 +20,7 @@ spring:
             - id: opinions
               uri: http://localhost:8081
               predicates:
-                - Path=/api/opinions/**
+                - Path=/api/access-requests/**,/api/opinion-lists/**,/api/opinions/**
             - id: users
               uri: http://localhost:8082
               predicates:
@@ -32,4 +32,4 @@ spring:
             - id: mock
               uri: http://localhost:8090
               predicates:
-                - Path=/api/access-requests/**,/api/opinion-lists/**,/api/selectors/**
+                - Path=/api/selectors/**

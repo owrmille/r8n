@@ -1,14 +1,15 @@
 import { Users } from "lucide-react";
 import { motion } from "framer-motion";
 import RatingBadge from "@/components/RatingBadge";
-import ReviewerAvatar from "@/components/ReviewerAvatar";
+import UserAvatar from "@/components/UserAvatar";
+import type { Uuid } from "@/lib/api/shared";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
 export interface ReviewCardProps {
   restaurantName: string;
+  reviewerId?: Uuid;
   reviewerName: string;
-  reviewerImage?: string;
   timeAgo: string;
   rating: number;
   weightedRating?: number;
@@ -20,8 +21,8 @@ export interface ReviewCardProps {
 
 const ReviewCard = ({
   restaurantName,
+  reviewerId,
   reviewerName,
-  reviewerImage,
   timeAgo,
   rating,
   weightedRating,
@@ -43,7 +44,7 @@ const ReviewCard = ({
       {/* Header */}
       <div className="mb-4 flex items-start justify-between">
         <div className="flex gap-3">
-          <ReviewerAvatar name={reviewerName} image={reviewerImage} size="md" />
+          <UserAvatar userId={reviewerId} name={reviewerName} size="md" />
           <div>
             <div className="flex items-center gap-2">
               <h4 className="font-medium text-card-foreground font-body">{restaurantName}</h4>

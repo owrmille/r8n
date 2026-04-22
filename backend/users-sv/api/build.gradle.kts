@@ -9,4 +9,5 @@ description = "user information service API"
 dependencies {
     implementation(project(":messaging-api"))
     implementation(project(":mock-api"))
+    implementation(project(":opinions-api"))
 }

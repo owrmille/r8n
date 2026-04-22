@@ -28,12 +28,14 @@ frontend_npx() { if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NOD
     prebuild-jars prepare-artifacts verify-artifacts docker-build docker-up \
     docker-certs docker-certs-force internal-certs internal-certs-force internal-certs-clean docker-certs-clean docker-secrets-clean docker-secrets-init edge-certs edge-certs-force \
     docker-down docker-logs clean-artifacts ensure-log-dirs clean-logs \
-    routed-request-opinion routed-request-mock routed-request-messaging-threads direct-request-opinion direct-request-mock \
-    https-routed-request-opinion https-routed-request-mock \
-    docker-database-drop-volume-personal docker-database-drop-volume-campus docker-run-database docker-database-connect \
+    get-token refresh-token logout routed-request-opinion routed-request-mock routed-request-user-profile routed-request-gdpr direct-request-opinion routed-request-messaging-threads direct-request-mock \
+    https-routed-request-opinion https-routed-request-mock https-routed-request-gdpr \
+    docker-database-create-data-folder docker-database-drop-volume-personal docker-database-drop-volume-campus docker-database-run docker-database-connect \
     build-opinions who-ate-all-the-space clean-the-fuck-out-of-this-campus-machine \
     frontend-install frontend-install-all frontend-check-node frontend-dev frontend-build frontend-lint \
     frontend-test frontend-test-unit frontend-test-e2e frontend-test-e2e-ui frontend-test-e2e-api frontend-clean frontend-clean-all frontend-cert frontend-cert-clean \
+    lint-backend test-backend test-frontend-prepare test-frontend test-e2e \
+    test-github-backend test-github-frontend test-github-e2e test-github \
     clean fclean re move-caches-to-goinfre gradle-%-bootJar check-makefile
 
 ##@ Docker
@@ -222,7 +224,7 @@ $(addprefix local-stop-,$(SERVICES)): local-stop-%: ## Stop one local backend se
 
 ##@ Frontend
 frontend-dev: frontend-install ## Start Vite dev server
-	@bash -lc '$(FRONTEND_SHELL) NODE_EXTRA_CA_CERTS="$(FRONTEND_GATEWAY_CERT)" frontend_npm run dev'
+	@bash -lc '$(LOAD_LOCAL_ENV) $(FRONTEND_SHELL) NODE_EXTRA_CA_CERTS="$(FRONTEND_GATEWAY_CERT)" frontend_npm run dev'
 
 ##@ Smoke tests
 
@@ -313,7 +315,24 @@ logout: ## Logout and clear cookies (ENV=local|docker)
 	rm -f .access_token .cookies; \
 	echo "Logged out and local session files removed."
 
-routed-request-opinion: ## Gateway request to opinions (ENV=local|docker)
+routed-request-opinion-forbidden: ## failing gateway request to opinions (ENV=local|docker)
+	@if [ ! -f .access_token ]; then $(MAKE) get-token ENV=$(ENV); fi
+	@if [ "$(ENV)" = "docker" ]; then \
+		$(LOAD_DOCKER_ENV) \
+		protocol=https; \
+		host=localhost; \
+		port=8080; \
+	else \
+		$(LOAD_LOCAL_ENV) \
+		protocol=$${INTERSERVICE_PROTOCOL:-http}; \
+		host=$${GATEWAY_HOST:-localhost}; \
+		port=$${GATEWAY_PORT:-8080}; \
+	fi; \
+	curl_args="-i"; \
+	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
+	curl $$curl_args "$$protocol://$$host:$$port/api/opinions/30000000-0000-0000-0000-000000000003" -H "Authorization: Bearer $$(cat .access_token)"
+
+routed-request-opinion-mine: ## Gateway request to opinions (ENV=local|docker)
 	@if [ ! -f .access_token ]; then $(MAKE) get-token ENV=$(ENV); fi
 	@if [ "$(ENV)" = "docker" ]; then \
 		$(LOAD_DOCKER_ENV) \
@@ -329,6 +348,23 @@ routed-request-opinion: ## Gateway request to opinions (ENV=local|docker)
 	curl_args="-i"; \
 	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
 	curl $$curl_args "$$protocol://$$host:$$port/api/opinions/30000000-0000-0000-0000-000000000002" -H "Authorization: Bearer $$(cat .access_token)"
+
+routed-request-opinion-approved: ## Gateway request to opinions (ENV=local|docker)
+	@if [ ! -f .access_token ]; then $(MAKE) get-token ENV=$(ENV); fi
+	@if [ "$(ENV)" = "docker" ]; then \
+		$(LOAD_DOCKER_ENV) \
+		protocol=https; \
+		host=localhost; \
+		port=8080; \
+	else \
+		$(LOAD_LOCAL_ENV) \
+		protocol=$${INTERSERVICE_PROTOCOL:-http}; \
+		host=$${GATEWAY_HOST:-localhost}; \
+		port=$${GATEWAY_PORT:-8080}; \
+	fi; \
+	curl_args="-i"; \
+	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
+	curl $$curl_args "$$protocol://$$host:$$port/api/opinions/30000000-0000-0000-0000-000000000001" -H "Authorization: Bearer $$(cat .access_token)"
 
 routed-request-mock: ## Gateway request to mock (ENV=local|docker)
 	@if [ ! -f .access_token ]; then $(MAKE) get-token ENV=$(ENV); fi
@@ -378,7 +414,7 @@ routed-request-user-profile: ## Gateway request to users-sv (ENV=local|docker)
 	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
 	curl $$curl_args "$$protocol://$$host:$$port/api/users/00000000-0000-0000-0000-000000000000" -H "Authorization: Bearer $$(cat .access_token)"
 
-routed-request-gdpr: ## HTTP direct request to users (ENV=local|docker)
+routed-request-gdpr: ## Gateway GDPR export request with timeout (ENV=local|docker)
 	@if [ ! -f .access_token ]; then $(MAKE) get-token ENV=$(ENV); fi
 	@if [ "$(ENV)" = "docker" ]; then \
 		$(LOAD_DOCKER_ENV) \
@@ -393,7 +429,34 @@ routed-request-gdpr: ## HTTP direct request to users (ENV=local|docker)
 	fi; \
 	curl_args="-i"; \
 	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
-	curl $$curl_args "$$protocol://$$host:$$port/api/users/export" -H "Authorization: Bearer $$(cat .access_token)"
+	\
+	echo "=== Step 1: Starting GDPR export..."; \
+	curl $$curl_args -X POST "$$protocol://$$host:$$port/api/export/start" \
+		-H "Authorization: Bearer $$(cat .access_token)"; \
+	echo ""; \
+	\
+	echo "=== Step 2: Polling for export status (timeout 30s)..."; \
+	timeout=30; \
+	while [ $$timeout -gt 0 ]; do \
+		status=$$(curl $$curl_args "$$protocol://$$host:$$port/api/export/status" \
+			-H "Authorization: Bearer $$(cat .access_token)" | grep -o '"status":"[^"]*"' | cut -d'"' -f4); \
+		echo "Status: $$status ($$timeout s remaining)"; \
+		if [ "$$status" = "COMPLETED" ]; then \
+			break; \
+		fi; \
+		sleep 2; \
+		timeout=$$((timeout - 2)); \
+	done; \
+	\
+	if [ $$timeout -le 0 ]; then \
+		echo "Timeout waiting for export to be ready"; \
+		exit 1; \
+	fi; \
+	\
+	echo "=== Step 3: Downloading export data..."; \
+	curl $$curl_args "$$protocol://$$host:$$port/api/export/download" \
+		-H "Authorization: Bearer $$(cat .access_token)" | head -c 500; \
+	echo "..."
 
 direct-request-opinion: ## HTTP direct request to opinions (local)
 	@if [ ! -f .access_token ]; then $(MAKE) get-token; fi
@@ -408,23 +471,23 @@ frontend-check-node: ## Check Node.js version (attempts nvm if too old)
 	@FRONTEND_NODE_VERSION="$(FRONTEND_NODE_VERSION)" ./scripts/frontend-check-node.sh
 
 frontend-build: frontend-install ## Build frontend dist (installs deps if missing)
-	@bash -lc '$(FRONTEND_SHELL) [ -d node_modules ] || frontend_npm ci; frontend_npm run build'
+	@bash -lc '$(LOAD_LOCAL_ENV) $(FRONTEND_SHELL) [ -d node_modules ] || frontend_npm ci; frontend_npm run build'
 
 frontend-lint: frontend-check-node ## Run frontend lint
-	@bash -lc '$(FRONTEND_SHELL) frontend_npm run lint'
+	@bash -lc '$(LOAD_LOCAL_ENV) $(FRONTEND_SHELL) frontend_npm run lint'
 
 frontend-test-unit: frontend-check-node ## Run frontend unit tests
-	@bash -lc '$(FRONTEND_SHELL) frontend_npm run test:unit'
+	@bash -lc '$(LOAD_LOCAL_ENV) $(FRONTEND_SHELL) frontend_npm run test:unit'
 
 frontend-test: frontend-test-unit frontend-test-e2e ## Run all frontend tests
 
 frontend-test-e2e: frontend-test-e2e-ui frontend-test-e2e-api ## Run all frontend E2E tests
 
 frontend-test-e2e-ui: frontend-check-node ## Run frontend Playwright UI tests
-	@bash -lc '$(FRONTEND_SHELL) frontend_npm run test:e2e -- --project ui'
+	@bash -lc '$(LOAD_LOCAL_ENV) $(FRONTEND_SHELL) frontend_npm run test:e2e -- --project ui'
 
 frontend-test-e2e-api: frontend-check-node ## Run frontend Playwright API tests
-	@bash -lc '$(FRONTEND_SHELL) frontend_npm run test:e2e -- --project api'
+	@bash -lc '$(LOAD_LOCAL_ENV) $(FRONTEND_SHELL) frontend_npm run test:e2e -- --project api'
 
 frontend-clean: ## Remove frontend build output, cache, and test artifacts
 	rm -rf $(FRONTEND_DIR)/dist $(FRONTEND_DIR)/node_modules/.vite $(FRONTEND_DIR)/playwright-report $(FRONTEND_DIR)/test-results $(FRONTEND_DIR)/coverage
@@ -483,9 +546,11 @@ test-frontend-prepare:
 	cd frontend && npm ci
 
 test-frontend: test-frontend-prepare
+	$(LOAD_LOCAL_ENV) \
 	cd frontend && npm run type-check && npx eslint . --max-warnings=0 && npm run test:unit -- --run && npm run build-only
 
 test-e2e:
+	$(LOAD_LOCAL_ENV) \
 	cd frontend && npm run test:e2e
 
 ##@ entrypoints

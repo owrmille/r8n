@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Clock, XCircle, Eye, EyeOff, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import ReviewerAvatar from "@/components/ReviewerAvatar";
+import UserAvatar from "@/components/UserAvatar";
 import { QueryState } from "@/components/server-state/QueryState";
 import {
   useIncomingAccessRequests,
@@ -114,7 +114,7 @@ const Requests = () => {
                 key={req.id}
                 className="flex items-center gap-4 border-b border-border last:border-0 px-5 py-4"
               >
-                <ReviewerAvatar name={req.requesterName} size="sm" />
+                <UserAvatar userId={req.requester} name={req.requesterName} size="sm" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">{req.requesterName}</p>
                   <p className="text-xs text-muted-foreground truncate">
@@ -165,7 +165,7 @@ const Requests = () => {
                 key={req.id}
                 className="flex items-center gap-4 border-b border-border last:border-0 px-5 py-4"
               >
-                <ReviewerAvatar name={req.requesterName} size="sm" />
+                <UserAvatar userId={req.requester} name={req.requesterName} size="sm" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">{req.requesterName}</p>
                   <p className="text-xs text-muted-foreground truncate">
@@ -212,7 +212,7 @@ const Requests = () => {
                   key={req.id}
                   className="flex items-center gap-4 border-b border-border last:border-0 px-5 py-4"
                 >
-                  <ReviewerAvatar name={req.ownerName} size="sm" />
+                  <UserAvatar userId={req.owner} name={req.ownerName} size="sm" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{req.ownerName}</p>
                     <p className="text-xs text-muted-foreground truncate">{req.opinionListName}</p>
