@@ -355,7 +355,7 @@ describe("API modules", () => {
       "/api/opinions/unlink/55555555-5555-5555-5555-555555555555",
     );
     expect(fetchMock.mock.calls[5][0]).toBe(
-      "/api/opinions/adjustWeight/66666666-6666-6666-6666-666666666666?weight=0.5",
+      "/api/opinions/adjust-weight/66666666-6666-6666-6666-666666666666?weight=0.5",
     );
 
     expect(fetchMock.mock.calls[1][1]).toEqual(
@@ -446,7 +446,6 @@ describe("API modules", () => {
     const accessRequestsApi = createAccessRequestsApi(client);
 
     await accessRequestsApi.getIncoming({
-      accessToken: "token",
       pageable: { page: 0, size: 20 },
     });
     await accessRequestsApi.acceptIncoming({

@@ -16,12 +16,10 @@ export interface WeightedOpinionReferenceDto {
 
 export interface OpinionSummaryDto {
   componentMark: number | null;
-  id: Uuid;
   opinions: WeightedOpinionReferenceDto[];
   ownMark: number | null;
   subject: Uuid;
   subjectName: string;
-  synchronizedMark: number;
 }
 
 export interface OpinionDto {
@@ -85,7 +83,7 @@ export function createOpinionsApi(client: HttpClient = httpClient) {
     adjustComponentWeight(
       request: AdjustOpinionComponentWeightRequestDto,
     ): Promise<OpinionDto> {
-      return client.patch<OpinionDto>(`/opinions/adjustWeight/${request.linkId}`, {
+      return client.patch<OpinionDto>(`/opinions/adjust-weight/${request.linkId}`, {
         auth: "required",
         query: {
           weight: request.weight,
