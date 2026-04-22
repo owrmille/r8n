@@ -5,7 +5,9 @@ import com.r8n.backend.opinions.opinions.database.ReferentRepository
 import com.r8n.backend.opinions.opinions.domain.SubjectDetails
 import com.r8n.backend.opinions.opinions.domain.SubjectReferent
 import com.r8n.backend.opinions.opinions.persistence.ReferentPersistence
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 
 // no permissions checks needed, all subjects are available to all users
@@ -18,7 +20,12 @@ class SubjectService(
 
     fun getSubject(id: UUID): SubjectDetails? {
         val subject = opinionSubjectRepository.findById(id).orElse(null) ?: return null
-        val primaryReferent = referentRepository.findById(subject.referent).orElseThrow()
+        val primaryReferent =
+            referentRepository.findById(subject.referent).orElseThrow {
+                ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                )
+            }
         val alternativeReferents =
             referentRepository
                 .findAllByReferentGroupOrderByIdAsc(primaryReferent.referentGroup)

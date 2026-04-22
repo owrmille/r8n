@@ -6,8 +6,10 @@ import com.r8n.backend.opinions.access.domain.RequestStatusEnum
 import com.r8n.backend.opinions.access.persistence.AccessRequestPersistence
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.server.ResponseStatusException
 import java.time.Instant
 import java.util.UUID
 
@@ -44,7 +46,7 @@ class AccessRequestService(
         requesterId: UUID,
     ): AccessRequest {
         if (accessService.getListOwner(listId) == requesterId) {
-            throw IllegalArgumentException("Owner cannot request access to their own list")
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Owner cannot request access to their own list")
         }
 
         val existingRequests =
@@ -80,14 +82,14 @@ class AccessRequestService(
         val request =
             repository
                 .findById(requestId)
-                .orElseThrow { NoSuchElementException("Request not found") }
+                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Request not found") }
 
         if (request.requester != requesterId) {
-            throw IllegalAccessException("Cannot cancel someone else's request")
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot cancel someone else's request")
         }
 
         if (request.status == RequestStatusEnum.CANCELLED) {
-            throw IllegalStateException("Request already cancelled")
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Request already cancelled")
         }
 
         request.status = RequestStatusEnum.CANCELLED
@@ -103,14 +105,14 @@ class AccessRequestService(
         val request =
             repository
                 .findById(requestId)
-                .orElseThrow { NoSuchElementException("Request not found") }
+                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Request not found") }
 
         if (accessService.getListOwner(request.list) != ownerId) {
-            throw SecurityException("Only the owner can accept a request")
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Only the owner can accept a request")
         }
 
         if (request.status != RequestStatusEnum.SENT && request.status != RequestStatusEnum.HIDDEN) {
-            throw IllegalStateException("Can only accept a pending or hidden request")
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Can only accept a pending or hidden request")
         }
 
         request.status = RequestStatusEnum.ACCEPTED
@@ -126,18 +128,18 @@ class AccessRequestService(
         val request =
             repository
                 .findById(requestId)
-                .orElseThrow { NoSuchElementException("Request not found") }
+                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Request not found") }
 
         if (accessService.getListOwner(request.list) != ownerId) {
-            throw SecurityException("Only the owner can decline a request")
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Only the owner can decline a request")
         }
 
         if (request.status == RequestStatusEnum.REJECTED) {
-            throw IllegalStateException("Request already rejected")
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Request already rejected")
         }
 
         if (request.status == RequestStatusEnum.CANCELLED) {
-            throw IllegalStateException("Cannot decline a cancelled request")
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot decline a cancelled request")
         }
 
         request.status = RequestStatusEnum.REJECTED
@@ -153,14 +155,14 @@ class AccessRequestService(
         val request =
             repository
                 .findById(requestId)
-                .orElseThrow { NoSuchElementException("Request not found") }
+                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Request not found") }
 
         if (accessService.getListOwner(request.list) != ownerId) {
-            throw SecurityException("Only the owner can hide a request")
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Only the owner can hide a request")
         }
 
         if (request.status != RequestStatusEnum.SENT) {
-            throw IllegalStateException("Can only hide a pending request")
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Can only hide a pending request")
         }
 
         request.status = RequestStatusEnum.HIDDEN

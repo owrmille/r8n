@@ -2,7 +2,9 @@ package com.r8n.backend.users.service
 
 import com.r8n.backend.users.persistence.AvatarStorageBackendPersistence
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import org.springframework.web.server.ResponseStatusException
 import java.nio.file.Files
 import java.nio.file.NoSuchFileException
 import java.nio.file.Path
@@ -50,7 +52,7 @@ class LocalAvatarStorage(
     private fun resolveObjectKey(objectKey: String): Path {
         val resolved = root.resolve(objectKey).normalize()
         if (!resolved.startsWith(root)) {
-            throw IllegalArgumentException("Avatar object key resolves outside the storage root")
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Avatar object key resolves outside the storage root")
         }
         return resolved
     }

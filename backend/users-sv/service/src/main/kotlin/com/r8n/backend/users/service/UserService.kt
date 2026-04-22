@@ -8,7 +8,9 @@ import com.r8n.backend.users.provider.database.PIIRepository
 import com.r8n.backend.users.provider.database.UserRepository
 import com.r8n.backend.users.provider.database.UserRoleAssignmentRepository
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.server.ResponseStatusException
 import java.time.Instant
 import java.util.UUID
 
@@ -38,10 +40,10 @@ class UserService(
     fun getUser(id: UUID): User {
         val userPersistence =
             userRepository.findByIdOrNull(id)
-                ?: throw NoSuchElementException("User $id not found")
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User $id not found")
         val piiPersistence =
             piiRepository.findByIdOrNull(id)
-                ?: throw NoSuchElementException("PII for user $id not found")
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "PII for user $id not found")
         val consents = consentService.getConsentsForUser(id)
 
         return User(
@@ -67,10 +69,10 @@ class UserService(
     fun getProfile(id: UUID): UserProfile {
         val user =
             userRepository.findByIdOrNull(id)
-                ?: throw NoSuchElementException("User $id not found")
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User $id not found")
         val pii =
             piiRepository.findByIdOrNull(id)
-                ?: throw NoSuchElementException("PII for user $id not found")
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "PII for user $id not found")
         return UserProfile(
             id,
             pii.name,
