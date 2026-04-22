@@ -17,7 +17,7 @@ class OpinionListsRestClientConfiguration {
     @Bean
     @Qualifier("opinionListsRestBaseClient")
     fun opinionListsRestBaseClient(
-        @Value("\${services.opinionLists.url}") baseUrl: String,
+        @Value("\${services.opinions.url}") baseUrl: String,
         serviceTokenService: ServiceTokenService,
     ): RestClient =
         RestClient

@@ -17,7 +17,7 @@ class AccessRestClientConfiguration {
     @Bean
     @Qualifier("accessRestBaseClient")
     fun accessRestBaseClient(
-        @Value("\${services.access.url}") baseUrl: String,
+        @Value("\${services.opinions.url}") baseUrl: String,
         serviceTokenService: ServiceTokenService,
     ): RestClient =
         RestClient
