@@ -3,18 +3,27 @@ server:
   ssl:
     enabled: false
 spring:
-  application.name: mock-sv
-  lifecycle:
-    timeout-per-shutdown-phase: 1s
+  application.name: messaging-sv
+  liquibase:
+    enabled: true
+    change-log: db/changelog/messaging/db.changelog-master.sql
+    default-schema: messaging
+    contexts: test
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_HOST_PORT}/${DATABASE_NAME}?currentSchema=messaging
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+  jpa:
+    defer-datasource-initialization: false
+    hibernate:
+      ddl-auto: validate
+  sql:
+    init:
+      mode: never
 logging:
   level:
     root: ERROR
-
-services:
-  mock:
-    url: http://localhost:${server.port}
-  users:
-    url: http://localhost:8082
 r8n:
   security:
     jwt:

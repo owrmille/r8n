@@ -1,4 +1,4 @@
-package com.r8n.backend.mock.persistence
+package com.r8n.backend.messaging.persistence
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -12,26 +12,21 @@ import java.time.Instant
 import java.util.UUID
 
 @Entity
-@Table(schema = "mock", name = "support_messages")
+@Table(schema = "messaging", name = "support_messages")
 class SupportMessagePersistence(
     @Id
     @GeneratedValue
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
     var id: UUID? = null,
-//
     @Column(name = "thread_id", nullable = false)
     var threadId: UUID,
-//
     @Column(name = "author_user_id", nullable = false)
     var authorUserId: UUID,
-//
     @Column(name = "author_role", nullable = false)
     @Enumerated(EnumType.STRING)
     var authorRole: SupportParticipantRoleEnumPersistence,
-//
     @Column(name = "text", nullable = false)
     var text: String,
-//
     @Column(name = "created_at", nullable = false)
     var createdAt: Instant,
 )

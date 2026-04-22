@@ -1,6 +1,5 @@
 plugins {
     id("convention-nonreactive-backend-service")
-    id("convention-database-consumer")
 }
 
 group = "com.r8n.backend"
@@ -8,6 +7,7 @@ version = "0.0.1-SNAPSHOT"
 description = "mock service for everything not cut out into dedicated services yet"
 
 dependencies {
+    implementation(project(":messaging-api"))
     implementation(project(":mock-api"))
     implementation(project(":mock-api-integration"))
     implementation(project(":opinions-api"))

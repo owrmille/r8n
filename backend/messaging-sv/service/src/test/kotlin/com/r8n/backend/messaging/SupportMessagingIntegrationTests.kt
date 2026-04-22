@@ -1,8 +1,8 @@
-package com.r8n.backend.mock
+package com.r8n.backend.messaging
 
-import com.r8n.backend.mock.api.MessagingApi.Companion.SUPPORT_THREADS_PATH
-import com.r8n.backend.mock.provider.database.SupportMessageRepository
-import com.r8n.backend.mock.provider.database.SupportThreadRepository
+import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREADS_PATH
+import com.r8n.backend.messaging.provider.database.SupportMessageRepository
+import com.r8n.backend.messaging.provider.database.SupportThreadRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -29,30 +29,21 @@ import java.util.UUID
 @ActiveProfiles("test")
 @Testcontainers
 @AutoConfigureMockMvc
-@SpringBootTest(
-    webEnvironment = WebEnvironment.RANDOM_PORT,
-    properties = [
-        "spring.autoconfigure.exclude=",
-        "spring.liquibase.enabled=true",
-        "spring.liquibase.change-log=db/changelog/mock/db.changelog-master.sql",
-        "spring.liquibase.default-schema=mock",
-        "spring.liquibase.contexts=test",
-    ],
-)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 class SupportMessagingIntegrationTests {
     private companion object {
         @Container
         @ServiceConnection
         val postgres: PostgreSQLContainer =
             PostgreSQLContainer(DockerImageName.parse("postgres:15"))
-                .withDatabaseName("mock")
+                .withDatabaseName("messaging")
                 .withUsername("test")
                 .withPassword("test")
                 .withInitScript("db/init-schema.sql")
 
-        val USER_A_ID: UUID = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")
-        val USER_B_ID: UUID = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")
-        val SUPPORT_ID: UUID = UUID.fromString("cccccccc-cccc-cccc-cccc-cccccccccccc")
+        val userAId: UUID = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")
+        val userBId: UUID = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")
+        val supportId: UUID = UUID.fromString("cccccccc-cccc-cccc-cccc-cccccccccccc")
     }
 
     @Autowired
@@ -75,58 +66,58 @@ class SupportMessagingIntegrationTests {
 
     @Test
     fun `user can create thread and read its messages`() {
-        val threadId = createThread(USER_A_ID, "USER", "Need help with a review dispute")
+        val threadId = createThread(userAId, "USER", "Need help with a review dispute")
 
         mockMvc
             .perform(
                 get(messagesPath(threadId))
                     .param("page", "0")
                     .param("size", "20")
-                    .with(user(USER_A_ID.toString()).roles("USER")),
+                    .with(user(userAId.toString()).roles("USER")),
             ).andExpect(status().isOk)
             .andExpect(jsonPath("$.items.length()").value(1))
             .andExpect(jsonPath("$.items[0].threadId").value(threadId.toString()))
-            .andExpect(jsonPath("$.items[0].authorUserId").value(USER_A_ID.toString()))
+            .andExpect(jsonPath("$.items[0].authorUserId").value(userAId.toString()))
             .andExpect(jsonPath("$.items[0].authorRole").value("USER"))
     }
 
     @Test
     fun `user cannot read another user thread`() {
-        val threadId = createThread(USER_A_ID, "USER", "My private support thread")
+        val threadId = createThread(userAId, "USER", "My private support thread")
 
         mockMvc
             .perform(
                 get(messagesPath(threadId))
                     .param("page", "0")
                     .param("size", "20")
-                    .with(user(USER_B_ID.toString()).roles("USER")),
+                    .with(user(userBId.toString()).roles("USER")),
             ).andExpect(status().isNotFound)
     }
 
     @Test
     fun `support can read another user thread`() {
-        val threadId = createThread(USER_A_ID, "USER", "Need a support response")
+        val threadId = createThread(userAId, "USER", "Need a support response")
 
         mockMvc
             .perform(
                 get(messagesPath(threadId))
                     .param("page", "0")
                     .param("size", "20")
-                    .with(user(SUPPORT_ID.toString()).roles("SUPPORT")),
+                    .with(user(supportId.toString()).roles("SUPPORT")),
             ).andExpect(status().isOk)
             .andExpect(jsonPath("$.items.length()").value(1))
     }
 
     @Test
     fun `posting blank message returns bad request`() {
-        val threadId = createThread(USER_A_ID, "USER", "Need clarification")
+        val threadId = createThread(userAId, "USER", "Need clarification")
 
         mockMvc
             .perform(
                 post(messagesPath(threadId))
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""{"text":"   "}""")
-                    .with(user(USER_A_ID.toString()).roles("USER"))
+                    .with(user(userAId.toString()).roles("USER"))
                     .with(csrf()),
             ).andExpect(status().isBadRequest)
     }
@@ -138,21 +129,21 @@ class SupportMessagingIntegrationTests {
                 get(messagesPath(UUID.randomUUID()))
                     .param("page", "0")
                     .param("size", "20")
-                    .with(user(SUPPORT_ID.toString()).roles("SUPPORT")),
+                    .with(user(supportId.toString()).roles("SUPPORT")),
             ).andExpect(status().isNotFound)
     }
 
     @Test
     fun `support sees all threads in list while user sees only own`() {
-        createThread(USER_A_ID, "USER", "Thread from user A")
-        createThread(USER_B_ID, "USER", "Thread from user B")
+        createThread(userAId, "USER", "Thread from user A")
+        createThread(userBId, "USER", "Thread from user B")
 
         mockMvc
             .perform(
                 get(SUPPORT_THREADS_PATH)
                     .param("page", "0")
                     .param("size", "20")
-                    .with(user(USER_A_ID.toString()).roles("USER")),
+                    .with(user(userAId.toString()).roles("USER")),
             ).andExpect(status().isOk)
             .andExpect(jsonPath("$.items.length()").value(1))
 
@@ -161,9 +152,43 @@ class SupportMessagingIntegrationTests {
                 get(SUPPORT_THREADS_PATH)
                     .param("page", "0")
                     .param("size", "20")
-                    .with(user(SUPPORT_ID.toString()).roles("SUPPORT")),
+                    .with(user(supportId.toString()).roles("SUPPORT")),
             ).andExpect(status().isOk)
             .andExpect(jsonPath("$.items.length()").value(2))
+    }
+
+    @Test
+    fun `thread summaries respect requested page size`() {
+        createThread(userAId, "USER", "Thread one")
+        createThread(userAId, "USER", "Thread two")
+
+        mockMvc
+            .perform(
+                get(SUPPORT_THREADS_PATH)
+                    .param("page", "0")
+                    .param("size", "1")
+                    .with(user(supportId.toString()).roles("SUPPORT")),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.items.length()").value(1))
+            .andExpect(jsonPath("$.total").value(2))
+            .andExpect(jsonPath("$.size").value(1))
+    }
+
+    @Test
+    fun `thread messages respect requested page size`() {
+        val threadId = createThread(userAId, "USER", "Message one")
+        addMessage(userAId, "USER", threadId, "Message two")
+
+        mockMvc
+            .perform(
+                get(messagesPath(threadId))
+                    .param("page", "0")
+                    .param("size", "1")
+                    .with(user(userAId.toString()).roles("USER")),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.items.length()").value(1))
+            .andExpect(jsonPath("$.total").value(2))
+            .andExpect(jsonPath("$.size").value(1))
     }
 
     private fun createThread(
@@ -184,6 +209,22 @@ class SupportMessagingIntegrationTests {
 
         val body = objectMapper.readTree(result.response.contentAsString)
         return UUID.fromString(body["id"].asText())
+    }
+
+    private fun addMessage(
+        authorId: UUID,
+        role: String,
+        threadId: UUID,
+        text: String,
+    ) {
+        mockMvc
+            .perform(
+                post(messagesPath(threadId))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"text":"$text"}""")
+                    .with(user(authorId.toString()).roles(role))
+                    .with(csrf()),
+            ).andExpect(status().isOk)
     }
 
     private fun messagesPath(threadId: UUID): String = "/api/messaging/support/threads/$threadId/messages"

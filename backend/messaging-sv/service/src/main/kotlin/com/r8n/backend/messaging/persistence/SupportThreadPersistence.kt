@@ -1,4 +1,4 @@
-package com.r8n.backend.mock.persistence
+package com.r8n.backend.messaging.persistence
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -10,19 +10,16 @@ import java.time.Instant
 import java.util.UUID
 
 @Entity
-@Table(schema = "mock", name = "support_threads")
+@Table(schema = "messaging", name = "support_threads")
 class SupportThreadPersistence(
     @Id
     @GeneratedValue
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
     var id: UUID? = null,
-//
     @Column(name = "owner_user_id", nullable = false)
     var ownerUserId: UUID,
-//
     @Column(name = "created_at", nullable = false)
     var createdAt: Instant,
-//
     @Column(name = "updated_at", nullable = false)
     var updatedAt: Instant,
 )
