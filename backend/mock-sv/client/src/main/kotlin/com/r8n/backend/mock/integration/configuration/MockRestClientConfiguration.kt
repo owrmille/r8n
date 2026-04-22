@@ -35,5 +35,4 @@ class MockRestClientConfiguration {
     fun selectorRestClient(
         @Qualifier("mockRestBaseClient") mockRestBaseClient: RestClient,
     ): SelectorApi = SelectorRestClient(mockRestBaseClient)
-
 }
