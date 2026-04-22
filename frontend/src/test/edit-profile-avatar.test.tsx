@@ -206,6 +206,7 @@ describe("EditProfile avatar controls", () => {
       .mockResolvedValueOnce(new Response(null, { status: 204 }));
     renderEditProfile();
 
+    await waitForInitialAvatarFetch();
     fireEvent.click(await screen.findByRole("button", { name: /remove image/i }));
 
     await waitFor(() => {
