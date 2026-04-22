@@ -1,8 +1,8 @@
 package com.r8n.backend.users
 
 import com.r8n.backend.core.utils.toResponse
+import com.r8n.backend.messaging.api.MessagingApi
 import com.r8n.backend.mock.api.IncomingAccessRequestApi
-import com.r8n.backend.mock.api.MessagingApi
 import com.r8n.backend.mock.api.OutgoingAccessRequestApi
 import com.r8n.backend.mock.integration.api.OpinionListInternalApi
 import com.r8n.backend.mock.stub.AccessRequestsTestDataFactory

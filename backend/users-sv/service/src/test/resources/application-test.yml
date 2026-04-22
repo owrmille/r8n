@@ -30,6 +30,8 @@ logging:
     root: ERROR
 
 services:
+  messaging:
+    url: http://localhost:8091
   mock:
     url: http://localhost:8090
 

@@ -1,7 +1,7 @@
 package com.r8n.backend.users.api.dto
 
 import com.r8n.backend.core.api.PageResponseDto
-import com.r8n.backend.mock.api.dto.SupportThreadDto
+import com.r8n.backend.messaging.api.dto.SupportThreadDto
 import com.r8n.backend.mock.api.dto.access.AccessRequestDto
 import com.r8n.backend.mock.api.dto.list.OpinionListDto
 import java.time.Instant
