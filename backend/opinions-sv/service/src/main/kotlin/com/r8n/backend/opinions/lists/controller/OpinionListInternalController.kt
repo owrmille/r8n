@@ -13,9 +13,8 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 class OpinionListInternalController(
     private val opinionListFacade: OpinionListFacade,
-): OpinionListsInternalApi {
+) : OpinionListsInternalApi {
     @PreAuthorize(IS_USER_OR_SERVICE)
-    override fun getMineFull(pageable: PageRequestDto): PageResponseDto<OpinionListDto> {
-        return opinionListFacade.getListsFull(getCurrentUserId(), pageable)
-    }
+    override fun getMineFull(pageable: PageRequestDto): PageResponseDto<OpinionListDto> =
+        opinionListFacade.getListsFull(getCurrentUserId(), pageable)
 }

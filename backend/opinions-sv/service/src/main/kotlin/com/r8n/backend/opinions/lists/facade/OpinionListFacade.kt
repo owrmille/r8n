@@ -23,7 +23,8 @@ class OpinionListFacade(
         ownerId: UUID,
         pageable: PageRequestDto,
     ): PageResponseDto<OpinionListDto> =
-        opinionListService.getListsFull(ownerId, pageable.toPageable())
+        opinionListService
+            .getListsFull(ownerId, pageable.toPageable())
             .map { opinionListMapper.toDto(it) }
             .toResponse()
 }

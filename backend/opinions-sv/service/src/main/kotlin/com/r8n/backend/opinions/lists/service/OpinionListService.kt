@@ -113,10 +113,10 @@ class OpinionListService(
     fun getListsFull(
         ownerId: UUID,
         pageable: Pageable,
-    ): Page<OpinionList> {
-        return opinionListRepository.findByOwner(ownerId, pageable)
+    ): Page<OpinionList> =
+        opinionListRepository
+            .findByOwner(ownerId, pageable)
             .map { getList(it.id!!, ownerId) }
-    }
 
     private companion object {
         fun toDomain(

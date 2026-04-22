@@ -12,5 +12,8 @@ interface OpinionListRepository : JpaRepository<OpinionListPersistence, UUID> {
         owner: UUID,
     ): Boolean
 
-    fun findByOwner(owner: UUID, pageable: Pageable): Page<OpinionListPersistence>
+    fun findByOwner(
+        owner: UUID,
+        pageable: Pageable,
+    ): Page<OpinionListPersistence>
 }
