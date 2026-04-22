@@ -12,6 +12,7 @@ import Supplier from "./pages/Supplier";
 import OpinionList from "./pages/OpinionList";
 import MyLists from "./pages/MyLists";
 import Requests from "./pages/Requests";
+import Messages from "./pages/Messages";
 import Discover from "./pages/Discover";
 import CreateReview from "./pages/CreateReview";
 import CreateList from "./pages/CreateList";
@@ -43,6 +44,7 @@ const App = () => (
               <Route path="/list/:id" element={<OpinionList />} />
               <Route path="/lists" element={<MyLists />} />
               <Route path="/requests" element={<Requests />} />
+              <Route path="/messages" element={<Messages />} />
               <Route path="/moderation/opinions" element={<OpinionModeration />} />
               <Route path="/discover" element={<Discover />} />
               <Route path="/create" element={<CreateReview />} />
