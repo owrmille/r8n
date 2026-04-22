@@ -2,11 +2,10 @@ package com.r8n.backend.opinions.access.facade
 
 import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
+import com.r8n.backend.core.utils.toPageable
 import com.r8n.backend.opinions.access.service.AccessRequestService
 import com.r8n.backend.opinions.api.access.dto.AccessRequestDto
 import com.r8n.backend.opinions.api.access.dto.RequestStatusEnumDto
-import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Component
 import java.time.Instant
 import java.util.UUID
@@ -23,19 +22,13 @@ class AccessRequestFacade(
         pageable: PageRequestDto,
         ownerId: UUID,
     ): PageResponseDto<AccessRequestDto> {
-        val pageRequest =
-            PageRequest.of(
-                pageable.page,
-                pageable.size,
-                Sort.by(pageable.sort.map { Sort.Order(Sort.Direction.valueOf(it.direction.name), it.property) }),
-            )
         val page =
             service.getRequests(
                 forListId,
                 null,
                 ownerId,
                 accessRequestMapper.toDomain(status),
-                pageRequest,
+                pageable.toPageable(),
             )
         return PageResponseDto(
             items = page.content.map { accessRequestMapper.toDto(it) },
@@ -52,19 +45,13 @@ class AccessRequestFacade(
         pageable: PageRequestDto,
         requesterId: UUID,
     ): PageResponseDto<AccessRequestDto> {
-        val pageRequest =
-            PageRequest.of(
-                pageable.page,
-                pageable.size,
-                Sort.by(pageable.sort.map { Sort.Order(Sort.Direction.valueOf(it.direction.name), it.property) }),
-            )
         val page =
             service.getRequests(
                 forListId,
                 requesterId,
                 null,
                 accessRequestMapper.toDomain(status),
-                pageRequest,
+                pageable.toPageable(),
             )
         return PageResponseDto(
             items = page.content.map { accessRequestMapper.toDto(it) },

@@ -10,6 +10,8 @@ import com.r8n.backend.opinions.lists.domain.OpinionSummary
 import com.r8n.backend.opinions.lists.persistence.OpinionListPersistence
 import com.r8n.backend.opinions.opinions.domain.WeightedOpinionReference
 import com.r8n.backend.opinions.opinions.service.OpinionService
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -106,6 +108,14 @@ class OpinionListService(
             }
 
         return toDomain(list, summaries)
+    }
+
+    fun getListsFull(
+        ownerId: UUID,
+        pageable: Pageable,
+    ): Page<OpinionList> {
+        return opinionListRepository.findByOwner(ownerId, pageable)
+            .map { getList(it.id!!, ownerId) }
     }
 
     private companion object {
