@@ -23,8 +23,7 @@ class AccessService(
     private val opinionsToOpinionListsRepository: OpinionsToOpinionListsRepository,
     private val opinionListRepository: OpinionListRepository,
 ) {
-    // duplicate from OpinionListService to break a circular dependency (bad solution)
-    private fun getListOwner(listId: UUID): UUID =
+    fun getListOwner(listId: UUID): UUID =
         opinionListRepository
             .findById(listId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }

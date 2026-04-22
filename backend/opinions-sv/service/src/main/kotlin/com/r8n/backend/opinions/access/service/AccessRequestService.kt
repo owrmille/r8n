@@ -4,7 +4,6 @@ import com.r8n.backend.opinions.access.database.AccessRequestRepository
 import com.r8n.backend.opinions.access.domain.AccessRequest
 import com.r8n.backend.opinions.access.domain.RequestStatusEnum
 import com.r8n.backend.opinions.access.persistence.AccessRequestPersistence
-import com.r8n.backend.opinions.lists.service.OpinionListService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -15,7 +14,7 @@ import java.util.UUID
 @Service
 class AccessRequestService(
     private val repository: AccessRequestRepository,
-    private val opinionListService: OpinionListService,
+    private val accessService: AccessService,
 ) {
     fun getRequests(
         listId: UUID?,
@@ -36,7 +35,7 @@ class AccessRequestService(
             status = status,
             createdAt = createdAt,
             updatedAt = updatedAt,
-            ownerId = opinionListService.getListOwner(list),
+            ownerId = accessService.getListOwner(list),
         )
 
     @Transactional
@@ -44,9 +43,7 @@ class AccessRequestService(
         listId: UUID,
         requesterId: UUID,
     ): AccessRequest {
-        val list = opinionListService.getList(listId, requesterId)
-
-        if (list.owner == requesterId) {
+        if (accessService.getListOwner(listId) == requesterId) {
             throw IllegalArgumentException("Owner cannot request access to their own list")
         }
 
@@ -108,7 +105,7 @@ class AccessRequestService(
                 .findById(requestId)
                 .orElseThrow { NoSuchElementException("Request not found") }
 
-        if (opinionListService.getListOwner(request.list) != ownerId) {
+        if (accessService.getListOwner(request.list) != ownerId) {
             throw SecurityException("Only the owner can accept a request")
         }
 
@@ -131,7 +128,7 @@ class AccessRequestService(
                 .findById(requestId)
                 .orElseThrow { NoSuchElementException("Request not found") }
 
-        if (opinionListService.getListOwner(request.list) != ownerId) {
+        if (accessService.getListOwner(request.list) != ownerId) {
             throw SecurityException("Only the owner can decline a request")
         }
 
@@ -158,7 +155,7 @@ class AccessRequestService(
                 .findById(requestId)
                 .orElseThrow { NoSuchElementException("Request not found") }
 
-        if (opinionListService.getListOwner(request.list) != ownerId) {
+        if (accessService.getListOwner(request.list) != ownerId) {
             throw SecurityException("Only the owner can hide a request")
         }
 
