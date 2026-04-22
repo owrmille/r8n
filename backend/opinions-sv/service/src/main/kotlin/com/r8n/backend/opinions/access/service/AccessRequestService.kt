@@ -109,8 +109,8 @@ class AccessRequestService(
             throw SecurityException("Only the owner can accept a request")
         }
 
-        if (request.status != RequestStatusEnum.SENT) {
-            throw IllegalStateException("Can only accept a pending request")
+        if (request.status != RequestStatusEnum.SENT && request.status != RequestStatusEnum.HIDDEN) {
+            throw IllegalStateException("Can only accept a pending or hidden request")
         }
 
         request.status = RequestStatusEnum.ACCEPTED
