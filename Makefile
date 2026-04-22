@@ -210,6 +210,7 @@ $(addprefix local-stop-,$(SERVICES)): local-stop-%: ## Stop one local backend se
 	port=""; \
 	case "$*" in \
 		gateway) port="$$GATEWAY_PORT" ;; \
+		messaging) port="$$SERVICES_MESSAGING_PORT" ;; \
 		opinions) port="$$SERVICES_OPINIONS_PORT" ;; \
 		mock) port="$$SERVICES_MOCK_PORT" ;; \
 		users) port="$$SERVICES_USERS_PORT" ;; \
