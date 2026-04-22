@@ -2,6 +2,7 @@ import { Home, Search, User, List, Bell, Settings, PenLine, ListPlus, LogOut, Sh
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { NavLink } from "@/components/NavLink";
+import UserAvatar from "@/components/UserAvatar";
 import { useLocation } from "react-router-dom";
 import { useLogoutMutation } from "@/lib/server-state";
 import { useMe } from "@/lib/server-state/hooks/users";
@@ -137,9 +138,7 @@ export function AppSidebar() {
 
       <SidebarFooter className="p-4 border-t border-sidebar-border">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-medium shrink-0">
-            {me?.name ? me.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase() : "…"}
-          </div>
+          <UserAvatar userId={me?.id} name={me?.name ?? "…"} size="sm" />
           {!collapsed && (
             <>
               <div className="flex-1 min-w-0">

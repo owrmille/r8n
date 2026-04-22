@@ -6,6 +6,7 @@ import { createAuthApi } from "@/lib/api/auth";
 import { createOpinionListsApi } from "@/lib/api/opinion-lists";
 import { createOpinionsApi } from "@/lib/api/opinions";
 import { createSelectorsApi } from "@/lib/api/selectors";
+import { createUsersApi } from "@/lib/api/users";
 
 function createJsonResponse(body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -223,6 +224,56 @@ describe("API modules", () => {
     const [, requestInit] = fetchMock.mock.calls[0];
     const headers = new Headers(requestInit.headers);
     expect(headers.get("Authorization")).toBe("Bearer stub-access-token-123");
+  });
+
+  it("uses backend avatar routes with blob and multipart bodies", async () => {
+    setCookie("XSRF-TOKEN", "xsrf-token");
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response("avatar-bytes", {
+          headers: { "Content-Type": "image/png" },
+          status: 200,
+        }),
+      )
+      .mockResolvedValueOnce(createEmptyResponse())
+      .mockResolvedValueOnce(createEmptyResponse());
+    const client = createHttpClient({
+      baseUrl: "/api",
+      fetchFn: fetchMock,
+    });
+    const usersApi = createUsersApi(client);
+
+    const avatar = await usersApi.getUserAvatar(
+      "11111111-1111-1111-1111-111111111111",
+    );
+    await usersApi.uploadMyAvatar({
+      file: new File(["avatar"], "avatar.png", { type: "image/png" }),
+    });
+    await usersApi.deleteMyAvatar();
+
+    expect(avatar.type).toBe("image/png");
+    expect(await avatar.text()).toBe("avatar-bytes");
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      "/api/users/11111111-1111-1111-1111-111111111111/avatar",
+    );
+    expect(fetchMock.mock.calls[1][0]).toBe("/api/users/me/avatar");
+    expect(fetchMock.mock.calls[2][0]).toBe("/api/users/me/avatar");
+
+    const getHeaders = new Headers(fetchMock.mock.calls[0][1].headers);
+    expect(getHeaders.get("Accept")).toBe("image/*");
+
+    const uploadRequest = fetchMock.mock.calls[1][1];
+    const uploadHeaders = new Headers(uploadRequest.headers);
+    expect(uploadRequest).toEqual(expect.objectContaining({ method: "POST" }));
+    expect(uploadRequest.body).toBeInstanceOf(FormData);
+    expect(uploadHeaders.get("Content-Type")).toBeNull();
+    expect(uploadHeaders.get("Authorization")).toBe("Bearer stub-access-token-123");
+    expect(uploadHeaders.get("X-XSRF-TOKEN")).toBe("xsrf-token");
+
+    expect(fetchMock.mock.calls[2][1]).toEqual(
+      expect.objectContaining({ method: "DELETE" }),
+    );
   });
 
   it("merges pagination and filters for opinion list searches", async () => {

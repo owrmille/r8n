@@ -1,15 +1,16 @@
 import { Lock, List, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import AccessRequestButton from "@/components/AccessRequestButton";
-import ReviewerAvatar from "@/components/ReviewerAvatar";
+import UserAvatar from "@/components/UserAvatar";
+import type { Uuid } from "@/lib/api/shared";
 import { cn } from "@/lib/utils";
 
 export interface OpinionListCardProps {
   title: string;
   description: string;
   reviewCount: number;
+  authorId?: Uuid;
   authorName: string;
-  authorImage?: string;
   hasAccess: boolean;
   accessStatus?: "none" | "pending" | "approved" | "declined";
   showAccessBadge?: boolean;
@@ -21,8 +22,8 @@ const OpinionListCard = ({
   title,
   description,
   reviewCount,
+  authorId,
   authorName,
-  authorImage,
   hasAccess,
   accessStatus = "none",
   showAccessBadge = false,
@@ -54,7 +55,7 @@ const OpinionListCard = ({
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <ReviewerAvatar name={authorName} image={authorImage} size="sm" />
+          <UserAvatar userId={authorId} name={authorName} size="sm" />
           <div className="text-xs text-muted-foreground">
             <span className="font-medium text-card-foreground">{authorName}</span>
             <span className="mx-1">·</span>

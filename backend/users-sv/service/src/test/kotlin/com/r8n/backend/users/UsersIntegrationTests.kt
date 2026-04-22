@@ -5,6 +5,7 @@ import com.r8n.backend.users.api.dto.UserStatusEnumDto
 import com.r8n.backend.users.service.TokenService
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.AutoConfigureJsonTesters
@@ -13,11 +14,19 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.mock.web.MockMultipartFile
 import org.springframework.security.test.context.support.WithMockUser
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
@@ -28,6 +37,7 @@ import tools.jackson.module.kotlin.readValue
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import java.util.Base64
 import java.util.UUID
 
 @ActiveProfiles("test")
@@ -50,6 +60,10 @@ class UsersIntegrationTests {
                 .withInitScript("db/init-schema.sql")
 
         const val USER_ID = "00000000-0000-0000-0000-000000000000"
+        val PNG_BYTES: ByteArray =
+            Base64.getDecoder().decode(
+                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/axq6L8AAAAASUVORK5CYII=",
+            )
     }
 
     @Autowired
@@ -63,6 +77,13 @@ class UsersIntegrationTests {
 
     @Autowired
     lateinit var jdbcTemplate: JdbcTemplate
+
+    @BeforeEach
+    fun setUp() {
+        jdbcTemplate.update("DELETE FROM users.profile_avatars")
+    }
+
+    private fun userAccessToken() = tokenService.generateAccessToken(UUID.fromString(USER_ID), listOf("USER"))
 
     @Test
     @WithMockUser(username = USER_ID)
@@ -109,5 +130,83 @@ class UsersIntegrationTests {
             !actual.lastOnline!!.isBefore(beforeRequest),
             "lastOnline (${actual.lastOnline}) should be after or equal to beforeRequest ($beforeRequest)",
         )
+    }
+
+    @Test
+    fun `avatar upload and fetch returns image bytes`() {
+        val avatar =
+            MockMultipartFile(
+                "file",
+                "avatar.png",
+                MediaType.IMAGE_PNG_VALUE,
+                PNG_BYTES,
+            )
+
+        mockMvc
+            .perform(
+                multipart("/api/users/me/avatar")
+                    .file(avatar)
+                    .with(csrf())
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer ${userAccessToken()}"),
+            ).andExpect(status().isNoContent)
+
+        mockMvc
+            .perform(
+                get("/api/users/$USER_ID/avatar")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer ${userAccessToken()}"),
+            ).andExpect(status().isOk)
+            .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaType.IMAGE_PNG_VALUE))
+            .andExpect(content().bytes(PNG_BYTES))
+    }
+
+    @Test
+    fun `avatar upload rejects unsupported content type`() {
+        val avatar =
+            MockMultipartFile(
+                "file",
+                "avatar.txt",
+                MediaType.TEXT_PLAIN_VALUE,
+                "not an image".toByteArray(),
+            )
+
+        mockMvc
+            .perform(
+                multipart("/api/users/me/avatar")
+                    .file(avatar)
+                    .with(csrf())
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer ${userAccessToken()}"),
+            ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `avatar delete removes current user avatar`() {
+        val avatar =
+            MockMultipartFile(
+                "file",
+                "avatar.png",
+                MediaType.IMAGE_PNG_VALUE,
+                PNG_BYTES,
+            )
+
+        mockMvc
+            .perform(
+                multipart("/api/users/me/avatar")
+                    .file(avatar)
+                    .with(csrf())
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer ${userAccessToken()}"),
+            ).andExpect(status().isNoContent)
+
+        mockMvc
+            .perform(
+                delete("/api/users/me/avatar")
+                    .with(csrf())
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer ${userAccessToken()}"),
+            ).andExpect(status().isNoContent)
+
+        mockMvc
+            .perform(
+                get("/api/users/$USER_ID/avatar")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer ${userAccessToken()}"),
+            ).andExpect(status().isNoContent)
     }
 }

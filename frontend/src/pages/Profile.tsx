@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { MapPin, Download } from "lucide-react";
 import { useParams, Link } from "react-router-dom";
-import ReviewerAvatar from "@/components/ReviewerAvatar";
+import UserAvatar from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { QueryState } from "@/components/server-state/QueryState";
 import { useMe, useUserProfile } from "@/lib/server-state/hooks/users";
@@ -45,7 +45,7 @@ const Profile = () => {
             className="mb-10"
           >
             <div className="flex flex-col sm:flex-row gap-6 items-start">
-              <ReviewerAvatar name={profile?.name ?? "?"} size="lg" />
+              <UserAvatar userId={profile?.id} name={profile?.name ?? "?"} size="lg" />
               <div className="flex-1">
                 <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground mb-1">
                   {profile?.name}

@@ -87,6 +87,7 @@ services:
       - r8n_net
     volumes:
       - ./deployment/users/logs:/var/log/r8n
+      - ./deployment/users/avatar-storage:/var/lib/r8n/uploads/avatars
       - ./deployment/certs/internal:/certs:ro
     depends_on:
       - database
