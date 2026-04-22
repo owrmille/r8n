@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, CloudUpload, Loader2, Trash2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -62,7 +62,8 @@ function validateAvatarFile(file: File): string | undefined {
 const EditProfile = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [name, setName] = useState("Jane Doe");
+  const isNameInitializedRef = useRef(false);
+  const [name, setName] = useState("");
   const [bio, setBio] = useState("Curious eater and honest reviewer. I care about quality, atmosphere, and whether a place lives up to the hype.");
   const [location, setLocation] = useState("Berlin, Germany");
   const { data: me } = useMe();
@@ -89,6 +90,15 @@ const EditProfile = () => {
   const isAvatarMutating =
     uploadAvatarMutation.isPending || deleteAvatarMutation.isPending;
   const displayName = name.trim() || me?.name || "?";
+
+  useEffect(() => {
+    if (!me?.name || isNameInitializedRef.current) {
+      return;
+    }
+
+    setName(me.name);
+    isNameInitializedRef.current = true;
+  }, [me?.name]);
 
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.currentTarget.files?.[0];
