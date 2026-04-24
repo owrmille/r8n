@@ -11,6 +11,10 @@ import reactor.core.publisher.Mono
 
 @Configuration
 class WebClientConfiguration {
+/*
+Other services own their integration clients based on blocking RestClient.
+Gateway is reactive and needs WebClient for communication, so to avoid confusion, it owns its client to users-sv itself.
+ */
 
     @Bean
     fun usersWebClient(

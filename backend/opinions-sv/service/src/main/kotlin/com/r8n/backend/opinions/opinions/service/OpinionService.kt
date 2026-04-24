@@ -183,7 +183,7 @@ class OpinionService(
             id!!,
             owner,
             subject,
-            subjectService.getSubjectName(subject) ?: "UNNAMED",
+            subjectService.getSubjectName(subject),
             noteService.getSubjective(id!!),
             noteService.getObjective(id!!),
             mark,
