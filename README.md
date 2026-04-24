@@ -14,7 +14,7 @@ _This project has been created as part of the 42 curriculum by dbisko, iatopchu,
 - Fulfill 42 curriculum requirements for web development
 
 ### Key Features
-- **Multi-service Backend**: Gateway, Opinions, and other services with clear separation of concerns
+- **Multi-service Backend**: Gateway, Opinions, Users, Export, and Mock services with clear separation of concerns
 - **API-First Design**: Separate API contracts from implementation for clear service boundaries
 - **Secure Communication**: TLS/SSL encryption between services
 - **Database Management**: PostgreSQL with isolated schemas per service
@@ -233,19 +233,18 @@ curl "http://localhost:8081/opinions/30000000-0000-0000-0000-000000000001" \
 
 **Project Management:**
 - GitHub repository for version control
-- GitHub Issues (or Trello/Jira) for task tracking
-<!-- Specify actual tools used: -->
-- Project Management Tool: [GitHub Issues / Trello / Jira]
+- GitHub Issues for task tracking
+- Project Management Tool: GitHub Issues
 
 **Communication:**
-- Primary channel: [Discord / Slack / Teams]
-- Video calls: [Google Meet / Zoom / Teams]
-- Documentation: Notion / Confluence
+- Primary channel: Slack
+- Video calls: Google Meet
+- Documentation: Notion
 
 **Development Environment:**
 - Code hosting: GitHub
-- CI/CD: [GitHub Actions / GitLab CI]
-- Container registry: [Docker Hub / GitHub Container Registry]
+- CI/CD: GitHub Actions
+- Container registry: Local Registry
 
 ### Branch Strategy
 - Main branch: `master` (production-ready)
@@ -626,10 +625,6 @@ r8n_database/
 - Created comprehensive Makefile for developer workflow
 - Managed database initialization and persistence
 
-**Lines of Code / Commits:**
-- Approximately [X] lines of configuration/devops code
-- [X] commits across backend and deployment
-
 ## Additional Information
 
 ### Known Limitations
@@ -692,11 +687,6 @@ make docker-up
 
 # Database console
 make docker-database-connect
-
-# Test via gateway
-curl "http://localhost:8080/opinions/30000000-0000-0000-0000-000000000001" \
-  -H "Authorization: Bearer stub-access-token-123"
-```
 
 **Access URLs:**
 - Frontend: http://localhost:5173 (local) / https://localhost:5173 (Docker)

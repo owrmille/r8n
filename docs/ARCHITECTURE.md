@@ -4,7 +4,7 @@ This document describes the high-level architecture of the r8n application, a mi
 
 ## System Overview
 
-r8n is structured as a **microservices architecture** with 3 backend services, a PostgreSQL database, and a React frontend. All services communicate via HTTP or HTTPS depending on the environment.
+r8n is structured as a **microservices architecture** with 5 backend services, a PostgreSQL database, and a React frontend. All services communicate via HTTP or HTTPS depending on the environment.
 
 ```
 ┌─────────────┐         ┌──────────────┐         ┌─────────────┐
@@ -86,7 +86,7 @@ backend/
 - **Local Port**: 8080 (HTTP)
 - **Docker Port**: 8080 (HTTPS with TLS)
 - **Role**: API Gateway, routing, TLS termination
-- **Routes requests to**: opinions-sv, mock-sv
+- **Routes requests to**: opinions-sv, mock-sv, users-sv, export-sv
 - **HTTP/HTTPS**: Configured via `SERVER_SSL_ENABLED` environment variable
   - Local: `false` (HTTP only)
   - Docker: `true` (HTTPS only)
@@ -104,6 +104,22 @@ backend/
 - **Docker Port**: 8080 (HTTPS internally)
 - **Role**: Provides stub/test data for development and testing
 - **Mocks**: AccessRequests, OpinionLists, Selectors, Recommendations, Messaging
+- **HTTP/HTTPS**: Uses `INTERSERVICE_PROTOCOL` (http=local, https=Docker)
+
+#### 4. Users Service (`users-sv`)
+- **Local Port**: 8082 (HTTP)
+- **Docker Port**: 8080 (HTTPS internally)
+- **Role**: User management, profiles, authentication
+- **Database**: PostgreSQL `users` schema
+- **Key Features**: User profiles, avatar upload, authentication endpoints
+- **HTTP/HTTPS**: Uses `INTERSERVICE_PROTOCOL` (http=local, https=Docker)
+
+#### 5. Export Service (`export-sv`)
+- **Local Port**: 8083 (HTTP)
+- **Docker Port**: 8080 (HTTPS internally)
+- **Role**: Data export functionality, async job processing
+- **Database**: PostgreSQL `export` schema
+- **Key Features**: Export jobs, data generation, async processing
 - **HTTP/HTTPS**: Uses `INTERSERVICE_PROTOCOL` (http=local, https=Docker)
 
 ### API-First Design Pattern
@@ -177,7 +193,7 @@ r8n_db/
   ```
   INTERSERVICE_PROTOCOL=http
   SERVER_SSL_ENABLED=false
-  Ports: 8080, 8081, 8090
+  Ports: 8080, 8081, 8082, 8083, 8090
   ```
 
 - **Docker (make docker-up)**: HTTPS only
@@ -291,8 +307,10 @@ make docker-down # Stop and remove containers
 - All services connect via Docker network `r8n_net`
 - Internal service resolution via service names
 - Gateway routes:
-  - `/opinions/**` → opinions-sv:8080
-  - `/auth/**`, `/access-requests/**`, `/opinion-lists/**`, `/selectors/**` → mock-sv:8080
+  - `/api/opinions/**` → opinions-sv:8080
+  - `/api/auth/**`, `/api/users/**` → users-sv:8080
+- `/api/export/**` → export-sv:8080
+- `/api/access-requests/**`, `/api/opinion-lists/**`, `/api/selectors/**` → mock-sv:8080
 
 ### Make Targets
 
