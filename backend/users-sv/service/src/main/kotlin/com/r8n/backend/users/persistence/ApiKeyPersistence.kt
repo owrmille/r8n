@@ -10,31 +10,31 @@ import java.time.Instant
 import java.util.UUID
 
 @Entity
-@Table(schema = "users", name = "refresh_tokens")
-class RefreshTokenPersistence(
+@Table(schema = "users", name = "api_keys")
+class ApiKeyPersistence(
     @Id
     @GeneratedValue
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
     var id: UUID? = null,
 //
     @Column(nullable = false)
-    val tokenId: UUID,
-//
-    @Column(nullable = false)
     val userId: UUID,
 //
-    @Column(name = "parent_id")
-    val parentId: UUID? = null,
+    @Column(nullable = false, unique = true)
+    val keyHash: String,
 //
     @Column(nullable = false)
-    val issuedAt: Instant,
+    val name: String,
 //
     @Column(nullable = false)
-    val expiresAt: Instant,
+    val createdAt: Instant,
+//
+    @Column(nullable = true)
+    var lastUsedAt: Instant? = null,
+//
+    @Column(nullable = true)
+    val expiresAt: Instant? = null,
 //
     @Column(nullable = false)
-    var revoked: Boolean = false,
-//
-    @Column(nullable = false)
-    var used: Boolean = false,
+    var revoked: Boolean = false
 )

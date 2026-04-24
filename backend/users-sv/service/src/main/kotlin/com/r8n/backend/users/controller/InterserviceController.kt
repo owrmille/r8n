@@ -8,6 +8,7 @@ import com.r8n.backend.users.integration.api.dto.UserDto
 import com.r8n.backend.users.integration.api.dto.UserSessionDto
 import com.r8n.backend.users.facade.UserFacade
 import com.r8n.backend.users.integration.api.UsersInternalApi
+import com.r8n.backend.users.service.ApiKeyService
 import com.r8n.backend.users.service.UserService
 import org.springframework.data.domain.Pageable
 import org.springframework.security.access.prepost.PreAuthorize
@@ -18,7 +19,11 @@ import java.util.UUID
 class InterserviceController(
     private val userService: UserService,
     private val userFacade: UserFacade,
+    private val apiKeyService: ApiKeyService,
 ) : UsersInternalApi {
+    @PreAuthorize(Authority.IS_USER_OR_SERVICE)
+    override fun validateApiKey(key: String): UUID = apiKeyService.validateApiKey(key)
+
     @PreAuthorize(Authority.IS_USER_OR_SERVICE)
     override fun getUserName(id: UUID) = userService.getName(id)
 

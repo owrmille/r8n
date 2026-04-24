@@ -138,3 +138,17 @@ CREATE TABLE users.profile_avatars (
     updated_at TIMESTAMPTZ NOT NULL,
     CONSTRAINT fk_profile_avatar_user FOREIGN KEY (user_id) REFERENCES users.users(id) ON DELETE CASCADE
 );
+
+--changeset junie:V6_api_keys
+CREATE TABLE users.api_keys (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL,
+    key_hash VARCHAR(255) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL,
+    last_used_at TIMESTAMPTZ,
+    expires_at TIMESTAMPTZ,
+    revoked BOOLEAN NOT NULL DEFAULT FALSE,
+    CONSTRAINT fk_api_key_user FOREIGN KEY (user_id) REFERENCES users.users(id) ON DELETE CASCADE
+);
+CREATE INDEX idx_api_keys_user_id ON users.api_keys(user_id);

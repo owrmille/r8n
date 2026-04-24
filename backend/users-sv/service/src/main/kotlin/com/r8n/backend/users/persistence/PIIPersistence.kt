@@ -12,8 +12,6 @@ import java.util.UUID
 @Table(schema = "users", name = "pii")
 class PIIPersistence(
     @Id
-    @GeneratedValue
-    @UuidGenerator
     val userId: UUID,
 //
     @Column(nullable = false)

@@ -92,10 +92,12 @@ class SecurityAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication(type = org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type.SERVLET)
     fun maskingLoggingFilter(): MaskingLoggingFilter = MaskingLoggingFilter()
 
     @Bean
     @ConditionalOnMissingBean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication(type = org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type.SERVLET)
     fun filterChain(
         http: HttpSecurity,
         jwtDecoder: JwtDecoder,
