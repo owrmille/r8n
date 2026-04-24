@@ -458,7 +458,7 @@ public-request-user: ## user-sv access through public api
 	curl_args="-i"; \
 	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
 	\
-	curl $$curl_args -X GET "$$protocol://$$host:$$port/api/public/users/profile/00000000-0000-0000-0000-000000000000" \
+	curl $$curl_args -X GET "$$protocol://$$host:$$port/api/public/users/00000000-0000-0000-0000-000000000000" \
 		-H "X-API-KEY: r8n_test-key_1234"
 
 direct-request-opinion: ## HTTP direct request to opinions (local)
