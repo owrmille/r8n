@@ -4,6 +4,7 @@ import logo from "@/assets/logo.png";
 import { NavLink } from "@/components/NavLink";
 import UserAvatar from "@/components/UserAvatar";
 import { useLocation } from "react-router-dom";
+import { getUnreadMessagesCount, MOCK_MESSAGE_THREADS } from "@/lib/messages";
 import { useLogoutMutation } from "@/lib/server-state";
 import { useMe } from "@/lib/server-state/hooks/users";
 import {
@@ -30,6 +31,7 @@ const mainItems = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
+  const unreadMessagesCount = getUnreadMessagesCount(MOCK_MESSAGE_THREADS);
   const location = useLocation();
   const navigate = useNavigate();
   const logoutMutation = useLogoutMutation({
@@ -96,6 +98,11 @@ export function AppSidebar() {
                       {item.title === "Requests" && !collapsed && (
                         <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-mono font-semibold text-accent-foreground">
                           3
+                        </span>
+                      )}
+                      {item.title === "Messages" && !collapsed && unreadMessagesCount > 0 && (
+                        <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-mono font-semibold text-accent-foreground">
+                          {unreadMessagesCount}
                         </span>
                       )}
                     </NavLink>

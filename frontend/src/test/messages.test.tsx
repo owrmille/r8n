@@ -36,4 +36,39 @@ describe("Messages page", () => {
     expect(screen.queryByText("Question about your coffee grinder review")).not.toBeInTheDocument();
     expect(screen.queryByText("Supplier recommendation follow-up")).not.toBeInTheDocument();
   });
+
+  it("sends a new message in an expanded thread", () => {
+    render(<Messages />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Expand thread with R8N Support" }));
+    fireEvent.change(
+      screen.getByPlaceholderText("Message R8N Support..."),
+      { target: { value: "Thanks, please send it here once it is ready." } },
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
+
+    expect(
+      screen.getByText("Thanks, please send it here once it is ready."),
+    ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Message R8N Support...")).toHaveValue("");
+  });
+
+  it("creates a new thread from the new message dialog", () => {
+    render(<Messages />);
+
+    fireEvent.click(screen.getByRole("button", { name: "New message" }));
+    fireEvent.change(screen.getByLabelText("Recipient"), {
+      target: { value: "Lina Hartmann" },
+    });
+    fireEvent.change(screen.getByLabelText("Message"), {
+      target: { value: "Hi, I wanted to ask about your supplier shortlist." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Start thread" }));
+
+    expect(screen.getByText("Conversation with Lina Hartmann")).toBeInTheDocument();
+    expect(
+      screen.getByText("Hi, I wanted to ask about your supplier shortlist."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Collapse thread with Lina Hartmann" })).toBeInTheDocument();
+  });
 });

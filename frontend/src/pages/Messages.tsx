@@ -3,121 +3,30 @@ import { motion } from "framer-motion";
 import {
   ChevronDown,
   Clock,
+  Plus,
+  SendHorizontal,
 } from "lucide-react";
 import ReviewerAvatar from "@/components/ReviewerAvatar";
+import { Button } from "@/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { MOCK_MESSAGE_THREADS, type MessageDirection, type MessageThread, type ThreadMessage } from "@/lib/messages";
 import { cn } from "@/lib/utils";
 
-type MessageDirection = "incoming" | "outgoing";
 type MessageFilter = "all" | "inbox" | "outbox" | "support";
-
-interface ThreadMessage {
-  id: string;
-  direction: MessageDirection;
-  authorName: string;
-  body: string;
-  sentAt: string;
-}
-
-interface MessageThread {
-  id: string;
-  subject: string;
-  participantName: string;
-  participantRole: string;
-  context: string;
-  updatedAt: string;
-  unreadCount: number;
-  messages: ThreadMessage[];
-}
-
-const MOCK_THREADS: MessageThread[] = [
-  {
-    id: "thread-user-1",
-    subject: "Question about your coffee grinder review",
-    participantName: "Marta Keller",
-    participantRole: "User",
-    context: "Direct message",
-    updatedAt: "18m ago",
-    unreadCount: 2,
-    messages: [
-      {
-        id: "msg-user-1",
-        direction: "incoming",
-        authorName: "Marta Keller",
-        body: "I saw your note about the grinder noise level. Was that during daily use or only while testing?",
-        sentAt: "09:42",
-      },
-      {
-        id: "msg-user-2",
-        direction: "outgoing",
-        authorName: "You",
-        body: "Daily use. It was fine for short grinding, but too loud for the small kitchen during service hours.",
-        sentAt: "09:51",
-      },
-      {
-        id: "msg-user-3",
-        direction: "incoming",
-        authorName: "Marta Keller",
-        body: "That helps, thanks. I will compare it with the quieter model before ordering.",
-        sentAt: "10:04",
-      },
-    ],
-  },
-  {
-    id: "thread-support-1",
-    subject: "Export archive request",
-    participantName: "R8N Support",
-    participantRole: "Support",
-    context: "Support conversation",
-    updatedAt: "1h ago",
-    unreadCount: 0,
-    messages: [
-      {
-        id: "msg-support-1",
-        direction: "outgoing",
-        authorName: "You",
-        body: "I requested an export of my account data this morning. Can you confirm when it will be ready?",
-        sentAt: "Yesterday",
-      },
-      {
-        id: "msg-support-2",
-        direction: "incoming",
-        authorName: "R8N Support",
-        body: "Your export is being prepared. We will notify you here when the archive is ready to download.",
-        sentAt: "Today",
-      },
-    ],
-  },
-  {
-    id: "thread-user-2",
-    subject: "Supplier recommendation follow-up",
-    participantName: "Elena Rossi",
-    participantRole: "User",
-    context: "Direct message",
-    updatedAt: "Yesterday",
-    unreadCount: 1,
-    messages: [
-      {
-        id: "msg-user-4",
-        direction: "incoming",
-        authorName: "Elena Rossi",
-        body: "Do you still recommend the packaging supplier from your March list?",
-        sentAt: "Yesterday",
-      },
-      {
-        id: "msg-user-5",
-        direction: "outgoing",
-        authorName: "You",
-        body: "Yes, but only for small batches. Their lead time became inconsistent for larger orders.",
-        sentAt: "Yesterday",
-      },
-    ],
-  },
-];
 
 const FILTERS: Array<{ id: MessageFilter; label: string }> = [
   { id: "all", label: "All" },
@@ -139,12 +48,17 @@ function getDirectionMeta(direction: MessageDirection) {
 }
 
 const Messages = () => {
+  const [threads, setThreads] = useState<MessageThread[]>(MOCK_MESSAGE_THREADS);
   const [openThreads, setOpenThreads] = useState<string[]>([]);
   const [activeFilter, setActiveFilter] = useState<MessageFilter>("all");
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [isNewMessageDialogOpen, setIsNewMessageDialogOpen] = useState(false);
+  const [newRecipient, setNewRecipient] = useState("");
+  const [newMessage, setNewMessage] = useState("");
 
   const filteredThreads = useMemo(
     () =>
-      MOCK_THREADS.filter((thread) => {
+      threads.filter((thread) => {
         const lastDirection = thread.messages[thread.messages.length - 1]?.direction;
 
         if (activeFilter === "inbox") {
@@ -161,7 +75,7 @@ const Messages = () => {
 
         return true;
       }),
-    [activeFilter],
+    [activeFilter, threads],
   );
 
   const toggleThread = (threadId: string) => {
@@ -172,20 +86,122 @@ const Messages = () => {
     );
   };
 
+  const updateDraft = (threadId: string, value: string) => {
+    setDrafts((current) => ({
+      ...current,
+      [threadId]: value,
+    }));
+  };
+
+  const sendMessage = (threadId: string) => {
+    const draft = drafts[threadId]?.trim();
+
+    if (!draft) {
+      return;
+    }
+
+    setThreads((current) => {
+      const thread = current.find((item) => item.id === threadId);
+      if (!thread) {
+        return current;
+      }
+
+      const nextMessage: ThreadMessage = {
+        id: `msg-${threadId}-${Date.now()}`,
+        direction: "outgoing",
+        authorName: "You",
+        body: draft,
+        sentAt: "Just now",
+      };
+
+      const updatedThread: MessageThread = {
+        ...thread,
+        updatedAt: "Just now",
+        unreadCount: 0,
+        messages: [...thread.messages, nextMessage],
+      };
+
+      return [
+        updatedThread,
+        ...current.filter((item) => item.id !== threadId),
+      ];
+    });
+
+    setDrafts((current) => ({
+      ...current,
+      [threadId]: "",
+    }));
+  };
+
+  const createThread = () => {
+    const recipientName = newRecipient.trim();
+    const messageBody = newMessage.trim();
+
+    if (!recipientName || !messageBody) {
+      return;
+    }
+
+    const normalizedRecipient = recipientName.toLowerCase();
+    const isSupportThread = normalizedRecipient.includes("support");
+    const threadId = `thread-new-${Date.now()}`;
+    const createdThread: MessageThread = {
+      id: threadId,
+      subject: isSupportThread
+        ? "New support conversation"
+        : `Conversation with ${recipientName}`,
+      participantName: recipientName,
+      participantRole: isSupportThread ? "Support" : "User",
+      context: isSupportThread ? "Support conversation" : "Direct message",
+      updatedAt: "Just now",
+      unreadCount: 0,
+      messages: [
+        {
+          id: `msg-${threadId}-1`,
+          direction: "outgoing",
+          authorName: "You",
+          body: messageBody,
+          sentAt: "Just now",
+        },
+      ],
+    };
+
+    setThreads((current) => [createdThread, ...current]);
+    setOpenThreads((current) => [threadId, ...current]);
+    setActiveFilter("all");
+    setDrafts((current) => ({
+      ...current,
+      [threadId]: "",
+    }));
+    setNewRecipient("");
+    setNewMessage("");
+    setIsNewMessageDialogOpen(false);
+  };
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 md:px-8 md:py-12">
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="mb-10"
+        className="mb-10 flex items-start justify-between gap-4"
       >
-        <h1 className="mb-1 text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
-          Messages
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Private conversations with other users and R8N support.
-        </p>
+        <div>
+          <h1 className="mb-1 text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
+            Messages
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Private conversations with other users and R8N support.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          className="rounded-xl"
+          onClick={() => setIsNewMessageDialogOpen(true)}
+        >
+          <Plus className="h-4 w-4" />
+          New message
+        </Button>
       </motion.div>
 
       <div className="mb-6 flex flex-wrap gap-2" aria-label="Message filters">
@@ -327,13 +343,89 @@ const Messages = () => {
                       );
                     })}
                   </div>
-
+                  <div className="mt-5 border-t border-border/70 pt-4">
+                    <div className="rounded-2xl border border-border bg-background p-3">
+                      <Textarea
+                        value={drafts[thread.id] ?? ""}
+                        onChange={(event) => updateDraft(thread.id, event.target.value)}
+                        placeholder={`Message ${thread.participantName}...`}
+                        className="min-h-[96px] resize-none border-0 px-0 py-0 shadow-none focus-visible:ring-0"
+                      />
+                      <div className="mt-3 flex justify-end">
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="rounded-xl"
+                          disabled={!drafts[thread.id]?.trim()}
+                          onClick={() => sendMessage(thread.id)}
+                        >
+                          <SendHorizontal className="h-4 w-4" />
+                          Send
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </CollapsibleContent>
             </Collapsible>
           );
         })}
       </motion.section>
+
+      <Dialog open={isNewMessageDialogOpen} onOpenChange={setIsNewMessageDialogOpen}>
+        <DialogContent className="rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>New message</DialogTitle>
+            <DialogDescription>
+              Start a private conversation with another user or R8N support.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="new-message-recipient" className="text-sm font-medium text-foreground">
+                Recipient
+              </label>
+              <Input
+                id="new-message-recipient"
+                value={newRecipient}
+                onChange={(event) => setNewRecipient(event.target.value)}
+                placeholder="Enter a name or R8N Support"
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="new-message-body" className="text-sm font-medium text-foreground">
+                Message
+              </label>
+              <Textarea
+                id="new-message-body"
+                value={newMessage}
+                onChange={(event) => setNewMessage(event.target.value)}
+                placeholder="Write the first message..."
+                className="min-h-[120px] resize-none"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-xl"
+              onClick={() => setIsNewMessageDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="rounded-xl"
+              disabled={!newRecipient.trim() || !newMessage.trim()}
+              onClick={createThread}
+            >
+              <SendHorizontal className="h-4 w-4" />
+              Start thread
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
