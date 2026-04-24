@@ -74,5 +74,8 @@ class SupportMessagingFacade(
         )
 
     private fun SupportParticipantRoleEnumPersistence.toDto(): SupportParticipantRoleEnumDto =
-        SupportParticipantRoleEnumDto.valueOf(name)
+        when (this) {
+            SupportParticipantRoleEnumPersistence.USER -> SupportParticipantRoleEnumDto.USER
+            SupportParticipantRoleEnumPersistence.SUPPORT -> SupportParticipantRoleEnumDto.SUPPORT
+        }
 }

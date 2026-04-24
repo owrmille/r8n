@@ -98,6 +98,7 @@ class SupportMessagingIntegrationTests {
     @Test
     fun `support can read another user thread`() {
         val threadId = createThread(userAId, "USER", "Need a support response")
+        addMessage(supportId, "SUPPORT", threadId, "Support response")
 
         mockMvc
             .perform(
@@ -106,7 +107,8 @@ class SupportMessagingIntegrationTests {
                     .param("size", "20")
                     .with(user(supportId.toString()).roles("SUPPORT")),
             ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.items.length()").value(1))
+            .andExpect(jsonPath("$.items.length()").value(2))
+            .andExpect(jsonPath("$.items[1].authorRole").value("SUPPORT"))
     }
 
     @Test
