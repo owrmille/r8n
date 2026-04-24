@@ -26,6 +26,7 @@ include("opinions-sv", "opinions-sv/service")
 
 include("core:security-common")
 include("core:security-servlet")
+include("core:security-reactive")
 include("core:api")
 include("core:utils")
 

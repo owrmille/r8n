@@ -10,7 +10,7 @@ tasks.named<BootJar>("bootJar") {
 
 dependencies {
     implementation(platform(project(":platform")))
-    implementation(project(":core:security-common"))
+    implementation(project(":core:security-reactive"))
     implementation(project(":users-api-integration"))
     implementation(libs.spring.boot.starter.webflux)
     implementation(libs.spring.cloud.gateway)

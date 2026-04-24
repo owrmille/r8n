@@ -36,8 +36,10 @@ class ApiKeyAuthenticationFilter(
                 .get()
                 .uri(KeyValidationApi.VALIDATE_API_KEY_PATH.replace("{key}", apiKey))
                 .retrieve()
-                .onStatus({ it.isError }) {
-                    Mono.error(RuntimeException("Invalid API Key"))
+                .onStatus({ it.isError }) { response ->
+                    response.bodyToMono(String::class.java).defaultIfEmpty("No error body").flatMap { body ->
+                        Mono.error(RuntimeException("Validation failed with status ${response.statusCode()}: $body"))
+                    }
                 }.bodyToMono(UUID::class.java)
                 .flatMap { userId ->
                     // Inject a short-lived internal JWT token so downstream services can identify the user
@@ -51,7 +53,13 @@ class ApiKeyAuthenticationFilter(
                     chain.filter(exchange.mutate().request(request).build())
                 }.onErrorResume { e ->
                     log.error("API Key validation failed: {}", e.message)
-                    exchange.response.statusCode = HttpStatus.UNAUTHORIZED
+                    if (e is RuntimeException && e.message?.contains("401") == true) {
+                        // If the call to users-sv returned 401, it means the API key is invalid
+                        exchange.response.statusCode = HttpStatus.UNAUTHORIZED
+                    } else {
+                        // Other errors (like 500 from users-sv or connection issues) are internal errors
+                        exchange.response.statusCode = HttpStatus.INTERNAL_SERVER_ERROR
+                    }
                     exchange.response.setComplete()
                 }
         }

@@ -39,5 +39,6 @@ spring:
                 - Path=/api/selectors/**
 r8n:
   security:
+    public-paths: /api/auth/**
     jwt:
       public-key: ${JWT_PUBLIC_KEY}
