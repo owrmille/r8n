@@ -154,20 +154,11 @@ DELETE FROM users.users_role_assignments
 WHERE "user" = '00000000-0000-0000-0000-000000000000'
   AND role = 'SUPPORT';
 
-MERGE INTO users.users_role_assignments AS target
-USING (
-    VALUES (
-        '78787878-7878-7878-7878-787878787878'::UUID,
-        '10101010-1010-1010-1010-101010101010'::UUID,
-        'SUPPORT',
-        '10101010-1010-1010-1010-101010101010'::UUID,
-        '2024-01-01T12:00:00Z'::TIMESTAMPTZ
-    )
-) AS source (id, "user", role, granted_by, timestamp)
-ON target."user" = source."user" AND target.role = source.role
-WHEN MATCHED THEN UPDATE SET
-    id = source.id,
-    granted_by = source.granted_by,
-    timestamp = source.timestamp
-WHEN NOT MATCHED THEN INSERT (id, "user", role, granted_by, timestamp)
-VALUES (source.id, source."user", source.role, source.granted_by, source.timestamp);
+INSERT INTO users.users_role_assignments (id, "user", role, granted_by, timestamp)
+VALUES (
+    '77777777-7777-7777-7777-777777777777',
+    '10101010-1010-1010-1010-101010101010',
+    'SUPPORT',
+    '10101010-1010-1010-1010-101010101010',
+    '2024-01-01T12:00:00Z'
+);
