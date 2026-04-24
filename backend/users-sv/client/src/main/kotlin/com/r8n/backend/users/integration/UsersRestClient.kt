@@ -6,10 +6,15 @@ import com.r8n.backend.users.api.dto.UserDto
 import com.r8n.backend.users.api.dto.UserSessionDto
 import com.r8n.backend.users.integration.api.UsersInternalApi
 import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.ID_PATH
+import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.IS_ADMIN_PATH
+import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.IS_AI_MODERATOR_PATH
+import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.IS_ANY_MODERATOR_PATH
+import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.IS_HUMAN_MODERATOR_PATH
 import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.NAME_PATH
 import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.SESSIONS_PATH
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.web.client.RestClient
+import org.springframework.web.client.body
 import java.util.UUID
 
 class UsersRestClient(
@@ -43,4 +48,32 @@ class UsersRestClient(
                     .build(id)
             }.retrieve()
             .body(object : ParameterizedTypeReference<PageResponseDto<UserSessionDto>>() {})!!
+
+    override fun isAnyModerator(id: UUID): Boolean =
+        restClient
+            .get()
+            .uri(IS_ANY_MODERATOR_PATH, id)
+            .retrieve()
+            .body<Boolean>()!!
+
+    override fun isHumanModerator(id: UUID): Boolean =
+        restClient
+            .get()
+            .uri(IS_HUMAN_MODERATOR_PATH, id)
+            .retrieve()
+            .body<Boolean>()!!
+
+    override fun isAiModerator(id: UUID): Boolean =
+        restClient
+            .get()
+            .uri(IS_AI_MODERATOR_PATH, id)
+            .retrieve()
+            .body<Boolean>()!!
+
+    override fun isAdmin(id: UUID): Boolean =
+        restClient
+            .get()
+            .uri(IS_ADMIN_PATH, id)
+            .retrieve()
+            .body<Boolean>()!!
 }

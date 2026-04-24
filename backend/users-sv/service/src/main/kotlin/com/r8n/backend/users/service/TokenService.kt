@@ -4,6 +4,7 @@ import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSHeader
 import com.nimbusds.jose.JWSSigner
 import com.nimbusds.jose.crypto.RSASSASigner
+import com.nimbusds.jose.crypto.RSASSAVerifier
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
 import com.r8n.backend.security.SecurityAutoConfiguration.Companion.decodePublicKey
@@ -96,9 +97,7 @@ class TokenService(
         try {
             val signedJWT = SignedJWT.parse(refreshToken)
             val pubKey = decodePublicKey(publicKeyPem)
-            val verifier =
-                com.nimbusds.jose.crypto
-                    .RSASSAVerifier(pubKey)
+            val verifier = RSASSAVerifier(pubKey)
 
             if (!signedJWT.verify(verifier)) {
                 throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token")

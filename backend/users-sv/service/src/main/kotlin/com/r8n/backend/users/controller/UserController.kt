@@ -20,7 +20,7 @@ class UserController(
     private val userAvatarService: UserAvatarService,
 ) : UsersApi {
     @PreAuthorize(IS_USER)
-    override fun getMyName(): UsernameDto = userFacade.getMyName()
+    override fun getMyName(): UsernameDto = userFacade.getMyName(getCurrentUserId())
 
     @PreAuthorize(IS_USER)
     override fun getUserProfile(id: UUID) = userFacade.getUserProfile(id)

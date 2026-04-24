@@ -104,6 +104,17 @@ describe("EditProfile avatar controls", () => {
     vi.unstubAllEnvs();
   });
 
+  it("shows initials from the current user name when there is no avatar", async () => {
+    fetchMock
+      .mockResolvedValueOnce(createUserResponse())
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    renderEditProfile();
+
+    expect(await screen.findByText("TT")).toBeInTheDocument();
+    expect(screen.queryByText("JD")).not.toBeInTheDocument();
+  });
+
   it("uploads a valid selected image file", async () => {
     fetchMock
       .mockResolvedValueOnce(createUserResponse())

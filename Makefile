@@ -314,7 +314,24 @@ logout: ## Logout and clear cookies (ENV=local|docker)
 	rm -f .access_token .cookies; \
 	echo "Logged out and local session files removed."
 
-routed-request-opinion: ## Gateway request to opinions (ENV=local|docker)
+routed-request-opinion-forbidden: ## failing gateway request to opinions (ENV=local|docker)
+	@if [ ! -f .access_token ]; then $(MAKE) get-token ENV=$(ENV); fi
+	@if [ "$(ENV)" = "docker" ]; then \
+		$(LOAD_DOCKER_ENV) \
+		protocol=https; \
+		host=localhost; \
+		port=8080; \
+	else \
+		$(LOAD_LOCAL_ENV) \
+		protocol=$${INTERSERVICE_PROTOCOL:-http}; \
+		host=$${GATEWAY_HOST:-localhost}; \
+		port=$${GATEWAY_PORT:-8080}; \
+	fi; \
+	curl_args="-i"; \
+	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
+	curl $$curl_args "$$protocol://$$host:$$port/api/opinions/30000000-0000-0000-0000-000000000003" -H "Authorization: Bearer $$(cat .access_token)"
+
+routed-request-opinion-mine: ## Gateway request to opinions (ENV=local|docker)
 	@if [ ! -f .access_token ]; then $(MAKE) get-token ENV=$(ENV); fi
 	@if [ "$(ENV)" = "docker" ]; then \
 		$(LOAD_DOCKER_ENV) \
@@ -330,6 +347,23 @@ routed-request-opinion: ## Gateway request to opinions (ENV=local|docker)
 	curl_args="-i"; \
 	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
 	curl $$curl_args "$$protocol://$$host:$$port/api/opinions/30000000-0000-0000-0000-000000000002" -H "Authorization: Bearer $$(cat .access_token)"
+
+routed-request-opinion-approved: ## Gateway request to opinions (ENV=local|docker)
+	@if [ ! -f .access_token ]; then $(MAKE) get-token ENV=$(ENV); fi
+	@if [ "$(ENV)" = "docker" ]; then \
+		$(LOAD_DOCKER_ENV) \
+		protocol=https; \
+		host=localhost; \
+		port=8080; \
+	else \
+		$(LOAD_LOCAL_ENV) \
+		protocol=$${INTERSERVICE_PROTOCOL:-http}; \
+		host=$${GATEWAY_HOST:-localhost}; \
+		port=$${GATEWAY_PORT:-8080}; \
+	fi; \
+	curl_args="-i"; \
+	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
+	curl $$curl_args "$$protocol://$$host:$$port/api/opinions/30000000-0000-0000-0000-000000000001" -H "Authorization: Bearer $$(cat .access_token)"
 
 routed-request-mock: ## Gateway request to mock (ENV=local|docker)
 	@if [ ! -f .access_token ]; then $(MAKE) get-token ENV=$(ENV); fi

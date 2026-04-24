@@ -3,10 +3,10 @@ package com.r8n.backend.export.service
 import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.export.api.dto.UserCompleteDataDto
-import com.r8n.backend.mock.api.IncomingAccessRequestApi
 import com.r8n.backend.mock.api.MessagingApi
-import com.r8n.backend.mock.api.OutgoingAccessRequestApi
-import com.r8n.backend.mock.integration.api.OpinionListInternalApi
+import com.r8n.backend.opinions.api.access.IncomingAccessRequestApi
+import com.r8n.backend.opinions.api.access.OutgoingAccessRequestApi
+import com.r8n.backend.opinions.integration.api.OpinionListsInternalApi
 import com.r8n.backend.users.api.dto.PersonalIdentifiableInformationSectionDto
 import com.r8n.backend.users.integration.api.UsersInternalApi
 import org.slf4j.LoggerFactory
@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap
 @Service
 class DataExportService(
     private val usersClient: UsersInternalApi,
-    private val opinionClient: OpinionListInternalApi,
+    private val opinionClient: OpinionListsInternalApi,
     private val incomingAccessRequestClient: IncomingAccessRequestApi,
     private val outgoingAccessRequestClient: OutgoingAccessRequestApi,
     private val messageClient: MessagingApi,
@@ -43,7 +43,7 @@ class DataExportService(
     }
 
     fun startExport(userId: UUID) {
-        logger.debug("Starting export for user: $userId")
+        logger.debug("Starting export for user: {}", userId)
         cancelExistingJob(userId)
         exportJobs[userId] = ExportJob(userId, ExportJobStatus.PENDING, Instant.now())
 
@@ -51,11 +51,11 @@ class DataExportService(
         // In a real implementation, this would be an async job
         try {
             updateExportStatus(userId, ExportJobStatus.IN_PROGRESS)
-            logger.debug("Fetching user data for user: $userId")
+            logger.debug("Fetching user data for user: {}", userId)
             val data = fetchUserCompleteData(userId)
-            logger.debug("User data fetched successfully for user: $userId")
+            logger.debug("User data fetched successfully for user: {}", userId)
             completeExport(userId, data)
-            logger.debug("Export completed successfully for user: $userId")
+            logger.debug("Export completed successfully for user: {}", userId)
         } catch (e: Exception) {
             logger.error("Export failed for user: $userId", e)
             failExport(userId)

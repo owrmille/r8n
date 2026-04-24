@@ -1,11 +1,14 @@
 import { motion } from "framer-motion";
-import { MapPin, Download } from "lucide-react";
+import { MapPin, Download, Settings } from "lucide-react";
 import { useParams, Link } from "react-router-dom";
 import UserAvatar from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { QueryState } from "@/components/server-state/QueryState";
 import { useMe, useUserProfile } from "@/lib/server-state/hooks/users";
 import { useMyOpinionLists } from "@/lib/server-state/hooks/opinion-lists";
+
+const profileActionButtonClass = "inline-flex h-11 items-center justify-center rounded-xl px-4 py-0 leading-none";
+const profileActionIconButtonClass = `${profileActionButtonClass} gap-1.5`;
 
 const Profile = () => {
   const { id } = useParams();
@@ -66,16 +69,21 @@ const Profile = () => {
                 )}
 
                 {isOwnProfile && (
-                  <div className="flex gap-3">
-                    <Link to="/profile/edit">
-                      <Button variant="outline" size="sm" className="rounded-xl">
+                  <div className="flex flex-wrap gap-3">
+                    <Button asChild variant="outline" className={profileActionButtonClass}>
+                      <Link to="/profile/edit">
                         Edit Profile
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" className={profileActionIconButtonClass}>
+                      <Link to="/settings">
+                        <Settings className="h-3.5 w-3.5" />
+                        Settings
+                      </Link>
+                    </Button>
                     <Button
                       variant="outline"
-                      size="sm"
-                      className="rounded-xl gap-1.5"
+                      className={profileActionIconButtonClass}
                       onClick={() => {
                         const data = {
                           profile,
@@ -111,7 +119,7 @@ const Profile = () => {
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {lists.map((list) => (
-                    <Link key={list.id} to={`/list/${list.id}`}>
+                    <Link key={list.listId} to={`/list/${list.listId}`}>
                       <div className="rounded-2xl border border-border bg-card p-4 hover:bg-muted/30 transition-colors">
                         <p className="font-medium text-foreground text-sm">{list.listName}</p>
                       </div>

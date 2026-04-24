@@ -46,7 +46,7 @@ const MyLists = () => {
         >
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {lists.map((list) => (
-              <Link key={list.id} to={`/list/${list.id}`}>
+              <Link key={list.listId} to={`/list/${list.listId}`}>
                 <OpinionListCard
                   title={list.listName}
                   description=""

@@ -121,6 +121,7 @@ services:
       - database
       - users
       - mock
+      - opinions
 
   gateway:
     build:
