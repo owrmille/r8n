@@ -4,6 +4,10 @@ _This project has been created as part of the 42 curriculum by dbisko, iatopchu,
 
 ## Description
 
+**You don't need everyone's opinion. You need the right people's opinion.**
+
+**r8n** platform lets you build a personal network of trusted reviewers — friends, food critics you follow, colleagues with similar taste — and see only their honest takes on restaurants and cafés. Reviews are private by design, shared only on request, which means they're protected under German law and can never be forced down.
+
 **r8n** is a scalable microservices-based platform built with Spring Boot, Kotlin, and React, designed to demonstrate modern software architecture patterns and distributed systems principles. The platform implements a multi-service architecture with an API Gateway and core business logic services, all communicating via HTTP/HTTPS with TLS encryption.
 
 ### Goals
@@ -106,7 +110,7 @@ make docker-down
 
 **Create database schema:**
 ```bash
-make docker-run-database
+make docker-database-run
 ```
 
 **Connect to database:**
@@ -118,19 +122,7 @@ make docker-database-connect
 
 ### Testing API Endpoints
 
-**Via Gateway:**
-```bash
-curl "http://localhost:8080/opinions/30000000-0000-0000-0000-000000000001" \
-  -H "Authorization: Bearer stub-access-token-123"
-```
-
-**Direct to services:**
-```bash
-# Direct to opinions
-curl "http://localhost:8081/opinions/30000000-0000-0000-0000-000000000001" \
-  -H "Authorization: Bearer stub-access-token-123"
-
-```
+Use the make rules to test API endpoints (documented in Make Commands Reference below).
 
 ### Make Commands Reference
 
@@ -142,7 +134,7 @@ curl "http://localhost:8081/opinions/30000000-0000-0000-0000-000000000001" \
 - `make build-opinions` - Build the opinions service
 
 **Database:**
-- `make docker-run-database` - Start only the database
+- `make docker-database-run` - Start only the database
 - `make docker-database-connect` - Connect to database with psql
 
 **Testing:**
@@ -190,43 +182,32 @@ curl "http://localhost:8081/opinions/30000000-0000-0000-0000-000000000001" \
 ## Team Information
 
 ### Team Structure
-<!-- Replace with actual team member information -->
 
-**Team Member 1: [login1]**
-- **Assigned Role(s):** Tech Lead, Backend Developer
-- **Responsibilities:**
-  - Led overall architecture design
-  - Implemented core backend microservices (Gateway, Opinions)
-  - Database design and schema implementation
-  - API design and contract management
+**Backend Team:**
+- **inikulin** - Tech Lead, Backend Developer
+  - Led architecture design, implemented Gateway and Opinions services
+  - Database design, API contracts
+- **iatopchu** - Backend Developer
+  - Backend service development, business logic implementation
+- **lshapkin** - Backend Developer
+  - Backend service development, testing
 
-**Team Member 2: [login2]**
-- **Assigned Role(s):** Frontend Lead, UI/UX Developer
-- **Responsibilities:**
-  - Frontend architecture decisions (Feature-Sliced Design)
-  - React component development
-  - Design system implementation
-  - Frontend build configuration
-
-**Team Member 3: [login3]**
-- **Assigned Role(s):** DevOps Engineer, Backend Developer
-- **Responsibilities:**
-  - Docker deployment configuration
-  - Makefile automation targets
-  - Testing infrastructure setup
+**Frontend Team:**
+- **mkulikov** - Frontend Lead, UI/UX Developer
+  - Frontend architecture (FSD), React development, design system
+- **dbisko** - Frontend Developer
+  - React component development, API integration
 
 ## Project Management
 
 ### Work Organization
 
 **Task Distribution:**
-- Sprint-based development with weekly check-ins
 - Clear separation of concerns (backend team, frontend team, devops)
 - Individual ownership of services (Gateway, Opinions, Frontend)
 
 **Meeting Structure:**
 - Weekly team meetings for progress review
-- Daily standups for feature development
 - Technical review sessions for architecture decisions
 
 ### Tools Used
@@ -270,10 +251,10 @@ curl "http://localhost:8081/opinions/30000000-0000-0000-0000-000000000001" \
 - **PostgreSQL 15** - Relational database with JSONB support
 - **HikariCP** - Connection pooling
 - **Spring Data JPA** - ORM abstraction
-- **Flyway** (or manual) - Schema migrations
+- **Liquibase** - Schema migrations
 
 **Justification:**
-- PostgreSQL offers robust ACID guarantees and excellent performance
+- PostgreSQL offers robust ACID (Atomicity, Consistency, Isolation, Durability) guarantees and excellent performance
 - Separate schemas provide clean service isolation
 - Spring Data JPA simplifies data access patterns
 
@@ -374,13 +355,13 @@ r8n_database/
 - **opinion_subjects** → **opinions**: Many-to-Many (future extension)
 
 ### Index Strategy
-- Primary keys: UUID (random UUID v4)
+- Primary keys: UUID (time-ordered UUID v7)
 - Foreign key indexes on `opinion_id`, `referent_id`
 - Composite indexes on common query patterns
 
 ### Migration Management
 - Schema migrations via initialization scripts in `deployment/database/init/`
-- Manual migration approach (Flyway available for future use)
+- Manual migration approach (Liquibase available for future use)
 
 ## Features List
 
@@ -406,7 +387,7 @@ r8n_database/
 - Weighted opinion calculations
 - Referent linking system
 - Opinion list organization
-- Selector-based filtering
+- Selector-based overlay display
 
 **Testing & Development:**
 - Comprehensive test data factories
@@ -421,24 +402,14 @@ r8n_database/
 
 ### Distribution by Team Member
 
-<!-- Replace with actual team member contributions -->
+**Backend Team:**
+- ✅ inikulin: Gateway service implementation, Opinions service core logic, Database schema design, API contract definitions
+- ✅ iatopchu: Backend service development, business logic
+- ✅ lshapkin: Backend service development, testing
 
-**[login1] - Backend Tech Lead:**
-- ✅ Gateway service implementation
-- ✅ Opinions service core logic
-- ✅ Database schema design
-- ✅ API contract definitions
-
-**[login2] - Frontend Lead:**
-- ✅ React application structure (FSD)
-- ✅ UI component development
-- ✅ Frontend build configuration
-- ✅ API client integration
-
-**[login3] - DevOps Engineer:**
-- ✅ Docker Compose setup
-- ✅ Makefile automation
-- ✅ TLS certificate generation
+**Frontend Team:**
+- ✅ mkulikov: React application structure (FSD), UI component development, Frontend build configuration, API client integration
+- ✅ dbisko: React component development, API integration
 
 ## Modules
 
@@ -450,37 +421,37 @@ r8n_database/
 - **Frontend**: React 18 + Vite
 - **Backend**: Spring Boot 3.x + Kotlin
 - **Implementation**: Full stack framework implementation
-- **Team member**: [login1, login2]
+- **Team member**: inikulin, mkulikov, dbisko
 - **Points**: 2
 
 **✅ Major: Allow users to interact with other users**
 - **Implementation**: Access request system (incoming/outgoing)
 - **Features**: Send, accept, reject, hide access requests
-- **Team member**: [login1, login3]
+- **Team member**: inikulin, iatopchu, lshapkin
 - **Points**: 2
 
 **✅ Major: Infrastructure for log management using ELK**
 - **Status**: Planned (not yet fully implemented)
 - **Current**: File-based logging system in place
-- **Team member**: [login3]
+- **Team member**: lshapkin
 - **Points**: 2 (planned)
 
 **✅ Major: Monitoring system with Prometheus and Grafana**
 - **Status**: Planned (not yet fully implemented)
 - **Current**: Basic health checks available
-- **Team member**: [login3]
+- **Team member**: lshapkin
 - **Points**: 2 (planned)
 
 **✅ Major: Backend as microservices**
 - **Implementation**: Gateway, Opinions
 - **Communication**: HTTP/HTTPS inter-service protocol
-- **Team member**: [login1, login3]
+- **Team member**: inikulin, iatopchu, lshapkin
 - **Points**: 2
 
 **✅ Major: Standard user management and authentication**
 - **Implementation**: JWT token-based auth (stub implementation)
 - **Features**: Authorization headers, token validation
-- **Team member**: [login1]
+- **Team member**: inikulin
 - **Points**: 2
 
 #### Minor Modules (1 point each)
@@ -488,60 +459,60 @@ r8n_database/
 **✅ Minor: Use an ORM for the database**
 - **Implementation**: Spring Data JPA + Hibernate
 - **Database**: PostgreSQL 15
-- **Team member**: [login1]
+- **Team member**: inikulin
 - **Points**: 1
 
 **✅ Minor: Custom-made design system with reusable components**
 - **Implementation**: Custom CSS/SASS components (FSD shared/ui)
 - **Components**: Buttons, inputs, cards, modals, etc.
-- **Team member**: [login2]
+- **Team member**: mkulikov
 - **Points**: 1
 
 **✅ Minor: Implement advanced search functionality**
 - **Implementation**: Search with filters, sorting, pagination
 - **Features**: Query params, pagination metadata
-- **Team member**: [login1, login2]
+- **Team member**: inikulin, mkulikov, dbisko
 - **Points**: 1
 
 **✅ Minor: File upload and management system**
 - **Status**: Planned (not yet fully implemented)
 - **Current**: Infrastructure in place for future implementation
-- **Team member**: [login2]
+- **Team member**: mkulikov
 - **Points**: 1 (partial)
 
 **✅ Minor: Progressive Web App (PWA) with offline support**
 - **Status**: Planned (service worker infrastructure in place)
-- **Team member**: [login2]
+- **Team member**: mkulikov
 - **Points**: 1 (planned)
 
 **✅ Minor: Support for multiple languages (i18n)**
 - **Status**: Planned
 - **Implementation**: i18next or similar library ready for integration
-- **Team member**: [login2]
+- **Team member**: mkulikov
 - **Points**: 1 (planned)
 
 **✅ Minor: Support for additional browsers**
 - **Implementation**: Modern browser compatibility testing
 - **Target**: Chrome, Firefox, Safari, Edge
-- **Team member**: [login2]
+- **Team member**: mkulikov
 - **Points**: 1
 
 **✅ Minor: Implement remote authentication with OAuth 2.0**
 - **Status**: Planned
 - **Current**: Stub auth system ready for OAuth integration
-- **Team member**: [login1]
+- **Team member**: inikulin
 - **Points**: 1 (planned)
 
 **✅ Minor: Health check and status page**
 - **Implementation**: Basic health check endpoints available
 - **Current**: File-based logging system
-- **Team member**: [login3]
+- **Team member**: lshapkin
 - **Points**: 1 (partial)
 
 ### Module Point Calculation
 
 **Total Points**: X (?) 
-**Minimum Required**: 7 points
+**Minimum Required**: 14 points
 
 **Implemented**: [X] points
 **Planned**: [X] points
@@ -552,7 +523,7 @@ r8n_database/
 
 ## Individual Contributions
 
-### **[login1]** - Tech Lead & Backend Developer
+### **inikulin** - Tech Lead & Backend Developer
 
 **Primary Responsibilities:**
 - Led architectural design discussions
@@ -565,7 +536,7 @@ r8n_database/
 **Technical Contributions:**
 - **Gateway Service**: Implemented Spring Cloud Gateway routing
 - **Opinions Service**: Core business logic, persistence layer
-- **Core Modules**: Shared utilities, API contracts, security
+- **Core Modules**: Shared utilities, security
 - **Database**: PostgreSQL schema design and migration scripts
 - **API Design**: OpinionApi, DTO definitions, OpenAPI planning
 
@@ -575,11 +546,29 @@ r8n_database/
 - Resolved database connection pooling issues
 - Established API-first design methodology
 
-**Lines of Code / Commits:**
-- Approximately [X] lines of backend code
-- [X] commits to backend repository
+### **iatopchu** - Backend Developer
 
-### **[login2]** - Frontend Lead & UI/UX Developer
+**Primary Responsibilities:**
+- Backend service development
+- Business logic implementation
+- Testing and quality assurance
+
+**Technical Contributions:**
+- **Opinions Service**: Business logic development
+- **Backend Features**: Service implementation and refinement
+- **Testing**: Unit and integration tests
+
+### **lshapkin** - Backend Developer
+
+**Primary Responsibilities:**
+- Backend service development
+- Testing infrastructure
+
+**Technical Contributions:**
+- **Service Development**: Backend logic implementation
+- **Testing**: Test coverage and QA processes
+
+### **mkulikov** - Frontend Lead & UI/UX Developer
 
 **Primary Responsibilities:**
 - Frontend architecture design
@@ -601,29 +590,17 @@ r8n_database/
 - Integrated with backend microservices APIs
 - Managed TypeScript configuration and types
 
-**Lines of Code / Commits:**
-- Approximately [X] lines of frontend code
-- [X] commits to frontend repository
-
-### **[login3]** - DevOps Engineer & Backend Developer
+### **dbisko** - Frontend Developer
 
 **Primary Responsibilities:**
-- Docker containerization
-- Build automation and scripting
-- Development environment setup
-- TLS certificate management
+- React component development
+- API integration
+- Frontend testing
 
 **Technical Contributions:**
-- **Docker Setup**: Compose configuration, Dockerfile optimization
-- **Make Targets**: Automation scripts for common operations
-- **CI/CD Setup**: Build automation pipeline
-- **Certificate Management**: TLS cert generation and configuration
-
-**Key Challenges Overcome:**
-- Configured multi-service container orchestration
-- Implemented inter-service TLS communication
-- Created comprehensive Makefile for developer workflow
-- Managed database initialization and persistence
+- **React Development**: Component implementation
+- **API Integration**: Frontend-backend integration
+- **UI Polish**: User interface improvements
 
 ## Additional Information
 

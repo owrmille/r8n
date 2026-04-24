@@ -98,6 +98,7 @@ backend/
 - **Database**: PostgreSQL `opinions` schema
 - **Key Entities**: Opinion, OpinionSubject, Referent, OpinionNote, WeightedOpinionReference
 - **HTTP/HTTPS**: Uses `INTERSERVICE_PROTOCOL` (http=local, https=Docker)
+- **Packages**: `api/`, `api-integration/`, `client/` for API contracts and REST clients
 
 #### 3. Mock Service (`mock-sv`)
 - **Local Port**: 8090 (HTTP)
@@ -105,6 +106,7 @@ backend/
 - **Role**: Provides stub/test data for development and testing
 - **Mocks**: AccessRequests, OpinionLists, Selectors, Recommendations, Messaging
 - **HTTP/HTTPS**: Uses `INTERSERVICE_PROTOCOL` (http=local, https=Docker)
+- **Packages**: `api/`, `client/` for API contracts and REST clients
 
 #### 4. Users Service (`users-sv`)
 - **Local Port**: 8082 (HTTP)
@@ -113,6 +115,7 @@ backend/
 - **Database**: PostgreSQL `users` schema
 - **Key Features**: User profiles, avatar upload, authentication endpoints
 - **HTTP/HTTPS**: Uses `INTERSERVICE_PROTOCOL` (http=local, https=Docker)
+- **Packages**: `api/`, `api-integration/`, `client/` for API contracts and REST clients
 
 #### 5. Export Service (`export-sv`)
 - **Local Port**: 8083 (HTTP)
@@ -121,6 +124,7 @@ backend/
 - **Database**: PostgreSQL `export` schema
 - **Key Features**: Export jobs, data generation, async processing
 - **HTTP/HTTPS**: Uses `INTERSERVICE_PROTOCOL` (http=local, https=Docker)
+- **Packages**: `api/`, `api-integration/`, `client/` for API contracts and REST clients
 
 ### API-First Design Pattern
 
