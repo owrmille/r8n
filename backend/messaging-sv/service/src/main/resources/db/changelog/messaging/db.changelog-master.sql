@@ -5,14 +5,10 @@ CREATE SCHEMA IF NOT EXISTS messaging;
 
 CREATE TABLE IF NOT EXISTS messaging.support_threads (
     id UUID PRIMARY KEY,
-    owner_user_id UUID NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL,
-    updated_at TIMESTAMPTZ NOT NULL
+    owner_user_id UUID NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_support_threads_owner_user_id
     ON messaging.support_threads(owner_user_id);
-CREATE INDEX IF NOT EXISTS idx_support_threads_updated_at
-    ON messaging.support_threads(updated_at);
 
 CREATE TABLE IF NOT EXISTS messaging.support_messages (
     id UUID PRIMARY KEY,
@@ -34,19 +30,15 @@ CREATE INDEX IF NOT EXISTS idx_support_messages_created_at
     ON messaging.support_messages(created_at);
 
 --changeset iatopchu:V2_seed_support_messaging context:local,test
-INSERT INTO messaging.support_threads (id, owner_user_id, created_at, updated_at)
+INSERT INTO messaging.support_threads (id, owner_user_id)
 VALUES
     (
         '80000000-0000-0000-0000-000000000001',
-        '00000000-0000-0000-0000-000000000000',
-        '2024-02-01T09:30:00Z',
-        '2024-02-01T09:35:00Z'
+        '00000000-0000-0000-0000-000000000000'
     ),
     (
         '80000000-0000-0000-0000-000000000002',
-        '10101010-1010-1010-1010-101010101010',
-        '2024-02-01T10:00:00Z',
-        '2024-02-01T10:00:00Z'
+        '10101010-1010-1010-1010-101010101010'
     )
 ON CONFLICT (id) DO NOTHING;
 

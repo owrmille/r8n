@@ -8,9 +8,9 @@ import com.r8n.backend.messaging.api.dto.messaging.SupportParticipantRoleEnumDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportThreadSummaryDto
 import com.r8n.backend.messaging.persistence.SupportMessagePersistence
 import com.r8n.backend.messaging.persistence.SupportParticipantRoleEnumPersistence
-import com.r8n.backend.messaging.persistence.SupportThreadPersistence
 import com.r8n.backend.messaging.service.SupportActor
 import com.r8n.backend.messaging.service.SupportMessagingService
+import com.r8n.backend.messaging.service.SupportThreadWithMessages
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -35,7 +35,7 @@ class SupportMessagingFacade(
         actor: SupportActor,
         pageable: Pageable,
     ): Page<SupportThreadSummaryDto> =
-        supportMessagingService.listVisibleThreads(actor, pageable).map { it.toSummaryDto() }
+        supportMessagingService.listThreadWithMessages(actor, pageable).map { it.toSummaryDto() }
 
     fun createSupportThread(
         actor: SupportActor,
@@ -55,12 +55,12 @@ class SupportMessagingFacade(
         request: CreateSupportMessageRequestDto,
     ): SupportMessageDto = supportMessagingService.addThreadMessage(actor, threadId, request.text.trim()).toDto()
 
-    private fun SupportThreadPersistence.toSummaryDto(): SupportThreadSummaryDto =
+    private fun SupportThreadWithMessages.toSummaryDto(): SupportThreadSummaryDto =
         SupportThreadSummaryDto(
-            id = requireNotNull(id),
-            ownerUserId = ownerUserId,
-            createdAt = createdAt,
-            lastMessageAt = updatedAt,
+            id = requireNotNull(thread.id),
+            ownerUserId = thread.ownerUserId,
+            createdAt = requireNotNull(messages.minOfOrNull { it.createdAt }),
+            lastMessageAt = messages.maxOfOrNull { it.createdAt },
         )
 
     private fun SupportMessagePersistence.toDto(): SupportMessageDto =

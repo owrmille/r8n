@@ -207,6 +207,22 @@ class SupportMessagingIntegrationTests {
     }
 
     @Test
+    fun `thread summaries are ordered by latest message date`() {
+        val olderThreadId = createThread(userAId, "USER", "Thread one")
+        createThread(userAId, "USER", "Thread two")
+        addMessage(userAId, "USER", olderThreadId, "Follow-up makes this thread latest")
+
+        mockMvc
+            .perform(
+                get(SUPPORT_THREADS_PATH)
+                    .param("page", "0")
+                    .param("size", "20")
+                    .with(user(supportId.toString()).roles("SUPPORT")),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.items[0].id").value(olderThreadId.toString()))
+    }
+
+    @Test
     fun `thread messages respect requested page size`() {
         val threadId = createThread(userAId, "USER", "Message one")
         addMessage(userAId, "USER", threadId, "Message two")

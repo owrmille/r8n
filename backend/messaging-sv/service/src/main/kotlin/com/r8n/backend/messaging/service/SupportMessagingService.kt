@@ -46,17 +46,16 @@ class SupportMessagingService(
         actor: SupportActor,
         pageable: Pageable,
     ): Page<SupportThreadPersistence> =
-        if (actor.isSupport) {
-            supportThreadRepository.findAllByOrderByUpdatedAtDesc(pageable)
-        } else {
-            supportThreadRepository.findAllByOwnerUserIdOrderByUpdatedAtDesc(actor.userId, pageable)
-        }
+        supportThreadRepository.findVisibleOrderByLastMessageAtDesc(
+            ownerUserId = actor.userId.takeUnless { actor.isSupport },
+            pageable = pageable,
+        )
 
     @Transactional
     fun createThread(
         actor: SupportActor,
         initialMessageText: String,
-    ): SupportThreadPersistence {
+    ): SupportThreadWithMessages {
         if (initialMessageText.isBlank()) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Initial message cannot be blank")
         }
@@ -66,21 +65,24 @@ class SupportMessagingService(
             supportThreadRepository.save(
                 SupportThreadPersistence(
                     ownerUserId = actor.userId,
-                    createdAt = now,
-                    updatedAt = now,
                 ),
             )
 
-        supportMessageRepository.save(
-            SupportMessagePersistence(
-                threadId = requireNotNull(thread.id),
-                authorUserId = actor.userId,
-                authorRole = actor.role,
-                text = initialMessageText,
-                createdAt = now,
-            ),
+        val message =
+            supportMessageRepository.save(
+                SupportMessagePersistence(
+                    threadId = requireNotNull(thread.id),
+                    authorUserId = actor.userId,
+                    authorRole = actor.role,
+                    text = initialMessageText,
+                    createdAt = now,
+                ),
+            )
+
+        return SupportThreadWithMessages(
+            thread = thread,
+            messages = listOf(message),
         )
-        return thread
     }
 
     fun getThreadMessages(
@@ -114,9 +116,6 @@ class SupportMessagingService(
                     createdAt = now,
                 ),
             )
-
-        thread.updatedAt = now
-        supportThreadRepository.save(thread)
         return message
     }
 
