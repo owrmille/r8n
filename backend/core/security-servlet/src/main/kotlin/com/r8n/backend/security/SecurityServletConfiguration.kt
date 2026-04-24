@@ -35,12 +35,14 @@ class SecurityServletConfiguration {
         jwtDecoder: JwtDecoder,
         jwtAuthenticationConverter: JwtAuthenticationConverter,
         maskingLoggingFilter: MaskingLoggingFilter,
-        @Value("\${r8n.security.public-paths:}") publicPaths: Array<String>,
+        @Value("\${r8n.security.public-paths:}") publicPaths: Array<String>?,
         @Value("\${server.ssl.enabled:false}") sslEnabled: Boolean,
     ): SecurityFilterChain {
         val csrfHandler = CsrfTokenRequestAttributeHandler()
         // Set the name of the attribute the CsrfToken will be populated on
         csrfHandler.setCsrfRequestAttributeName("_csrf")
+
+        val paths = publicPaths ?: emptyArray()
 
         return http
             .csrf { csrf ->
@@ -48,7 +50,7 @@ class SecurityServletConfiguration {
                     .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                     .csrfTokenRequestHandler(csrfHandler)
                     .ignoringRequestMatchers(
-                        *publicPaths
+                        *paths
                             .filter { path ->
                                 path != "/api/auth/**" && path != "/api/auth/login"
                             }.toTypedArray(),
@@ -72,8 +74,8 @@ class SecurityServletConfiguration {
                 maskingLoggingFilter,
                 UsernamePasswordAuthenticationFilter::class.java,
             ).authorizeHttpRequests { auth ->
-                if (publicPaths.isNotEmpty()) {
-                    auth.requestMatchers(*publicPaths).permitAll()
+                if (paths.isNotEmpty()) {
+                    auth.requestMatchers(*paths).permitAll()
                 }
                 auth.anyRequest().authenticated()
             }.oauth2ResourceServer { oauth ->

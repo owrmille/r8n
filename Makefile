@@ -245,7 +245,7 @@ get-token: ## Obtain a JWT token and refresh cookie (ENV=local|docker, default: 
 	curl_args="-s"; \
 	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
 	echo "Fetching CSRF token..."; \
-	csrf_headers=$$(curl $$curl_args -c .cookies -i -X POST "$$protocol://$$host:$$port/api/auth/login" | tr -d '\r'); \
+	csrf_headers=$$(curl $$curl_args -c .cookies -i -X GET "$$protocol://$$host:$$port/api/auth/csrf" | tr -d '\r'); \
 	csrf_token=$$(echo "$$csrf_headers" | grep -i "Set-Cookie: XSRF-TOKEN=" | sed 's/.*XSRF-TOKEN=\([^;]*\).*/\1/'); \
 	if [ -z "$$csrf_token" ]; then \
 		echo "Failed to obtain CSRF token. Headers:"; \
@@ -458,7 +458,7 @@ public-request-user: ## user-sv access through public api
 	curl_args="-i"; \
 	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
 	\
-	curl $$curl_args -X POST "$$protocol://$$host:$$port/api/public/users/profile/00000000-0000-0000-0000-000000000000" \
+	curl $$curl_args -X GET "$$protocol://$$host:$$port/api/public/users/profile/00000000-0000-0000-0000-000000000000" \
 		-H "X-API-KEY: 1234"
 
 direct-request-opinion: ## HTTP direct request to opinions (local)

@@ -39,3 +39,7 @@ spring:
               uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_MOCK_HOST}:${SERVICES_MOCK_PORT}
               predicates:
                 - Path=/api/selectors/**
+r8n:
+  security:
+    jwt:
+      public-key: ${JWT_PUBLIC_KEY}

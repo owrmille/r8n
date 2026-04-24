@@ -64,6 +64,10 @@ spring:
                     durationSeconds: 60
                 - RewritePath=/api/public/users/(?<segment>.*), /api/users/$\{segment}
 
+r8n:
+  security:
+    jwt:
+      public-key: ${JWT_PUBLIC_KEY}
 springdoc:
   api-docs:
     path: /v3/api-docs

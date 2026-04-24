@@ -17,6 +17,9 @@ Gateway is reactive and needs WebClient for communication, so to avoid confusion
  */
 
     @Bean
+    fun webClientBuilder(): WebClient.Builder = WebClient.builder()
+
+    @Bean
     fun usersWebClient(
         @Value("\${interservice.protocol}") protocol: String,
         @Value("\${services.users.host}") host: String,
