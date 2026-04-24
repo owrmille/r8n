@@ -21,7 +21,8 @@ class InterserviceController(
     private val userService: UserService,
     private val userFacade: UserFacade,
     private val apiKeyService: ApiKeyService,
-) : UsersInternalApi, KeyValidationApi {
+) : UsersInternalApi,
+    KeyValidationApi {
     @PreAuthorize(Authority.IS_USER_OR_SERVICE)
     override fun validateApiKey(key: String): UUID = apiKeyService.validateApiKey(key)
 

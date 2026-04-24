@@ -24,6 +24,7 @@ import java.util.UUID
 class ApiKeyServiceTest {
     @Mock
     private lateinit var apiKeyRepository: ApiKeyRepository
+
     @Mock
     private lateinit var passwordEncoder: PasswordEncoder
     private lateinit var apiKeyService: ApiKeyService

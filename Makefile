@@ -519,7 +519,7 @@ test-github-frontend: test-frontend
 
 test-github-e2e: test-e2e
 
-test-github: test-github-backend test-github-frontend test-github-e2e
+test-github: check-makefile test-github-backend test-github-frontend test-github-e2e
 
 test-backend: lint-backend
 	cd backend && ./gradlew test
