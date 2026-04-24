@@ -557,6 +557,13 @@ test-e2e:
 	cd frontend && npm run test:e2e
 
 ##@ entrypoints
+swagger: ## Open Swagger UI
+	@protocol=$${INTERSERVICE_PROTOCOL}; \
+	host=$${GATEWAY_HOST}; \
+	port=$${GATEWAY_PORT}; \
+	echo "Opening Swagger UI: $$protocol://$$host:$$port/swagger-ui.html"; \
+	(open "$$protocol://$$host:$$port/swagger-ui.html" || xdg-open "$$protocol://$$host:$$port/swagger-ui.html" || echo "Please open $$protocol://$$host:$$port/swagger-ui.html in your browser") 2>/dev/null
+
 help: ## Show this help
 	@awk 'BEGIN {FS=":.*##"} /^##@/ {printf "\n%s:\n", substr($$0,5)} /^[a-zA-Z0-9_.%-]+:.*##/ {printf "  %-32s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
