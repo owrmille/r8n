@@ -4,8 +4,16 @@ server:
     enabled: false
 spring:
   application.name: mock-sv
+  liquibase:
+    enabled: false
   lifecycle:
     timeout-per-shutdown-phase: 1s
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
 logging:
   level:
     root: ERROR
