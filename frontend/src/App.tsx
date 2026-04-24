@@ -20,6 +20,8 @@ import EditProfile from "./pages/EditProfile";
 import Login from "./pages/Login";
 import CreateProfile from "./pages/CreateProfile";
 import OpinionModeration from "./pages/OpinionModeration";
+import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = createQueryClient();
@@ -33,6 +35,8 @@ const App = () => (
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/create-profile" element={<CreateProfile />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route element={<RequireAuth />}>
             <Route element={<AppLayout />}>
               <Route index element={<Index />} />
