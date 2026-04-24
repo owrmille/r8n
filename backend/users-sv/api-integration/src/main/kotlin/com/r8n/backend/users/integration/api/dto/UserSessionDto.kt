@@ -1,4 +1,4 @@
-package com.r8n.backend.users.api.dto
+package com.r8n.backend.users.integration.api.dto
 
 import java.time.Instant
 import java.util.UUID

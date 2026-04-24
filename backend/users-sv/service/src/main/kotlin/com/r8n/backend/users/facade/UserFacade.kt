@@ -1,9 +1,9 @@
 package com.r8n.backend.users.facade
 
-import com.r8n.backend.users.api.dto.ConsentDto
-import com.r8n.backend.users.api.dto.UserDto
+import com.r8n.backend.users.integration.api.dto.ConsentDto
+import com.r8n.backend.users.integration.api.dto.UserDto
 import com.r8n.backend.users.api.dto.UserProfileDto
-import com.r8n.backend.users.api.dto.UserSessionDto
+import com.r8n.backend.users.integration.api.dto.UserSessionDto
 import com.r8n.backend.users.api.dto.UserStatusEnumDto
 import com.r8n.backend.users.api.dto.UsernameDto
 import com.r8n.backend.users.domain.Consent

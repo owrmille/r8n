@@ -4,8 +4,8 @@ import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.security.Authority
-import com.r8n.backend.users.api.dto.UserDto
-import com.r8n.backend.users.api.dto.UserSessionDto
+import com.r8n.backend.users.integration.api.dto.UserDto
+import com.r8n.backend.users.integration.api.dto.UserSessionDto
 import com.r8n.backend.users.facade.UserFacade
 import com.r8n.backend.users.integration.api.UsersInternalApi
 import com.r8n.backend.users.service.UserService

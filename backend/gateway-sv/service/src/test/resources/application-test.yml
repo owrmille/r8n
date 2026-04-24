@@ -13,6 +13,12 @@ spring:
       server:
         webflux:
           routes:
+            - id: block_internal
+              uri: no-forward://internal
+              predicates:
+                - Path=/api/internal/**
+              filters:
+                - SetStatus=403
             - id: auth
               uri: http://localhost:8082
               predicates:
