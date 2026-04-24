@@ -28,8 +28,6 @@ spring:
 services:
   messaging:
     url: ${INTERSERVICE_PROTOCOL}://${SERVICES_MESSAGING_HOST}:${SERVICES_MESSAGING_PORT}
-  mock:
-    url: ${INTERSERVICE_PROTOCOL}://${SERVICES_MOCK_HOST}:${SERVICES_MOCK_PORT}
 r8n:
   security:
     jwt:
