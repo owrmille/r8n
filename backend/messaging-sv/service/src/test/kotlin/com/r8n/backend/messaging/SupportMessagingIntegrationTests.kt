@@ -1,6 +1,7 @@
 package com.r8n.backend.messaging
 
 import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREADS_PATH
+import com.r8n.backend.messaging.api.dto.messaging.SUPPORT_MESSAGE_TEXT_MAX_LENGTH
 import com.r8n.backend.messaging.provider.database.SupportMessageRepository
 import com.r8n.backend.messaging.provider.database.SupportThreadRepository
 import org.junit.jupiter.api.BeforeEach
@@ -117,6 +118,35 @@ class SupportMessagingIntegrationTests {
                 post(messagesPath(threadId))
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""{"text":"   "}""")
+                    .with(user(userAId.toString()).roles("USER"))
+                    .with(csrf()),
+            ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `creating thread with oversized initial message returns bad request`() {
+        val oversizedMessage = "a".repeat(SUPPORT_MESSAGE_TEXT_MAX_LENGTH + 1)
+
+        mockMvc
+            .perform(
+                post(SUPPORT_THREADS_PATH)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(mapOf("initialMessage" to oversizedMessage)))
+                    .with(user(userAId.toString()).roles("USER"))
+                    .with(csrf()),
+            ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `posting oversized message returns bad request`() {
+        val threadId = createThread(userAId, "USER", "Need clarification")
+        val oversizedMessage = "a".repeat(SUPPORT_MESSAGE_TEXT_MAX_LENGTH + 1)
+
+        mockMvc
+            .perform(
+                post(messagesPath(threadId))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(mapOf("text" to oversizedMessage)))
                     .with(user(userAId.toString()).roles("USER"))
                     .with(csrf()),
             ).andExpect(status().isBadRequest)

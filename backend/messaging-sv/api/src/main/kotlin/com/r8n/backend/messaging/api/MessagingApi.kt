@@ -7,6 +7,7 @@ import com.r8n.backend.messaging.api.dto.messaging.CreateSupportMessageRequestDt
 import com.r8n.backend.messaging.api.dto.messaging.CreateSupportThreadRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportMessageDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportThreadSummaryDto
+import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -29,6 +30,7 @@ interface MessagingApi {
 
     @PostMapping(SUPPORT_THREADS_PATH)
     fun createSupportThread(
+        @Valid
         @RequestBody
         request: CreateSupportThreadRequestDto,
     ): SupportThreadSummaryDto
@@ -44,6 +46,7 @@ interface MessagingApi {
     fun addSupportThreadMessage(
         @PathVariable
         threadId: UUID,
+        @Valid
         @RequestBody
         request: CreateSupportMessageRequestDto,
     ): SupportMessageDto
