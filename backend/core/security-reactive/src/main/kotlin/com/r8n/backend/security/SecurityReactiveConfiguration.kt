@@ -29,7 +29,7 @@ class SecurityReactiveConfiguration {
                     exchange.pathMatchers(*paths).permitAll()
                 }
                 // Allow Swagger UI and API docs
-                exchange.pathMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/api/*/v3/api-docs/**").permitAll()
+                exchange.pathMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/api/*/v3/api-docs/**", "/webjars/swagger-ui/**").permitAll()
                 // Allow public API paths if configured
                 exchange.pathMatchers("/api/public/**").permitAll()
                 exchange.anyExchange().permitAll() // By default, Gateway is transparent

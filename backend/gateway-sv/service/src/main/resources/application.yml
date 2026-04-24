@@ -28,14 +28,32 @@ spring:
               uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_OPINIONS_HOST}:${SERVICES_OPINIONS_PORT}
               predicates:
                 - Path=/api/access-requests/**,/api/opinion-lists/**,/api/opinions/**
+            - id: opinions_swagger
+              uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_OPINIONS_HOST}:${SERVICES_OPINIONS_PORT}
+              predicates:
+                - Path=/api/opinions/swagger-ui.html,/api/opinions/swagger-ui/**,/api/opinions/webjars/swagger-ui/**
+              filters:
+                - RewritePath=/api/opinions/(?<segment>.*), /$\{segment}
             - id: users
               uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_USERS_HOST}:${SERVICES_USERS_PORT}
               predicates:
                 - Path=/api/users/**
+            - id: users_swagger
+              uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_USERS_HOST}:${SERVICES_USERS_PORT}
+              predicates:
+                - Path=/api/users/swagger-ui.html,/api/users/swagger-ui/**,/api/users/webjars/swagger-ui/**
+              filters:
+                - RewritePath=/api/users/(?<segment>.*), /$\{segment}
             - id: export
               uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_EXPORT_HOST}:${SERVICES_EXPORT_PORT}
               predicates:
                 - Path=/api/export/**
+            - id: export_swagger
+              uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_EXPORT_HOST}:${SERVICES_EXPORT_PORT}
+              predicates:
+                - Path=/api/export/swagger-ui.html,/api/export/swagger-ui/**,/api/export/webjars/swagger-ui/**
+              filters:
+                - RewritePath=/api/export/(?<segment>.*), /$\{segment}
             - id: mock
               uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_MOCK_HOST}:${SERVICES_MOCK_PORT}
               predicates:

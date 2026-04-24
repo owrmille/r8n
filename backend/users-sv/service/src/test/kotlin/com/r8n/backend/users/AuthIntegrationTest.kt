@@ -268,6 +268,21 @@ class AuthIntegrationTest {
     }
 
     @Test
+    fun `swagger and api docs are accessible without authentication`() {
+        mockMvc.perform(get("/v3/api-docs"))
+            .andExpect(status().isOk)
+
+        mockMvc.perform(get("/swagger-ui.html"))
+            .andExpect(status().isFound) // Redirects to /swagger-ui/index.html
+
+        mockMvc.perform(get("/swagger-ui/index.html"))
+            .andExpect(status().isOk)
+
+        mockMvc.perform(get("/swagger-ui/swagger-ui.css"))
+            .andExpect(status().isOk)
+    }
+
+    @Test
     fun `logout clears refresh token cookie`() {
         val response =
             mockMvc
