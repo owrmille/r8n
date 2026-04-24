@@ -3,8 +3,6 @@ import { motion } from "framer-motion";
 import {
   ChevronDown,
   Clock,
-  Inbox,
-  Send,
 } from "lucide-react";
 import ReviewerAvatar from "@/components/ReviewerAvatar";
 import {
@@ -129,37 +127,32 @@ const FILTERS: Array<{ id: MessageFilter; label: string }> = [
 ];
 
 function getDirectionMeta(direction: MessageDirection) {
-  if (direction === "outgoing") {
-    return {
-      label: "From you",
-      icon: Send,
-      className: "border-primary/20 bg-primary/5 text-primary",
-    };
-  }
-
-  return {
-    label: "To you",
-    icon: Inbox,
-    className: "border-accent/20 bg-accent/5 text-accent",
-  };
+  return direction === "outgoing"
+    ? {
+        bubbleClassName: "border-primary/20 bg-primary/5",
+        layoutClassName: "justify-end",
+      }
+    : {
+        bubbleClassName: "border-border bg-background",
+        layoutClassName: "justify-start",
+      };
 }
 
 const Messages = () => {
-  const firstThreadId = MOCK_THREADS[0]?.id ?? "";
-  const [openThreads, setOpenThreads] = useState<string[]>([firstThreadId]);
+  const [openThreads, setOpenThreads] = useState<string[]>([]);
   const [activeFilter, setActiveFilter] = useState<MessageFilter>("all");
 
   const filteredThreads = useMemo(
     () =>
       MOCK_THREADS.filter((thread) => {
-        const firstDirection = thread.messages[0]?.direction;
+        const lastDirection = thread.messages[thread.messages.length - 1]?.direction;
 
         if (activeFilter === "inbox") {
-          return firstDirection === "incoming";
+          return lastDirection === "incoming";
         }
 
         if (activeFilter === "outbox") {
-          return firstDirection === "outgoing";
+          return lastDirection === "outgoing";
         }
 
         if (activeFilter === "support") {
@@ -221,10 +214,8 @@ const Messages = () => {
       >
         {filteredThreads.map((thread) => {
           const isOpen = openThreads.includes(thread.id);
-          const firstMessage = thread.messages[0];
-          const remainingMessages = thread.messages.slice(1);
-          const directionMeta = getDirectionMeta(firstMessage.direction);
-          const DirectionIcon = directionMeta.icon;
+          const lastMessage = thread.messages[thread.messages.length - 1];
+          const previewMeta = getDirectionMeta(lastMessage.direction);
 
           return (
             <Collapsible
@@ -261,49 +252,50 @@ const Messages = () => {
               <CollapsibleTrigger asChild>
                 <button
                   type="button"
-                  className="flex w-full items-start gap-4 px-5 py-4 text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  className="w-full px-5 py-4 text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   aria-label={`${isOpen ? "Collapse" : "Expand"} thread with ${thread.participantName}`}
                 >
-                  <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                    <DirectionIcon className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-medium text-foreground">
-                        {firstMessage.authorName}
-                      </span>
-                      <span
-                        className={cn(
-                          "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium",
-                          directionMeta.className,
-                        )}
-                      >
-                        <DirectionIcon className="h-3 w-3" />
-                        {directionMeta.label}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground/70">
-                        {firstMessage.sentAt}
-                      </span>
-                    </div>
-                    <p className="line-clamp-2 text-sm leading-6 text-foreground/85">
-                      {firstMessage.body}
-                    </p>
-                  </div>
-                  <ChevronDown
+                  <div
                     className={cn(
-                      "mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-transform",
-                      isOpen && "rotate-180",
+                      "flex items-start gap-3",
+                      previewMeta.layoutClassName,
                     )}
-                  />
+                  >
+                    <div
+                      className={cn(
+                        "max-w-[82%] rounded-2xl border px-4 py-3",
+                        previewMeta.bubbleClassName,
+                      )}
+                    >
+                      <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-medium text-foreground">
+                          {lastMessage.authorName}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground/70">
+                          {lastMessage.sentAt}
+                        </span>
+                      </div>
+                      {!isOpen && (
+                        <p className="line-clamp-2 text-sm leading-6 text-foreground/85">
+                          {lastMessage.body}
+                        </p>
+                      )}
+                    </div>
+                    <ChevronDown
+                      className={cn(
+                        "mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-transform",
+                        isOpen && "rotate-180",
+                      )}
+                    />
+                  </div>
                 </button>
               </CollapsibleTrigger>
 
               <CollapsibleContent>
                 <div className="border-t border-border/70 px-5 py-4">
                   <div className="space-y-4">
-                    {remainingMessages.map((message) => {
+                    {thread.messages.map((message) => {
                       const messageMeta = getDirectionMeta(message.direction);
-                      const MessageIcon = messageMeta.icon;
 
                       return (
                         <article
@@ -313,28 +305,15 @@ const Messages = () => {
                             message.direction === "outgoing" && "flex-row-reverse",
                           )}
                         >
-                          <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                            <MessageIcon className="h-4 w-4" />
-                          </div>
                           <div
                             className={cn(
-                              "max-w-[82%] rounded-2xl border border-border bg-background px-4 py-3",
-                              message.direction === "outgoing" &&
-                                "border-primary/20 bg-primary/5",
+                              "max-w-[82%] rounded-2xl border px-4 py-3",
+                              messageMeta.bubbleClassName,
                             )}
                           >
                             <div className="mb-1.5 flex flex-wrap items-center gap-2">
                               <span className="text-sm font-medium text-foreground">
                                 {message.authorName}
-                              </span>
-                              <span
-                                className={cn(
-                                  "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium",
-                                  messageMeta.className,
-                                )}
-                              >
-                                <MessageIcon className="h-3 w-3" />
-                                {messageMeta.label}
                               </span>
                               <span className="text-[10px] text-muted-foreground/70">
                                 {message.sentAt}
