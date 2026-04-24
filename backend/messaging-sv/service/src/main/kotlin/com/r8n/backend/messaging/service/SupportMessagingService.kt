@@ -130,7 +130,7 @@ class SupportMessagingService(
             }
 
         if (!actor.isSupport && thread.ownerUserId != actor.userId) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Support thread not found")
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Support thread belongs to another user")
         }
         return thread
     }

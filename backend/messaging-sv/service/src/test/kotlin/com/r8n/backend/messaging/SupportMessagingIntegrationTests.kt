@@ -92,7 +92,7 @@ class SupportMessagingIntegrationTests {
                     .param("page", "0")
                     .param("size", "20")
                     .with(user(userBId.toString()).roles("USER")),
-            ).andExpect(status().isNotFound)
+            ).andExpect(status().isForbidden)
     }
 
     @Test
