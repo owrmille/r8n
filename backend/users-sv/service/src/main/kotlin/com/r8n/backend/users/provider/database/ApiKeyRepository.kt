@@ -8,5 +8,8 @@ import java.util.UUID
 @Repository
 interface ApiKeyRepository : JpaRepository<ApiKeyPersistence, UUID> {
     fun findByUserIdAndRevokedFalse(userId: UUID): List<ApiKeyPersistence>
+
+    fun findByKeyIdentifier(keyIdentifier: String): ApiKeyPersistence?
+
     fun findByKeyHash(keyHash: String): ApiKeyPersistence?
 }

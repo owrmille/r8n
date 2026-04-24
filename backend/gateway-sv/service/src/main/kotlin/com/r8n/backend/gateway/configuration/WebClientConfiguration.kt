@@ -22,25 +22,25 @@ Gateway is reactive and needs WebClient for communication, so to avoid confusion
         @Value("\${services.users.host}") host: String,
         @Value("\${services.users.port}") port: Int,
         serviceTokenService: ServiceTokenService,
-        webClientBuilder: WebClient.Builder
-    ): WebClient {
-        return webClientBuilder
+        webClientBuilder: WebClient.Builder,
+    ): WebClient =
+        webClientBuilder
             .baseUrl("$protocol://$host:$port")
             .filter(serviceTokenFilter(serviceTokenService))
             .build()
-    }
 
-    private fun serviceTokenFilter(serviceTokenService: ServiceTokenService): ExchangeFilterFunction {
-        return ExchangeFilterFunction.ofRequestProcessor { request: ClientRequest ->
+    private fun serviceTokenFilter(serviceTokenService: ServiceTokenService): ExchangeFilterFunction =
+        ExchangeFilterFunction.ofRequestProcessor { request: ClientRequest ->
             val token = serviceTokenService.generateServiceToken()
-            val newRequest = if (token != null) {
-                ClientRequest.from(request)
-                    .header("Authorization", "Bearer $token")
-                    .build()
-            } else {
-                request
-            }
+            val newRequest =
+                if (token != null) {
+                    ClientRequest
+                        .from(request)
+                        .header("Authorization", "Bearer $token")
+                        .build()
+                } else {
+                    request
+                }
             Mono.just(newRequest)
         }
-    }
 }

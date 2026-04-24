@@ -21,6 +21,9 @@ class ApiKeyPersistence(
     val userId: UUID,
 //
     @Column(nullable = false, unique = true)
+    val keyIdentifier: String,
+//
+    @Column(nullable = false)
     val keyHash: String,
 //
     @Column(nullable = false)
@@ -36,5 +39,5 @@ class ApiKeyPersistence(
     val expiresAt: Instant? = null,
 //
     @Column(nullable = false)
-    var revoked: Boolean = false
+    var revoked: Boolean = false,
 )

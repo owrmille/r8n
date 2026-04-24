@@ -143,12 +143,15 @@ CREATE TABLE users.profile_avatars (
 CREATE TABLE users.api_keys (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL,
-    key_hash VARCHAR(255) NOT NULL UNIQUE,
+    key_identifier VARCHAR(255) NOT NULL,
+    key_hash VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
     created_at TIMESTAMPTZ NOT NULL,
     last_used_at TIMESTAMPTZ,
     expires_at TIMESTAMPTZ,
     revoked BOOLEAN NOT NULL DEFAULT FALSE,
-    CONSTRAINT fk_api_key_user FOREIGN KEY (user_id) REFERENCES users.users(id) ON DELETE CASCADE
+    CONSTRAINT fk_api_key_user FOREIGN KEY (user_id) REFERENCES users.users(id) ON DELETE CASCADE,
+    CONSTRAINT uk_api_keys_key_identifier UNIQUE (key_identifier)
 );
 CREATE INDEX idx_api_keys_user_id ON users.api_keys(user_id);
+CREATE INDEX idx_api_keys_key_identifier ON users.api_keys(key_identifier);

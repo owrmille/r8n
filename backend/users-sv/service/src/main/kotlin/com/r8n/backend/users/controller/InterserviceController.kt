@@ -4,10 +4,11 @@ import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.security.Authority
+import com.r8n.backend.users.facade.UserFacade
+import com.r8n.backend.users.integration.api.KeyValidationApi
+import com.r8n.backend.users.integration.api.UsersInternalApi
 import com.r8n.backend.users.integration.api.dto.UserDto
 import com.r8n.backend.users.integration.api.dto.UserSessionDto
-import com.r8n.backend.users.facade.UserFacade
-import com.r8n.backend.users.integration.api.UsersInternalApi
 import com.r8n.backend.users.service.ApiKeyService
 import com.r8n.backend.users.service.UserService
 import org.springframework.data.domain.Pageable
@@ -20,7 +21,7 @@ class InterserviceController(
     private val userService: UserService,
     private val userFacade: UserFacade,
     private val apiKeyService: ApiKeyService,
-) : UsersInternalApi {
+) : UsersInternalApi, KeyValidationApi {
     @PreAuthorize(Authority.IS_USER_OR_SERVICE)
     override fun validateApiKey(key: String): UUID = apiKeyService.validateApiKey(key)
 

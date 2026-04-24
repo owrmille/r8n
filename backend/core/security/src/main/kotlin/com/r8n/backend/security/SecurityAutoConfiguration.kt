@@ -2,11 +2,13 @@ package com.r8n.backend.security
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
@@ -86,18 +88,22 @@ class SecurityAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    fun passwordEncoder(): org.springframework.security.crypto.password.PasswordEncoder =
+    fun passwordEncoder(): PasswordEncoder =
         org.springframework.security.crypto.bcrypt
             .BCryptPasswordEncoder()
 
     @Bean
     @ConditionalOnMissingBean
-    @org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication(type = org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type.SERVLET)
+    @ConditionalOnWebApplication(
+        type = ConditionalOnWebApplication.Type.SERVLET,
+    )
     fun maskingLoggingFilter(): MaskingLoggingFilter = MaskingLoggingFilter()
 
     @Bean
     @ConditionalOnMissingBean
-    @org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication(type = org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type.SERVLET)
+    @ConditionalOnWebApplication(
+        type = ConditionalOnWebApplication.Type.SERVLET,
+    )
     fun filterChain(
         http: HttpSecurity,
         jwtDecoder: JwtDecoder,

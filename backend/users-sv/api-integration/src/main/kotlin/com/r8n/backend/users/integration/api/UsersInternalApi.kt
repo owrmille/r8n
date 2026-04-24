@@ -17,13 +17,7 @@ interface UsersInternalApi {
         const val IS_HUMAN_MODERATOR_PATH = "$ID_PATH/is-human-moderator"
         const val IS_AI_MODERATOR_PATH = "$ID_PATH/is-ai-moderator"
         const val IS_ADMIN_PATH = "$ID_PATH/is-admin"
-        const val VALIDATE_API_KEY_PATH = "/api/internal/users/api-keys/validate/{key}"
     }
-
-    @GetMapping(VALIDATE_API_KEY_PATH)
-    fun validateApiKey(
-        @PathVariable key: String,
-    ): UUID
 
     @GetMapping(NAME_PATH)
     fun getUserName(

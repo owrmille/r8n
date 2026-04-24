@@ -20,50 +20,72 @@ class ApiKeyService(
     private val secureRandom = SecureRandom()
 
     @Transactional
-    fun createApiKey(userId: UUID, name: String, expiresAt: Instant? = null): String {
+    fun createApiKey(
+        userId: UUID,
+        name: String,
+        expiresAt: Instant? = null,
+    ): String {
         val rawKey = generateSecureKey()
+
+        // Use URL-safe Base64 for the identifier to avoid issues with special characters.
+        // We also remove underscores from the identifier to use it as a clean part of the key.
+        val identifier =
+            UUID
+                .randomUUID()
+                .toString()
+                .replace("-", "")
+                .substring(0, 12)
+
+        // We hash the full key with BCrypt for security.
         val hashedKey = passwordEncoder.encode(rawKey)
 
-        val apiKey = ApiKeyPersistence(
-            userId = userId,
-            keyHash = hashedKey!!,
-            name = name,
-            createdAt = Instant.now(),
-            expiresAt = expiresAt
-        )
+        val apiKey =
+            ApiKeyPersistence(
+                userId = userId,
+                keyIdentifier = identifier,
+                keyHash = hashedKey!!,
+                name = name,
+                createdAt = Instant.now(),
+                expiresAt = expiresAt,
+            )
         apiKeyRepository.save(apiKey)
 
-        // Return prefix + raw key for the user to store
-        return "r8n_${Base64.getEncoder().withoutPadding().encodeToString(rawKey.toByteArray())}"
+        // Return prefix + identifier + raw key
+        return "r8n_${identifier}_$rawKey"
     }
 
     @Transactional
     fun validateApiKey(rawKeyWithPrefix: String): UUID {
-        if (!rawKeyWithPrefix.startsWith("r8n_")) {
+        val prefix = "r8n_"
+        if (!rawKeyWithPrefix.startsWith(prefix)) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid API key format")
         }
 
-        val rawKey = String(Base64.getDecoder().decode(rawKeyWithPrefix.substring(4)))
-        
-        // This is inefficient as we can't look up by hash directly since BCrypt is salted.
-        // For a real production system with many keys, we'd use a key prefix/id or a faster hash.
-        // Given the "Smallest Change" and "Maintainability" principles, we'll implement a simple lookup.
-        // Optimization: In a real system, we might store a non-salted hash (e.g., SHA-256) of the key for lookup,
-        // and then verify with BCrypt for security.
-        
-        // For now, let's find all active keys and verify. 
-        // Better: Use a prefix of the key (e.g. first 8 chars) stored in plain text to narrow down the search.
-        
-        // Let's refine the implementation to be more performant while keeping it simple.
-        val allKeys = apiKeyRepository.findAll().filter { !it.revoked && (it.expiresAt == null || it.expiresAt.isAfter(Instant.now())) }
-        
-        val matchedKey = allKeys.find { passwordEncoder.matches(rawKey, it.keyHash) }
-            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid API key")
+        val content = rawKeyWithPrefix.substring(prefix.length)
+        val parts = content.split("_")
+        if (parts.size != 2) {
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid API key format")
+        }
 
-        matchedKey.lastUsedAt = Instant.now()
-        apiKeyRepository.save(matchedKey)
+        val identifier = parts[0]
+        val rawKey = parts[1]
 
-        return matchedKey.userId
+        val apiKey =
+            apiKeyRepository.findByKeyIdentifier(identifier)
+                ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid API key")
+
+        if (apiKey.revoked || (apiKey.expiresAt != null && apiKey.expiresAt.isBefore(Instant.now()))) {
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "API key revoked or expired")
+        }
+
+        if (!passwordEncoder.matches(rawKey, apiKey.keyHash)) {
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid API key")
+        }
+
+        apiKey.lastUsedAt = Instant.now()
+        apiKeyRepository.save(apiKey)
+
+        return apiKey.userId
     }
 
     private fun generateSecureKey(): String {
@@ -73,11 +95,16 @@ class ApiKeyService(
     }
 
     @Transactional
-    fun revokeApiKey(userId: UUID, keyId: UUID) {
-        val apiKey = apiKeyRepository.findById(keyId)
-            .filter { it.userId == userId }
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "API key not found") }
-        
+    fun revokeApiKey(
+        userId: UUID,
+        keyId: UUID,
+    ) {
+        val apiKey =
+            apiKeyRepository
+                .findById(keyId)
+                .filter { it.userId == userId }
+                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "API key not found") }
+
         apiKey.revoked = true
         apiKeyRepository.save(apiKey)
     }
