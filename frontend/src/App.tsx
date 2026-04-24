@@ -14,6 +14,7 @@ const Supplier = lazy(() => import("./pages/Supplier"));
 const OpinionList = lazy(() => import("./pages/OpinionList"));
 const MyLists = lazy(() => import("./pages/MyLists"));
 const Requests = lazy(() => import("./pages/Requests"));
+const Messages = lazy(() => import("./pages/Messages"));
 const Discover = lazy(() => import("./pages/Discover"));
 const CreateReview = lazy(() => import("./pages/CreateReview"));
 const CreateList = lazy(() => import("./pages/CreateList"));
@@ -52,6 +53,7 @@ const App = () => (
                 <Route path="/list/:id" element={<OpinionList />} />
                 <Route path="/lists" element={<MyLists />} />
                 <Route path="/requests" element={<Requests />} />
+                <Route path="/messages" element={<Messages />} />
                 <Route path="/moderation/opinions" element={<OpinionModeration />} />
                 <Route path="/discover" element={<Discover />} />
                 <Route path="/create" element={<CreateReview />} />
