@@ -155,3 +155,7 @@ CREATE TABLE users.api_keys (
 );
 CREATE INDEX idx_api_keys_user_id ON users.api_keys(user_id);
 CREATE INDEX idx_api_keys_key_identifier ON users.api_keys(key_identifier);
+
+--changeset inikulin:V7_preseed_api_keys
+INSERT INTO users.api_keys (id, user_id, key_identifier, key_hash, name, created_at)
+VALUES ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'test-key', '$2a$12$lxo9e8RbWABER4/mkU./s.njgArpJleAB9Vdq7C7rlNWIRYEw0Oym', 'Test Key', '2024-01-01T12:00:00Z');

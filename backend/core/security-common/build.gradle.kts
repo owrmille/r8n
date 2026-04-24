@@ -4,10 +4,10 @@ plugins {
 
 group = "com.r8n.backend"
 version = "0.0.1-SNAPSHOT"
-description = "security bean for backend services import"
+description = "Common security logic for all services"
 
 dependencies {
     implementation(libs.spring.boot.starter.oauth)
     implementation(libs.spring.boot.starter.security)
-    compileOnly(libs.spring.boot.starter.web)
+    implementation(libs.spring.web)
 }

@@ -443,6 +443,24 @@ routed-request-gdpr: ## Gateway GDPR export request with timeout (ENV=local|dock
 		-H "Authorization: Bearer $$(cat .access_token)" | head -c 500; \
 	echo "..."
 
+public-request-user: ## user-sv access through public api
+	@if [ "$(ENV)" = "docker" ]; then \
+		$(LOAD_DOCKER_ENV) \
+		protocol=https; \
+		host=localhost; \
+		port=8080; \
+	else \
+		$(LOAD_LOCAL_ENV) \
+		protocol=$${INTERSERVICE_PROTOCOL:-http}; \
+		host=$${GATEWAY_HOST:-localhost}; \
+		port=$${GATEWAY_PORT:-8080}; \
+	fi; \
+	curl_args="-i"; \
+	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
+	\
+	curl $$curl_args -X POST "$$protocol://$$host:$$port/api/public/users/profile/00000000-0000-0000-0000-000000000000" \
+		-H "X-API-KEY: 1234"
+
 direct-request-opinion: ## HTTP direct request to opinions (local)
 	@if [ ! -f .access_token ]; then $(MAKE) get-token; fi
 	curl "http://localhost:8081/api/opinions/30000000-0000-0000-0000-000000000002" -i -H "Authorization: Bearer $$(cat .access_token)"
