@@ -49,21 +49,16 @@ const PrivacyPolicy = () => {
                 <h3 className="text-sm font-medium text-foreground mb-2">Personal Information</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   We collect information you provide directly, including your name, email address,
-                  profile information, and any content you create on the platform.
+                  optional phone number, claimed location jurisdiction, profile information, and any
+                  content you create on the platform.
                 </p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-foreground mb-2">Usage Data</h3>
+                <h3 className="text-sm font-medium text-foreground mb-2">Session Information</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  We collect information about how you use the platform, including pages visited,
-                  features used, and interaction patterns to improve our services.
-                </p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-foreground mb-2">Device Information</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  We may collect device information such as IP address, browser type, and operating
-                  system for security and analytical purposes.
+                  We store session begin and end information, and record direct actions such as
+                  creating, editing, or deleting opinions and opinion lists, and sending, accepting,
+                  or rejecting subscription requests.
                 </p>
               </div>
             </div>
