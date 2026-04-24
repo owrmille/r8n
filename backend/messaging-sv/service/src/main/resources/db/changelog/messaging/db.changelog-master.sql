@@ -32,3 +32,48 @@ CREATE INDEX IF NOT EXISTS idx_support_messages_thread_id
     ON messaging.support_messages(thread_id);
 CREATE INDEX IF NOT EXISTS idx_support_messages_created_at
     ON messaging.support_messages(created_at);
+
+--changeset iatopchu:V2_seed_support_messaging context:local,test
+INSERT INTO messaging.support_threads (id, owner_user_id, created_at, updated_at)
+VALUES
+    (
+        '80000000-0000-0000-0000-000000000001',
+        '00000000-0000-0000-0000-000000000000',
+        '2024-02-01T09:30:00Z',
+        '2024-02-01T09:35:00Z'
+    ),
+    (
+        '80000000-0000-0000-0000-000000000002',
+        '10101010-1010-1010-1010-101010101010',
+        '2024-02-01T10:00:00Z',
+        '2024-02-01T10:00:00Z'
+    )
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO messaging.support_messages (id, thread_id, author_user_id, author_role, text, created_at)
+VALUES
+    (
+        '81000000-0000-0000-0000-000000000001',
+        '80000000-0000-0000-0000-000000000001',
+        '00000000-0000-0000-0000-000000000000',
+        'USER',
+        'I need help with a review dispute.',
+        '2024-02-01T09:30:00Z'
+    ),
+    (
+        '81000000-0000-0000-0000-000000000002',
+        '80000000-0000-0000-0000-000000000001',
+        '10101010-1010-1010-1010-101010101010',
+        'SUPPORT',
+        'Thanks, we will check the moderation context.',
+        '2024-02-01T09:35:00Z'
+    ),
+    (
+        '81000000-0000-0000-0000-000000000003',
+        '80000000-0000-0000-0000-000000000002',
+        '10101010-1010-1010-1010-101010101010',
+        'SUPPORT',
+        'Opening an internal support follow-up.',
+        '2024-02-01T10:00:00Z'
+    )
+ON CONFLICT (id) DO NOTHING;
