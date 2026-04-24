@@ -25,9 +25,6 @@ spring:
   sql:
     init:
       mode: never
-services:
-  messaging:
-    url: ${INTERSERVICE_PROTOCOL}://${SERVICES_MESSAGING_HOST}:${SERVICES_MESSAGING_PORT}
 r8n:
   security:
     jwt:

@@ -8,9 +8,6 @@ version = "0.0.1-SNAPSHOT"
 description = "provides information about users"
 
 dependencies {
-    implementation(project(":messaging-api"))
-    implementation(project(":messaging-api-integration"))
-    implementation(project(":messaging-client"))
     implementation(project(":users-api"))
     implementation(project(":users-api-integration"))
     implementation(project(":opinions-api"))

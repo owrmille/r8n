@@ -29,9 +29,6 @@ logging:
   level:
     root: ERROR
 
-services:
-  messaging:
-    url: http://localhost:8091
 r8n:
   security:
     public-paths: /api/auth/**
