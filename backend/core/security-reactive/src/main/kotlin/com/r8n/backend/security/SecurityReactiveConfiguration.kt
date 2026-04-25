@@ -30,8 +30,7 @@ class SecurityReactiveConfiguration {
                 // Allow public API paths if configured
                 exchange.pathMatchers("/api/public/**").permitAll()
                 exchange.anyExchange().permitAll() // By default, Gateway is transparent
-            }
-            .httpBasic { it.disable() }
+            }.httpBasic { it.disable() }
             .formLogin { it.disable() }
             .build()
     }

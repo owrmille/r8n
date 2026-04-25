@@ -29,6 +29,7 @@ frontend_npx() { if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NOD
     docker-certs docker-certs-force internal-certs internal-certs-force internal-certs-clean docker-certs-clean docker-secrets-clean docker-secrets-init edge-certs edge-certs-force \
     docker-down docker-logs clean-artifacts ensure-log-dirs clean-logs \
     get-token refresh-token logout routed-request-opinion routed-request-mock routed-request-user-profile routed-request-gdpr direct-request-opinion direct-request-mock \
+    direct-request-swagger public-request-user routed-request-opinion-approved routed-request-opinion-forbidden routed-request-opinion-mine \
     https-routed-request-opinion https-routed-request-mock https-routed-request-gdpr \
     docker-database-create-data-folder docker-database-drop-volume-personal docker-database-drop-volume-campus docker-database-run docker-database-connect \
     build-opinions who-ate-all-the-space clean-the-fuck-out-of-this-campus-machine \
@@ -529,19 +530,16 @@ move-caches-to-goinfre: ## Move Docker and Gradle caches to /goinfre (campus mac
 	@chmod +x scripts/move-docker-to-goinfre.sh
 	./scripts/move-docker-to-goinfre.sh
 
-##@ Linters
+##@ CI check stages
 check-makefile: ## Lint Makefile formatting and conflicts
 	chmod +x utils/lint-makefile.sh
 	./utils/lint-makefile.sh
 
-##@ CI check stages
 test-github-backend: test-backend
 
 test-github-frontend: test-frontend
 
 test-github-e2e: test-e2e
-
-test-github: check-makefile test-github-backend test-github-frontend test-github-e2e
 
 test-backend: lint-backend
 	cd backend && ./gradlew test
