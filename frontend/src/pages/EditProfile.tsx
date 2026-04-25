@@ -19,9 +19,18 @@ const MAX_AVATAR_SIZE_BYTES = readPositiveIntegerEnv(
   import.meta.env.VITE_AVATAR_MAX_SIZE_BYTES,
 );
 const MAX_AVATAR_SIZE_LABEL = formatFileSize(MAX_AVATAR_SIZE_BYTES);
-const PROFILE_NAME_MAX_LENGTH = 255;
-const PROFILE_ABOUT_MAX_LENGTH = 255;
-const PROFILE_LOCATION_MAX_LENGTH = 255;
+const PROFILE_NAME_MAX_LENGTH = readPositiveIntegerEnv(
+  "VITE_PROFILE_NAME_MAX_LENGTH",
+  import.meta.env.VITE_PROFILE_NAME_MAX_LENGTH,
+);
+const PROFILE_ABOUT_MAX_LENGTH = readPositiveIntegerEnv(
+  "VITE_PROFILE_ABOUT_MAX_LENGTH",
+  import.meta.env.VITE_PROFILE_ABOUT_MAX_LENGTH,
+);
+const PROFILE_LOCATION_MAX_LENGTH = readPositiveIntegerEnv(
+  "VITE_PROFILE_LOCATION_MAX_LENGTH",
+  import.meta.env.VITE_PROFILE_LOCATION_MAX_LENGTH,
+);
 const ALLOWED_AVATAR_TYPES = new Set([
   "image/jpeg",
   "image/png",

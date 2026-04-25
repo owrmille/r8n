@@ -107,6 +107,9 @@ describe("EditProfile avatar controls", () => {
     fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
     vi.stubEnv("VITE_AVATAR_MAX_SIZE_BYTES", String(AVATAR_MAX_SIZE_BYTES));
+    vi.stubEnv("VITE_PROFILE_NAME_MAX_LENGTH", String(PROFILE_NAME_MAX_LENGTH));
+    vi.stubEnv("VITE_PROFILE_ABOUT_MAX_LENGTH", String(PROFILE_ABOUT_MAX_LENGTH));
+    vi.stubEnv("VITE_PROFILE_LOCATION_MAX_LENGTH", String(PROFILE_LOCATION_MAX_LENGTH));
 
     ({ default: EditProfile } = await import("@/pages/EditProfile"));
     ({ createQueryClient } = await import("@/lib/server-state/query-client"));
