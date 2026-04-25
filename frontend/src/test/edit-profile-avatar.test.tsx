@@ -8,7 +8,7 @@ const USER_ID = "00000000-0000-0000-0000-000000000000";
 const ACCESS_TOKEN = "stub-access-token-123";
 const AVATAR_MAX_SIZE_BYTES = 1024;
 const PROFILE_NAME_MAX_LENGTH = 255;
-const PROFILE_ABOUT_MAX_LENGTH = 200;
+const PROFILE_ABOUT_MAX_LENGTH = 255;
 const PROFILE_LOCATION_MAX_LENGTH = 255;
 
 const { toastMock } = vi.hoisted(() => ({

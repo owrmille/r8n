@@ -24,7 +24,7 @@ class UserService(
 ) {
     private companion object {
         const val NAME_MAX_LENGTH = 255
-        const val ABOUT_MAX_LENGTH = 200
+        const val ABOUT_MAX_LENGTH = 255
         const val LOCATION_MAX_LENGTH = 255
     }
 

@@ -222,7 +222,7 @@ class UsersIntegrationTests {
             objectMapper.writeValueAsString(
                 mapOf(
                     "name" to "Test Testsson",
-                    "about" to "a".repeat(201),
+                    "about" to "a".repeat(256),
                     "location" to "Berlin",
                 ),
             )
