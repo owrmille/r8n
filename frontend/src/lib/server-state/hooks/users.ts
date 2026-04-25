@@ -11,7 +11,7 @@ import {
 } from "@/lib/server-state/hooks/authorized";
 import { usersApi } from "@/lib/api/users";
 import type {
-  UpdateMyProfileRequestDto,
+  UpdateMyPublicProfileRequestDto,
   UploadMyAvatarRequestDto,
   UserProfileDto,
 } from "@/lib/api/users";
@@ -66,18 +66,18 @@ export function useUserAvatar(
   });
 }
 
-export function useUpdateMyProfileMutation(
+export function useUpdateMyPublicProfileMutation(
   options?: UseMutationOptions<
     UserProfileDto,
     Error,
-    UpdateMyProfileRequestDto,
+    UpdateMyPublicProfileRequestDto,
     unknown
   >,
 ) {
   const invalidate = useApiInvalidation();
 
   return useAuthorizedMutation({
-    mutationFn: (variables) => usersApi.updateMyProfile(variables),
+    mutationFn: (variables) => usersApi.updateMyPublicProfile(variables),
     ...options,
     meta: {
       errorTitle: "Profile update failed",

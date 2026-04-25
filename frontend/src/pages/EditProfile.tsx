@@ -8,7 +8,7 @@ import { toast } from "@/hooks/use-toast";
 import {
   useDeleteMyAvatarMutation,
   useMe,
-  useUpdateMyProfileMutation,
+  useUpdateMyPublicProfileMutation,
   useUploadMyAvatarMutation,
   useUserAvatar,
   useUserProfile,
@@ -102,7 +102,7 @@ const EditProfile = () => {
       });
     },
   });
-  const updateProfileMutation = useUpdateMyProfileMutation({
+  const updateProfileMutation = useUpdateMyPublicProfileMutation({
     onSuccess: () => {
       toast({ title: "Profile updated", description: "Your changes have been saved." });
       navigate("/profile");

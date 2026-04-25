@@ -146,7 +146,7 @@ class UsersIntegrationTests {
         val result =
             mockMvc
                 .perform(
-                    patch("/api/users/me/profile")
+                    patch("/api/users/me/public-profile")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody)
                         .with(csrf())
@@ -184,7 +184,7 @@ class UsersIntegrationTests {
         val result =
             mockMvc
                 .perform(
-                    patch("/api/users/me/profile")
+                    patch("/api/users/me/public-profile")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody)
                         .with(csrf())
@@ -210,7 +210,7 @@ class UsersIntegrationTests {
 
         mockMvc
             .perform(
-                patch("/api/users/me/profile")
+                patch("/api/users/me/public-profile")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(requestBody)
                     .with(csrf())
@@ -231,7 +231,7 @@ class UsersIntegrationTests {
 
         mockMvc
             .perform(
-                patch("/api/users/me/profile")
+                patch("/api/users/me/public-profile")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(requestBody)
                     .with(csrf())
@@ -252,7 +252,7 @@ class UsersIntegrationTests {
 
         mockMvc
             .perform(
-                patch("/api/users/me/profile")
+                patch("/api/users/me/public-profile")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(requestBody)
                     .with(csrf())

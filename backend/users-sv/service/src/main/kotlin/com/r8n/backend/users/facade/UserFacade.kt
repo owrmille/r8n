@@ -1,7 +1,7 @@
 package com.r8n.backend.users.facade
 
 import com.r8n.backend.users.api.dto.ConsentDto
-import com.r8n.backend.users.api.dto.UpdateMyProfileRequestDto
+import com.r8n.backend.users.api.dto.UpdateMyPublicProfileRequestDto
 import com.r8n.backend.users.api.dto.UserDto
 import com.r8n.backend.users.api.dto.UserProfileDto
 import com.r8n.backend.users.api.dto.UserSessionDto
@@ -30,9 +30,9 @@ class UserFacade(
 
     fun getUserProfile(id: UUID) = userService.getProfile(id).toDto()
 
-    fun updateMyProfile(
+    fun updateMyPublicProfile(
         userId: UUID,
-        request: UpdateMyProfileRequestDto,
+        request: UpdateMyPublicProfileRequestDto,
     ) = userService
         .updateProfile(userId, request.name, request.about, request.location)
         .toDto()

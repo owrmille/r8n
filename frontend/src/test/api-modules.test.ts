@@ -295,14 +295,14 @@ describe("API modules", () => {
     });
     const usersApi = createUsersApi(client);
 
-    await usersApi.updateMyProfile({
+    await usersApi.updateMyPublicProfile({
       about: "Privacy-conscious coffee reviewer",
       location: "Hamburg, Germany",
       name: "Jane Reviewer",
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/users/me/profile",
+      "/api/users/me/public-profile",
       expect.objectContaining({
         body: JSON.stringify({
           about: "Privacy-conscious coffee reviewer",

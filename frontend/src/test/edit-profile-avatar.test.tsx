@@ -305,7 +305,7 @@ describe("EditProfile avatar controls", () => {
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
-        "/api/users/me/profile",
+        "/api/users/me/public-profile",
         expect.objectContaining({
           body: JSON.stringify({
             about: "Updated public bio",
@@ -351,7 +351,7 @@ describe("EditProfile avatar controls", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save Profile" }));
 
     expect(fetchMock).not.toHaveBeenCalledWith(
-      "/api/users/me/profile",
+      "/api/users/me/public-profile",
       expect.objectContaining({ method: "PATCH" }),
     );
     expect(toastMock).toHaveBeenCalledWith({
@@ -387,7 +387,7 @@ describe("EditProfile avatar controls", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save Profile" }));
 
     expect(fetchMock).not.toHaveBeenCalledWith(
-      "/api/users/me/profile",
+      "/api/users/me/public-profile",
       expect.objectContaining({ method: "PATCH" }),
     );
     expect(toastMock).toHaveBeenCalledWith({

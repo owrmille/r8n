@@ -3,7 +3,7 @@ package com.r8n.backend.users.controller
 import com.r8n.backend.security.Authority.IS_USER
 import com.r8n.backend.security.CurrentUserIdentifier.getCurrentUserId
 import com.r8n.backend.users.api.UsersApi
-import com.r8n.backend.users.api.dto.UpdateMyProfileRequestDto
+import com.r8n.backend.users.api.dto.UpdateMyPublicProfileRequestDto
 import com.r8n.backend.users.api.dto.UsernameDto
 import com.r8n.backend.users.facade.UserFacade
 import com.r8n.backend.users.service.UserAvatarService
@@ -27,8 +27,8 @@ class UserController(
     override fun getUserProfile(id: UUID) = userFacade.getUserProfile(id)
 
     @PreAuthorize(IS_USER)
-    override fun updateMyProfile(request: UpdateMyProfileRequestDto) =
-        userFacade.updateMyProfile(getCurrentUserId(), request)
+    override fun updateMyPublicProfile(request: UpdateMyPublicProfileRequestDto) =
+        userFacade.updateMyPublicProfile(getCurrentUserId(), request)
 
     @PreAuthorize(IS_USER)
     override fun getUserAvatar(id: UUID): ResponseEntity<ByteArray> {
