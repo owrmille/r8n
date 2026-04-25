@@ -26,11 +26,12 @@ spring:
     init:
       mode: never
 springdoc:
-  packages-to-scan: com.r8n.backend.opinions.opinions.controller, com.r8n.backend.opinions.lists.controller, com.r8n.backend.opinions.access.controller
+  packages-to-scan: com.r8n.backend.opinions.opinions.controller, com.r8n.backend.opinions.lists.controller, com.r8n.backend.opinions.access.controller, com.r8n.backend.opinions.api
 services:
   users:
     url: ${INTERSERVICE_PROTOCOL}://${SERVICES_USERS_HOST}:${SERVICES_USERS_PORT}
 r8n:
   security:
+    public-paths: /v3/api-docs/**
     jwt:
       public-key: ${JWT_PUBLIC_KEY}

@@ -10,4 +10,5 @@ dependencies {
     api(project(":core:security-common"))
     implementation(libs.spring.boot.starter.webflux)
     implementation(libs.spring.boot.starter.security)
+    implementation(libs.spring.boot.starter.oauth)
 }
