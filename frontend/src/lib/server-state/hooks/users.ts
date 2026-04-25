@@ -10,7 +10,7 @@ import {
   useAuthorizedQuery,
 } from "@/lib/server-state/hooks/authorized";
 import { usersApi } from "@/lib/api/users";
-import type { UploadMyAvatarRequestDto } from "@/lib/api/users";
+import type { UploadMyAvatarRequestDto, UserProfileDto } from "@/lib/api/users";
 import { usersKeys } from "@/lib/server-state/query-keys";
 import type { ApiErrorMeta } from "@/lib/server-state/query-client";
 import type { Uuid } from "@/lib/api/shared";
@@ -22,11 +22,18 @@ export function useMe() {
   });
 }
 
-export function useUserProfile(id: Uuid) {
+export function useUserProfile(
+  id: Uuid,
+  options?: Omit<
+    UseQueryOptions<UserProfileDto, Error, UserProfileDto, QueryKey>,
+    "queryKey" | "queryFn"
+  >,
+) {
   return useAuthorizedQuery({
     queryKey: usersKeys.detail(id),
     queryFn: () => usersApi.getUser(id),
     enabled: !!id,
+    ...options,
   });
 }
 
