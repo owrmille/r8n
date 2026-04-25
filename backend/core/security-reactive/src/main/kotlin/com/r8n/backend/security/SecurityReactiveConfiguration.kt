@@ -13,12 +13,11 @@ import org.springframework.security.web.server.SecurityWebFilterChain
 @EnableWebFluxSecurity
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
 class SecurityReactiveConfiguration {
-
     @Bean
     @ConditionalOnMissingBean
     fun springSecurityFilterChain(
         http: ServerHttpSecurity,
-        @Value("\${r8n.security.public-paths:}") publicPaths: Array<String>?
+        @Value("\${r8n.security.public-paths:}") publicPaths: Array<String>?,
     ): SecurityWebFilterChain {
         val paths = publicPaths ?: emptyArray()
 
@@ -29,11 +28,17 @@ class SecurityReactiveConfiguration {
                     exchange.pathMatchers(*paths).permitAll()
                 }
                 // Allow Swagger UI and API docs
-                exchange.pathMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/api/*/v3/api-docs/**", "/webjars/swagger-ui/**").permitAll()
+                exchange
+                    .pathMatchers(
+                        "/swagger-ui.html",
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**",
+                        "/api/*/v3/api-docs/**",
+                        "/webjars/swagger-ui/**",
+                    ).permitAll()
                 // Allow public API paths if configured
                 exchange.pathMatchers("/api/public/**").permitAll()
                 exchange.anyExchange().permitAll() // By default, Gateway is transparent
-            }
-            .build()
+            }.build()
     }
 }

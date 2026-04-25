@@ -77,7 +77,14 @@ class SecurityServletConfiguration {
                 if (paths.isNotEmpty()) {
                     auth.requestMatchers(*paths).permitAll()
                 }
-                auth.requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/api/*/v3/api-docs/**", "/webjars/swagger-ui/**").permitAll()
+                auth
+                    .requestMatchers(
+                        "/swagger-ui.html",
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**",
+                        "/api/*/v3/api-docs/**",
+                        "/webjars/swagger-ui/**",
+                    ).permitAll()
                 auth.anyRequest().authenticated()
             }.oauth2ResourceServer { oauth ->
                 oauth.jwt { jwt ->
