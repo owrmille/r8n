@@ -143,20 +143,6 @@ CREATE TABLE users.profile_avatars (
 INSERT INTO users.users_role_assignments (id, "user", role, granted_by, timestamp)
 VALUES (
     '77777777-7777-7777-7777-777777777777',
-    '00000000-0000-0000-0000-000000000000',
-    'SUPPORT',
-    '00000000-0000-0000-0000-000000000000',
-    '2024-01-01T12:00:00Z'
-);
-
---changeset iatopchu:V7_move_support_role_to_secondary_seed_user context:local,test
-DELETE FROM users.users_role_assignments
-WHERE "user" = '00000000-0000-0000-0000-000000000000'
-  AND role = 'SUPPORT';
-
-INSERT INTO users.users_role_assignments (id, "user", role, granted_by, timestamp)
-VALUES (
-    '77777777-7777-7777-7777-777777777777',
     '10101010-1010-1010-1010-101010101010',
     'SUPPORT',
     '10101010-1010-1010-1010-101010101010',
