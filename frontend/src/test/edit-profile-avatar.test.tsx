@@ -35,6 +35,29 @@ function createUserResponse() {
   );
 }
 
+function createProfileResponse(
+  overrides: Partial<{
+    about: string | null;
+    location: string | null;
+    name: string;
+  }> = {},
+) {
+  return new Response(
+    JSON.stringify({
+      about: overrides.about ?? "I am a coffee expert",
+      id: USER_ID,
+      lastOnline: null,
+      location: overrides.location ?? "Berlin, Germany",
+      name: overrides.name ?? "Test Testsson",
+      status: "ACTIVE",
+    }),
+    {
+      headers: { "Content-Type": "application/json" },
+      status: 200,
+    },
+  );
+}
+
 function createAvatarResponse() {
   return new Response("avatar-bytes", {
     headers: { "Content-Type": "image/png" },
@@ -107,7 +130,8 @@ describe("EditProfile avatar controls", () => {
   it("shows initials from the current user name when there is no avatar", async () => {
     fetchMock
       .mockResolvedValueOnce(createUserResponse())
-      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(createProfileResponse());
 
     renderEditProfile();
 
@@ -119,8 +143,10 @@ describe("EditProfile avatar controls", () => {
     fetchMock
       .mockResolvedValueOnce(createUserResponse())
       .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(createProfileResponse())
       .mockResolvedValueOnce(createEmptyResponse())
       .mockResolvedValueOnce(createUserResponse())
+      .mockResolvedValueOnce(createProfileResponse())
       .mockResolvedValueOnce(createAvatarResponse());
     const { fileInput } = renderEditProfile();
     const file = new File(["avatar"], "avatar.png", { type: "image/png" });
@@ -155,7 +181,8 @@ describe("EditProfile avatar controls", () => {
   it("rejects unsupported file types before upload", async () => {
     fetchMock
       .mockResolvedValueOnce(createUserResponse())
-      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(createProfileResponse());
     const { fileInput } = renderEditProfile();
     const file = new File(["not-image"], "avatar.txt", { type: "text/plain" });
 
@@ -175,7 +202,8 @@ describe("EditProfile avatar controls", () => {
   it("rejects images larger than the configured size before upload", async () => {
     fetchMock
       .mockResolvedValueOnce(createUserResponse())
-      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(createProfileResponse());
     const { fileInput } = renderEditProfile();
     const file = new File(
       [new Uint8Array(AVATAR_MAX_SIZE_BYTES + 1)],
@@ -201,8 +229,10 @@ describe("EditProfile avatar controls", () => {
     fetchMock
       .mockResolvedValueOnce(createUserResponse())
       .mockResolvedValueOnce(createAvatarResponse())
+      .mockResolvedValueOnce(createProfileResponse())
       .mockResolvedValueOnce(createEmptyResponse())
       .mockResolvedValueOnce(createUserResponse())
+      .mockResolvedValueOnce(createProfileResponse())
       .mockResolvedValueOnce(new Response(null, { status: 204 }));
     renderEditProfile();
 
@@ -223,6 +253,59 @@ describe("EditProfile avatar controls", () => {
     expect(toastMock).toHaveBeenCalledWith({
       title: "Profile image removed",
       description: "Your profile now shows initials again.",
+    });
+  });
+
+  it("updates public profile text fields", async () => {
+    fetchMock
+      .mockResolvedValueOnce(createUserResponse())
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(createProfileResponse())
+      .mockResolvedValueOnce(
+        createProfileResponse({
+          about: "Updated public bio",
+          location: "Hamburg, Germany",
+          name: "Updated Testsson",
+        }),
+      )
+      .mockResolvedValueOnce(createUserResponse())
+      .mockResolvedValueOnce(
+        createProfileResponse({
+          about: "Updated public bio",
+          location: "Hamburg, Germany",
+          name: "Updated Testsson",
+        }),
+      )
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+    renderEditProfile();
+
+    fireEvent.change(await screen.findByLabelText("Display name"), {
+      target: { value: "Updated Testsson" },
+    });
+    fireEvent.change(screen.getByLabelText("Bio"), {
+      target: { value: "Updated public bio" },
+    });
+    fireEvent.change(screen.getByLabelText("Location"), {
+      target: { value: "Hamburg, Germany" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save Profile" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/users/me/profile",
+        expect.objectContaining({
+          body: JSON.stringify({
+            about: "Updated public bio",
+            location: "Hamburg, Germany",
+            name: "Updated Testsson",
+          }),
+          method: "PATCH",
+        }),
+      );
+    });
+    expect(toastMock).toHaveBeenCalledWith({
+      title: "Profile updated",
+      description: "Your changes have been saved.",
     });
   });
 });

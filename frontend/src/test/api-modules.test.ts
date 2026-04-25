@@ -276,6 +276,48 @@ describe("API modules", () => {
     );
   });
 
+  it("updates the current user's public profile through the users API", async () => {
+    setCookie("XSRF-TOKEN", "xsrf-token");
+    const fetchMock = vi.fn().mockResolvedValue(
+      createJsonResponse({
+        about: "Privacy-conscious coffee reviewer",
+        id: "11111111-1111-1111-1111-111111111111",
+        lastOnline: null,
+        location: "Hamburg, Germany",
+        name: "Jane Reviewer",
+        status: "ACTIVE",
+      }),
+    );
+    const client = createHttpClient({
+      baseUrl: "/api",
+      fetchFn: fetchMock,
+    });
+    const usersApi = createUsersApi(client);
+
+    await usersApi.updateMyProfile({
+      about: "Privacy-conscious coffee reviewer",
+      location: "Hamburg, Germany",
+      name: "Jane Reviewer",
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/users/me/profile",
+      expect.objectContaining({
+        body: JSON.stringify({
+          about: "Privacy-conscious coffee reviewer",
+          location: "Hamburg, Germany",
+          name: "Jane Reviewer",
+        }),
+        method: "PATCH",
+      }),
+    );
+
+    const [, requestInit] = fetchMock.mock.calls[0];
+    const headers = new Headers(requestInit.headers);
+    expect(headers.get("Authorization")).toBe("Bearer stub-access-token-123");
+    expect(headers.get("X-XSRF-TOKEN")).toBe("xsrf-token");
+  });
+
   it("merges pagination and filters for opinion list searches", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       createJsonResponse({

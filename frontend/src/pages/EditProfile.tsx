@@ -8,8 +8,10 @@ import { toast } from "@/hooks/use-toast";
 import {
   useDeleteMyAvatarMutation,
   useMe,
+  useUpdateMyProfileMutation,
   useUploadMyAvatarMutation,
   useUserAvatar,
+  useUserProfile,
 } from "@/lib/server-state/hooks/users";
 
 const MAX_AVATAR_SIZE_BYTES = readPositiveIntegerEnv(
@@ -62,11 +64,12 @@ function validateAvatarFile(file: File): string | undefined {
 const EditProfile = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const isNameInitializedRef = useRef(false);
+  const isProfileInitializedRef = useRef(false);
   const [name, setName] = useState("");
-  const [bio, setBio] = useState("Curious eater and honest reviewer. I care about quality, atmosphere, and whether a place lives up to the hype.");
-  const [location, setLocation] = useState("Berlin, Germany");
+  const [about, setAbout] = useState("");
+  const [location, setLocation] = useState("");
   const { data: me } = useMe();
+  const { data: profile } = useUserProfile(me?.id ?? "");
   const { data: avatar } = useUserAvatar(me?.id ?? "", {
     enabled: !!me?.id,
     retry: false,
@@ -87,18 +90,26 @@ const EditProfile = () => {
       });
     },
   });
+  const updateProfileMutation = useUpdateMyProfileMutation({
+    onSuccess: () => {
+      toast({ title: "Profile updated", description: "Your changes have been saved." });
+      navigate("/profile");
+    },
+  });
   const isAvatarMutating =
     uploadAvatarMutation.isPending || deleteAvatarMutation.isPending;
   const displayName = name.trim() || me?.name || "?";
 
   useEffect(() => {
-    if (!me?.name || isNameInitializedRef.current) {
+    if (!profile || isProfileInitializedRef.current) {
       return;
     }
 
-    setName(me.name);
-    isNameInitializedRef.current = true;
-  }, [me?.name]);
+    setName(profile.name);
+    setAbout(profile.about ?? "");
+    setLocation(profile.location ?? "");
+    isProfileInitializedRef.current = true;
+  }, [profile]);
 
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.currentTarget.files?.[0];
@@ -126,8 +137,11 @@ const EditProfile = () => {
       toast({ title: "Name required", description: "Please enter your display name." });
       return;
     }
-    toast({ title: "Profile updated", description: "Your changes have been saved." });
-    navigate("/profile");
+    updateProfileMutation.mutate({
+      about: about.trim() === "" ? null : about.trim(),
+      location: location.trim() === "" ? null : location.trim(),
+      name: name.trim(),
+    });
   };
 
   return (
@@ -199,8 +213,9 @@ const EditProfile = () => {
 
           {/* Name */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">Display name</label>
+            <label htmlFor="profile-name" className="mb-1.5 block text-sm font-medium text-foreground">Display name</label>
             <input
+              id="profile-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -211,21 +226,24 @@ const EditProfile = () => {
 
           {/* Bio */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">Bio</label>
+            <label htmlFor="profile-about" className="mb-1.5 block text-sm font-medium text-foreground">Bio</label>
             <textarea
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
+              id="profile-about"
+              value={about}
+              onChange={(e) => setAbout(e.target.value)}
+              maxLength={200}
               placeholder="Tell others what you care about in your reviews..."
               rows={3}
               className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all resize-none leading-relaxed"
             />
-            <p className="mt-1 text-[11px] text-muted-foreground/60">{bio.length}/200 characters</p>
+            <p className="mt-1 text-[11px] text-muted-foreground/60">{about.length}/200 characters</p>
           </div>
 
           {/* Location */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">Location</label>
+            <label htmlFor="profile-location" className="mb-1.5 block text-sm font-medium text-foreground">Location</label>
             <input
+              id="profile-location"
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
@@ -236,8 +254,12 @@ const EditProfile = () => {
 
           {/* Submit */}
           <div className="flex gap-3 pt-2">
-            <Button type="submit" className="rounded-xl px-8">
-              Save Profile
+            <Button type="submit" disabled={updateProfileMutation.isPending} className="rounded-xl px-8">
+              {updateProfileMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Save Profile"
+              )}
             </Button>
             <Button type="button" variant="ghost" onClick={() => navigate("/profile")} className="rounded-xl">
               Cancel
