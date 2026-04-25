@@ -82,6 +82,8 @@ class UsersIntegrationTests {
     @BeforeEach
     fun setUp() {
         jdbcTemplate.update("DELETE FROM users.profile_avatars")
+        // Profile update tests mutate the seeded user, so reset public profile fields
+        // to keep this test class independent from method execution order.
         jdbcTemplate.update(
             "UPDATE users.pii SET name = ?, about = ?, location = ? WHERE user_id = ?",
             "Test Testsson",
