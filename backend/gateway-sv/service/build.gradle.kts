@@ -14,5 +14,5 @@ dependencies {
     implementation(project(":users-api-integration"))
     implementation(libs.spring.boot.starter.webflux)
     implementation(libs.spring.cloud.gateway)
-    implementation(libs.spring.swagger)
+    implementation(libs.spring.swagger.gateway)
 }

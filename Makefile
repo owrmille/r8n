@@ -469,6 +469,10 @@ direct-request-mock: ## HTTP direct request to mock (local)
 	@if [ ! -f .access_token ]; then $(MAKE) get-token; fi
 	curl "http://localhost:8090/api/opinion-lists/00000000-0000-0000-0000-000000000000/summary" -i -H "Authorization: Bearer $$(cat .access_token)"
 
+direct-request-swagger: ## HTTP direct request to users swagger (local)
+	@if [ ! -f .access_token ]; then $(MAKE) get-token; fi
+	curl "http://localhost:8082/v3/api-docs" -i -H "Authorization: Bearer $$(cat .access_token)"
+
 # frontend
 frontend-check-node: ## Check Node.js version (attempts nvm if too old)
 	@FRONTEND_NODE_VERSION="$(FRONTEND_NODE_VERSION)" ./scripts/frontend-check-node.sh
