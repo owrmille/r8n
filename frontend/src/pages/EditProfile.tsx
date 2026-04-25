@@ -19,6 +19,9 @@ const MAX_AVATAR_SIZE_BYTES = readPositiveIntegerEnv(
   import.meta.env.VITE_AVATAR_MAX_SIZE_BYTES,
 );
 const MAX_AVATAR_SIZE_LABEL = formatFileSize(MAX_AVATAR_SIZE_BYTES);
+const PROFILE_NAME_MAX_LENGTH = 255;
+const PROFILE_ABOUT_MAX_LENGTH = 200;
+const PROFILE_LOCATION_MAX_LENGTH = 255;
 const ALLOWED_AVATAR_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -133,14 +136,40 @@ const EditProfile = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
+    const normalizedName = name.trim();
+    const normalizedAbout = about.trim();
+    const normalizedLocation = location.trim();
+
+    if (!normalizedName) {
       toast({ title: "Name required", description: "Please enter your display name." });
       return;
     }
+    if (normalizedName.length > PROFILE_NAME_MAX_LENGTH) {
+      toast({
+        title: "Profile not saved",
+        description: `Display name must be ${PROFILE_NAME_MAX_LENGTH} characters or fewer.`,
+      });
+      return;
+    }
+    if (normalizedAbout.length > PROFILE_ABOUT_MAX_LENGTH) {
+      toast({
+        title: "Profile not saved",
+        description: `Bio must be ${PROFILE_ABOUT_MAX_LENGTH} characters or fewer.`,
+      });
+      return;
+    }
+    if (normalizedLocation.length > PROFILE_LOCATION_MAX_LENGTH) {
+      toast({
+        title: "Profile not saved",
+        description: `Location must be ${PROFILE_LOCATION_MAX_LENGTH} characters or fewer.`,
+      });
+      return;
+    }
+
     updateProfileMutation.mutate({
-      about: about.trim() === "" ? null : about.trim(),
-      location: location.trim() === "" ? null : location.trim(),
-      name: name.trim(),
+      about: normalizedAbout === "" ? null : normalizedAbout,
+      location: normalizedLocation === "" ? null : normalizedLocation,
+      name: normalizedName,
     });
   };
 
@@ -219,6 +248,7 @@ const EditProfile = () => {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              maxLength={PROFILE_NAME_MAX_LENGTH}
               placeholder="Your name"
               className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
             />
@@ -231,12 +261,12 @@ const EditProfile = () => {
               id="profile-about"
               value={about}
               onChange={(e) => setAbout(e.target.value)}
-              maxLength={200}
+              maxLength={PROFILE_ABOUT_MAX_LENGTH}
               placeholder="Tell others what you care about in your reviews..."
               rows={3}
               className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all resize-none leading-relaxed"
             />
-            <p className="mt-1 text-[11px] text-muted-foreground/60">{about.length}/200 characters</p>
+            <p className="mt-1 text-[11px] text-muted-foreground/60">{about.length}/{PROFILE_ABOUT_MAX_LENGTH} characters</p>
           </div>
 
           {/* Location */}
@@ -247,6 +277,7 @@ const EditProfile = () => {
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
+              maxLength={PROFILE_LOCATION_MAX_LENGTH}
               placeholder="e.g., Berlin, Germany"
               className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
             />

@@ -7,6 +7,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const USER_ID = "00000000-0000-0000-0000-000000000000";
 const ACCESS_TOKEN = "stub-access-token-123";
 const AVATAR_MAX_SIZE_BYTES = 1024;
+const PROFILE_NAME_MAX_LENGTH = 255;
+const PROFILE_ABOUT_MAX_LENGTH = 200;
+const PROFILE_LOCATION_MAX_LENGTH = 255;
 
 const { toastMock } = vi.hoisted(() => ({
   toastMock: vi.fn(),
@@ -67,6 +70,13 @@ function createAvatarResponse() {
 
 function createEmptyResponse() {
   return new Response(null, { status: 204 });
+}
+
+function mockInitialEditProfileRequests() {
+  fetchMock
+    .mockResolvedValueOnce(createUserResponse())
+    .mockResolvedValueOnce(new Response(null, { status: 204 }))
+    .mockResolvedValueOnce(createProfileResponse());
 }
 
 function renderEditProfile() {
@@ -308,6 +318,80 @@ describe("EditProfile avatar controls", () => {
       description: "Your changes have been saved.",
     });
   });
+
+  it("sets frontend length limits matching the profile update API", async () => {
+    mockInitialEditProfileRequests();
+    renderEditProfile();
+
+    expect(await screen.findByLabelText("Display name")).toHaveAttribute(
+      "maxLength",
+      String(PROFILE_NAME_MAX_LENGTH),
+    );
+    expect(screen.getByLabelText("Bio")).toHaveAttribute(
+      "maxLength",
+      String(PROFILE_ABOUT_MAX_LENGTH),
+    );
+    expect(screen.getByLabelText("Location")).toHaveAttribute(
+      "maxLength",
+      String(PROFILE_LOCATION_MAX_LENGTH),
+    );
+  });
+
+  it("rejects blank display name before updating public profile", async () => {
+    mockInitialEditProfileRequests();
+    renderEditProfile();
+
+    await waitForProfileForm();
+    fireEvent.change(screen.getByLabelText("Display name"), {
+      target: { value: "   " },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save Profile" }));
+
+    expect(fetchMock).not.toHaveBeenCalledWith(
+      "/api/users/me/profile",
+      expect.objectContaining({ method: "PATCH" }),
+    );
+    expect(toastMock).toHaveBeenCalledWith({
+      title: "Name required",
+      description: "Please enter your display name.",
+    });
+  });
+
+  it.each([
+    {
+      description: `Display name must be ${PROFILE_NAME_MAX_LENGTH} characters or fewer.`,
+      label: "Display name",
+      value: "a".repeat(PROFILE_NAME_MAX_LENGTH + 1),
+    },
+    {
+      description: `Bio must be ${PROFILE_ABOUT_MAX_LENGTH} characters or fewer.`,
+      label: "Bio",
+      value: "a".repeat(PROFILE_ABOUT_MAX_LENGTH + 1),
+    },
+    {
+      description: `Location must be ${PROFILE_LOCATION_MAX_LENGTH} characters or fewer.`,
+      label: "Location",
+      value: "a".repeat(PROFILE_LOCATION_MAX_LENGTH + 1),
+    },
+  ])("rejects $label longer than the server limit", async ({ description, label, value }) => {
+    mockInitialEditProfileRequests();
+    renderEditProfile();
+
+    await waitForProfileForm();
+    fireEvent.change(screen.getByLabelText(label), {
+      target: { value },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save Profile" }));
+
+    expect(fetchMock).not.toHaveBeenCalledWith(
+      "/api/users/me/profile",
+      expect.objectContaining({ method: "PATCH" }),
+    );
+    expect(toastMock).toHaveBeenCalledWith({
+      title: "Profile not saved",
+      description,
+    });
+  });
 });
 
 function renderWithClient(ui: ReactElement) {
@@ -332,5 +416,11 @@ async function waitForInitialAvatarFetch() {
       `/api/users/${USER_ID}/avatar`,
       expect.objectContaining({ method: "GET" }),
     );
+  });
+}
+
+async function waitForProfileForm() {
+  await waitFor(() => {
+    expect(screen.getByLabelText("Display name")).toHaveValue("Test Testsson");
   });
 }
