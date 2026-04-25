@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.transaction.annotation.Transactional
+import java.time.Instant
 import java.util.UUID
 
 interface UserRepository : JpaRepository<UserPersistence, UUID> {
@@ -17,5 +18,13 @@ interface UserRepository : JpaRepository<UserPersistence, UUID> {
     fun updatePassword(
         userId: UUID,
         passwordHash: String?,
+    )
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE UserPersistence u SET u.lastSeenAt = :lastSeenAt WHERE u.id = :userId")
+    fun updateLastSeenAt(
+        userId: UUID,
+        lastSeenAt: Instant,
     )
 }

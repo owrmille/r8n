@@ -138,3 +138,6 @@ CREATE TABLE users.profile_avatars (
     updated_at TIMESTAMPTZ NOT NULL,
     CONSTRAINT fk_profile_avatar_user FOREIGN KEY (user_id) REFERENCES users.users(id) ON DELETE CASCADE
 );
+
+--changeset codex:V6_user_last_seen_at
+ALTER TABLE users.users ADD COLUMN last_seen_at TIMESTAMPTZ;

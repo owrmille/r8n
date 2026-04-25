@@ -27,6 +27,9 @@ class UserPersistence(
     @Column(nullable = false)
     val statusTimestamp: Instant,
 //
+    @Column(name = "last_seen_at", nullable = true)
+    val lastSeenAt: Instant? = null,
+//
     @Column(nullable = true)
     val passwordHash: String? = null,
 )
