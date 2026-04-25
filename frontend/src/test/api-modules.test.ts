@@ -276,6 +276,32 @@ describe("API modules", () => {
     );
   });
 
+  it("uses backend user profile DTO with last seen timestamp", async () => {
+    const userId = "11111111-1111-1111-1111-111111111111";
+    const profile = {
+      id: userId,
+      name: "Jane Doe",
+      status: "ACTIVE",
+      lastSeenAt: "2026-04-25T10:15:30Z",
+      about: "Coffee reviewer",
+      location: "Berlin, Germany",
+    };
+    const fetchMock = vi.fn().mockResolvedValue(createJsonResponse(profile));
+    const client = createHttpClient({
+      baseUrl: "/api",
+      fetchFn: fetchMock,
+    });
+    const usersApi = createUsersApi(client);
+
+    await expect(usersApi.getUser(userId)).resolves.toEqual(profile);
+    expect(fetchMock).toHaveBeenCalledWith(
+      `/api/users/${userId}`,
+      expect.objectContaining({
+        method: "GET",
+      }),
+    );
+  });
+
   it("merges pagination and filters for opinion list searches", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       createJsonResponse({
