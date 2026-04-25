@@ -1,4 +1,4 @@
-package com.r8n.backend.opinions.lists.controller_internal
+package com.r8n.backend.opinions.lists.controllerInternal
 
 import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
