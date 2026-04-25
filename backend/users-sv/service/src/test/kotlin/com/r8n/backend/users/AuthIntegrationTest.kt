@@ -18,10 +18,10 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
@@ -220,7 +220,11 @@ class AuthIntegrationTest {
 
         val firstRefreshToken = extractRefreshToken(loginResponse.response.getHeader(HttpHeaders.SET_COOKIE)!!)
         val staleLastSeenAt = Instant.parse("2024-01-01T00:00:00Z")
-        jdbcTemplate.update("UPDATE users.users SET last_seen_at = ? WHERE id = ?", Timestamp.from(staleLastSeenAt), userId)
+        jdbcTemplate.update(
+            "UPDATE users.users SET last_seen_at = ? WHERE id = ?",
+            Timestamp.from(staleLastSeenAt),
+            userId,
+        )
         val beforeRefresh = Instant.now()
 
         // 2. First refresh
