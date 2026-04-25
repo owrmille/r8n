@@ -11,7 +11,6 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
-import java.time.Instant
 import java.util.UUID
 
 @Service
@@ -19,7 +18,6 @@ class UserService(
     private val consentService: ConsentService,
     private val userRepository: UserRepository,
     private val piiRepository: PIIRepository,
-    private val userSessionService: UserSessionService,
     private val userRoleAssignmentRepository: UserRoleAssignmentRepository,
 ) {
     fun getName(id: UUID) = piiRepository.findByIdOrNull(id)?.name ?: "Unknown"
@@ -61,11 +59,6 @@ class UserService(
 
     fun getMyName(userId: UUID): Username = Username(userId, getName(userId))
 
-    fun lastOnline(id: UUID): Instant? {
-        val lastSession = userSessionService.lastSessionForUserId(id)
-        return lastSession?.expires?.let { minOf(Instant.now(), it) }
-    }
-
     fun getProfile(id: UUID): UserProfile {
         val user =
             userRepository.findByIdOrNull(id)
@@ -77,7 +70,7 @@ class UserService(
             id,
             pii.name,
             user.status,
-            lastOnline(id),
+            user.lastSeenAt,
             pii.about,
             pii.location,
         )

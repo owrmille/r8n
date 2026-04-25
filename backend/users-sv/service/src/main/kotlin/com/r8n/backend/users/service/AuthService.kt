@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
+import java.time.Instant
 import java.util.UUID
 
 @Service
@@ -34,6 +35,7 @@ class AuthService(
         val roles = userRoleAssignmentRepository.findAllByUser(user.id).map { it.role.name }
         val accessToken = tokenService.generateAccessToken(user.id, roles.ifEmpty { listOf("USER") })
         val refreshToken = tokenService.generateRefreshToken(user.id)
+        userRepository.updateLastSeenAt(user.id, Instant.now())
 
         return AuthenticationTokens(
             accessToken = accessToken,
@@ -67,6 +69,7 @@ class AuthService(
 
         val roles = userRoleAssignmentRepository.findAllByUser(userId).map { it.role.name }
         val accessToken = tokenService.generateAccessToken(userId, roles.ifEmpty { listOf("USER") })
+        userRepository.updateLastSeenAt(userId, Instant.now())
 
         return AuthenticationTokens(
             accessToken = accessToken,
