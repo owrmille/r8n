@@ -17,7 +17,7 @@ export interface UserProfileDto {
   id: Uuid;
   name: string;
   status: UserStatusEnumDto;
-  lastOnline: string | null;
+  lastSeenAt: string | null;
   about: string | null;
   location: string | null;
 }

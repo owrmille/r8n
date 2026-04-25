@@ -26,11 +26,18 @@ export function useMe() {
   });
 }
 
-export function useUserProfile(id: Uuid) {
+export function useUserProfile(
+  id: Uuid,
+  options?: Omit<
+    UseQueryOptions<UserProfileDto, Error, UserProfileDto, QueryKey>,
+    "queryKey" | "queryFn"
+  >,
+) {
   return useAuthorizedQuery({
     queryKey: usersKeys.detail(id),
     queryFn: () => usersApi.getUser(id),
     enabled: !!id,
+    ...options,
   });
 }
 

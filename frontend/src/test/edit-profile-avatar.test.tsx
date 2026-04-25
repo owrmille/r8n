@@ -49,7 +49,7 @@ function createProfileResponse(
     JSON.stringify({
       about: overrides.about ?? "I am a coffee expert",
       id: USER_ID,
-      lastOnline: null,
+      lastSeenAt: null,
       location: overrides.location ?? "Berlin, Germany",
       name: overrides.name ?? "Test Testsson",
       status: "ACTIVE",
