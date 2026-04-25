@@ -1,4 +1,4 @@
-package com.r8n.backend.users.controller
+package com.r8n.backend.users.controller.internal
 
 import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto

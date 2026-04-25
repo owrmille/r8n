@@ -24,16 +24,6 @@ class SecurityReactiveConfiguration {
         return http
             .csrf { it.disable() } // CSRF handled by downstream services or disabled for Gateway
             .authorizeExchange { exchange ->
-                // Allow Swagger UI and API docs
-                exchange
-                    .pathMatchers(
-                        "/swagger-ui.html",
-                        "/swagger-ui/**",
-                        "/v3/api-docs/**",
-                        "/api/*/v3/api-docs/**",
-                        "/webjars/swagger-ui/**",
-                    ).permitAll()
-
                 if (paths.isNotEmpty()) {
                     exchange.pathMatchers(*paths).permitAll()
                 }

@@ -19,15 +19,12 @@ class RestSecurityInterceptor(
         execution: ClientHttpRequestExecution,
     ): ClientHttpResponse {
         val auth = SecurityContextHolder.getContext().authentication
-        logger.debug("RestSecurityInterceptor: auth = $auth, isAuthenticated = ${auth?.isAuthenticated}")
 
         if (auth is JwtAuthenticationToken) {
             request.headers.add("Authorization", "Bearer ${auth.token.tokenValue}")
-            logger.debug("Added Authorization header with JWT token")
         } else {
             serviceTokenService?.generateServiceToken()?.let { token ->
                 request.headers.add("Authorization", "Bearer $token")
-                logger.debug("Added Authorization header with service token")
             } ?: logger.warn("No authenticated user found in security context")
         }
         return execution.execute(request, body)

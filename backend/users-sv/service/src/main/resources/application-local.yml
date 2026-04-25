@@ -32,6 +32,7 @@ services:
     url: ${INTERSERVICE_PROTOCOL}://${SERVICES_MOCK_HOST}:${SERVICES_MOCK_PORT}
 r8n:
   security:
+    public-paths: /api/auth/**, /v3/api-docs/**, /swagger-ui.html, /swagger-ui/**, /webjars/swagger-ui/**
     jwt:
       private-key: ${JWT_PRIVATE_KEY}
       public-key: ${JWT_PUBLIC_KEY}

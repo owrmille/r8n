@@ -52,7 +52,7 @@ class SecurityServletConfiguration {
                     .ignoringRequestMatchers(
                         *paths
                             .filter { path ->
-                                path != "/api/auth/**" && path != "/api/auth/login"
+                                !path.startsWith("/api/auth/") && path != "/api/auth/**"
                             }.toTypedArray(),
                     )
             }.headers { headers ->
@@ -77,14 +77,6 @@ class SecurityServletConfiguration {
                 if (paths.isNotEmpty()) {
                     auth.requestMatchers(*paths).permitAll()
                 }
-                auth
-                    .requestMatchers(
-                        "/swagger-ui.html",
-                        "/swagger-ui/**",
-                        "/v3/api-docs/**",
-                        "/api/*/v3/api-docs/**",
-                        "/webjars/swagger-ui/**",
-                    ).permitAll()
                 auth.anyRequest().authenticated()
             }.oauth2ResourceServer { oauth ->
                 oauth.jwt { jwt ->

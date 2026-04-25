@@ -58,7 +58,6 @@ spring:
               uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_MOCK_HOST}:${SERVICES_MOCK_PORT}
               predicates:
                 - Path=/api/selectors/**
-
             - id: public_opinions
               uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_OPINIONS_HOST}:${SERVICES_OPINIONS_PORT}
               predicates:
@@ -70,7 +69,6 @@ spring:
                     limit: 100
                     durationSeconds: 60
                 - RewritePath=/api/public/opinions/(?<segment>.*), /api/opinions/$\{segment}
-
             - id: public_users
               uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_USERS_HOST}:${SERVICES_USERS_PORT}
               predicates:
@@ -82,13 +80,6 @@ spring:
                     limit: 100
                     durationSeconds: 60
                 - RewritePath=/api/public/users/(?<segment>.*), /api/users/$\{segment}
-
-r8n:
-  security:
-    public-paths: /api/auth/**, /swagger-ui.html, /swagger-ui/**, /v3/api-docs/**, /api/*/v3/api-docs/**, /webjars/swagger-ui/**, /api/opinions/v3/api-docs/**, /api/users/v3/api-docs/**, /api/export/v3/api-docs/**
-    jwt:
-      private-key: ${JWT_PRIVATE_KEY}
-      public-key: ${JWT_PUBLIC_KEY}
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -101,3 +92,9 @@ springdoc:
         url: /api/users/v3/api-docs
       - name: Export Service
         url: /api/export/v3/api-docs
+r8n:
+  security:
+    public-paths: /api/auth/**, /swagger-ui.html, /swagger-ui/**, /v3/api-docs/**, /api/*/v3/api-docs/**, /webjars/swagger-ui/**, /api/opinions/v3/api-docs/**, /api/users/v3/api-docs/**, /api/export/v3/api-docs/**
+    jwt:
+      private-key: ${JWT_PRIVATE_KEY}
+      public-key: ${JWT_PUBLIC_KEY}
