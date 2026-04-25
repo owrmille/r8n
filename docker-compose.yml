@@ -113,7 +113,6 @@ services:
       - ./deployment/certs/internal:/certs:ro
     depends_on:
       - database
-      - mock
 
   export:
     build:
@@ -143,6 +142,7 @@ services:
       - database
       - users
       - mock
+      - messaging
       - opinions
 
   gateway:
