@@ -118,8 +118,8 @@ class UsersIntegrationTests {
         assertEquals("I am a bratwurst expert", actual.about)
         assertEquals("Munich, Germany", actual.location)
 
-        assertTrue(actual.lastOnline != null, "lastOnline should not be null")
-        assertEquals(lastSeenAt, actual.lastOnline)
+        assertTrue(actual.lastSeenAt != null, "lastSeenAt should not be null")
+        assertEquals(lastSeenAt, actual.lastSeenAt)
     }
 
     @Test

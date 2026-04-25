@@ -51,7 +51,7 @@ class UserFacade(
             id,
             name,
             status.toDto(),
-            lastOnline,
+            lastSeenAt,
             about,
             location,
         )
