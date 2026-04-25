@@ -121,6 +121,19 @@ describe("UserAvatar", () => {
       );
     });
   });
+
+  it("shows provided last seen information without a user id", async () => {
+    const lastSeenAt = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+
+    renderWithClient(<UserAvatar name="Alex Krüger" lastSeenAt={lastSeenAt} />);
+
+    const trigger = screen.getByRole("button", { name: "Alex Krüger presence" });
+    fireEvent.pointerEnter(trigger, { pointerType: "mouse" });
+    fireEvent.mouseEnter(trigger);
+
+    expect(await screen.findByText("Last seen 15 minutes ago")).toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 });
 
 function renderWithClient(ui: ReactElement) {

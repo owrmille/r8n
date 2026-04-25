@@ -12,38 +12,127 @@ import { useUserAvatar, useUserProfile } from "@/lib/server-state/hooks/users";
 interface UserAvatarProps {
   userId?: Uuid | null;
   name: string;
+  lastSeenAt?: string | null;
   size?: "sm" | "md" | "lg";
   className?: string;
 }
 
-const UserAvatar = ({ userId, name, size = "md", className }: UserAvatarProps) => {
-  const [isPresenceOpen, setIsPresenceOpen] = useState(false);
+const UserAvatar = ({
+  userId,
+  name,
+  lastSeenAt,
+  size = "md",
+  className,
+}: UserAvatarProps) => {
+  if (userId) {
+    return (
+      <ProfileUserAvatar
+        userId={userId}
+        name={name}
+        fallbackLastSeenAt={lastSeenAt}
+        size={size}
+        className={className}
+      />
+    );
+  }
+
+  if (lastSeenAt !== undefined) {
+    return (
+      <PresenceAvatar
+        name={name}
+        lastSeenAt={lastSeenAt}
+        size={size}
+        className={className}
+      />
+    );
+  }
+
+  return <ReviewerAvatar name={name} size={size} className={className} />;
+};
+
+interface ProfileUserAvatarProps {
+  userId: Uuid;
+  name: string;
+  fallbackLastSeenAt?: string | null;
+  size: "sm" | "md" | "lg";
+  className?: string;
+}
+
+function ProfileUserAvatar({
+  userId,
+  name,
+  fallbackLastSeenAt,
+  size,
+  className,
+}: ProfileUserAvatarProps) {
   const { data: avatar } = useUserAvatar(userId ?? "", {
-    enabled: !!userId,
+    enabled: true,
     retry: false,
   });
+  const [isPresenceOpen, setIsPresenceOpen] = useState(false);
   const { data: profile, isError, isLoading } = useUserProfile(userId ?? "", {
-    enabled: !!userId && isPresenceOpen,
+    enabled: isPresenceOpen,
     retry: false,
     staleTime: 60_000,
   });
   const avatarUrl = useObjectUrl(avatar);
 
+  return (
+    <PresenceAvatar
+      name={name}
+      displayName={profile?.name}
+      image={avatarUrl}
+      lastSeenAt={profile?.lastSeenAt ?? fallbackLastSeenAt}
+      isError={isError}
+      isLoading={isLoading}
+      isOpen={isPresenceOpen}
+      onOpenChange={setIsPresenceOpen}
+      size={size}
+      className={className}
+    />
+  );
+}
+
+interface PresenceAvatarProps {
+  name: string;
+  displayName?: string;
+  image?: string;
+  lastSeenAt?: string | null;
+  isLoading?: boolean;
+  isError?: boolean;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  size: "sm" | "md" | "lg";
+  className?: string;
+}
+
+function PresenceAvatar({
+  name,
+  displayName,
+  image,
+  lastSeenAt,
+  isLoading = false,
+  isError = false,
+  isOpen,
+  onOpenChange,
+  size,
+  className,
+}: PresenceAvatarProps) {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = isOpen ?? uncontrolledOpen;
+  const setOpen = onOpenChange ?? setUncontrolledOpen;
+
   const avatarElement = (
     <ReviewerAvatar
       name={name}
-      image={avatarUrl}
+      image={image}
       size={size}
       className={className}
     />
   );
 
-  if (!userId) {
-    return avatarElement;
-  }
-
   return (
-    <HoverCard open={isPresenceOpen} onOpenChange={setIsPresenceOpen} openDelay={150}>
+    <HoverCard open={open} onOpenChange={setOpen} openDelay={150}>
       <HoverCardTrigger asChild>
         <button
           type="button"
@@ -55,15 +144,15 @@ const UserAvatar = ({ userId, name, size = "md", className }: UserAvatarProps) =
       </HoverCardTrigger>
       <HoverCardContent side="top" align="center" className="w-52 p-3">
         <div className="space-y-1">
-          <p className="truncate text-sm font-medium text-foreground">{profile?.name ?? name}</p>
+          <p className="truncate text-sm font-medium text-foreground">{displayName ?? name}</p>
           <p className="text-xs text-muted-foreground">
-            {getPresenceText(profile?.lastSeenAt, isLoading, isError)}
+            {getPresenceText(lastSeenAt, isLoading, isError)}
           </p>
         </div>
       </HoverCardContent>
     </HoverCard>
   );
-};
+}
 
 function getPresenceText(
   lastSeenAt: string | null | undefined,
