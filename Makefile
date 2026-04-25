@@ -30,7 +30,6 @@ frontend_npx() { if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NOD
     docker-down docker-logs clean-artifacts ensure-log-dirs clean-logs \
     get-token refresh-token logout routed-request-opinion routed-request-mock routed-request-user-profile routed-request-gdpr direct-request-opinion direct-request-mock \
     direct-request-swagger public-request-user routed-request-opinion-approved routed-request-opinion-forbidden routed-request-opinion-mine \
-    https-routed-request-opinion https-routed-request-mock https-routed-request-gdpr \
     docker-database-create-data-folder docker-database-drop-volume-personal docker-database-drop-volume-campus docker-database-run docker-database-connect \
     build-opinions who-ate-all-the-space clean-the-fuck-out-of-this-campus-machine \
     frontend-install frontend-install-all frontend-check-node frontend-dev frontend-build frontend-lint \
