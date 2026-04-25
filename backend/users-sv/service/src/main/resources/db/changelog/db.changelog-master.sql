@@ -139,7 +139,10 @@ CREATE TABLE users.profile_avatars (
     CONSTRAINT fk_profile_avatar_user FOREIGN KEY (user_id) REFERENCES users.users(id) ON DELETE CASCADE
 );
 
---changeset iatopchu:V6_seed_support_role context:local,test
+--changeset codex:V6_user_last_seen_at
+ALTER TABLE users.users ADD COLUMN last_seen_at TIMESTAMPTZ;
+
+--changeset iatopchu:V7_seed_support_role context:local,test
 INSERT INTO users.users_role_assignments (id, "user", role, granted_by, timestamp)
 VALUES (
     '77777777-7777-7777-7777-777777777777',
