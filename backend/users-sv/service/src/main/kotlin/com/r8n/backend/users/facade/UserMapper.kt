@@ -28,5 +28,6 @@ fun UserSession.toDto() =
         created = created,
         expires = expires,
         ip = ip,
+        os = os,
         userAgent = userAgent,
     )

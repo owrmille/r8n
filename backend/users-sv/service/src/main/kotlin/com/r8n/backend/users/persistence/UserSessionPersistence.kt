@@ -30,5 +30,8 @@ class UserSessionPersistence(
     val ip: String,
 //
     @Column(nullable = false)
+    val os: String,
+//
+    @Column(nullable = false)
     val userAgent: String,
 )

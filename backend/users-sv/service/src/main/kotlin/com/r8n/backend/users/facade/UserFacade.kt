@@ -1,5 +1,6 @@
 package com.r8n.backend.users.facade
 
+import com.r8n.backend.users.api.dto.UpdateMyPublicProfileRequestDto
 import com.r8n.backend.users.api.dto.UserProfileDto
 import com.r8n.backend.users.api.dto.UserStatusEnumDto
 import com.r8n.backend.users.api.dto.UsernameDto
@@ -28,6 +29,13 @@ class UserFacade(
     private fun Username.toDto() = UsernameDto(id, name)
 
     fun getUserProfile(id: UUID) = userService.getProfile(id).toDto()
+
+    fun updateMyPublicProfile(
+        userId: UUID,
+        request: UpdateMyPublicProfileRequestDto,
+    ) = userService
+        .updateProfile(userId, request.name, request.about, request.location)
+        .toDto()
 
     fun getSessionsForUser(
         id: UUID,
@@ -77,6 +85,7 @@ class UserFacade(
             created = created,
             expires = expires,
             ip = ip,
+            os = os,
             userAgent = userAgent,
         )
 }
