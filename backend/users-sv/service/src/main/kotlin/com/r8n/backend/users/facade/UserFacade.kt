@@ -85,6 +85,7 @@ class UserFacade(
             created = created,
             expires = expires,
             ip = ip,
+            os = os,
             userAgent = userAgent,
         )
 }
