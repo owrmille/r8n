@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Shield, Eye, Bell, ChevronRight, AlertTriangle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { usersApi } from "@/lib/api/users";
+import { clearSession } from "@/lib/auth/session";
 import { useMe } from "@/lib/server-state/hooks/users";
 
 const TABS = [
@@ -20,6 +22,7 @@ type Tab = typeof TABS[number]["id"];
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState<Tab>("account");
+  const navigate = useNavigate();
   const { data: me } = useMe();
   const email = me?.email ?? "";
 
@@ -54,13 +57,8 @@ const Settings = () => {
     setIsDeleting(true);
     try {
       await usersApi.requestAccountDeletion({ email: deleteEmail });
-      toast({
-        title: "Account deleted",
-        description: "Your account and all associated data have been permanently deleted.",
-      });
-      setDeleteDialogOpen(false);
-      setDeleteEmail("");
-      // Redirect to home or logout would happen here
+      clearSession();
+      navigate("/login", { replace: true });
     } catch (error) {
       toast({
         title: "Deletion failed",
@@ -109,7 +107,7 @@ const Settings = () => {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
                 <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
                   <h3 className="text-sm font-medium text-foreground">Email address</h3>
-                  <p className="text-sm text-muted-foreground">{email}</p>
+                  <p className="text-sm text-muted-foreground">{email || "Loading…"}</p>
                 </div>
 
                 <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
@@ -155,15 +153,17 @@ const Settings = () => {
                           <Input
                             id="delete-email"
                             type="email"
-                            placeholder={email}
+                            placeholder={email || "your@email.com"}
                             value={deleteEmail}
                             onChange={(e) => setDeleteEmail(e.target.value)}
                             className="rounded-xl"
                           />
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                          Your email: <span className="font-medium">{email}</span>
-                        </p>
+                        {email && (
+                          <p className="text-xs text-muted-foreground">
+                            Your email: <span className="font-medium">{email}</span>
+                          </p>
+                        )}
                       </div>
                       <DialogFooter>
                         <Button
@@ -179,7 +179,7 @@ const Settings = () => {
                         <Button
                           variant="destructive"
                           onClick={handleAccountDeletion}
-                          disabled={isDeleting || !deleteEmail}
+                          disabled={isDeleting || !deleteEmail || !email}
                           className="rounded-xl"
                         >
                           {isDeleting ? "Deleting..." : "Delete Account"}
