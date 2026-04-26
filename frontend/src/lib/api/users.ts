@@ -5,6 +5,7 @@ import type { Uuid } from "@/lib/api/shared";
 export interface UsernameDto {
   id: Uuid;
   name: string;
+  roles: string[];
 }
 
 export type UserStatusEnumDto =
