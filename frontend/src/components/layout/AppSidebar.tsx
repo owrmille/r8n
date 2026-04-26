@@ -42,7 +42,7 @@ export function AppSidebar() {
   });
   const { data: me } = useMe();
 
-  const canModerate = me?.roles.some((r) => r === "MODERATOR" || r === "ADMIN") ?? false;
+  const canModerate = me?.roles?.some((r) => r === "MODERATOR" || r === "ADMIN") ?? false;
   const mainItems = canModerate ? [...baseItems, moderationItem] : baseItems;
 
   const isActive = (path: string) =>
