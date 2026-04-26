@@ -13,6 +13,10 @@ spring:
       server:
         webflux:
           routes:
+            - id: block_internal
+              uri: no-forward://internal
+              predicates:
+                - Path=/api/internal/**
             - id: auth
               uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_USERS_HOST}:${SERVICES_USERS_PORT}
               predicates:
@@ -33,3 +37,8 @@ spring:
               uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_MOCK_HOST}:${SERVICES_MOCK_PORT}
               predicates:
                 - Path=/api/selectors/**
+r8n:
+  security:
+    public-paths: /api/auth/**
+    jwt:
+      public-key: ${JWT_PUBLIC_KEY}

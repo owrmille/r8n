@@ -32,7 +32,10 @@ class OpinionListService(
             opinionListRepository
                 .findById(listId)
                 .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
-        if (!accessService.ownsOpinionList(userId, listId) && list.privacy == OpinionListPrivacyEnum.PRIVATE) {
+        if (!accessService.ownsOpinionList(userId, listId) &&
+            !accessService.canAccessOpinionList(userId, listId, OpinionListPermissionEnum.VIEW) &&
+            list.privacy == OpinionListPrivacyEnum.PRIVATE
+        ) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND)
         }
         return list.name

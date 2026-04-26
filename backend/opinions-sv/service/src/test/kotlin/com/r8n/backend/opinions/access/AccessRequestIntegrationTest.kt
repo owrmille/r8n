@@ -205,7 +205,7 @@ class AccessRequestIntegrationTest {
         val createResult =
             mockMvc
                 .perform(
-                    get("/api/access-requests/outgoing/create/$listId")
+                    post("/api/access-requests/outgoing/create/$listId")
                         .header("Authorization", "Bearer $requesterToken")
                         .with(csrf()),
                 ).andExpect(status().isOk)
