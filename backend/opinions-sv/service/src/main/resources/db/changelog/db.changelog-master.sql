@@ -276,3 +276,14 @@ CREATE TABLE opinions.opinion_lists_syncs (
 CREATE INDEX idx_opinion_lists_syncs_source ON opinions.opinion_lists_syncs(source_list);
 CREATE INDEX idx_opinion_lists_syncs_destination ON opinions.opinion_lists_syncs(destination_list);
 CREATE UNIQUE INDEX uq_opinion_lists_syncs_pair ON opinions.opinion_lists_syncs(source_list, destination_list);
+
+--changeset inikulin:V11_preseed_sync_test_data context:local,test
+INSERT INTO opinions.access_requests (id, list, requester, status, created_at, updated_at)
+VALUES (
+    '30000000-0000-0000-0000-300000000006',
+    '70000000-0000-0000-0000-000000000001',
+    '20202020-2020-2020-2020-202020202020',
+    'SENT',
+    '2026-04-26T10:00:00Z',
+    '2026-04-26T10:00:00Z'
+) ON CONFLICT (id) DO NOTHING;

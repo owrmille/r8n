@@ -47,8 +47,13 @@ import java.util.UUID
 @Import(TestObjectMapperConfiguration::class)
 class OpinionListSyncIntegrationTest {
     private companion object {
-        val OWNER_ID: UUID = UUID.fromString("00000000-0000-0000-0000-000000000001")
-        val REQUESTER_ID: UUID = UUID.fromString("00000000-0000-0000-0000-000000000002")
+        val BERNARD_ID: UUID = UUID.fromString("10101010-1010-1010-1010-101010101010")
+        val ANNA_ID: UUID = UUID.fromString("20202020-2020-2020-2020-202020202020")
+
+        val BERNARD_LIST_ID: UUID = UUID.fromString("70000000-0000-0000-0000-000000000001")
+        val ANNA_LIST_ID: UUID = UUID.fromString("70000000-0000-0000-0000-000000000003")
+
+        val PRESEEDED_REQUEST_ID: UUID = UUID.fromString("30000000-0000-0000-0000-300000000006")
 
         @Suppress("unused") // used to store test database container
         @Container
@@ -87,74 +92,49 @@ class OpinionListSyncIntegrationTest {
     @BeforeEach
     fun setUp() {
         opinionListSyncRepository.deleteAll()
-        accessRequestRepository.deleteAll()
-        opinionListRepository.deleteAll()
 
-        requesterToken = "Bearer " + serviceTokenService.generateAccessToken(REQUESTER_ID, listOf("USER"))
+        requesterToken = "Bearer " + serviceTokenService.generateAccessToken(ANNA_ID, listOf("USER"))
 
         whenever(usersInternalApi.isAnyModerator(any())).thenReturn(false)
         whenever(usersInternalApi.isHumanModerator(any())).thenReturn(false)
-        whenever(usersInternalApi.getUserName(any())).thenReturn("Test User")
+        whenever(usersInternalApi.getUserName(any())).thenReturn("Anna Müller")
     }
 
     @Test
     fun `sync and unsync with opinion list works`() {
-        // 1. Create owner's list
-        val ownerList =
-            opinionListRepository.save(
-                OpinionListPersistence(
-                    owner = OWNER_ID,
-                    name = "Owner's List",
-                    privacy = OpinionListPrivacyEnum.PRIVATE,
-                ),
-            )
+        // 1. Bernard's list is the source (preseeded)
+        // 2. Anna's list is the destination (preseeded)
 
-        // 2. Create requester's list
-        val requesterList =
-            opinionListRepository.save(
-                OpinionListPersistence(
-                    owner = REQUESTER_ID,
-                    name = "Requester's List",
-                    privacy = OpinionListPrivacyEnum.PRIVATE,
-                ),
-            )
-
-        // 3. Try to sync without access request - should be forbidden
+        // 3. Sync without approved access request - should fail (it's currently SENT)
         mockMvc
             .perform(
-                post("/api/opinion-lists/${requesterList.id}/sync")
+                post("/api/opinion-lists/$ANNA_LIST_ID/sync")
                     .header("Authorization", requesterToken)
-                    .param("addedListId", ownerList.id.toString()),
+                    .param("addedListId", BERNARD_LIST_ID.toString()),
             ).andExpect(status().isForbidden)
 
-        // 4. Create approved access request
-        accessRequestRepository.save(
-            AccessRequestPersistence(
-                list = ownerList.id!!,
-                requester = REQUESTER_ID,
-                status = RequestStatusEnum.ACCEPTED,
-                createdAt = Instant.now(),
-                updatedAt = Instant.now(),
-            ),
-        )
+        // 4. Approve the preseeded access request
+        val request = accessRequestRepository.findById(PRESEEDED_REQUEST_ID).get()
+        request.status = RequestStatusEnum.ACCEPTED
+        accessRequestRepository.save(request)
 
         // 5. Sync with access request - should work
         val syncResult =
             mockMvc
                 .perform(
-                    post("/api/opinion-lists/${requesterList.id}/sync")
+                    post("/api/opinion-lists/$ANNA_LIST_ID/sync")
                         .header("Authorization", requesterToken)
-                        .param("addedListId", ownerList.id.toString()),
+                        .param("addedListId", BERNARD_LIST_ID.toString()),
                 ).andExpect(status().isOk)
                 .andReturn()
                 .response.contentAsString
                 .let { objectMapper.readValue<OpinionListDto>(it) }
 
-        assertEquals(requesterList.id, syncResult.id)
+        assertEquals(ANNA_LIST_ID, syncResult.id)
         val syncPersistence =
             opinionListSyncRepository.findByDestinationListAndSourceList(
-                requesterList.id!!,
-                ownerList.id!!,
+                ANNA_LIST_ID,
+                BERNARD_LIST_ID,
             )
         assertTrue(syncPersistence != null)
         assertEquals(1.0, syncPersistence?.weight)
@@ -162,16 +142,16 @@ class OpinionListSyncIntegrationTest {
         // 5.1 Update weight
         mockMvc
             .perform(
-                post("/api/opinion-lists/${requesterList.id}/sync")
+                post("/api/opinion-lists/$ANNA_LIST_ID/sync")
                     .header("Authorization", requesterToken)
-                    .param("addedListId", ownerList.id.toString())
+                    .param("addedListId", BERNARD_LIST_ID.toString())
                     .param("weight", "0.5"),
             ).andExpect(status().isOk)
 
         val updatedSyncPersistence =
             opinionListSyncRepository.findByDestinationListAndSourceList(
-                requesterList.id!!,
-                ownerList.id!!,
+                ANNA_LIST_ID,
+                BERNARD_LIST_ID,
             )
         assertEquals(0.5, updatedSyncPersistence?.weight)
 
@@ -179,95 +159,52 @@ class OpinionListSyncIntegrationTest {
         val unsyncResult =
             mockMvc
                 .perform(
-                    post("/api/opinion-lists/${requesterList.id}/unsync")
+                    post("/api/opinion-lists/$ANNA_LIST_ID/unsync")
                         .header("Authorization", requesterToken)
-                        .param("removedListId", ownerList.id.toString()),
+                        .param("removedListId", BERNARD_LIST_ID.toString()),
                 ).andExpect(status().isOk)
                 .andReturn()
                 .response.contentAsString
                 .let { objectMapper.readValue<OpinionListDto>(it) }
 
-        assertEquals(requesterList.id, unsyncResult.id)
+        assertEquals(ANNA_LIST_ID, unsyncResult.id)
         assertTrue(
-            opinionListSyncRepository.findByDestinationListAndSourceList(requesterList.id!!, ownerList.id!!) == null,
+            opinionListSyncRepository.findByDestinationListAndSourceList(ANNA_LIST_ID, BERNARD_LIST_ID) == null,
         )
     }
 
     @Test
     fun `cannot sync to a list you do not own`() {
-        val ownerList =
-            opinionListRepository.save(
-                OpinionListPersistence(
-                    owner = OWNER_ID,
-                    name = "Owner's List",
-                    privacy = OpinionListPrivacyEnum.SEARCHABLE,
-                ),
-            )
-        val otherList =
-            opinionListRepository.save(
-                OpinionListPersistence(
-                    owner = OWNER_ID,
-                    name = "Other List",
-                    privacy = OpinionListPrivacyEnum.SEARCHABLE,
-                ),
-            )
-
         mockMvc
             .perform(
-                post("/api/opinion-lists/${otherList.id}/sync")
+                post("/api/opinion-lists/$BERNARD_LIST_ID/sync")
                     .header("Authorization", requesterToken)
-                    .param("addedListId", ownerList.id.toString()),
+                    .param("addedListId", ANNA_LIST_ID.toString()),
             ).andExpect(status().isForbidden)
     }
 
     @Test
     fun `sync with invalid weight should return bad request`() {
-        // 1. Create owner's list
-        val ownerList =
-            opinionListRepository.save(
-                OpinionListPersistence(
-                    owner = OWNER_ID,
-                    name = "Owner's List",
-                    privacy = OpinionListPrivacyEnum.PRIVATE,
-                ),
-            )
-
-        // 2. Create requester's list
-        val requesterList =
-            opinionListRepository.save(
-                OpinionListPersistence(
-                    owner = REQUESTER_ID,
-                    name = "Requester's List",
-                    privacy = OpinionListPrivacyEnum.PRIVATE,
-                ),
-            )
-
-        // 4. Create approved access request
-        accessRequestRepository.save(
-            AccessRequestPersistence(
-                list = ownerList.id!!,
-                requester = REQUESTER_ID,
-                status = RequestStatusEnum.ACCEPTED,
-                createdAt = Instant.now(),
-                updatedAt = Instant.now(),
-            ),
-        )
+        // Approve the preseeded access request
+        val request = accessRequestRepository.findById(PRESEEDED_REQUEST_ID).get()
+        request.status = RequestStatusEnum.ACCEPTED
+        accessRequestRepository.save(request)
 
         // Weight < 0
         mockMvc
             .perform(
-                post("/api/opinion-lists/${requesterList.id}/sync")
+                post("/api/opinion-lists/$ANNA_LIST_ID/sync")
                     .header("Authorization", requesterToken)
-                    .param("addedListId", ownerList.id.toString())
+                    .param("addedListId", BERNARD_LIST_ID.toString())
                     .param("weight", "-0.1"),
             ).andExpect(status().isBadRequest)
 
         // Weight > 1
         mockMvc
             .perform(
-                post("/api/opinion-lists/${requesterList.id}/sync")
+                post("/api/opinion-lists/$ANNA_LIST_ID/sync")
                     .header("Authorization", requesterToken)
-                    .param("addedListId", ownerList.id.toString())
+                    .param("addedListId", BERNARD_LIST_ID.toString())
                     .param("weight", "1.1"),
             ).andExpect(status().isBadRequest)
     }
