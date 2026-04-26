@@ -22,10 +22,14 @@ class AccessRequestService(
         listId: UUID?,
         requesterId: UUID?,
         ownerId: UUID?,
+        since: Instant?,
         status: RequestStatusEnum?,
         pageable: Pageable,
     ): Page<AccessRequest> =
-        repository.findAllByFilters(listId, requesterId, ownerId, status, pageable).map {
+        (since
+            ?.let { repository.findAllByFiltersUpdatedSince(listId, requesterId, ownerId, it, status, pageable) }
+            ?: repository.findAllByFilters(listId, requesterId, ownerId, status, pageable)
+        ).map {
             it.toDomain().apply {
                 // If the owner has hidden the request, the requester shouldn't know.
                 if (requesterId != null && ownerId != requesterId && this.status == RequestStatusEnum.HIDDEN) {
@@ -54,7 +58,7 @@ class AccessRequestService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Owner cannot request access to their own list")
         }
 
-        val existing = getRequests(listId, requesterId, null, null, Pageable.unpaged()).firstOrNull()
+        val existing = getRequests(listId, requesterId, null, null, null, Pageable.unpaged()).firstOrNull()
         if (existing != null) {
             return existing
         }

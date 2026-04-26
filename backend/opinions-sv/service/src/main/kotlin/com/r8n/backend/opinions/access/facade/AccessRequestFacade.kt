@@ -27,6 +27,7 @@ class AccessRequestFacade(
                 forListId,
                 null,
                 ownerId,
+                since,
                 accessRequestMapper.toDomain(status),
                 pageable.toPageable(),
             )
@@ -50,6 +51,7 @@ class AccessRequestFacade(
                 forListId,
                 requesterId,
                 null,
+                since,
                 accessRequestMapper.toDomain(status),
                 pageable.toPageable(),
             )
