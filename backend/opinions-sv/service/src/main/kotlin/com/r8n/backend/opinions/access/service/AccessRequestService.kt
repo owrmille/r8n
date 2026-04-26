@@ -26,9 +26,10 @@ class AccessRequestService(
         status: RequestStatusEnum?,
         pageable: Pageable,
     ): Page<AccessRequest> =
-        (since
-            ?.let { repository.findAllByFiltersUpdatedSince(listId, requesterId, ownerId, it, status, pageable) }
-            ?: repository.findAllByFilters(listId, requesterId, ownerId, status, pageable)
+        (
+            since
+                ?.let { repository.findAllByFiltersUpdatedSince(listId, requesterId, ownerId, it, status, pageable) }
+                ?: repository.findAllByFilters(listId, requesterId, ownerId, status, pageable)
         ).map {
             it.toDomain().apply {
                 // If the owner has hidden the request, the requester shouldn't know.
