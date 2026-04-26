@@ -1,6 +1,7 @@
 package com.r8n.backend.messaging.service
 
 import com.r8n.backend.messaging.persistence.SupportMessagePersistence
+import com.r8n.backend.messaging.persistence.SupportParticipantRoleEnumPersistence
 import com.r8n.backend.messaging.persistence.SupportThreadPersistence
 import com.r8n.backend.messaging.provider.database.SupportMessageRepository
 import com.r8n.backend.messaging.provider.database.SupportThreadRepository
@@ -47,7 +48,10 @@ class SupportMessagingService(
         pageable: Pageable,
     ): Page<SupportThreadPersistence> =
         supportThreadRepository.findVisibleOrderByLastMessageAtDesc(
-            ownerUserId = actor.userId.takeUnless { actor.isSupport },
+            ownerUserId =
+                actor.userId.takeUnless {
+                    actor.role == SupportParticipantRoleEnumPersistence.SUPPORT
+                },
             pageable = pageable,
         )
 
@@ -128,7 +132,7 @@ class SupportMessagingService(
                 ResponseStatusException(HttpStatus.NOT_FOUND, "Support thread not found")
             }
 
-        if (!actor.isSupport && thread.ownerUserId != actor.userId) {
+        if (actor.role != SupportParticipantRoleEnumPersistence.SUPPORT && thread.ownerUserId != actor.userId) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "Support thread belongs to another user")
         }
         return thread

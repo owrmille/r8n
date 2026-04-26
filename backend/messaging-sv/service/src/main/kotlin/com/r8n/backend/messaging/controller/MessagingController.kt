@@ -62,7 +62,6 @@ class MessagingController(
 
         return SupportActor(
             userId = getCurrentUserId(),
-            isSupport = isSupport,
             role =
                 if (isSupport) {
                     SupportParticipantRoleEnumPersistence.SUPPORT
