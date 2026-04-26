@@ -29,7 +29,7 @@ frontend_npx() { if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NOD
     docker-certs docker-certs-force internal-certs internal-certs-force internal-certs-clean docker-certs-clean docker-secrets-clean docker-secrets-init edge-certs edge-certs-force \
     docker-down docker-logs clean-artifacts ensure-log-dirs clean-logs \
     get-token refresh-token logout routed-request-opinion routed-request-mock routed-request-user-profile routed-request-gdpr direct-request-opinion direct-request-mock \
-    https-routed-request-opinion https-routed-request-mock https-routed-request-gdpr \
+    direct-request-swagger public-request-user routed-request-opinion-approved routed-request-opinion-forbidden routed-request-opinion-mine \
     docker-database-create-data-folder docker-database-drop-volume-personal docker-database-drop-volume-campus docker-database-run docker-database-connect \
     build-opinions who-ate-all-the-space clean-the-fuck-out-of-this-campus-machine \
     frontend-install frontend-install-all frontend-check-node frontend-dev frontend-build frontend-lint \
@@ -245,7 +245,7 @@ get-token: ## Obtain a JWT token and refresh cookie (ENV=local|docker, default: 
 	curl_args="-s"; \
 	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
 	echo "Fetching CSRF token..."; \
-	csrf_headers=$$(curl $$curl_args -c .cookies -i -X POST "$$protocol://$$host:$$port/api/auth/login" | tr -d '\r'); \
+	csrf_headers=$$(curl $$curl_args -c .cookies -i -X GET "$$protocol://$$host:$$port/api/auth/csrf" | tr -d '\r'); \
 	csrf_token=$$(echo "$$csrf_headers" | grep -i "Set-Cookie: XSRF-TOKEN=" | sed 's/.*XSRF-TOKEN=\([^;]*\).*/\1/'); \
 	if [ -z "$$csrf_token" ]; then \
 		echo "Failed to obtain CSRF token. Headers:"; \
@@ -443,6 +443,24 @@ routed-request-gdpr: ## Gateway GDPR export request with timeout (ENV=local|dock
 		-H "Authorization: Bearer $$(cat .access_token)" | head -c 500; \
 	echo "..."
 
+public-request-user: ## user-sv access through public api
+	@if [ "$(ENV)" = "docker" ]; then \
+		$(LOAD_DOCKER_ENV) \
+		protocol=https; \
+		host=localhost; \
+		port=8080; \
+	else \
+		$(LOAD_LOCAL_ENV) \
+		protocol=$${INTERSERVICE_PROTOCOL:-http}; \
+		host=$${GATEWAY_HOST:-localhost}; \
+		port=$${GATEWAY_PORT:-8080}; \
+	fi; \
+	curl_args="-i"; \
+	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
+	\
+	curl $$curl_args -X GET "$$protocol://$$host:$$port/api/public/users/00000000-0000-0000-0000-000000000000" \
+		-H "X-API-KEY: r8n_test-key_1234"
+
 direct-request-opinion: ## HTTP direct request to opinions (local)
 	@if [ ! -f .access_token ]; then $(MAKE) get-token; fi
 	curl "http://localhost:8081/api/opinions/30000000-0000-0000-0000-000000000002" -i -H "Authorization: Bearer $$(cat .access_token)"
@@ -450,6 +468,10 @@ direct-request-opinion: ## HTTP direct request to opinions (local)
 direct-request-mock: ## HTTP direct request to mock (local)
 	@if [ ! -f .access_token ]; then $(MAKE) get-token; fi
 	curl "http://localhost:8090/api/opinion-lists/00000000-0000-0000-0000-000000000000/summary" -i -H "Authorization: Bearer $$(cat .access_token)"
+
+direct-request-swagger: ## HTTP direct request to users swagger (local)
+	@if [ ! -f .access_token ]; then $(MAKE) get-token; fi
+	curl "http://localhost:8082/v3/api-docs" -i -H "Authorization: Bearer $$(cat .access_token)"
 
 # frontend
 frontend-check-node: ## Check Node.js version (attempts nvm if too old)
@@ -507,19 +529,16 @@ move-caches-to-goinfre: ## Move Docker and Gradle caches to /goinfre (campus mac
 	@chmod +x scripts/move-docker-to-goinfre.sh
 	./scripts/move-docker-to-goinfre.sh
 
-##@ Linters
+##@ CI check stages
 check-makefile: ## Lint Makefile formatting and conflicts
 	chmod +x utils/lint-makefile.sh
 	./utils/lint-makefile.sh
 
-##@ CI check stages
 test-github-backend: test-backend
 
 test-github-frontend: test-frontend
 
 test-github-e2e: test-e2e
-
-test-github: test-github-backend test-github-frontend test-github-e2e
 
 test-backend: lint-backend
 	cd backend && ./gradlew test
