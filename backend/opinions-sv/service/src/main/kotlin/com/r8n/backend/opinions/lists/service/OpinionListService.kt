@@ -116,8 +116,16 @@ class OpinionListService(
 
         val allAssignments = assignments + syncedAssignments
         val opinions =
-            allAssignments.map { asmt ->
-                opinionService.getOpinion(asmt.opinion, requesterId).copy(weight = asmt.weight)
+            allAssignments.mapNotNull { asmt ->
+                try {
+                    opinionService.getOpinion(asmt.opinion, requesterId).copy(weight = asmt.weight)
+                } catch (e: ResponseStatusException) {
+                    if (e.statusCode == HttpStatus.FORBIDDEN || e.statusCode == HttpStatus.NOT_FOUND) {
+                        null
+                    } else {
+                        throw e
+                    }
+                }
             }
         val opinionsBySubject = opinions.groupBy { it.subject }
 

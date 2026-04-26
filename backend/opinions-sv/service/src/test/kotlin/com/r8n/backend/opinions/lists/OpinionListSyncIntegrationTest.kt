@@ -290,4 +290,61 @@ class OpinionListSyncIntegrationTest {
             UUID.fromString("40000000-0000-0000-0000-000000000031"),
         )
     }
+
+    @Test
+    fun `revoking access to source list breaks sync visibility`() {
+        // Anna (u1) has preseeded sync from Bernard's list (l21) to her list (l11)
+        // AND she has access (ACCEPTED) in the preseed V12.
+
+        val u1Token = "Bearer " + serviceTokenService.generateAccessToken(ANNA_ID, listOf("USER"))
+        val l11Id = UUID.fromString("80000000-0000-0000-0000-000000000111")
+        val l21Id = UUID.fromString("80000000-0000-0000-0000-000000000211")
+
+        // 1. Initially it works
+        mockMvc.perform(get("/api/opinion-lists/$l11Id").header("Authorization", u1Token))
+            .andExpect(status().isOk)
+
+        // 2. Revoke access (delete the access request)
+        accessRequestRepository.findAll().forEach {
+            if (it.requester == ANNA_ID && it.list == l21Id) {
+                accessRequestRepository.delete(it)
+            }
+        }
+
+        // 3. Now getting l11 should still work but r23/r24 (from l21) should be missing
+        val result = mockMvc.perform(get("/api/opinion-lists/$l11Id").header("Authorization", u1Token))
+            .andExpect(status().isOk)
+            .andReturn()
+
+        val list = objectMapper.readValue(result.response.contentAsString, OpinionListDto::class.java)
+        // Summaries for Subject 3 and 4 should be gone (they were only from l21)
+        assertThat(list.opinionSummaries.map { it.subjectName }).doesNotContain("Subject 3", "Subject 4")
+        // Subject 1 should only have r11, not r31 (wait, r31 was from l31. Let's check l31 access)
+        // In V12, l31 synced to l11 also has a preseeded access request.
+    }
+
+    @Test
+    fun `circular sync works without infinite loop`() {
+        // Preseed: l21 synced to l11, l11 synced to l21
+        val u1Token = "Bearer " + serviceTokenService.generateAccessToken(ANNA_ID, listOf("USER"))
+        val l11Id = UUID.fromString("80000000-0000-0000-0000-000000000111")
+
+        // Should just work and return one level of sync
+        mockMvc.perform(get("/api/opinion-lists/$l11Id").header("Authorization", u1Token))
+            .andExpect(status().isOk)
+    }
+
+    @Test
+    fun `syncing with private list without access should return not found`() {
+        // Bernard has a private list l23
+        val l23Id = UUID.fromString("80000000-0000-0000-0000-000000000223")
+
+        // Anna tries to sync her list l11 with Bernard's private list l23
+        // It returns 404 because for a private list, if you don't have access, we return 404 to avoid leaking existence
+        mockMvc.perform(
+            post("/api/opinion-lists/$ANNA_LIST_ID/sync")
+                .header("Authorization", requesterToken)
+                .param("addedListId", l23Id.toString())
+        ).andExpect(status().isNotFound)
+    }
 }
