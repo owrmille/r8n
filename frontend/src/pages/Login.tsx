@@ -9,6 +9,12 @@ import { useLoginMutation } from "@/lib/server-state";
 import { toast } from "@/hooks/use-toast";
 import logo from "@/assets/logo.png";
 import { NavLink } from "@/components/NavLink";
+import { cn } from "@/lib/utils";
+import {
+  validateLoginForm,
+  validateRegistrationForm,
+  type AuthFieldErrors,
+} from "@/lib/auth/validation";
 
 const Login = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -16,6 +22,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [gdprAccepted, setGdprAccepted] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<AuthFieldErrors>({});
   const navigate = useNavigate();
   const loginMutation = useLoginMutation({
     onSuccess: () => {
@@ -23,8 +30,48 @@ const Login = () => {
     },
   });
 
+  const clearFieldError = (field: keyof AuthFieldErrors) => {
+    setFieldErrors((currentErrors) => {
+      if (currentErrors[field] === undefined) {
+        return currentErrors;
+      }
+
+      const nextErrors = { ...currentErrors };
+      delete nextErrors[field];
+      return nextErrors;
+    });
+  };
+
+  const switchAuthMode = () => {
+    setIsSignUp((currentValue) => !currentValue);
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+    setGdprAccepted(false);
+    setFieldErrors({});
+  };
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    const validation = isSignUp
+      ? validateRegistrationForm({
+        email,
+        password,
+        confirmPassword,
+        gdprAccepted,
+      })
+      : validateLoginForm({
+        email,
+        password,
+      });
+
+    if (!validation.success) {
+      setFieldErrors(validation.errors);
+      return;
+    }
+
+    setFieldErrors({});
 
     if (isSignUp) {
       toast({
@@ -34,17 +81,9 @@ const Login = () => {
       return;
     }
 
-    if (email.trim() === "" || password.trim() === "") {
-      toast({
-        title: "Missing credentials",
-        description: "Enter both email and password.",
-      });
-      return;
-    }
-
     loginMutation.mutate({
-      login: email.trim(),
-      password,
+      login: validation.data.email,
+      password: validation.data.password,
     });
   };
 
@@ -70,6 +109,7 @@ const Login = () => {
           <form
             onSubmit={handleSubmit}
             className="space-y-4"
+            noValidate
           >
             <div className="space-y-2">
               <Label htmlFor="email" className="text-xs">Email</Label>
@@ -78,10 +118,23 @@ const Login = () => {
                 type="email"
                 placeholder="test@test.test"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="rounded-xl"
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  clearFieldError("email");
+                }}
+                className={cn(
+                  "rounded-xl",
+                  fieldErrors.email && "border-destructive focus-visible:ring-destructive",
+                )}
                 autoComplete="email"
+                aria-invalid={fieldErrors.email !== undefined}
+                aria-describedby={fieldErrors.email ? "email-error" : undefined}
               />
+              {fieldErrors.email && (
+                <p id="email-error" role="alert" className="text-xs font-medium text-destructive">
+                  {fieldErrors.email}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -91,10 +144,24 @@ const Login = () => {
                 type="password"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="rounded-xl"
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  clearFieldError("password");
+                  clearFieldError("confirmPassword");
+                }}
+                className={cn(
+                  "rounded-xl",
+                  fieldErrors.password && "border-destructive focus-visible:ring-destructive",
+                )}
                 autoComplete={isSignUp ? "new-password" : "current-password"}
+                aria-invalid={fieldErrors.password !== undefined}
+                aria-describedby={fieldErrors.password ? "password-error" : undefined}
               />
+              {fieldErrors.password && (
+                <p id="password-error" role="alert" className="text-xs font-medium text-destructive">
+                  {fieldErrors.password}
+                </p>
+              )}
             </div>
 
             {!isSignUp && (
@@ -111,28 +178,54 @@ const Login = () => {
                   type="password"
                   placeholder="••••••••"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="rounded-xl"
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    clearFieldError("confirmPassword");
+                  }}
+                  className={cn(
+                    "rounded-xl",
+                    fieldErrors.confirmPassword && "border-destructive focus-visible:ring-destructive",
+                  )}
+                  autoComplete="new-password"
+                  aria-invalid={fieldErrors.confirmPassword !== undefined}
+                  aria-describedby={fieldErrors.confirmPassword ? "confirm-password-error" : undefined}
                 />
+                {fieldErrors.confirmPassword && (
+                  <p id="confirm-password-error" role="alert" className="text-xs font-medium text-destructive">
+                    {fieldErrors.confirmPassword}
+                  </p>
+                )}
               </div>
             )}
 
             {isSignUp && (
-              <label className="flex items-start gap-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={gdprAccepted}
-                    onChange={(e) => setGdprAccepted(e.target.checked)}
+              <div className="space-y-2">
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={gdprAccepted}
+                    onChange={(e) => {
+                      setGdprAccepted(e.target.checked);
+                      clearFieldError("gdprAccepted");
+                    }}
                     className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
+                    aria-invalid={fieldErrors.gdprAccepted !== undefined}
+                    aria-describedby={fieldErrors.gdprAccepted ? "gdpr-accepted-error" : undefined}
                   />
-                <span className="text-xs text-muted-foreground leading-relaxed">
-                  I agree to the{" "}
-                  <NavLink to="/privacy" className="text-primary hover:underline">Privacy Policy</NavLink>{" "}
-                  and{" "}
-                  <NavLink to="/terms" className="text-primary hover:underline">Terms of Service</NavLink>.
-                  Your data is processed in accordance with GDPR.
-                </span>
-              </label>
+                  <span className="text-xs text-muted-foreground leading-relaxed">
+                    I agree to the{" "}
+                    <NavLink to="/privacy" className="text-primary hover:underline">Privacy Policy</NavLink>{" "}
+                    and{" "}
+                    <NavLink to="/terms" className="text-primary hover:underline">Terms of Service</NavLink>.
+                    Your data is processed in accordance with GDPR.
+                  </span>
+                </label>
+                {fieldErrors.gdprAccepted && (
+                  <p id="gdpr-accepted-error" role="alert" className="text-xs font-medium text-destructive">
+                    {fieldErrors.gdprAccepted}
+                  </p>
+                )}
+              </div>
             )}
 
             {!isSignUp && (
@@ -143,7 +236,7 @@ const Login = () => {
               </div>
             )}
 
-            <Button type="submit" className="w-full rounded-xl">
+            <Button type="submit" className="w-full rounded-xl" disabled={loginMutation.isPending}>
               {loginMutation.isPending
                 ? "Signing in..."
                 : isSignUp
@@ -168,7 +261,7 @@ const Login = () => {
         <p className="mt-6 text-center text-xs text-muted-foreground">
           {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
           <button
-            onClick={() => setIsSignUp(!isSignUp)}
+            onClick={switchAuthMode}
             className="font-medium text-primary hover:underline"
           >
             {isSignUp ? "Sign in" : "Create one"}
