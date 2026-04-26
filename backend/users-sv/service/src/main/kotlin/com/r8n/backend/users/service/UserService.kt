@@ -7,9 +7,11 @@ import com.r8n.backend.users.persistence.RoleEnumPersistence
 import com.r8n.backend.users.provider.database.PIIRepository
 import com.r8n.backend.users.provider.database.UserRepository
 import com.r8n.backend.users.provider.database.UserRoleAssignmentRepository
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 
@@ -20,6 +22,12 @@ class UserService(
     private val piiRepository: PIIRepository,
     private val userRoleAssignmentRepository: UserRoleAssignmentRepository,
 ) {
+    private companion object {
+        const val NAME_MAX_LENGTH = 255
+        const val ABOUT_MAX_LENGTH = 255
+        const val LOCATION_MAX_LENGTH = 255
+    }
+
     fun getName(id: UUID) = piiRepository.findByIdOrNull(id)?.name ?: "Unknown"
 
     fun isAnyModerator(id: UUID): Boolean = isHumanModerator(id) || isAiModerator(id)
@@ -77,5 +85,61 @@ class UserService(
             pii.about,
             pii.location,
         )
+    }
+
+    @Transactional
+    fun updateProfile(
+        userId: UUID,
+        name: String,
+        about: String?,
+        location: String?,
+    ): UserProfile {
+        val normalizedName = normalizeRequiredText(name, "Name", NAME_MAX_LENGTH)
+        val normalizedAbout = normalizeOptionalText(about, "About", ABOUT_MAX_LENGTH)
+        val normalizedLocation = normalizeOptionalText(location, "Location", LOCATION_MAX_LENGTH)
+
+        try {
+            val updatedRows =
+                piiRepository.updatePublicProfile(
+                    userId = userId,
+                    name = normalizedName,
+                    about = normalizedAbout,
+                    location = normalizedLocation,
+                )
+            if (updatedRows == 0) {
+                throw ResponseStatusException(HttpStatus.NOT_FOUND, "PII for user $userId not found")
+            }
+        } catch (_: DataIntegrityViolationException) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Display name is already taken")
+        }
+
+        return getProfile(userId)
+    }
+
+    private fun normalizeRequiredText(
+        value: String,
+        fieldName: String,
+        maxLength: Int,
+    ): String {
+        val normalizedValue = value.trim()
+        if (normalizedValue.isEmpty()) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "$fieldName is required")
+        }
+        if (normalizedValue.length > maxLength) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "$fieldName must be $maxLength characters or fewer")
+        }
+        return normalizedValue
+    }
+
+    private fun normalizeOptionalText(
+        value: String?,
+        fieldName: String,
+        maxLength: Int,
+    ): String? {
+        val normalizedValue = value?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+        if (normalizedValue.length > maxLength) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "$fieldName must be $maxLength characters or fewer")
+        }
+        return normalizedValue
     }
 }

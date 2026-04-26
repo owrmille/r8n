@@ -27,6 +27,12 @@ export interface UploadMyAvatarRequestDto {
   file: File;
 }
 
+export interface UpdateMyPublicProfileRequestDto {
+  about: string | null;
+  location: string | null;
+  name: string;
+}
+
 export function createUsersApi(client: HttpClient = httpClient) {
   return {
     getMe(): Promise<UsernameDto> {
@@ -35,6 +41,16 @@ export function createUsersApi(client: HttpClient = httpClient) {
 
     getUser(id: Uuid): Promise<UserProfileDto> {
       return client.get<UserProfileDto>(`/users/${id}`, { auth: "required" });
+    },
+
+    updateMyPublicProfile(request: UpdateMyPublicProfileRequestDto): Promise<UserProfileDto> {
+      return client.patch<UserProfileDto, UpdateMyPublicProfileRequestDto>(
+        "/users/me/public-profile",
+        {
+          auth: "required",
+          body: request,
+        },
+      );
     },
 
     getUserAvatar(id: Uuid): Promise<Blob | undefined> {

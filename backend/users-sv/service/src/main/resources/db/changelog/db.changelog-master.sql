@@ -142,6 +142,10 @@ CREATE TABLE users.profile_avatars (
 --changeset codex:V6_user_last_seen_at
 ALTER TABLE users.users ADD COLUMN last_seen_at TIMESTAMPTZ;
 
---changeset ditabisko:V7_seed_moderator_role context:local,test
+--changeset iatopchu:V7_add_session_os
+ALTER TABLE users.sessions
+    ADD COLUMN os VARCHAR(255) NOT NULL DEFAULT 'Unknown';
+
+--changeset ditabisko:V8_seed_moderator_role context:local,test
 INSERT INTO users.users_role_assignments (id, "user", role, granted_by, timestamp)
 VALUES ('a0a0a0a0-a0a0-a0a0-a0a0-a0a0a0a0a0a0', '00000000-0000-0000-0000-000000000000', 'MODERATOR', '00000000-0000-0000-0000-000000000000', '2024-01-01T12:00:00Z');
