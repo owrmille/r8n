@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { useLoginMutation } from "@/lib/server-state";
 import { toast } from "@/hooks/use-toast";
 import logo from "@/assets/logo.png";
+import { NavLink } from "@/components/NavLink";
 
 const Login = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -126,9 +127,9 @@ const Login = () => {
                   />
                 <span className="text-xs text-muted-foreground leading-relaxed">
                   I agree to the{" "}
-                  <button type="button" className="text-primary hover:underline">Privacy Policy</button>{" "}
+                  <NavLink to="/privacy" className="text-primary hover:underline">Privacy Policy</NavLink>{" "}
                   and{" "}
-                  <button type="button" className="text-primary hover:underline">Terms of Service</button>.
+                  <NavLink to="/terms" className="text-primary hover:underline">Terms of Service</NavLink>.
                   Your data is processed in accordance with GDPR.
                 </span>
               </label>

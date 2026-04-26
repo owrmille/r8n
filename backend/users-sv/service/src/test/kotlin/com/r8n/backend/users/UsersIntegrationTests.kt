@@ -87,23 +87,16 @@ class UsersIntegrationTests {
 
     @Test
     @WithMockUser(username = USER_ID)
-    fun `getUserProfile returns profile with current online timestamp`() {
+    fun `getUserProfile returns profile with last seen timestamp`() {
         // Given
         val userId = UUID.fromString("10101010-1010-1010-1010-101010101010")
-        val now = Instant.now().truncatedTo(ChronoUnit.MILLIS)
+        val lastSeenAt = Instant.now().minus(1, ChronoUnit.HOURS).truncatedTo(ChronoUnit.MILLIS)
 
-        // Using JdbcTemplate to avoid Hibernate state issues
         jdbcTemplate.update(
-            "INSERT INTO users.sessions (id, user_id, created, expires, ip, user_agent) VALUES (?, ?, ?, ?, ?, ?)",
-            UUID.randomUUID(),
+            "UPDATE users.users SET last_seen_at = ? WHERE id = ?",
+            Timestamp.from(lastSeenAt),
             userId,
-            Timestamp.from(now),
-            Timestamp.from(now.plus(1, ChronoUnit.HOURS)),
-            "127.0.0.1",
-            "Test Agent",
         )
-
-        val beforeRequest = Instant.now().truncatedTo(ChronoUnit.MILLIS)
 
         val accessToken = tokenService.generateAccessToken(UUID.fromString(USER_ID), listOf("USER"))
 
@@ -125,11 +118,8 @@ class UsersIntegrationTests {
         assertEquals("I am a bratwurst expert", actual.about)
         assertEquals("Munich, Germany", actual.location)
 
-        assertTrue(actual.lastOnline != null, "lastOnline should not be null")
-        assertTrue(
-            !actual.lastOnline!!.isBefore(beforeRequest),
-            "lastOnline (${actual.lastOnline}) should be after or equal to beforeRequest ($beforeRequest)",
-        )
+        assertTrue(actual.lastSeenAt != null, "lastSeenAt should not be null")
+        assertEquals(lastSeenAt, actual.lastSeenAt)
     }
 
     @Test

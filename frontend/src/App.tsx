@@ -23,6 +23,8 @@ const EditProfile = lazy(() => import("./pages/EditProfile"));
 const Login = lazy(() => import("./pages/Login"));
 const CreateProfile = lazy(() => import("./pages/CreateProfile"));
 const OpinionModeration = lazy(() => import("./pages/OpinionModeration"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = createQueryClient();
@@ -43,6 +45,8 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/create-profile" element={<CreateProfile />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route element={<RequireAuth />}>
               <Route element={<AppLayout />}>
                 <Route index element={<Index />} />
