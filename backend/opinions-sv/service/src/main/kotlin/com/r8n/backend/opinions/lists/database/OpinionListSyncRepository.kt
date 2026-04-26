@@ -14,4 +14,6 @@ interface OpinionListSyncRepository : CrudRepository<OpinionListSyncPersistence,
         destinationList: UUID,
         sourceList: UUID,
     ): OpinionListSyncPersistence?
+
+    fun findAllByDestinationList(destinationList: UUID): List<OpinionListSyncPersistence>
 }

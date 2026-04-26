@@ -3,14 +3,12 @@ package com.r8n.backend.opinions.lists
 import com.r8n.backend.opinions.TestObjectMapperConfiguration
 import com.r8n.backend.opinions.access.database.AccessRequestRepository
 import com.r8n.backend.opinions.access.domain.RequestStatusEnum
-import com.r8n.backend.opinions.access.persistence.AccessRequestPersistence
 import com.r8n.backend.opinions.api.lists.dto.OpinionListDto
 import com.r8n.backend.opinions.lists.database.OpinionListRepository
 import com.r8n.backend.opinions.lists.database.OpinionListSyncRepository
-import com.r8n.backend.opinions.lists.domain.OpinionListPrivacyEnum
-import com.r8n.backend.opinions.lists.persistence.OpinionListPersistence
 import com.r8n.backend.security.ServiceTokenService
 import com.r8n.backend.users.integration.api.UsersInternalApi
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -26,6 +24,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.testcontainers.junit.jupiter.Container
@@ -34,7 +33,6 @@ import org.testcontainers.postgresql.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.readValue
-import java.time.Instant
 import java.util.UUID
 
 @ActiveProfiles("test")
@@ -91,8 +89,6 @@ class OpinionListSyncIntegrationTest {
 
     @BeforeEach
     fun setUp() {
-        opinionListSyncRepository.deleteAll()
-
         requesterToken = "Bearer " + serviceTokenService.generateAccessToken(ANNA_ID, listOf("USER"))
 
         whenever(usersInternalApi.isAnyModerator(any())).thenReturn(false)
@@ -207,5 +203,91 @@ class OpinionListSyncIntegrationTest {
                     .param("addedListId", BERNARD_LIST_ID.toString())
                     .param("weight", "1.1"),
             ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `complex ownership and sync schema works`() {
+        // u1 looks at his l11
+        // u1: l11(r11, r12)
+        // l21(r23, r24), l22(empty), l31(r31) synced to l11
+        // Total for l11: r11(s1), r12(s2), r23(s3), r24(s4), r31(s1)
+
+        val u1Token = "Bearer " + serviceTokenService.generateAccessToken(ANNA_ID, listOf("USER"))
+        val l11Id = UUID.fromString("80000000-0000-0000-0000-000000000111")
+
+        val result =
+            mockMvc
+                .perform(
+                    get("/api/opinion-lists/$l11Id")
+                        .header("Authorization", u1Token),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val json = result.response.contentAsString
+        val list = objectMapper.readValue(json, OpinionListDto::class.java)
+
+        // s1 (r11, r31), s2 (r12), s3 (r23), s4 (r24)
+        assertThat(list.opinionSummaries).hasSize(4)
+
+        val s1 = list.opinionSummaries.find { it.subjectName == "Subject 1" }!!
+        assertThat(s1.ownMark).isEqualTo(1.1)
+        assertThat(s1.opinions).hasSize(2)
+        assertThat(s1.opinions.map { it.opinion }).containsExactlyInAnyOrder(
+            UUID.fromString("40000000-0000-0000-0000-000000000011"),
+            UUID.fromString("40000000-0000-0000-0000-000000000031"),
+        )
+
+        val s2 = list.opinionSummaries.find { it.subjectName == "Subject 2" }!!
+        assertThat(s2.ownMark).isEqualTo(1.2)
+        assertThat(s2.opinions).hasSize(1)
+
+        val s3 = list.opinionSummaries.find { it.subjectName == "Subject 3" }!!
+        assertThat(s3.ownMark).isNull()
+        assertThat(s3.opinions).hasSize(1)
+        assertThat(s3.opinions[0].opinion).isEqualTo(UUID.fromString("40000000-0000-0000-0000-000000000023"))
+
+        val s4 = list.opinionSummaries.find { it.subjectName == "Subject 4" }!!
+        assertThat(s4.ownMark).isNull()
+        assertThat(s4.opinions).hasSize(1)
+        assertThat(s4.opinions[0].opinion).isEqualTo(UUID.fromString("40000000-0000-0000-0000-000000000024"))
+    }
+
+    @Test
+    fun `no transitive connections - only direct reviews are synced`() {
+        // u1 looks at l11
+        // u1: l11(r11, r12)
+        // l31(r31) synced to l11
+        // l21(r23, r24) synced to l11
+        
+        // Total for l11: r11, r12, r31, r23, r24
+        
+        // l21 has l11 and l12 synced to it.
+        // IF it were transitive, l11 would see its own reviews AGAIN via l21, and also r11 via l12 synced to l21.
+        
+        val u1Token = "Bearer " + serviceTokenService.generateAccessToken(ANNA_ID, listOf("USER"))
+        val l11Id = UUID.fromString("80000000-0000-0000-0000-000000000111")
+
+        val result =
+            mockMvc
+                .perform(
+                    get("/api/opinion-lists/$l11Id")
+                        .header("Authorization", u1Token),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val json = result.response.contentAsString
+        val list = objectMapper.readValue(json, OpinionListDto::class.java)
+
+        // Subject 1 (r11, r31), Subject 2 (r12), Subject 3 (r23), Subject 4 (r24)
+        assertThat(list.opinionSummaries).hasSize(4)
+
+        val s1 = list.opinionSummaries.find { it.subjectName == "Subject 1" }!!
+        // r11 (direct), r31 (synced from l31)
+        // it should NOT have r11 again (synced from l21 <- l11) or r11 (synced from l21 <- l12)
+        assertThat(s1.opinions).hasSize(2)
+        assertThat(s1.opinions.map { it.opinion }).containsExactlyInAnyOrder(
+            UUID.fromString("40000000-0000-0000-0000-000000000011"),
+            UUID.fromString("40000000-0000-0000-0000-000000000031"),
+        )
     }
 }

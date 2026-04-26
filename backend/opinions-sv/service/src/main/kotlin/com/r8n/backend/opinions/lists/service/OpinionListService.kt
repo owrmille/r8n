@@ -106,8 +106,17 @@ class OpinionListService(
         }
 
         val assignments = opinionsAssignmentRepository.findAllByOpinionList(listId)
+        val syncs = syncRepository.findAllByDestinationList(listId)
+        val syncedAssignments =
+            syncs.flatMap { sync ->
+                opinionsAssignmentRepository.findAllByOpinionList(sync.sourceList).map { asmt ->
+                    asmt.copy(weight = asmt.weight * sync.weight)
+                }
+            }
+
+        val allAssignments = assignments + syncedAssignments
         val opinions =
-            assignments.map { asmt ->
+            allAssignments.map { asmt ->
                 opinionService.getOpinion(asmt.opinion, requesterId).copy(weight = asmt.weight)
             }
         val opinionsBySubject = opinions.groupBy { it.subject }
