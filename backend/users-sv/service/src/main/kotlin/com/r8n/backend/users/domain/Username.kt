@@ -7,4 +7,3 @@ data class Username(
     val name: String,
     val email: String,
 )
-)
