@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { useLoginMutation } from "@/lib/server-state";
+import { useLoginMutation, useRegisterMutation } from "@/lib/server-state";
 import { toast } from "@/hooks/use-toast";
 import logo from "@/assets/logo.png";
 import { NavLink } from "@/components/NavLink";
@@ -29,6 +29,21 @@ const Login = () => {
       navigate("/", { replace: true });
     },
   });
+  const registerMutation = useRegisterMutation({
+    onSuccess: () => {
+      toast({
+        title: "Check your email",
+        description: "We created your account. Verify your email address before signing in.",
+      });
+      setIsSignUp(false);
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
+      setGdprAccepted(false);
+      setFieldErrors({});
+    },
+  });
+  const isSubmitPending = loginMutation.isPending || registerMutation.isPending;
 
   const clearFieldError = (field: keyof AuthFieldErrors) => {
     setFieldErrors((currentErrors) => {
@@ -74,9 +89,11 @@ const Login = () => {
     setFieldErrors({});
 
     if (isSignUp) {
-      toast({
-        title: "Sign up is not connected yet",
-        description: "Use the sign in flow while backend registration is still missing.",
+      registerMutation.mutate({
+        email: validation.data.email,
+        password: validation.data.password,
+        privacyPolicyAccepted: validation.data.gdprAccepted,
+        termsOfServiceAccepted: validation.data.gdprAccepted,
       });
       return;
     }
@@ -236,9 +253,11 @@ const Login = () => {
               </div>
             )}
 
-            <Button type="submit" className="w-full rounded-xl" disabled={loginMutation.isPending}>
-              {loginMutation.isPending
-                ? "Signing in..."
+            <Button type="submit" className="w-full rounded-xl" disabled={isSubmitPending}>
+              {isSubmitPending
+                ? isSignUp
+                  ? "Creating account..."
+                  : "Signing in..."
                 : isSignUp
                   ? "Create account"
                   : "Sign in"}

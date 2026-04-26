@@ -10,6 +10,7 @@ const {
   getSessionMock,
   loginMock,
   navigateMock,
+  registerMock,
   setSessionMock,
   subscribeSessionMock,
 } = vi.hoisted(() => ({
@@ -18,6 +19,7 @@ const {
   getSessionMock: vi.fn(),
   loginMock: vi.fn(),
   navigateMock: vi.fn(),
+  registerMock: vi.fn(),
   setSessionMock: vi.fn(),
   subscribeSessionMock: vi.fn(),
 }));
@@ -36,6 +38,7 @@ vi.mock("react-router-dom", async () => {
 vi.mock("@/lib/api", () => ({
   authApi: {
     login: loginMock,
+    register: registerMock,
   },
 }));
 
@@ -73,6 +76,7 @@ function renderLoginPage() {
 describe("Login page", () => {
   beforeEach(() => {
     loginMock.mockReset();
+    registerMock.mockReset();
     navigateMock.mockReset();
     clearSessionMock.mockReset();
     getAccessTokenMock.mockReset();
@@ -127,14 +131,41 @@ describe("Login page", () => {
     expect(screen.getByPlaceholderText("test@test.test")).toBeInTheDocument();
   });
 
-  it("does not call the login API from the unfinished sign-up flow", async () => {
+  it("registers a new account and returns to sign in without creating a session", async () => {
+    registerMock.mockResolvedValue({
+      emailVerificationRequired: true,
+    });
+
     renderLoginPage();
 
     fireEvent.click(screen.getByRole("button", { name: "Create one" }));
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "new-user@test.test" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "long-enough-password" },
+    });
+    fireEvent.change(screen.getByLabelText("Confirm password"), {
+      target: { value: "long-enough-password" },
+    });
+    fireEvent.click(screen.getByRole("checkbox"));
     fireEvent.click(screen.getByRole("button", { name: "Create account" }));
 
     await waitFor(() => {
       expect(loginMock).not.toHaveBeenCalled();
+      expect(registerMock).toHaveBeenCalledWith({
+        email: "new-user@test.test",
+        password: "long-enough-password",
+        privacyPolicyAccepted: true,
+        termsOfServiceAccepted: true,
+      });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Sign in" })).toBeInTheDocument();
+      expect(screen.getByLabelText("Email")).toHaveValue("");
+      expect(setSessionMock).not.toHaveBeenCalled();
+      expect(navigateMock).not.toHaveBeenCalled();
     });
   });
 
@@ -149,6 +180,7 @@ describe("Login page", () => {
     expect(await screen.findByText("Enter your email address.")).toBeInTheDocument();
     expect(screen.getByLabelText("Email")).toHaveAttribute("aria-invalid", "true");
     expect(loginMock).not.toHaveBeenCalled();
+    expect(registerMock).not.toHaveBeenCalled();
   });
 
   it("shows an inline error when login email is invalid", async () => {
@@ -164,6 +196,7 @@ describe("Login page", () => {
 
     expect(await screen.findByText("Enter a valid email address.")).toBeInTheDocument();
     expect(loginMock).not.toHaveBeenCalled();
+    expect(registerMock).not.toHaveBeenCalled();
   });
 
   it("shows an inline error when registration password is too short", async () => {
@@ -184,6 +217,7 @@ describe("Login page", () => {
 
     expect(await screen.findByText("Password must be at least 12 characters.")).toBeInTheDocument();
     expect(loginMock).not.toHaveBeenCalled();
+    expect(registerMock).not.toHaveBeenCalled();
   });
 
   it("shows an inline error when registration passwords do not match", async () => {
@@ -205,6 +239,7 @@ describe("Login page", () => {
     expect(await screen.findByText("Passwords do not match.")).toBeInTheDocument();
     expect(screen.getByLabelText("Confirm password")).toHaveAttribute("aria-invalid", "true");
     expect(loginMock).not.toHaveBeenCalled();
+    expect(registerMock).not.toHaveBeenCalled();
   });
 
   it("shows an inline error when registration consent is unchecked", async () => {
@@ -227,6 +262,7 @@ describe("Login page", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("checkbox")).toHaveAttribute("aria-invalid", "true");
     expect(loginMock).not.toHaveBeenCalled();
+    expect(registerMock).not.toHaveBeenCalled();
   });
 
   it("clears form values and validation errors when switching auth modes", async () => {
