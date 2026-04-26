@@ -10,8 +10,8 @@ import java.util.UUID
 
 interface OpinionListsInternalApi {
     companion object {
-        const val MINE_FULL_PATH = "/api/opinion-lists/mine/full"
-        const val USER_PATH = "/api/opinion-lists/user/{userId}"
+        const val MINE_FULL_PATH = "/api/internal/opinion-lists/mine/full"
+        const val USER_PATH = "/api/internal/opinion-lists/user/{userId}"
     }
 
     @GetMapping(MINE_FULL_PATH)

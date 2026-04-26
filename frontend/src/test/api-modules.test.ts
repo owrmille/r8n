@@ -276,6 +276,49 @@ describe("API modules", () => {
     );
   });
 
+  it("updates the current user's public profile through the users API", async () => {
+    setCookie("XSRF-TOKEN", "xsrf-token");
+    const fetchMock = vi.fn().mockResolvedValue(
+      createJsonResponse({
+        about: "Privacy-conscious coffee reviewer",
+        id: "11111111-1111-1111-1111-111111111111",
+        lastSeenAt: null,
+        location: "Hamburg, Germany",
+        name: "Jane Reviewer",
+        status: "ACTIVE",
+      }),
+    );
+
+    const client = createHttpClient({
+      baseUrl: "/api",
+      fetchFn: fetchMock,
+    });
+    const usersApi = createUsersApi(client);
+
+    await usersApi.updateMyPublicProfile({
+      about: "Privacy-conscious coffee reviewer",
+      location: "Hamburg, Germany",
+      name: "Jane Reviewer",
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/users/me/public-profile",
+      expect.objectContaining({
+        body: JSON.stringify({
+          about: "Privacy-conscious coffee reviewer",
+          location: "Hamburg, Germany",
+          name: "Jane Reviewer",
+        }),
+        method: "PATCH",
+      }),
+    );
+
+    const [, requestInit] = fetchMock.mock.calls[0];
+    const headers = new Headers(requestInit.headers);
+    expect(headers.get("Authorization")).toBe("Bearer stub-access-token-123");
+    expect(headers.get("X-XSRF-TOKEN")).toBe("xsrf-token");
+  });
+
   it("uses backend user profile DTO with last seen timestamp", async () => {
     const userId = "11111111-1111-1111-1111-111111111111";
     const profile = {
@@ -512,10 +555,10 @@ describe("API modules", () => {
     );
 
     expect(fetchMock.mock.calls[5][1]).toEqual(
-      expect.objectContaining({ method: "GET" }),
+      expect.objectContaining({ method: "POST" }),
     );
     expect(fetchMock.mock.calls[6][1]).toEqual(
-      expect.objectContaining({ method: "GET" }),
+      expect.objectContaining({ method: "POST" }),
     );
   });
 

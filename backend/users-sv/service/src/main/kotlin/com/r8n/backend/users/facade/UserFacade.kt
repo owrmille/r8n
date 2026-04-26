@@ -1,9 +1,7 @@
 package com.r8n.backend.users.facade
 
-import com.r8n.backend.users.api.dto.ConsentDto
-import com.r8n.backend.users.api.dto.UserDto
+import com.r8n.backend.users.api.dto.UpdateMyPublicProfileRequestDto
 import com.r8n.backend.users.api.dto.UserProfileDto
-import com.r8n.backend.users.api.dto.UserSessionDto
 import com.r8n.backend.users.api.dto.UserStatusEnumDto
 import com.r8n.backend.users.api.dto.UsernameDto
 import com.r8n.backend.users.domain.Consent
@@ -11,6 +9,9 @@ import com.r8n.backend.users.domain.UserProfile
 import com.r8n.backend.users.domain.UserSession
 import com.r8n.backend.users.domain.UserStatusEnum
 import com.r8n.backend.users.domain.Username
+import com.r8n.backend.users.integration.api.dto.ConsentDto
+import com.r8n.backend.users.integration.api.dto.UserDto
+import com.r8n.backend.users.integration.api.dto.UserSessionDto
 import com.r8n.backend.users.service.UserService
 import com.r8n.backend.users.service.UserSessionService
 import org.springframework.data.domain.Page
@@ -28,6 +29,13 @@ class UserFacade(
     private fun Username.toDto() = UsernameDto(id, name)
 
     fun getUserProfile(id: UUID) = userService.getProfile(id).toDto()
+
+    fun updateMyPublicProfile(
+        userId: UUID,
+        request: UpdateMyPublicProfileRequestDto,
+    ) = userService
+        .updateProfile(userId, request.name, request.about, request.location)
+        .toDto()
 
     fun getSessionsForUser(
         id: UUID,
@@ -77,6 +85,7 @@ class UserFacade(
             created = created,
             expires = expires,
             ip = ip,
+            os = os,
             userAgent = userAgent,
         )
 }
