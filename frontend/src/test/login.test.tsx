@@ -92,7 +92,7 @@ describe("Login page", () => {
 
     renderLoginPage();
 
-    fireEvent.change(screen.getByLabelText("Login"), {
+    fireEvent.change(screen.getByLabelText("Email"), {
       target: { value: "test@test.test" },
     });
     fireEvent.change(screen.getByLabelText("Password"), {

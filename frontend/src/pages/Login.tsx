@@ -12,7 +12,7 @@ import { NavLink } from "@/components/NavLink";
 
 const Login = () => {
   const [isSignUp, setIsSignUp] = useState(false);
-  const [login, setLogin] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [gdprAccepted, setGdprAccepted] = useState(false);
@@ -34,16 +34,16 @@ const Login = () => {
       return;
     }
 
-    if (login.trim() === "" || password.trim() === "") {
+    if (email.trim() === "" || password.trim() === "") {
       toast({
         title: "Missing credentials",
-        description: "Enter both login and password.",
+        description: "Enter both email and password.",
       });
       return;
     }
 
     loginMutation.mutate({
-      login: login.trim(),
+      login: email.trim(),
       password,
     });
   };
@@ -72,15 +72,15 @@ const Login = () => {
             className="space-y-4"
           >
             <div className="space-y-2">
-              <Label htmlFor="login" className="text-xs">Login</Label>
+              <Label htmlFor="email" className="text-xs">Email</Label>
               <Input
-                id="login"
-                type="text"
+                id="email"
+                type="email"
                 placeholder="test@test.test"
-                value={login}
-                onChange={(e) => setLogin(e.target.value)}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="rounded-xl"
-                autoComplete="username"
+                autoComplete="email"
               />
             </div>
 
