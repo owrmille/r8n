@@ -29,6 +29,7 @@ include("core:security-servlet")
 include("core:security-reactive")
 include("core:api")
 include("core:utils")
+include("core:web")
 
 fun include(name: String, projectDir: String) {
     include(name)
