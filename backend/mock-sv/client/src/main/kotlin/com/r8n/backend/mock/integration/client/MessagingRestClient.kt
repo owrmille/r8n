@@ -3,9 +3,11 @@ package com.r8n.backend.mock.integration.client
 import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.mock.api.MessagingApi
 import com.r8n.backend.mock.api.MessagingApi.Companion.SUPPORT_PATH
+import com.r8n.backend.mock.api.MessagingApi.Companion.USER_PATH
 import com.r8n.backend.mock.api.dto.SupportThreadDto
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.body
+import java.util.UUID
 
 class MessagingRestClient(
     private val restClient: RestClient,
@@ -16,4 +18,12 @@ class MessagingRestClient(
             .uri(SUPPORT_PATH)
             .retrieve()
             .body<PageResponseDto<SupportThreadDto>>()!!
+
+    override fun deleteAllUserDataForUser(userId: UUID) {
+        restClient
+            .delete()
+            .uri(USER_PATH, userId)
+            .retrieve()
+            .toBodilessEntity()
+    }
 }

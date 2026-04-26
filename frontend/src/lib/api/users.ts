@@ -26,6 +26,10 @@ export interface UploadMyAvatarRequestDto {
   file: File;
 }
 
+export interface AccountDeletionRequestDto {
+  email: string;
+}
+
 export function createUsersApi(client: HttpClient = httpClient) {
   return {
     getMe(): Promise<UsernameDto> {
@@ -56,6 +60,13 @@ export function createUsersApi(client: HttpClient = httpClient) {
 
     deleteMyAvatar(): Promise<void> {
       return client.delete<void>("/users/me/avatar", { auth: "required" });
+    },
+
+    requestAccountDeletion(request: AccountDeletionRequestDto): Promise<void> {
+      return client.post<void, AccountDeletionRequestDto>("/users/me/delete", {
+        auth: "required",
+        body: request,
+      });
     },
   };
 }

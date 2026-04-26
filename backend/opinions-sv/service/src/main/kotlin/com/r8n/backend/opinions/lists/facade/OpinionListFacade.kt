@@ -27,4 +27,8 @@ class OpinionListFacade(
             .getListsFull(ownerId, pageable.toPageable())
             .map { opinionListMapper.toDto(it) }
             .toResponse()
+
+    fun deleteAllUserDataForUser(userId: UUID) {
+        opinionListService.deleteAllUserDataForUser(userId)
+    }
 }

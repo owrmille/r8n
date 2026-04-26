@@ -5,8 +5,10 @@ import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.opinions.api.lists.dto.OpinionListDto
 import com.r8n.backend.opinions.integration.api.OpinionListsInternalApi
 import com.r8n.backend.opinions.integration.api.OpinionListsInternalApi.Companion.MINE_FULL_PATH
+import com.r8n.backend.opinions.integration.api.OpinionListsInternalApi.Companion.USER_PATH
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.body
+import java.util.UUID
 
 class OpinionListInternalRestClient(
     private val restClient: RestClient,
@@ -26,4 +28,12 @@ class OpinionListInternalRestClient(
                     }.build()
             }.retrieve()
             .body<PageResponseDto<OpinionListDto>>()!!
+
+    override fun deleteAllUserDataForUser(userId: UUID) {
+        restClient
+            .delete()
+            .uri(USER_PATH, userId)
+            .retrieve()
+            .toBodilessEntity()
+    }
 }

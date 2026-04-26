@@ -24,6 +24,8 @@ spring:
 services:
   mock:
     url: ${INTERSERVICE_PROTOCOL}://${SERVICES_MOCK_HOST}:${SERVICES_MOCK_PORT}
+  opinions:
+    url: ${INTERSERVICE_PROTOCOL}://${SERVICES_OPINIONS_HOST}:${SERVICES_OPINIONS_PORT}
 r8n:
   security:
     refresh-cookie:

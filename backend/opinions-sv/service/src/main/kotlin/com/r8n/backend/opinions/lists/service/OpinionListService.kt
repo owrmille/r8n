@@ -112,6 +112,13 @@ class OpinionListService(
             .findByOwner(ownerId, pageable)
             .map { getList(it.id!!, ownerId) }
 
+    fun deleteAllUserDataForUser(userId: UUID) {
+        // Delete all opinion lists owned by the user
+        // This will cascade to delete opinions-to-lists relationships
+        val userLists = opinionListRepository.findAllByOwner(userId)
+        opinionListRepository.deleteAll(userLists)
+    }
+
     private companion object {
         fun toDomain(
             list: OpinionListPersistence,

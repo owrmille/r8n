@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Shield, Eye, Bell, ChevronRight } from "lucide-react";
+import { Shield, Eye, Bell, ChevronRight, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { usersApi } from "@/lib/api/users";
 
 const TABS = [
   { id: "account", label: "Account & Security", icon: Shield },
@@ -29,8 +32,44 @@ const Settings = () => {
   const [notifyNewReviews, setNotifyNewReviews] = useState(true);
   const [notifyAccessApproved, setNotifyAccessApproved] = useState(true);
 
+  // Account deletion state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteEmail, setDeleteEmail] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const handleSave = () => {
     toast({ title: "Settings saved", description: "Your preferences have been updated." });
+  };
+
+  const handleAccountDeletion = async () => {
+    if (deleteEmail.toLowerCase() !== email.toLowerCase()) {
+      toast({
+        title: "Email mismatch",
+        description: "Please enter your email address exactly as shown.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await usersApi.requestAccountDeletion({ email: deleteEmail });
+      toast({
+        title: "Account deleted",
+        description: "Your account and all associated data have been permanently deleted.",
+      });
+      setDeleteDialogOpen(false);
+      setDeleteEmail("");
+      // Redirect to home or logout would happen here
+    } catch (error) {
+      toast({
+        title: "Deletion failed",
+        description: "There was an error deleting your account. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -92,9 +131,62 @@ const Settings = () => {
                 <div className="rounded-2xl border border-destructive/20 bg-card p-5 space-y-4">
                   <h3 className="text-sm font-medium text-destructive">Danger zone</h3>
                   <p className="text-xs text-muted-foreground">Permanently delete your account and all associated data.</p>
-                  <Button variant="destructive" size="sm" className="rounded-xl">
-                    Delete account
-                  </Button>
+                  <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="destructive" size="sm" className="rounded-xl">
+                        Delete account
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="rounded-2xl">
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                          <AlertTriangle className="h-5 w-5 text-destructive" />
+                          Delete Account
+                        </DialogTitle>
+                        <DialogDescription>
+                          This action cannot be undone. This will permanently delete your account and remove all your data from our servers.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <label htmlFor="delete-email" className="text-sm font-medium">
+                            Type your email to confirm
+                          </label>
+                          <Input
+                            id="delete-email"
+                            type="email"
+                            placeholder={email}
+                            value={deleteEmail}
+                            onChange={(e) => setDeleteEmail(e.target.value)}
+                            className="rounded-xl"
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Your email: <span className="font-medium">{email}</span>
+                        </p>
+                      </div>
+                      <DialogFooter>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setDeleteDialogOpen(false);
+                            setDeleteEmail("");
+                          }}
+                          className="rounded-xl"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          onClick={handleAccountDeletion}
+                          disabled={isDeleting || !deleteEmail}
+                          className="rounded-xl"
+                        >
+                          {isDeleting ? "Deleting..." : "Delete Account"}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </motion.div>
             )}

@@ -16,4 +16,6 @@ interface OpinionListRepository : JpaRepository<OpinionListPersistence, UUID> {
         owner: UUID,
         pageable: Pageable,
     ): Page<OpinionListPersistence>
+
+    fun findAllByOwner(owner: UUID): List<OpinionListPersistence>
 }
