@@ -51,6 +51,7 @@ class OpinionsIntegrationTests {
         val REQUESTER: UUID = UUID.fromString("09090909-0909-0909-0909-090909090909")
         val OWNER: UUID = UUID.fromString("10101010-1010-1010-1010-101010101010")
 
+        @Suppress("unused") // used to store test database container
         @Container
         @ServiceConnection
         val postgres: PostgreSQLContainer =
