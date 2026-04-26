@@ -10,7 +10,11 @@ import {
   useAuthorizedQuery,
 } from "@/lib/server-state/hooks/authorized";
 import { usersApi } from "@/lib/api/users";
-import type { UploadMyAvatarRequestDto, UserProfileDto } from "@/lib/api/users";
+import type {
+  UpdateMyPublicProfileRequestDto,
+  UploadMyAvatarRequestDto,
+  UserProfileDto,
+} from "@/lib/api/users";
 import { usersKeys } from "@/lib/server-state/query-keys";
 import type { ApiErrorMeta } from "@/lib/server-state/query-client";
 import type { Uuid } from "@/lib/api/shared";
@@ -59,6 +63,30 @@ export function useUserAvatar(
     },
     enabled: !!id,
     ...options,
+  });
+}
+
+export function useUpdateMyPublicProfileMutation(
+  options?: UseMutationOptions<
+    UserProfileDto,
+    Error,
+    UpdateMyPublicProfileRequestDto,
+    unknown
+  >,
+) {
+  const invalidate = useApiInvalidation();
+
+  return useAuthorizedMutation({
+    mutationFn: (variables) => usersApi.updateMyPublicProfile(variables),
+    ...options,
+    meta: {
+      errorTitle: "Profile update failed",
+      ...options?.meta,
+    } as ApiErrorMeta,
+    onSuccess: (data, variables, context) => {
+      invalidate(usersKeys.all);
+      options?.onSuccess?.(data, variables, context);
+    },
   });
 }
 
