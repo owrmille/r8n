@@ -18,7 +18,6 @@ dependencies {
         api(libs.spring.boot.starter.security)
         api(libs.spring.boot.starter.test)
         api(libs.spring.data.commons)
-        api(libs.spring.swagger)
         api(libs.testcontainers.junit)
         api(libs.testcontainers.postgresql)
     }

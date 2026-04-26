@@ -7,6 +7,7 @@ import { useLocation } from "react-router-dom";
 import { getUnreadMessagesCount, MOCK_MESSAGE_THREADS } from "@/lib/messages";
 import { useLogoutMutation } from "@/lib/server-state";
 import { useMe } from "@/lib/server-state/hooks/users";
+import { useIncomingAccessRequests } from "@/lib/server-state/hooks/access-requests";
 import {
   Sidebar,
   SidebarContent,
@@ -41,6 +42,11 @@ export function AppSidebar() {
     },
   });
   const { data: me } = useMe();
+  const { data: pendingRequests } = useIncomingAccessRequests(
+    { filters: { status: "SENT" }, pageable: { page: 0, size: 1, sort: [] } },
+    { refetchInterval: 30_000 },
+  );
+  const pendingCount = pendingRequests?.total ?? 0;
 
   const canModerate = me?.roles?.some((r) => r === "MODERATOR" || r === "ADMIN") ?? false;
   const mainItems = canModerate ? [...baseItems, moderationItem] : baseItems;
@@ -99,9 +105,9 @@ export function AppSidebar() {
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
                       {!collapsed && <span>{item.title}</span>}
-                      {item.title === "Requests" && !collapsed && (
+                      {item.title === "Requests" && !collapsed && pendingCount > 0 && (
                         <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-mono font-semibold text-accent-foreground">
-                          3
+                          {pendingCount}
                         </span>
                       )}
                       {item.title === "Messages" && !collapsed && unreadMessagesCount > 0 && (
