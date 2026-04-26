@@ -5,6 +5,7 @@ import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.opinions.api.lists.dto.OpinionListDto
 import com.r8n.backend.opinions.api.lists.dto.OpinionListPrivacyEnumDto
 import com.r8n.backend.opinions.api.lists.dto.OpinionListSummaryDto
+import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -77,6 +78,7 @@ interface OpinionListsApi {
         authorId: UUID?,
         @RequestParam(required = false)
         authorNameSubstring: String?,
+        @Valid
         pageable: PageRequestDto,
     ): PageResponseDto<OpinionListSummaryDto>
 
@@ -97,5 +99,8 @@ interface OpinionListsApi {
     ): OpinionListDto
 
     @GetMapping(MINE_PATH)
-    fun getMine(pageable: PageRequestDto): PageResponseDto<OpinionListSummaryDto>
+    fun getMine(
+        @Valid
+        pageable: PageRequestDto,
+    ): PageResponseDto<OpinionListSummaryDto>
 }

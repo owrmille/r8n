@@ -1,6 +1,7 @@
 package com.r8n.backend.messaging.controller
 
 import com.r8n.backend.core.api.PageRequestDto
+import com.r8n.backend.core.utils.toPageable
 import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.messaging.api.MessagingApi
 import com.r8n.backend.messaging.api.dto.messaging.CreateSupportMessageRequestDto
@@ -14,14 +15,9 @@ import com.r8n.backend.security.Authority
 import com.r8n.backend.security.Authority.IS_USER_OR_SUPPORT
 import com.r8n.backend.security.CurrentUserIdentifier.getCurrentUserId
 import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Pageable
-import org.springframework.data.domain.Sort
-import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 
 @RestController
@@ -74,24 +70,5 @@ class MessagingController(
                     SupportParticipantRoleEnumPersistence.USER
                 },
         )
-    }
-
-    private fun PageRequestDto.toPageable(): Pageable {
-        if (page < 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Page index must be >= 0")
-        }
-        if (size <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Page size must be > 0")
-        }
-
-        val sortSpec =
-            if (sort.isEmpty()) {
-                Sort.unsorted()
-            } else {
-                Sort.by(
-                    sort.map { Sort.Order(Sort.Direction.valueOf(it.direction.name), it.property) },
-                )
-            }
-        return PageRequest.of(page, size, sortSpec)
     }
 }

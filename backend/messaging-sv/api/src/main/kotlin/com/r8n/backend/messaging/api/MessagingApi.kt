@@ -26,7 +26,10 @@ interface MessagingApi {
     fun getSupportThreads(): PageResponseDto<SupportThreadDto>
 
     @GetMapping(SUPPORT_THREADS_PATH)
-    fun getSupportThreadSummaries(pageable: PageRequestDto): PageResponseDto<SupportThreadSummaryDto>
+    fun getSupportThreadSummaries(
+        @Valid
+        pageable: PageRequestDto,
+    ): PageResponseDto<SupportThreadSummaryDto>
 
     @PostMapping(SUPPORT_THREADS_PATH)
     fun createSupportThread(
@@ -39,6 +42,7 @@ interface MessagingApi {
     fun getSupportThreadMessages(
         @PathVariable
         threadId: UUID,
+        @Valid
         pageable: PageRequestDto,
     ): PageResponseDto<SupportMessageDto>
 
