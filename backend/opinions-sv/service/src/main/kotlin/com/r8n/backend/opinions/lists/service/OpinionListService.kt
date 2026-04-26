@@ -72,6 +72,7 @@ class OpinionListService(
         syncRepository.deleteByDestinationListAndSourceList(existingListId, removedListId)
         return getList(existingListId, userId)
     }
+
     fun getListName(
         listId: UUID,
         userId: UUID,

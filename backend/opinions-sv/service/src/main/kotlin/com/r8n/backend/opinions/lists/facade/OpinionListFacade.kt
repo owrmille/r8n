@@ -33,7 +33,8 @@ class OpinionListFacade(
         existingListId: UUID,
         addedListId: UUID,
         weight: Double,
-    ): OpinionListDto = opinionListMapper.toDto(opinionListService.syncWithOpinionList(userId, existingListId, addedListId, weight))
+    ): OpinionListDto =
+        opinionListMapper.toDto(opinionListService.syncWithOpinionList(userId, existingListId, addedListId, weight))
 
     fun unsyncWithOpinionList(
         userId: UUID,

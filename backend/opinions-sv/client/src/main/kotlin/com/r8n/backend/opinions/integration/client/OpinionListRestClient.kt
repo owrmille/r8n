@@ -114,7 +114,12 @@ class OpinionListRestClient(
         restClient
             .post()
             .uri { uriBuilder ->
-                uriBuilder.path(SYNC_PATH).queryParam("addedListId", addedListId).queryParam("weight", weight).build(existingListId)
+                uriBuilder
+                    .path(
+                        SYNC_PATH,
+                    ).queryParam("addedListId", addedListId)
+                    .queryParam("weight", weight)
+                    .build(existingListId)
             }.retrieve()
             .body<OpinionListDto>()!!
 
