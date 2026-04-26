@@ -117,6 +117,52 @@ describe("API modules", () => {
     expect(headers.get("X-XSRF-TOKEN")).toBe("existing-xsrf-token");
   });
 
+  it("bootstraps csrf before registering a new account", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(createEmptyResponse())
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          emailVerificationRequired: true,
+        }),
+      );
+    const client = createHttpClient({
+      baseUrl: "/api",
+      fetchFn: fetchMock,
+    });
+    const authApi = createAuthApi(client);
+
+    await authApi.register({
+      email: "new-user@test.test",
+      password: "long-enough-password",
+      privacyPolicyAccepted: true,
+      termsOfServiceAccepted: true,
+    });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "/api/auth/csrf",
+      expect.objectContaining({
+        credentials: "include",
+        method: "GET",
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/api/auth/register",
+      expect.objectContaining({
+        body: JSON.stringify({
+          email: "new-user@test.test",
+          password: "long-enough-password",
+          privacyPolicyAccepted: true,
+          termsOfServiceAccepted: true,
+        }),
+        credentials: "include",
+        method: "POST",
+      }),
+    );
+  });
+
   it("bootstraps csrf before refresh and does not send a refresh token from JavaScript", async () => {
     const fetchMock = vi
       .fn()
