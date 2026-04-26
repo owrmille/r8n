@@ -347,4 +347,45 @@ class OpinionListSyncIntegrationTest {
                 .param("addedListId", l23Id.toString())
         ).andExpect(status().isNotFound)
     }
+
+    @Test
+    fun `weight aggregation math works correctly`() {
+        // Subject 1 has two opinions in l11:
+        // 1. r11 (own) with mark 1.1, direct weight 1.0 (preseeded)
+        // 2. r31 (synced from l31) with mark 3.1, direct weight 1.0 (preseeded)
+        // Global sync weight for l31 -> l11 is 1.0 (preseeded)
+
+        val u1Token = "Bearer " + serviceTokenService.generateAccessToken(ANNA_ID, listOf("USER"))
+        val l11Id = UUID.fromString("80000000-0000-0000-0000-000000000111")
+        val l31Id = UUID.fromString("80000000-0000-0000-0000-000000000311")
+
+        // Set l31 -> l11 sync weight to 0.5
+        mockMvc.perform(
+            post("/api/opinion-lists/$l11Id/sync")
+                .header("Authorization", u1Token)
+                .param("addedListId", l31Id.toString())
+                .param("weight", "0.5")
+        ).andExpect(status().isOk)
+
+        val result = mockMvc.perform(get("/api/opinion-lists/$l11Id").header("Authorization", u1Token))
+            .andExpect(status().isOk)
+            .andReturn()
+
+        val list = objectMapper.readValue(result.response.contentAsString, OpinionListDto::class.java)
+        val s1 = list.opinionSummaries.find { it.subjectName == "Subject 1" }!!
+
+        // Expected weights:
+        // r11: 1.0 (direct)
+        // r31: 1.0 (direct in l31) * 0.5 (sync weight) = 0.5
+        
+        // componentMark should be weighted average: (1.1 * 1.0 + 3.1 * 0.5) / (1.0 + 0.5)
+        // (1.1 + 1.55) / 1.5 = 2.65 / 1.5 = 1.7666...
+        
+        assertThat(s1.opinions.find { it.opinion == UUID.fromString("40000000-0000-0000-0000-000000000011") }?.weight).isEqualTo(1.0)
+        assertThat(s1.opinions.find { it.opinion == UUID.fromString("40000000-0000-0000-0000-000000000031") }?.weight).isEqualTo(0.5)
+        
+        // Currently it's likely (1.1*1.0 + 3.1*0.5) = 2.65 because it's just a sum in the code.
+        // Let's see what it actually is.
+        assertThat(s1.componentMark).isCloseTo(1.7666666666666666, org.assertj.core.api.Assertions.within(0.000000000000001))
+    }
 }

@@ -134,7 +134,12 @@ class OpinionListService(
                 opinionsBySubject.map { (subject, ops) ->
                     val own = ops.firstOrNull { it.owner == requesterId }
                     val weightedMarks = ops.mapNotNull { it.mark?.let { mark -> it.weight!! * mark } }
-                    val componentMark = weightedMarks.takeIf { it.isNotEmpty() && it.size == ops.size }?.sum()
+                    val totalWeight = ops.mapNotNull { if (it.mark != null) it.weight else null }.sum()
+                    val componentMark = if (totalWeight > 0 && weightedMarks.size == ops.size) {
+                        weightedMarks.sum() / totalWeight
+                    } else {
+                        null
+                    }
 
                     OpinionSummary(
                         subject = subject,
