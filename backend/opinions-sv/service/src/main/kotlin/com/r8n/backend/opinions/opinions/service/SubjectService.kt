@@ -16,7 +16,7 @@ class SubjectService(
     private val opinionSubjectRepository: OpinionSubjectRepository,
     private val referentRepository: ReferentRepository,
 ) {
-    fun getSubjectName(id: UUID): String = getSubject(id)?.name ?: UNNAMED_SUBJECT
+    fun getSubjectName(id: UUID): String? = getSubject(id)?.name
 
     fun getSubject(id: UUID): SubjectDetails? {
         val subject = opinionSubjectRepository.findById(id).orElse(null) ?: return null
@@ -48,8 +48,4 @@ class SubjectService(
             latitude = latitude,
             longitude = longitude,
         )
-
-    companion object {
-        private const val UNNAMED_SUBJECT = "UNNAMED"
-    }
 }

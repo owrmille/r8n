@@ -17,8 +17,8 @@ import java.util.UUID
 class UserPersistence(
     @Id
     @GeneratedValue
-    @UuidGenerator
-    val id: UUID,
+    @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
+    var id: UUID,
 //
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
