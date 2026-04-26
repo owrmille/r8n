@@ -33,7 +33,10 @@ class AccessRequestMapper(
             RequestStatusEnum.CANCELLED -> RequestStatusEnumDto.CANCELLED
         }
 
-    fun toDto(request: AccessRequest, viewerId: UUID): AccessRequestDto =
+    fun toDto(
+        request: AccessRequest,
+        viewerId: UUID,
+    ): AccessRequestDto =
         with(request) {
             AccessRequestDto(
                 id = id!!,
