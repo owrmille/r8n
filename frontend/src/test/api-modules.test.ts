@@ -512,10 +512,10 @@ describe("API modules", () => {
     );
 
     expect(fetchMock.mock.calls[5][1]).toEqual(
-      expect.objectContaining({ method: "GET" }),
+      expect.objectContaining({ method: "POST" }),
     );
     expect(fetchMock.mock.calls[6][1]).toEqual(
-      expect.objectContaining({ method: "GET" }),
+      expect.objectContaining({ method: "POST" }),
     );
   });
 
