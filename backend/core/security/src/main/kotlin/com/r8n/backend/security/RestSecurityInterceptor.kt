@@ -19,7 +19,7 @@ class RestSecurityInterceptor(
         execution: ClientHttpRequestExecution,
     ): ClientHttpResponse {
         val auth = SecurityContextHolder.getContext().authentication
-        logger.debug("RestSecurityInterceptor: auth = $auth, isAuthenticated = ${auth?.isAuthenticated}")
+        logger.debug("RestSecurityInterceptor: auth = {}, isAuthenticated = {}", auth, auth?.isAuthenticated)
 
         if (auth is JwtAuthenticationToken) {
             request.headers.add("Authorization", "Bearer ${auth.token.tokenValue}")
