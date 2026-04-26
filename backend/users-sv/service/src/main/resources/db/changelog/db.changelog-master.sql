@@ -142,6 +142,10 @@ CREATE TABLE users.profile_avatars (
 --changeset codex:V6_user_last_seen_at
 ALTER TABLE users.users ADD COLUMN last_seen_at TIMESTAMPTZ;
 
+--changeset iatopchu:V7_add_session_os
+ALTER TABLE users.sessions
+    ADD COLUMN os VARCHAR(255) NOT NULL DEFAULT 'Unknown';
+
 --changeset iatopchu:V7_seed_support_role context:local,test
 INSERT INTO users.users_role_assignments (id, "user", role, granted_by, timestamp)
 VALUES (

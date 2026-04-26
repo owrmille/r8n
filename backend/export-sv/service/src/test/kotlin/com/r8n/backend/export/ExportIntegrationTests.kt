@@ -120,6 +120,7 @@ class ExportIntegrationTests {
                 timestamp,
                 timestamp.plus(1, ChronoUnit.DAYS),
                 "127.0.0.1",
+                "Unknown",
                 "Test User Agent",
             )
         val userDto =
@@ -195,6 +196,7 @@ class ExportIntegrationTests {
                     ChronoUnit.DAYS,
                 ),
                 "127.0.0.1",
+                "Unknown",
                 "Test User Agent",
             )
 
