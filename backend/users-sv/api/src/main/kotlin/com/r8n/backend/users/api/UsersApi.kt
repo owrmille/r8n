@@ -66,4 +66,3 @@ interface UsersApi {
         request: AccountDeletionRequestDto,
     ): ResponseEntity<Void>
 }
-}
