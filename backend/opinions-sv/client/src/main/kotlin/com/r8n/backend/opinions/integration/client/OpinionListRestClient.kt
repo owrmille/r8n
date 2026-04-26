@@ -109,11 +109,12 @@ class OpinionListRestClient(
     override fun syncWithOpinionList(
         existingListId: UUID,
         addedListId: UUID,
+        weight: Double,
     ): OpinionListDto =
         restClient
             .post()
             .uri { uriBuilder ->
-                uriBuilder.path(SYNC_PATH).queryParam("addedListId", addedListId).build(existingListId)
+                uriBuilder.path(SYNC_PATH).queryParam("addedListId", addedListId).queryParam("weight", weight).build(existingListId)
             }.retrieve()
             .body<OpinionListDto>()!!
 

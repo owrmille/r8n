@@ -3,17 +3,20 @@ package com.r8n.backend.opinions.lists.service
 import com.r8n.backend.opinions.access.domain.OpinionListPermissionEnum
 import com.r8n.backend.opinions.access.service.AccessService
 import com.r8n.backend.opinions.lists.database.OpinionListRepository
+import com.r8n.backend.opinions.lists.database.OpinionListSyncRepository
 import com.r8n.backend.opinions.lists.database.OpinionsToOpinionListsRepository
 import com.r8n.backend.opinions.lists.domain.OpinionList
 import com.r8n.backend.opinions.lists.domain.OpinionListPrivacyEnum
 import com.r8n.backend.opinions.lists.domain.OpinionSummary
 import com.r8n.backend.opinions.lists.persistence.OpinionListPersistence
+import com.r8n.backend.opinions.lists.persistence.OpinionListSyncPersistence
 import com.r8n.backend.opinions.opinions.domain.WeightedOpinionReference
 import com.r8n.backend.opinions.opinions.service.OpinionService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 
@@ -23,7 +26,52 @@ class OpinionListService(
     private val opinionService: OpinionService,
     private val opinionsAssignmentRepository: OpinionsToOpinionListsRepository,
     private val accessService: AccessService,
+    private val syncRepository: OpinionListSyncRepository,
 ) {
+    fun syncWithOpinionList(
+        userId: UUID,
+        existingListId: UUID,
+        addedListId: UUID,
+        weight: Double = 1.0,
+    ): OpinionList {
+        if (!accessService.ownsOpinionList(userId, existingListId)) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't own the destination list")
+        }
+        if (!accessService.canAccessOpinionList(userId, addedListId, OpinionListPermissionEnum.VIEW)) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't have access to the source list")
+        }
+
+        val existingSync = syncRepository.findByDestinationListAndSourceList(existingListId, addedListId)
+        if (existingSync != null) {
+            if (existingSync.weight != weight) {
+                existingSync.weight = weight
+                syncRepository.save(existingSync)
+            }
+        } else {
+            syncRepository.save(
+                OpinionListSyncPersistence(
+                    destinationList = existingListId,
+                    sourceList = addedListId,
+                    weight = weight,
+                ),
+            )
+        }
+        return getList(existingListId, userId)
+    }
+
+    @Transactional
+    fun unsyncWithOpinionList(
+        userId: UUID,
+        existingListId: UUID,
+        removedListId: UUID,
+    ): OpinionList {
+        if (!accessService.ownsOpinionList(userId, existingListId)) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't own the destination list")
+        }
+
+        syncRepository.deleteByDestinationListAndSourceList(existingListId, removedListId)
+        return getList(existingListId, userId)
+    }
     fun getListName(
         listId: UUID,
         userId: UUID,

@@ -262,3 +262,17 @@ VALUES
     ('30000000-0000-0000-0000-300000000004', '70000000-0000-0000-0000-000000000002', '50505050-5050-5050-5050-505050505050', 'SENT', '2026-04-22T12:00:00Z', '2026-04-22T12:00:00Z'),
     ('30000000-0000-0000-0000-300000000005', '70000000-0000-0000-0000-000000000002', '60606060-6060-6060-6060-606060606060', 'ACCEPTED', '2026-04-23T13:00:00Z', '2026-04-23T14:00:00Z')
 ON CONFLICT (id) DO NOTHING;
+
+--changeset inikulin:V10_opinion_lists_syncs
+CREATE TABLE opinions.opinion_lists_syncs (
+    id UUID PRIMARY KEY,
+    source_list UUID NOT NULL,
+    destination_list UUID NOT NULL,
+    weight DOUBLE PRECISION NOT NULL DEFAULT 1.0,
+    CONSTRAINT fk_sync_source FOREIGN KEY (source_list) REFERENCES opinions.opinion_lists(id) ON DELETE CASCADE,
+    CONSTRAINT fk_sync_destination FOREIGN KEY (destination_list) REFERENCES opinions.opinion_lists(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_opinion_lists_syncs_source ON opinions.opinion_lists_syncs(source_list);
+CREATE INDEX idx_opinion_lists_syncs_destination ON opinions.opinion_lists_syncs(destination_list);
+CREATE UNIQUE INDEX uq_opinion_lists_syncs_pair ON opinions.opinion_lists_syncs(source_list, destination_list);

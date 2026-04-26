@@ -27,4 +27,18 @@ class OpinionListFacade(
             .getListsFull(ownerId, pageable.toPageable())
             .map { opinionListMapper.toDto(it) }
             .toResponse()
+
+    fun syncWithOpinionList(
+        userId: UUID,
+        existingListId: UUID,
+        addedListId: UUID,
+        weight: Double,
+    ): OpinionListDto = opinionListMapper.toDto(opinionListService.syncWithOpinionList(userId, existingListId, addedListId, weight))
+
+    fun unsyncWithOpinionList(
+        userId: UUID,
+        existingListId: UUID,
+        removedListId: UUID,
+    ): OpinionListDto =
+        opinionListMapper.toDto(opinionListService.unsyncWithOpinionList(userId, existingListId, removedListId))
 }

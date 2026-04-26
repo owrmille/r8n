@@ -62,13 +62,14 @@ class StubOpinionListController(
     override fun syncWithOpinionList(
         existingListId: UUID,
         addedListId: UUID,
-    ) = OpinionListTestDataFactory.getList(existingListId)
+        weight: Double,
+    ) = opinionListFacade.syncWithOpinionList(getCurrentUserId(), existingListId, addedListId, weight)
 
     @PreAuthorize(IS_USER)
     override fun unsyncWithOpinionList(
         existingListId: UUID,
         removedListId: UUID,
-    ) = OpinionListTestDataFactory.getList(existingListId)
+    ) = opinionListFacade.unsyncWithOpinionList(getCurrentUserId(), existingListId, removedListId)
 
     @PreAuthorize(IS_USER)
     override fun getMine(pageable: PageRequestDto) = search(null, null, null, pageable)

@@ -86,6 +86,8 @@ interface OpinionListsApi {
         existingListId: UUID,
         @RequestParam(required = true)
         addedListId: UUID,
+        @RequestParam(defaultValue = "1.0")
+        weight: Double,
     ): OpinionListDto
 
     @PostMapping(UNSYNC_PATH)
