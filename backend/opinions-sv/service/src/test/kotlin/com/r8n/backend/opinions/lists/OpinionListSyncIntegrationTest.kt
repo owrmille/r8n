@@ -199,6 +199,16 @@ class OpinionListSyncIntegrationTest {
 
     @Test
     fun `sync with invalid weight should return bad request`() {
+        // 1. Create owner's list
+        val ownerList = opinionListRepository.save(
+            OpinionListPersistence(
+                owner = OWNER_ID,
+                name = "Owner's List",
+                privacy = OpinionListPrivacyEnum.PRIVATE
+            )
+        )
+
+        // 2. Create requester's list
         val requesterList = opinionListRepository.save(
             OpinionListPersistence(
                 owner = REQUESTER_ID,
@@ -206,13 +216,23 @@ class OpinionListSyncIntegrationTest {
                 privacy = OpinionListPrivacyEnum.PRIVATE
             )
         )
-        val someListId = UUID.randomUUID()
+
+        // 4. Create approved access request
+        accessRequestRepository.save(
+            AccessRequestPersistence(
+                list = ownerList.id!!,
+                requester = REQUESTER_ID,
+                status = RequestStatusEnum.ACCEPTED,
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
+            )
+        )
 
         // Weight < 0
         mockMvc.perform(
             post("/api/opinion-lists/${requesterList.id}/sync")
                 .header("Authorization", requesterToken)
-                .param("addedListId", someListId.toString())
+                .param("addedListId", ownerList.id.toString())
                 .param("weight", "-0.1")
         ).andExpect(status().isBadRequest)
 
@@ -220,7 +240,7 @@ class OpinionListSyncIntegrationTest {
         mockMvc.perform(
             post("/api/opinion-lists/${requesterList.id}/sync")
                 .header("Authorization", requesterToken)
-                .param("addedListId", someListId.toString())
+                .param("addedListId", ownerList.id.toString())
                 .param("weight", "1.1")
         ).andExpect(status().isBadRequest)
     }
