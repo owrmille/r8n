@@ -65,7 +65,12 @@ class UserService(
         )
     }
 
-    fun getMyName(userId: UUID): Username = Username(userId, getName(userId))
+    fun getMyName(userId: UUID): Username {
+        val pii =
+            piiRepository.findByIdOrNull(userId)
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "PII for user $userId not found")
+        return Username(userId, pii.name, pii.email)
+    }
 
     fun getProfile(id: UUID): UserProfile {
         val user =

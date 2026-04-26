@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { usersApi } from "@/lib/api/users";
+import { useMe } from "@/lib/server-state/hooks/users";
 
 const TABS = [
   { id: "account", label: "Account & Security", icon: Shield },
@@ -19,9 +20,8 @@ type Tab = typeof TABS[number]["id"];
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState<Tab>("account");
-
-  // Account state
-  const [email] = useState("jane@example.com");
+  const { data: me } = useMe();
+  const email = me?.email ?? "";
 
   // Privacy state
   const [profileSearchable, setProfileSearchable] = useState(true);
