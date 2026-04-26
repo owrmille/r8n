@@ -139,6 +139,7 @@ class UsersIntegrationTests {
                     ChronoUnit.DAYS,
                 ),
                 "127.0.0.1",
+                "Unknown",
                 "Test User Agent",
             )
 

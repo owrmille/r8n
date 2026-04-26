@@ -79,5 +79,5 @@ class UserFacade(
 
     private fun Consent.toDto() = ConsentDto(type, accepted, session.toDto())
 
-    private fun UserSession.toDto() = UserSessionDto(id, created, expires, ip, userAgent)
+    private fun UserSession.toDto() = UserSessionDto(id, created, expires, ip, os, userAgent)
 }
