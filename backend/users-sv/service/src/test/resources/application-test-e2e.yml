@@ -1,4 +1,7 @@
 server.port: ${SERVICES_USERS_PORT:8082}
+
+
+
 spring:
   application.name: users-sv
   liquibase:
@@ -21,8 +24,6 @@ spring:
 services:
   mock:
     url: ${INTERSERVICE_PROTOCOL}://${SERVICES_MOCK_HOST}:${SERVICES_MOCK_PORT}
-  users:
-    url: ${INTERSERVICE_PROTOCOL}://${SERVICES_USERS_HOST}:${SERVICES_USERS_PORT}
 r8n:
   security:
     refresh-cookie:

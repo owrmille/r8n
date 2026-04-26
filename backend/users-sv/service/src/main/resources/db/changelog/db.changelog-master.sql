@@ -128,6 +128,20 @@ UPDATE users.pii SET location = 'Munich, Germany' WHERE user_id = '10101010-1010
 UPDATE users.pii SET about = 'I am a bratwurst expert' WHERE user_id = '10101010-1010-1010-1010-101010101010';
 CREATE UNIQUE INDEX idx_user_name ON users.pii(name);
 
---changeset iasemintopchu:V5_add_session_os
+--changeset mkulikov:V5_profile_avatars
+CREATE TABLE users.profile_avatars (
+    user_id UUID PRIMARY KEY,
+    storage_backend VARCHAR(32) NOT NULL,
+    object_key VARCHAR(512) NOT NULL,
+    content_type VARCHAR(128) NOT NULL,
+    file_size BIGINT NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL,
+    CONSTRAINT fk_profile_avatar_user FOREIGN KEY (user_id) REFERENCES users.users(id) ON DELETE CASCADE
+);
+
+--changeset codex:V6_user_last_seen_at
+ALTER TABLE users.users ADD COLUMN last_seen_at TIMESTAMPTZ;
+
+--changeset iatopchu:V7_add_session_os
 ALTER TABLE users.sessions
     ADD COLUMN os VARCHAR(255) NOT NULL DEFAULT 'Unknown';

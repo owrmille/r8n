@@ -363,7 +363,7 @@ const CreateReview = () => {
               >
                 <option value="">None</option>
                 {myLists.map((l) => (
-                  <option key={l.id} value={l.id}>{l.listName}</option>
+                  <option key={l.listId} value={l.listId}>{l.listName}</option>
                 ))}
               </select>
               <Button

@@ -1,5 +1,8 @@
 package com.r8n.backend.users
 
+import com.r8n.backend.opinions.api.access.IncomingAccessRequestApi
+import com.r8n.backend.opinions.api.access.OutgoingAccessRequestApi
+import com.r8n.backend.opinions.integration.api.OpinionListsInternalApi
 import com.r8n.backend.security.ServiceTokenService
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -8,6 +11,7 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -21,6 +25,13 @@ import java.util.UUID
 @AutoConfigureMockMvc
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(TestObjectMapperConfiguration::class)
+@MockitoBean(
+    types = [
+        IncomingAccessRequestApi::class,
+        OutgoingAccessRequestApi::class,
+        OpinionListsInternalApi::class,
+    ],
+)
 class InterserviceSecurityIntegrationTest {
     companion object {
         @Container
@@ -43,7 +54,7 @@ class InterserviceSecurityIntegrationTest {
     fun `getUserName requires authentication`() {
         val userId = UUID.randomUUID()
         mockMvc
-            .perform(get("/api/users/$userId/name"))
+            .perform(get("/api/internal/users/$userId/name"))
             .andExpect(status().isUnauthorized)
     }
 
@@ -54,7 +65,7 @@ class InterserviceSecurityIntegrationTest {
 
         mockMvc
             .perform(
-                get("/api/users/$userId/name")
+                get("/api/internal/users/$userId/name")
                     .header("Authorization", "Bearer $token"),
             ).andExpect(status().isOk)
     }
@@ -66,7 +77,7 @@ class InterserviceSecurityIntegrationTest {
 
         mockMvc
             .perform(
-                get("/api/users/$userId/name")
+                get("/api/internal/users/$userId/name")
                     .header("Authorization", "Bearer $token"),
             ).andExpect(status().isOk)
     }

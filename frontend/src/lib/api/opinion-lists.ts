@@ -12,7 +12,7 @@ export type OpinionListPrivacyEnumDto = "PRIVATE" | "SEARCHABLE";
 
 export interface OpinionListSummaryDto {
   grantedAccessCount: number;
-  id: Uuid;
+  listId: Uuid;
   listName: string;
   opinionsCount: number;
   owner: Uuid;
@@ -26,6 +26,7 @@ export interface OpinionListDto {
   opinionSummaries: OpinionSummaryDto[];
   owner: Uuid;
   ownerName: string;
+  privacy: OpinionListPrivacyEnumDto;
 }
 
 export interface GetOpinionListSummaryRequestDto {

@@ -32,7 +32,6 @@ logging:
 services:
   mock:
     url: http://localhost:8090
-
 r8n:
   security:
     public-paths: /api/auth/**
@@ -81,3 +80,7 @@ r8n:
       same-site: Strict
       path: /api/auth
       max-age: 30d
+  storage:
+    avatar:
+      local-root: ${java.io.tmpdir}/r8n-test/uploads/avatars
+      max-size: 2MB

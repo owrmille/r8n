@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Check, X } from "lucide-react";
 import RatingBadge from "@/components/RatingBadge";
-import ReviewerAvatar from "@/components/ReviewerAvatar";
+import UserAvatar from "@/components/UserAvatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,6 +22,7 @@ type PendingOpinion = {
   subjectName: string;
   subjectType: string;
   reviewerName: string;
+  reviewerLastSeenAt: string | null;
   submittedAt: string;
   rating: number;
   linkedList: string;
@@ -41,6 +42,7 @@ const initialPendingOpinions: PendingOpinion[] = [
     subjectName: "Espresso Lab Mitte",
     subjectType: "Café",
     reviewerName: "Alex Krüger",
+    reviewerLastSeenAt: new Date(Date.now() - 12 * 60_000).toISOString(),
     submittedAt: "8 minutes ago",
     rating: 8.5,
     linkedList: "Best espresso in Berlin",
@@ -53,6 +55,7 @@ const initialPendingOpinions: PendingOpinion[] = [
     subjectName: "Public policy consulting workshop",
     subjectType: "Service",
     reviewerName: "Mia Svensson",
+    reviewerLastSeenAt: new Date(Date.now() - 2 * 60 * 60_000).toISOString(),
     submittedAt: "31 minutes ago",
     rating: 4,
     linkedList: "Consultants and facilitators",
@@ -65,6 +68,7 @@ const initialPendingOpinions: PendingOpinion[] = [
     subjectName: "Neighbourhood Bakery Kreuzberg",
     subjectType: "Shop",
     reviewerName: "Tobias Richter",
+    reviewerLastSeenAt: new Date(Date.now() - 25 * 60 * 60_000).toISOString(),
     submittedAt: "1 hour ago",
     rating: 7,
     linkedList: "Weekend breakfast spots",
@@ -80,6 +84,7 @@ const recentDecisionsSeed: ModerationDecision[] = [
     subjectName: "Dyson V15 Detect",
     subjectType: "Product",
     reviewerName: "Sophie Chen",
+    reviewerLastSeenAt: null,
     submittedAt: "Earlier today",
     rating: 6.5,
     linkedList: "Home appliances 2026",
@@ -193,7 +198,11 @@ const OpinionModeration = () => {
                   <div className="border-b border-border px-5 py-4 md:px-6">
                     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                       <div className="flex items-start gap-3">
-                        <ReviewerAvatar name={opinion.reviewerName} size="md" />
+                        <UserAvatar
+                          name={opinion.reviewerName}
+                          lastSeenAt={opinion.reviewerLastSeenAt}
+                          size="md"
+                        />
                         <div className="min-w-0">
                           <div className="mb-2 flex flex-wrap items-center gap-2">
                             <h3 className="text-base font-semibold text-foreground">{opinion.subjectName}</h3>

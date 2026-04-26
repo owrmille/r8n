@@ -16,7 +16,12 @@ include("users-api-integration", "users-sv/api-integration")
 include("users-client", "users-sv/client")
 include("users-sv", "users-sv/service")
 
+include("export-api", "export-sv/api")
+include("export-sv", "export-sv/service")
+
 include("opinions-api", "opinions-sv/api")
+include("opinions-api-integration", "opinions-sv/api-integration")
+include("opinions-client", "opinions-sv/client")
 include("opinions-sv", "opinions-sv/service")
 
 include("core:security")

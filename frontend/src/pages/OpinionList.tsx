@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, List, ChevronDown, Plus } from "lucide-react";
-import ReviewerAvatar from "@/components/ReviewerAvatar";
+import UserAvatar from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { QueryState } from "@/components/server-state/QueryState";
@@ -112,11 +112,11 @@ const OpinionListPage = () => {
                 <tbody>
                   {summaries.map((summary) => (
                     <ItemRow
-                      key={summary.id}
+                      key={summary.subject}
                       listId={listId!}
                       summary={summary}
-                      isExpanded={expandedItem === summary.id}
-                      onToggle={() => setExpandedItem(expandedItem === summary.id ? null : summary.id)}
+                      isExpanded={expandedItem === summary.subject}
+                      onToggle={() => setExpandedItem(expandedItem === summary.subject ? null : summary.subject)}
                       onAdjustWeight={handleAdjustWeight}
                       onAddReview={handleAddReview}
                       isAdjustingWeight={adjustWeight.isPending}
@@ -185,7 +185,7 @@ const ItemRow = ({
           {summary.ownMark !== null ? summary.ownMark.toFixed(1) : "—"}
         </td>
         <td className="px-4 py-3 font-mono font-semibold text-foreground">
-          {summary.synchronizedMark.toFixed(2)}
+          {summary.componentMark !== null ? summary.componentMark.toFixed(2) : "—"}
         </td>
         <td className="px-4 py-3">
           <ChevronDown
@@ -351,7 +351,7 @@ const OpinionRow = ({
     <tr className="border-b border-border last:border-0">
       <td className="px-3 py-2.5 text-foreground font-medium">
         <div className="flex items-center gap-2">
-          <ReviewerAvatar name={opinion?.ownerName ?? "?"} size="sm" />
+          <UserAvatar userId={opinion?.owner} name={opinion?.ownerName ?? "?"} size="sm" />
           {opinion?.ownerName ?? "—"}
         </div>
       </td>

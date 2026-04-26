@@ -1,9 +1,11 @@
 package com.r8n.backend.users
 
+import com.r8n.backend.opinions.api.access.IncomingAccessRequestApi
+import com.r8n.backend.opinions.api.access.OutgoingAccessRequestApi
+import com.r8n.backend.opinions.integration.api.OpinionListsInternalApi
 import com.r8n.backend.users.api.AuthApi.Companion.REFRESH_TOKEN_COOKIE_NAME
 import com.r8n.backend.users.api.dto.LoginRequestDto
 import com.r8n.backend.users.provider.database.PIIRepository
-import com.r8n.backend.users.provider.database.UserRepository
 import com.r8n.backend.users.provider.database.UserRoleAssignmentRepository
 import jakarta.persistence.EntityManager
 import jakarta.servlet.http.Cookie
@@ -16,9 +18,11 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
@@ -30,6 +34,7 @@ import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.postgresql.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 import tools.jackson.databind.ObjectMapper
+import java.sql.Timestamp
 import java.time.Instant
 import java.util.UUID
 
@@ -38,6 +43,13 @@ import java.util.UUID
 @AutoConfigureMockMvc
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(TestObjectMapperConfiguration::class)
+@MockitoBean(
+    types = [
+        IncomingAccessRequestApi::class,
+        OutgoingAccessRequestApi::class,
+        OpinionListsInternalApi::class,
+    ],
+)
 class AuthIntegrationTest {
     private companion object {
         @Container
@@ -64,9 +76,6 @@ class AuthIntegrationTest {
     lateinit var objectMapper: ObjectMapper
 
     @Autowired
-    lateinit var userRepository: UserRepository
-
-    @Autowired
     lateinit var piiRepository: PIIRepository
 
     @Autowired
@@ -77,6 +86,9 @@ class AuthIntegrationTest {
 
     @Autowired
     lateinit var entityManager: EntityManager
+
+    @Autowired
+    lateinit var jdbcTemplate: JdbcTemplate
 
     private fun extractRefreshToken(setCookieHeader: String): String =
         setCookieHeader
@@ -122,6 +134,7 @@ class AuthIntegrationTest {
         entityManager.clear()
 
         val loginRequest = LoginRequestDto(EMAIL, PASSWORD)
+        val beforeLogin = Instant.now()
 
         val response =
             mockMvc
@@ -140,6 +153,15 @@ class AuthIntegrationTest {
         assertTrue(setCookieHeader.contains("$REFRESH_TOKEN_COOKIE_NAME="))
         assertTrue(setCookieHeader.contains("HttpOnly"))
         assertTrue(setCookieHeader.contains("Path=/api/auth"))
+
+        val lastSeenAt =
+            jdbcTemplate.queryForObject(
+                "SELECT last_seen_at FROM users.users WHERE id = ?",
+                Instant::class.java,
+                userId,
+            )
+        assertTrue(lastSeenAt != null, "last_seen_at should be set after login")
+        assertTrue(!lastSeenAt!!.isBefore(beforeLogin), "last_seen_at should be updated after login")
     }
 
     @Test
@@ -185,7 +207,7 @@ class AuthIntegrationTest {
 
         val loginRequest = LoginRequestDto(EMAIL, PASSWORD)
 
-        // 1. Login to get first refresh token
+        // 1. Login to get the first refresh token
         val loginResponse =
             mockMvc
                 .perform(
@@ -197,6 +219,13 @@ class AuthIntegrationTest {
                 .andReturn()
 
         val firstRefreshToken = extractRefreshToken(loginResponse.response.getHeader(HttpHeaders.SET_COOKIE)!!)
+        val staleLastSeenAt = Instant.parse("2024-01-01T00:00:00Z")
+        jdbcTemplate.update(
+            "UPDATE users.users SET last_seen_at = ? WHERE id = ?",
+            Timestamp.from(staleLastSeenAt),
+            userId,
+        )
+        val beforeRefresh = Instant.now()
 
         // 2. First refresh
         val firstRefreshResponse =
@@ -210,8 +239,16 @@ class AuthIntegrationTest {
 
         val secondRefreshToken = extractRefreshToken(firstRefreshResponse.response.getHeader(HttpHeaders.SET_COOKIE)!!)
         assertTrue(firstRefreshToken != secondRefreshToken)
+        val refreshedLastSeenAt =
+            jdbcTemplate.queryForObject(
+                "SELECT last_seen_at FROM users.users WHERE id = ?",
+                Instant::class.java,
+                userId,
+            )
+        assertTrue(refreshedLastSeenAt != null, "last_seen_at should be set after refresh")
+        assertTrue(!refreshedLastSeenAt!!.isBefore(beforeRefresh), "last_seen_at should be updated after refresh")
 
-        // 3. Second refresh with NEW token works
+        // 3. Second refresh with a NEW token works
         mockMvc
             .perform(
                 post(REFRESH_PATH)
@@ -219,7 +256,7 @@ class AuthIntegrationTest {
                     .cookie(Cookie(REFRESH_TOKEN_COOKIE_NAME, secondRefreshToken)),
             ).andExpect(status().isOk)
 
-        // 4. Reuse first refresh token - should FAIL and be rejected (Compromise detection)
+        // 4. Reuse the first refresh token - should FAIL and be rejected (Compromise detection)
         mockMvc
             .perform(
                 post(REFRESH_PATH)

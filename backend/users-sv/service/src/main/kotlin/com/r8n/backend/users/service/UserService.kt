@@ -1,14 +1,16 @@
 package com.r8n.backend.users.service
 
-import com.r8n.backend.security.CurrentUserIdentifier.getCurrentUserId
 import com.r8n.backend.users.domain.User
 import com.r8n.backend.users.domain.UserProfile
 import com.r8n.backend.users.domain.Username
+import com.r8n.backend.users.persistence.RoleEnumPersistence
 import com.r8n.backend.users.provider.database.PIIRepository
 import com.r8n.backend.users.provider.database.UserRepository
+import com.r8n.backend.users.provider.database.UserRoleAssignmentRepository
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
-import java.time.Instant
+import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 
 @Service
@@ -16,17 +18,30 @@ class UserService(
     private val consentService: ConsentService,
     private val userRepository: UserRepository,
     private val piiRepository: PIIRepository,
-    private val userSessionService: UserSessionService,
+    private val userRoleAssignmentRepository: UserRoleAssignmentRepository,
 ) {
     fun getName(id: UUID) = piiRepository.findByIdOrNull(id)?.name ?: "Unknown"
+
+    fun isAnyModerator(id: UUID): Boolean = isHumanModerator(id) || isAiModerator(id)
+
+    fun isHumanModerator(id: UUID): Boolean = hasRole(id, RoleEnumPersistence.MODERATOR)
+
+    fun isAiModerator(id: UUID): Boolean = hasRole(id, RoleEnumPersistence.AI_MODERATOR)
+
+    fun isAdmin(id: UUID): Boolean = hasRole(id, RoleEnumPersistence.ADMIN)
+
+    private fun hasRole(
+        userId: UUID,
+        role: RoleEnumPersistence,
+    ): Boolean = userRoleAssignmentRepository.findAllByUser(userId).any { it.role == role }
 
     fun getUser(id: UUID): User {
         val userPersistence =
             userRepository.findByIdOrNull(id)
-                ?: throw NoSuchElementException("User $id not found")
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User $id not found")
         val piiPersistence =
             piiRepository.findByIdOrNull(id)
-                ?: throw NoSuchElementException("PII for user $id not found")
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "PII for user $id not found")
         val consents = consentService.getConsentsForUser(id)
 
         return User(
@@ -42,28 +57,20 @@ class UserService(
         )
     }
 
-    fun getMyName(): Username {
-        val id = getCurrentUserId()
-        return Username(id, getName(id))
-    }
-
-    fun lastOnline(id: UUID): Instant? {
-        val lastSession = userSessionService.lastSessionForUserId(id)
-        return lastSession?.expires?.let { minOf(Instant.now(), it) }
-    }
+    fun getMyName(userId: UUID): Username = Username(userId, getName(userId))
 
     fun getProfile(id: UUID): UserProfile {
         val user =
             userRepository.findByIdOrNull(id)
-                ?: throw NoSuchElementException("User $id not found")
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User $id not found")
         val pii =
             piiRepository.findByIdOrNull(id)
-                ?: throw NoSuchElementException("PII for user $id not found")
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "PII for user $id not found")
         return UserProfile(
             id,
             pii.name,
             user.status,
-            lastOnline(id),
+            user.lastSeenAt,
             pii.about,
             pii.location,
         )
