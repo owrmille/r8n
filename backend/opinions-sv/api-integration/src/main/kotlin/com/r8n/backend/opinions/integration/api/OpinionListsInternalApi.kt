@@ -22,3 +22,4 @@ interface OpinionListsInternalApi {
         @PathVariable userId: UUID,
     )
 }
+}

@@ -7,3 +7,4 @@ data class UsernameDto(
     val name: String,
     val email: String,
 )
+)

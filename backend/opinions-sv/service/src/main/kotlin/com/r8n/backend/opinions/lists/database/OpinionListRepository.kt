@@ -19,3 +19,4 @@ interface OpinionListRepository : JpaRepository<OpinionListPersistence, UUID> {
 
     fun findAllByOwner(owner: UUID): List<OpinionListPersistence>
 }
+}

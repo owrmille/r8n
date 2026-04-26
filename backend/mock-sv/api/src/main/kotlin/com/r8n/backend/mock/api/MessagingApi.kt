@@ -22,3 +22,4 @@ interface MessagingApi {
         @PathVariable userId: UUID,
     )
 }
+}

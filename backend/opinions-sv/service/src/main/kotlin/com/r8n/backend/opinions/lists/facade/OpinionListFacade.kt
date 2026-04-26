@@ -32,3 +32,4 @@ class OpinionListFacade(
         opinionListService.deleteAllUserDataForUser(userId)
     }
 }
+}

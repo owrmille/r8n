@@ -22,3 +22,4 @@ class StubMessagingController : MessagingApi {
         // For now, this is a stub that does nothing
     }
 }
+}

@@ -24,3 +24,4 @@ class OpinionListInternalController(
         opinionListFacade.deleteAllUserDataForUser(userId)
     }
 }
+}

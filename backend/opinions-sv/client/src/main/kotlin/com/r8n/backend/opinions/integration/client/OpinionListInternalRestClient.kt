@@ -37,3 +37,4 @@ class OpinionListInternalRestClient(
             .toBodilessEntity()
     }
 }
+}
