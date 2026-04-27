@@ -2,7 +2,6 @@ package com.r8n.backend.messaging.api
 
 import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
-import com.r8n.backend.messaging.api.dto.SupportThreadDto
 import com.r8n.backend.messaging.api.dto.messaging.CreateSupportMessageRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.CreateSupportThreadRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportMessageDto
@@ -21,9 +20,6 @@ interface MessagingApi {
         const val SUPPORT_THREADS_PATH = "$SUPPORT_PATH/threads"
         const val SUPPORT_THREAD_MESSAGES_PATH = "$SUPPORT_THREADS_PATH/{threadId}/messages"
     }
-
-    @GetMapping(SUPPORT_PATH)
-    fun getSupportThreads(): PageResponseDto<SupportThreadDto>
 
     @GetMapping(SUPPORT_THREADS_PATH)
     fun getSupportThreadSummaries(

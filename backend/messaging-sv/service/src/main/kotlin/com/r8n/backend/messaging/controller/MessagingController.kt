@@ -14,7 +14,6 @@ import com.r8n.backend.messaging.service.SupportActor
 import com.r8n.backend.security.Authority
 import com.r8n.backend.security.Authority.IS_USER_OR_SUPPORT
 import com.r8n.backend.security.CurrentUserIdentifier.getCurrentUserId
-import org.springframework.data.domain.PageImpl
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.RestController
@@ -24,13 +23,6 @@ import java.util.UUID
 class MessagingController(
     private val supportMessagingFacade: SupportMessagingFacade,
 ) : MessagingApi {
-    @PreAuthorize(IS_USER_OR_SUPPORT)
-    override fun getSupportThreads() =
-        supportMessagingFacade
-            .getSupportThreads(getSupportActor())
-            .let { PageImpl(it) }
-            .toResponse()
-
     @PreAuthorize(IS_USER_OR_SUPPORT)
     override fun getSupportThreadSummaries(pageable: PageRequestDto) =
         supportMessagingFacade.getSupportThreadSummaries(getSupportActor(), pageable.toPageable()).toResponse()

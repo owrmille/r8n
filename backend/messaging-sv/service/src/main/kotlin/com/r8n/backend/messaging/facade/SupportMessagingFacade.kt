@@ -1,6 +1,5 @@
 package com.r8n.backend.messaging.facade
 
-import com.r8n.backend.messaging.api.dto.SupportThreadDto
 import com.r8n.backend.messaging.api.dto.messaging.CreateSupportMessageRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.CreateSupportThreadRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportMessageDto
@@ -20,17 +19,6 @@ import java.util.UUID
 class SupportMessagingFacade(
     private val supportMessagingService: SupportMessagingService,
 ) {
-    fun getSupportThreads(actor: SupportActor): List<SupportThreadDto> =
-        supportMessagingService
-            .listThreadWithMessages(actor, Pageable.unpaged())
-            .content
-            .map { entry ->
-                SupportThreadDto(
-                    id = requireNotNull(entry.thread.id),
-                    messages = entry.messages.map { it.text },
-                )
-            }
-
     fun getSupportThreadSummaries(
         actor: SupportActor,
         pageable: Pageable,

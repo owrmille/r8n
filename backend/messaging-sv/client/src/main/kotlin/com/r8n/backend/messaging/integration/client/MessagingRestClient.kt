@@ -3,10 +3,8 @@ package com.r8n.backend.messaging.integration.client
 import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.messaging.api.MessagingApi
-import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_PATH
 import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREADS_PATH
 import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREAD_MESSAGES_PATH
-import com.r8n.backend.messaging.api.dto.SupportThreadDto
 import com.r8n.backend.messaging.api.dto.messaging.CreateSupportMessageRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.CreateSupportThreadRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportMessageDto
@@ -18,13 +16,6 @@ import java.util.UUID
 class MessagingRestClient(
     private val restClient: RestClient,
 ) : MessagingApi {
-    override fun getSupportThreads(): PageResponseDto<SupportThreadDto> =
-        restClient
-            .get()
-            .uri(SUPPORT_PATH)
-            .retrieve()
-            .body<PageResponseDto<SupportThreadDto>>()!!
-
     override fun getSupportThreadSummaries(pageable: PageRequestDto): PageResponseDto<SupportThreadSummaryDto> =
         restClient
             .get()
