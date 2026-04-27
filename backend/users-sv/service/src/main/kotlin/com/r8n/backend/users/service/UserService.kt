@@ -106,7 +106,6 @@ class UserService(
         if (!userRoleAssignmentRepository.existsByUserAndRole(userId, role)) {
             userRoleAssignmentRepository.save(
                 UserRoleAssignmentPersistence(
-                    id = UUID.randomUUID(),
                     user = userId,
                     role = role,
                     grantedBy = adminId,
