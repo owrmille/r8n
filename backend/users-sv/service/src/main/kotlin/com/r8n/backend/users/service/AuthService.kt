@@ -32,7 +32,8 @@ class AuthService(
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials")
         }
 
-        val roles = (listOf("USER") + userRoleAssignmentRepository.findAllByUser(user.id).map { it.role.name }).distinct()
+        val roles =
+            (listOf("USER") + userRoleAssignmentRepository.findAllByUser(user.id).map { it.role.name }).distinct()
         val accessToken = tokenService.generateAccessToken(user.id, roles)
         val refreshToken = tokenService.generateRefreshToken(user.id)
         userRepository.updateLastSeenAt(user.id, Instant.now())
@@ -67,7 +68,8 @@ class AuthService(
                 refreshToken ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing refresh token"),
             )
 
-        val roles = (listOf("USER") + userRoleAssignmentRepository.findAllByUser(userId).map { it.role.name }).distinct()
+        val roles =
+            (listOf("USER") + userRoleAssignmentRepository.findAllByUser(userId).map { it.role.name }).distinct()
         val accessToken = tokenService.generateAccessToken(userId, roles)
         userRepository.updateLastSeenAt(userId, Instant.now())
 
