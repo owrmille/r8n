@@ -53,7 +53,7 @@ const RoleAssignment = () => {
           User Roles
         </h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Assign or remove roles for users. Roles are inherited — Admin includes all Moderator permissions, and Moderator includes all regular User permissions.
+          Assign or remove roles for users. Roles are inherited. Admin includes all Moderator permissions, and Moderator includes all regular User permissions.
         </p>
       </motion.div>
 
