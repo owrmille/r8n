@@ -59,12 +59,14 @@ class UserFacade(
             email = email,
             status = status.toDto(),
             isModerator = roles.contains(RoleEnumPersistence.MODERATOR),
+            isSupport = roles.contains(RoleEnumPersistence.SUPPORT),
             isAdmin = roles.contains(RoleEnumPersistence.ADMIN),
         )
 
     private fun RoleEnumDto.toPersistence(): RoleEnumPersistence =
         when (this) {
             RoleEnumDto.MODERATOR -> RoleEnumPersistence.MODERATOR
+            RoleEnumDto.SUPPORT -> RoleEnumPersistence.SUPPORT
             RoleEnumDto.ADMIN -> RoleEnumPersistence.ADMIN
             else -> throw org.springframework.web.server.ResponseStatusException(
                 org.springframework.http.HttpStatus.BAD_REQUEST,

@@ -41,6 +41,7 @@ export interface UserWithRolesDto {
   email: string;
   status: UserStatusEnumDto;
   isModerator: boolean;
+  isSupport: boolean;
   isAdmin: boolean;
 }
 
@@ -99,6 +100,17 @@ export function createUsersApi(client: HttpClient = httpClient) {
 
     revokeModerator(userId: Uuid): Promise<void> {
       return client.delete<void>(`/admin/users/${userId}/roles/MODERATOR`, { auth: "required" });
+    },
+
+    assignSupport(userId: Uuid): Promise<void> {
+      return client.post<void, { role: string }>(`/admin/users/${userId}/roles`, {
+        auth: "required",
+        body: { role: "SUPPORT" },
+      });
+    },
+
+    revokeSupport(userId: Uuid): Promise<void> {
+      return client.delete<void>(`/admin/users/${userId}/roles/SUPPORT`, { auth: "required" });
     },
 
     assignAdmin(userId: Uuid): Promise<void> {

@@ -180,6 +180,44 @@ export function useRevokeModeratorMutation(
   });
 }
 
+export function useAssignSupportMutation(
+  options?: UseMutationOptions<void, Error, Uuid, unknown>,
+) {
+  const invalidate = useApiInvalidation();
+
+  return useAuthorizedMutation({
+    mutationFn: (userId) => usersApi.assignSupport(userId),
+    ...options,
+    meta: {
+      errorTitle: "Role assignment failed",
+      ...options?.meta,
+    } as ApiErrorMeta,
+    onSuccess: (data, variables, context) => {
+      invalidate(usersKeys.withRoles());
+      options?.onSuccess?.(data, variables, context);
+    },
+  });
+}
+
+export function useRevokeSupportMutation(
+  options?: UseMutationOptions<void, Error, Uuid, unknown>,
+) {
+  const invalidate = useApiInvalidation();
+
+  return useAuthorizedMutation({
+    mutationFn: (userId) => usersApi.revokeSupport(userId),
+    ...options,
+    meta: {
+      errorTitle: "Role revocation failed",
+      ...options?.meta,
+    } as ApiErrorMeta,
+    onSuccess: (data, variables, context) => {
+      invalidate(usersKeys.withRoles());
+      options?.onSuccess?.(data, variables, context);
+    },
+  });
+}
+
 export function useAssignAdminMutation(
   options?: UseMutationOptions<void, Error, Uuid, unknown>,
 ) {

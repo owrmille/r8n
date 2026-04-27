@@ -8,5 +8,6 @@ data class UserWithRolesDto(
     val email: String,
     val status: UserStatusEnumDto,
     val isModerator: Boolean,
+    val isSupport: Boolean,
     val isAdmin: Boolean,
 )

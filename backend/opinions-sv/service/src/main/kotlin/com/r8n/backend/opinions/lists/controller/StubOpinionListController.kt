@@ -22,7 +22,7 @@ class StubOpinionListController(
     override fun getListSummary(listId: UUID): OpinionListSummaryDto = OpinionListTestDataFactory.getListSummary(listId)
 
     @PreAuthorize(IS_USER)
-    override fun getList(listId: UUID) = opinionListFacade.getList(listId, getCurrentUserId())
+    override fun getList(listId: UUID) = OpinionListTestDataFactory.getList(listId)
 
     @PreAuthorize(IS_USER)
     override fun renameList(

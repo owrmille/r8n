@@ -8,7 +8,9 @@ import com.r8n.backend.opinions.api.opinions.dto.WeightedOpinionReferenceDto
 import java.util.UUID
 
 object OpinionListTestDataFactory {
-    fun getListSummary(id: UUID = UUID.randomUUID()) =
+    val SEEDED_LIST_ID: UUID = UUID.fromString("70000000-0000-0000-0000-000000000001")
+
+    fun getListSummary(id: UUID = SEEDED_LIST_ID) =
         OpinionListSummaryDto(
             id,
             "${OpinionSubjectTestDataFactory.bernard.name}'s cappuccino rating",

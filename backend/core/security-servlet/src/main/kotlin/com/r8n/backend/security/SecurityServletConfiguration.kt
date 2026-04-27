@@ -25,7 +25,10 @@ import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWrite
 class SecurityServletConfiguration {
     @Bean
     @ConditionalOnMissingBean
-    fun roleHierarchy(): RoleHierarchy = RoleHierarchyImpl.fromHierarchy("ROLE_ADMIN > ROLE_MODERATOR > ROLE_USER")
+    fun roleHierarchy(): RoleHierarchy =
+        RoleHierarchyImpl.fromHierarchy(
+            "ROLE_ADMIN > ROLE_SUPPORT > ROLE_MODERATOR > ROLE_USER",
+        )
 
     @Bean
     @ConditionalOnMissingBean
