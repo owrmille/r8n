@@ -29,7 +29,9 @@ include("opinions-api-integration", "opinions-sv/api-integration")
 include("opinions-client", "opinions-sv/client")
 include("opinions-sv", "opinions-sv/service")
 
-include("core:security")
+include("core:security-common")
+include("core:security-servlet")
+include("core:security-reactive")
 include("core:api")
 include("core:utils")
 

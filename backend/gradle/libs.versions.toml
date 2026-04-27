@@ -12,7 +12,7 @@ spring-cloud = "2025.1.1"
 spring-dependency-management = "1.1.7"
 spring-gateway = "5.0.1"
 spring-web = "7.0.5"
-springdoc = "2.2.0"
+springdoc = "3.0.3"
 ktlint = "14.0.1"
 testcontainers = "2.0.3"
 testcontainers-jupiter = "1.21.3"
@@ -61,7 +61,8 @@ spring-cloud-feign = { module = "org.springframework.cloud:spring-cloud-starter-
 spring-context = { module = "org.springframework:spring-context", version.ref = "spring-web" }
 spring-data-commons = { module = "org.springframework.data:spring-data-commons", version.ref = "spring-boot" }
 spring-security-test = { module = "org.springframework.security:spring-security-test", version.ref = "spring" }
-spring-swagger = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc"}
+spring-swagger-gateway = { module = "org.springdoc:springdoc-openapi-starter-webflux-ui", version.ref = "springdoc"}
+spring-swagger-mvc-api = { module = "org.springdoc:springdoc-openapi-starter-webmvc-api", version.ref = "springdoc"}
 spring-web = { module = "org.springframework:spring-web", version.ref = "spring-web" }
 testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
 testcontainers-junit = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers-jupiter" }

@@ -16,8 +16,8 @@ import java.util.UUID
 class UserRoleAssignmentPersistence(
     @Id
     @GeneratedValue
-    @UuidGenerator
-    val id: UUID,
+    @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
+    var id: UUID,
 //
     @Column(nullable = false)
     val user: UUID,

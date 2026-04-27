@@ -2,8 +2,8 @@ package com.r8n.backend.users.integration.api
 
 import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
-import com.r8n.backend.users.api.dto.UserDto
-import com.r8n.backend.users.api.dto.UserSessionDto
+import com.r8n.backend.users.integration.api.dto.UserDto
+import com.r8n.backend.users.integration.api.dto.UserSessionDto
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable

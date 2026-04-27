@@ -33,7 +33,7 @@ class OpinionListMapper(
         with(opinionSummary) {
             OpinionSummaryDto(
                 subject = subject,
-                subjectName = subjectService.getSubjectName(subject),
+                subjectName = subjectService.getSubjectName(subject) ?: "UNNAMED",
                 ownMark = ownMark,
                 componentMark = componentMark,
                 opinions = opinions.map { opinionMapper.toDto(it) },

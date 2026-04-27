@@ -7,6 +7,7 @@ import com.r8n.backend.opinions.api.access.dto.RequestStatusEnumDto
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import java.time.Instant
 import java.util.UUID
@@ -31,12 +32,12 @@ interface OutgoingAccessRequestApi {
         pageable: PageRequestDto,
     ): PageResponseDto<AccessRequestDto>
 
-    @GetMapping(CREATE_PATH)
+    @PostMapping(CREATE_PATH)
     fun create(
         @PathVariable listId: UUID,
     ): AccessRequestDto
 
-    @GetMapping(CANCEL_PATH)
+    @PostMapping(CANCEL_PATH)
     fun cancel(
         @PathVariable requestId: UUID,
     ): AccessRequestDto

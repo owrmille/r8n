@@ -63,9 +63,10 @@ class AccessRequestIntegrationTest {
         val OWNER_ID: UUID = UUID.randomUUID()
         val REQUESTER_ID: UUID = UUID.randomUUID()
 
+        @Suppress("unused") // used to store test database container
         @Container
         @ServiceConnection
-        val postgres =
+        val postgres: PostgreSQLContainer =
             PostgreSQLContainer(DockerImageName.parse("postgres:15"))
                 .withDatabaseName("opinions")
                 .withUsername("test")
@@ -204,7 +205,7 @@ class AccessRequestIntegrationTest {
         val createResult =
             mockMvc
                 .perform(
-                    get("/api/access-requests/outgoing/create/$listId")
+                    post("/api/access-requests/outgoing/create/$listId")
                         .header("Authorization", "Bearer $requesterToken")
                         .with(csrf()),
                 ).andExpect(status().isOk)

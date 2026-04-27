@@ -15,12 +15,12 @@ import com.r8n.backend.opinions.api.access.dto.RequestStatusEnumDto
 import com.r8n.backend.opinions.integration.api.OpinionListsInternalApi
 import com.r8n.backend.opinions.stub.OpinionListTestDataFactory
 import com.r8n.backend.security.ServiceTokenService
-import com.r8n.backend.users.api.dto.ConsentDto
-import com.r8n.backend.users.api.dto.PersonalIdentifiableInformationSectionDto
-import com.r8n.backend.users.api.dto.UserDto
-import com.r8n.backend.users.api.dto.UserSessionDto
 import com.r8n.backend.users.api.dto.UserStatusEnumDto
 import com.r8n.backend.users.integration.api.UsersInternalApi
+import com.r8n.backend.users.integration.api.dto.ConsentDto
+import com.r8n.backend.users.integration.api.dto.PersonalIdentifiableInformationSectionDto
+import com.r8n.backend.users.integration.api.dto.UserDto
+import com.r8n.backend.users.integration.api.dto.UserSessionDto
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

@@ -15,5 +15,5 @@ dependencies {
     implementation(project(":opinions-client"))
     implementation(project(":messaging-api"))
     implementation(project(":messaging-client"))
-    testImplementation(project(":core:security"))
+    testImplementation(project(":core:security-servlet"))
 }
