@@ -396,8 +396,8 @@ class OpinionListSyncIntegrationTest {
         val s1 = list.opinionSummaries.find { it.subjectName == "Subject 1" }!!
 
         // Expected weights:
-        // r11: 1.0 (direct)
-        // r31: 1.0 (direct in l31) * 0.5 (sync weight) = 0.5
+        // r11: 1.0 (own item weight is always 1.0)
+        // r31: 1.0 (requester weight, default) * 0.5 (sync weight) = 0.5
         
         // componentMark should be weighted average: (1.1 * 1.0 + 3.1 * 0.5) / (1.0 + 0.5)
         // (1.1 + 1.55) / 1.5 = 2.65 / 1.5 = 1.7666...
@@ -405,16 +405,15 @@ class OpinionListSyncIntegrationTest {
         assertThat(s1.opinions.find { it.opinion == UUID.fromString("40000000-0000-0000-0000-000000000011") }?.weight).isEqualTo(1.0)
         assertThat(s1.opinions.find { it.opinion == UUID.fromString("40000000-0000-0000-0000-000000000031") }?.weight).isEqualTo(0.5)
         
-        // Currently it's likely (1.1*1.0 + 3.1*0.5) = 2.65 because it's just a sum in the code.
-        // Let's see what it actually is.
+        // Currently it's a weighted average.
         assertThat(s1.componentMark).isCloseTo(1.7666666666666666, org.assertj.core.api.Assertions.within(0.000000000000001))
     }
 
     @Test
     fun `requester weight override works`() {
         // r31 is in l31 with weight 1.0 (preseeded)
-        // Anna syncs l31 with weight 0.5.
-        // weight = 1.0 (requester default) * 0.5 (sync) = 0.5
+        // Anna owns l11 and syncs l31 into it with weight 0.5.
+        // If she didn't link it manually, weight would be 1.0 (source weight) * 0.5 (sync) = 0.5
 
         // Now Anna adds r31 to HER list l11 with weight 0.2
         val u1Token = "Bearer " + serviceTokenService.generateAccessToken(ANNA_ID, listOf("USER"))
@@ -427,7 +426,7 @@ class OpinionListSyncIntegrationTest {
             post("/api/opinion-lists/$l11Id/sync")
                 .header("Authorization", u1Token)
                 .param("addedListId", l31Id.toString())
-                .param("weight", "0.5")
+                .param("weight", "0.5") // Anna half-trusts u3 generally
         ).andExpect(status().isOk)
 
         // Add r31 to l11 with weight 0.2
@@ -435,7 +434,7 @@ class OpinionListSyncIntegrationTest {
             post("/api/opinion-lists/$l11Id/link")
                 .header("Authorization", u1Token)
                 .param("opinionId", r31Id.toString())
-                .param("weight", "0.2")
+                .param("weight", "0.2") // Anna explicitly sets weight to 0.2
         ).andExpect(status().isOk)
 
         val result = mockMvc.perform(get("/api/opinion-lists/$l11Id").header("Authorization", u1Token))
@@ -446,18 +445,17 @@ class OpinionListSyncIntegrationTest {
         val s1 = list.opinionSummaries.find { it.subjectName == "Subject 1" }!!
 
         // Expected weights for r31:
-        // 1. Direct: 0.2
-        // 2. Synced: 0.2 (requester weight) * 0.5 (sync weight) = 0.1
-        // Total weight contribution for r31 = 0.3
+        // Option A: Strict Override - the manual link (0.2) completely overrides the synced link.
+        // So r31 should only appear once with weight 0.2.
         
         val r31References = s1.opinions.filter { it.opinion == r31Id }
-        assertThat(r31References).hasSize(2)
-        assertThat(r31References.map { it.weight }).containsExactlyInAnyOrder(0.2, 0.1)
+        assertThat(r31References).hasSize(1)
+        assertThat(r31References[0].weight).isEqualTo(0.2)
         
-        // r11 is also there: mark 1.1, weight 1.0 (direct)
-        // componentMark = (1.1 * 1.0 + 3.1 * 0.3) / (1.0 + 0.3)
-        // (1.1 + 0.93) / 1.3 = 2.03 / 1.3 = 1.5615384615384615
+        // r11 is also there: mark 1.1, weight 1.0 (own item weight is always 1.0)
+        // componentMark = (1.1 * 1.0 + 3.1 * 0.2) / (1.0 + 0.2)
+        // (1.1 + 0.62) / 1.2 = 1.72 / 1.2 = 1.4333...
         
-        assertThat(s1.componentMark).isCloseTo(1.5615384615384615, org.assertj.core.api.Assertions.within(0.000000000000001))
+        assertThat(s1.componentMark).isCloseTo(1.4333333333333333, org.assertj.core.api.Assertions.within(0.000000000000001))
     }
 }
