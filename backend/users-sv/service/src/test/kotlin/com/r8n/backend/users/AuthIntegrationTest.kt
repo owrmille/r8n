@@ -124,7 +124,7 @@ class AuthIntegrationTest {
 
         entityManager
             .createNativeQuery(
-                "INSERT INTO users.users_role_assignments (id, \"user\", role, granted_by, timestamp) VALUES (:id, :userId, :role, :grantedBy, :timestamp)",
+                "INSERT INTO users.users_role_assignments (id, \"user\", role, granted_by, timestamp) VALUES (:id, :userId, :role, :grantedBy, :timestamp) ON CONFLICT ON CONSTRAINT uq_user_role DO NOTHING",
             ).setParameter("id", UUID.randomUUID())
             .setParameter("userId", userId)
             .setParameter("role", "ADMIN")

@@ -177,3 +177,7 @@ ON CONFLICT DO NOTHING;
 INSERT INTO users.users_role_assignments (id, "user", role, granted_by, timestamp)
 VALUES ('b0b0b0b0-b0b0-b0b0-b0b0-b0b0b0b0b0b0', '30303030-3030-3030-3030-303030303030', 'MODERATOR', '00000000-0000-0000-0000-000000000000', '2024-01-01T12:00:00Z')
 ON CONFLICT DO NOTHING;
+
+--changeset ditabisko:V12_unique_user_role_constraint
+ALTER TABLE users.users_role_assignments
+    ADD CONSTRAINT uq_user_role UNIQUE ("user", role);

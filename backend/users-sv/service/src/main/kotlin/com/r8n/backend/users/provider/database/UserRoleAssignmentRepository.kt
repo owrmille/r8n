@@ -17,4 +17,6 @@ interface UserRoleAssignmentRepository : JpaRepository<UserRoleAssignmentPersist
         user: UUID,
         role: RoleEnumPersistence,
     )
+
+    fun countByRole(role: RoleEnumPersistence): Long
 }

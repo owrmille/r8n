@@ -78,7 +78,7 @@ class UserController(
             runCatching { RoleEnumDto.valueOf(role) }.getOrElse {
                 throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown role: $role")
             }
-        userFacade.revokeRole(userId, roleEnum)
+        userFacade.revokeRole(getCurrentUserId(), userId, roleEnum)
         return ResponseEntity.noContent().build()
     }
 }

@@ -47,9 +47,10 @@ class UserFacade(
     ) = userService.assignRole(adminId, userId, request.role.toPersistence())
 
     fun revokeRole(
+        adminId: UUID,
         userId: UUID,
         role: RoleEnumDto,
-    ) = userService.revokeRole(userId, role.toPersistence())
+    ) = userService.revokeRole(adminId, userId, role.toPersistence())
 
     private fun UserWithRoles.toDto() =
         UserWithRolesDto(

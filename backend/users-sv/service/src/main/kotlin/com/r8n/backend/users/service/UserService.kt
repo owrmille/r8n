@@ -117,9 +117,18 @@ class UserService(
 
     @Transactional
     fun revokeRole(
+        adminId: UUID,
         userId: UUID,
         role: RoleEnumPersistence,
     ) {
+        if (role == RoleEnumPersistence.ADMIN) {
+            if (adminId == userId) {
+                throw ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot remove your own admin role")
+            }
+            if (userRoleAssignmentRepository.countByRole(RoleEnumPersistence.ADMIN) <= 1) {
+                throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Cannot remove the last admin")
+            }
+        }
         userRoleAssignmentRepository.deleteByUserAndRole(userId, role)
     }
 
