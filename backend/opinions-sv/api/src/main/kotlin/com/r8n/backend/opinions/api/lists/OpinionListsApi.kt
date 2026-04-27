@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
+import jakarta.validation.Valid
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -89,6 +90,7 @@ interface OpinionListsApi {
         authorId: UUID?,
         @RequestParam(required = false)
         authorNameSubstring: String?,
+        @Valid
         pageable: PageRequestDto,
     ): PageResponseDto<OpinionListSummaryDto>
 
@@ -113,5 +115,8 @@ interface OpinionListsApi {
     ): OpinionListDto
 
     @GetMapping(MINE_PATH)
-    fun getMine(pageable: PageRequestDto): PageResponseDto<OpinionListSummaryDto>
+    fun getMine(
+        @Valid
+        pageable: PageRequestDto,
+    ): PageResponseDto<OpinionListSummaryDto>
 }

@@ -7,5 +7,6 @@ version = "0.0.1-SNAPSHOT"
 description = "common api components for backend"
 
 dependencies {
+    compileOnly(libs.spring.boot.starter.validation)
     implementation(libs.jakarta.validation)
 }

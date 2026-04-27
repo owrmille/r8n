@@ -4,6 +4,10 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler
+import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
@@ -19,6 +23,15 @@ import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWrite
 @EnableWebSecurity
 @EnableMethodSecurity
 class SecurityServletConfiguration {
+    @Bean
+    @ConditionalOnMissingBean
+    fun roleHierarchy(): RoleHierarchy = RoleHierarchyImpl.fromHierarchy("ROLE_ADMIN > ROLE_MODERATOR > ROLE_USER")
+
+    @Bean
+    @ConditionalOnMissingBean
+    fun methodSecurityExpressionHandler(roleHierarchy: RoleHierarchy): MethodSecurityExpressionHandler =
+        DefaultMethodSecurityExpressionHandler().also { it.setRoleHierarchy(roleHierarchy) }
+
     @Bean
     @ConditionalOnMissingBean
     fun maskingLoggingFilter(): MaskingLoggingFilter = MaskingLoggingFilter()

@@ -1,4 +1,4 @@
-package com.r8n.backend.mock.api.dto
+package com.r8n.backend.messaging.api.dto
 
 import java.util.UUID
 
