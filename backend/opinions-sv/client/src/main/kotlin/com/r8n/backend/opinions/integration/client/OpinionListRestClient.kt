@@ -63,11 +63,16 @@ class OpinionListRestClient(
     override fun linkOpinion(
         listId: UUID,
         opinionId: UUID,
+        weight: Double,
     ): OpinionListDto =
         restClient
             .post()
             .uri { uriBuilder ->
-                uriBuilder.path(LINK_PATH).queryParam("opinionId", opinionId).build(listId)
+                uriBuilder
+                    .path(LINK_PATH)
+                    .queryParam("opinionId", opinionId)
+                    .queryParam("weight", weight)
+                    .build(listId)
             }.retrieve()
             .body<OpinionListDto>()!!
 

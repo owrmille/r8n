@@ -115,7 +115,7 @@ class OpinionListService(
                     opinionList = listId,
                     opinion = opinionId,
                     weight = weight,
-                )
+                ),
             )
         }
         return getList(listId, userId)
@@ -140,8 +140,10 @@ class OpinionListService(
         listId: UUID,
         requesterId: UUID,
     ): OpinionList {
-        val list = opinionListRepository.findById(listId)
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
+        val list =
+            opinionListRepository
+                .findById(listId)
+                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
 
         validateAccess(list, requesterId)
 
@@ -152,7 +154,10 @@ class OpinionListService(
         return toDomain(list, summaries)
     }
 
-    private fun validateAccess(list: OpinionListPersistence, requesterId: UUID) {
+    private fun validateAccess(
+        list: OpinionListPersistence,
+        requesterId: UUID,
+    ) {
         val listId = list.id!!
         if (!accessService.canAccessOpinionList(requesterId, listId, OpinionListPermissionEnum.VIEW)) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN)
@@ -168,30 +173,32 @@ class OpinionListService(
 
         val directOpinionWeights = assignments.associate { it.opinion to it.weight }
 
-        val syncedAssignments = syncs.flatMap { sync ->
-            opinionsAssignmentRepository.findAllByOpinionList(sync.sourceList).mapNotNull { asmt ->
-                if (directOpinionWeights.containsKey(asmt.opinion)) {
-                    // ignore synced versions if directly linked
-                    null
-                } else {
-                    asmt.copy(weight = asmt.weight * sync.weight)
+        val syncedAssignments =
+            syncs.flatMap { sync ->
+                opinionsAssignmentRepository.findAllByOpinionList(sync.sourceList).mapNotNull { asmt ->
+                    if (directOpinionWeights.containsKey(asmt.opinion)) {
+                        // ignore synced versions if directly linked
+                        null
+                    } else {
+                        asmt.copy(weight = asmt.weight * sync.weight)
+                    }
                 }
             }
-        }
 
         // If an opinion is synced from multiple sources, pick the one with max weight
-        val dedupedSyncedAssignments = syncedAssignments
-            .groupBy { it.opinion }
-            .map { (_, asmts) -> asmts.maxBy { it.weight } }
+        val dedupedSyncedAssignments =
+            syncedAssignments
+                .groupBy { it.opinion }
+                .map { (_, asmts) -> asmts.maxBy { it.weight } }
 
         return assignments + dedupedSyncedAssignments
     }
 
     private fun fetchAndEnrichOpinions(
         assignments: List<OpinionsToOpinionListsPersistence>,
-        requesterId: UUID
-    ): List<Opinion> {
-        return assignments.mapNotNull { asmt ->
+        requesterId: UUID,
+    ): List<Opinion> =
+        assignments.mapNotNull { asmt ->
             try {
                 val opinion = opinionService.getOpinion(asmt.opinion, requesterId)
                 val weight = if (opinion.owner == requesterId) 1.0 else asmt.weight
@@ -204,12 +211,11 @@ class OpinionListService(
                 }
             }
         }
-    }
 
     private fun calculateSummaries(
         list: OpinionListPersistence,
         opinions: List<Opinion>,
-        requesterId: UUID
+        requesterId: UUID,
     ): List<OpinionSummary> {
         val listId = list.id!!
         val opinionsBySubject = opinions.groupBy { it.subject }
@@ -227,45 +233,54 @@ class OpinionListService(
         }
     }
 
-    private fun calculateOwnSummary(subject: UUID, ops: List<Opinion>, requesterId: UUID): OpinionSummary {
+    private fun calculateOwnSummary(
+        subject: UUID,
+        ops: List<Opinion>,
+        requesterId: UUID,
+    ): OpinionSummary {
         val own = ops.firstOrNull { it.owner == requesterId }
         val weightedMarks = ops.mapNotNull { it.mark?.let { mark -> it.weight!! * mark } }
         val totalWeight = ops.mapNotNull { if (it.mark != null) it.weight else null }.sum()
 
-        val componentMark = if (totalWeight > 0 && weightedMarks.size == ops.size) {
-            weightedMarks.sum() / totalWeight
-        } else {
-            null
-        }
+        val componentMark =
+            if (totalWeight > 0 && weightedMarks.size == ops.size) {
+                weightedMarks.sum() / totalWeight
+            } else {
+                null
+            }
 
         return OpinionSummary(
             subject = subject,
             ownMark = own?.mark,
             componentMark = componentMark,
-            opinions = ops.map {
-                WeightedOpinionReference(
-                    id = it.id,
-                    opinion = it.id,
-                    weight = it.weight!!,
-                )
-            },
+            opinions =
+                ops.map {
+                    WeightedOpinionReference(
+                        id = it.id,
+                        opinion = it.id,
+                        weight = it.weight!!,
+                    )
+                },
         )
     }
 
-    private fun createSimpleSummary(subject: UUID, ownOpinion: Opinion): OpinionSummary {
-        return OpinionSummary(
+    private fun createSimpleSummary(
+        subject: UUID,
+        ownOpinion: Opinion,
+    ): OpinionSummary =
+        OpinionSummary(
             subject = subject,
             ownMark = ownOpinion.mark,
             componentMark = null,
-            opinions = listOf(
-                WeightedOpinionReference(
-                    id = ownOpinion.id,
-                    opinion = ownOpinion.id,
-                    weight = ownOpinion.weight!!
+            opinions =
+                listOf(
+                    WeightedOpinionReference(
+                        id = ownOpinion.id,
+                        opinion = ownOpinion.id,
+                        weight = ownOpinion.weight!!,
+                    ),
                 ),
-            ),
         )
-    }
 
     fun getListsFull(
         ownerId: UUID,

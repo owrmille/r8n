@@ -48,13 +48,11 @@ class OpinionListFacade(
         listId: UUID,
         opinionId: UUID,
         weight: Double,
-    ): OpinionListDto =
-        opinionListMapper.toDto(opinionListService.linkOpinion(userId, listId, opinionId, weight))
+    ): OpinionListDto = opinionListMapper.toDto(opinionListService.linkOpinion(userId, listId, opinionId, weight))
 
     fun unlinkOpinion(
         userId: UUID,
         listId: UUID,
         opinionId: UUID,
-    ): OpinionListDto =
-        opinionListMapper.toDto(opinionListService.unlinkOpinion(userId, listId, opinionId))
+    ): OpinionListDto = opinionListMapper.toDto(opinionListService.unlinkOpinion(userId, listId, opinionId))
 }

@@ -106,14 +106,14 @@ class OpinionListSyncIntegrationTest {
             post("/api/opinion-lists/$l11Id/sync")
                 .header("Authorization", requesterToken)
                 .param("addedListId", l31Id.toString())
-                .param("weight", "1.0")
+                .param("weight", "1.0"),
         )
 
         // Remove r31 from l11 if it was added
         mockMvc.perform(
             patch("/api/opinion-lists/$l11Id/unlink")
                 .header("Authorization", requesterToken)
-                .param("opinionId", r31Id.toString())
+                .param("opinionId", r31Id.toString()),
         )
     }
 
@@ -279,12 +279,12 @@ class OpinionListSyncIntegrationTest {
         // u1: l11(r11, r12)
         // l31(r31) synced to l11
         // l21(r23, r24) synced to l11
-        
+
         // Total for l11: r11, r12, r31, r23, r24
-        
+
         // l21 has l11 and l12 synced to it.
         // IF it were transitive, l11 would see its own reviews AGAIN via l21, and also r11 via l12 synced to l21.
-        
+
         val u1Token = "Bearer " + serviceTokenService.generateAccessToken(ANNA_ID, listOf("USER"))
         val l11Id = UUID.fromString("80000000-0000-0000-0000-000000000111")
 
@@ -322,7 +322,8 @@ class OpinionListSyncIntegrationTest {
         val l21Id = UUID.fromString("80000000-0000-0000-0000-000000000211")
 
         // 1. Initially it works
-        mockMvc.perform(get("/api/opinion-lists/$l11Id").header("Authorization", u1Token))
+        mockMvc
+            .perform(get("/api/opinion-lists/$l11Id").header("Authorization", u1Token))
             .andExpect(status().isOk)
 
         // 2. Revoke access (delete the access request)
@@ -333,9 +334,11 @@ class OpinionListSyncIntegrationTest {
         }
 
         // 3. Now getting l11 should still work but r23/r24 (from l21) should be missing
-        val result = mockMvc.perform(get("/api/opinion-lists/$l11Id").header("Authorization", u1Token))
-            .andExpect(status().isOk)
-            .andReturn()
+        val result =
+            mockMvc
+                .perform(get("/api/opinion-lists/$l11Id").header("Authorization", u1Token))
+                .andExpect(status().isOk)
+                .andReturn()
 
         val list = objectMapper.readValue(result.response.contentAsString, OpinionListDto::class.java)
         // Summaries for Subject 3 and 4 should be gone (they were only from l21)
@@ -351,7 +354,8 @@ class OpinionListSyncIntegrationTest {
         val l11Id = UUID.fromString("80000000-0000-0000-0000-000000000111")
 
         // Should just work and return one level of sync
-        mockMvc.perform(get("/api/opinion-lists/$l11Id").header("Authorization", u1Token))
+        mockMvc
+            .perform(get("/api/opinion-lists/$l11Id").header("Authorization", u1Token))
             .andExpect(status().isOk)
     }
 
@@ -362,11 +366,12 @@ class OpinionListSyncIntegrationTest {
 
         // Anna tries to sync her list l11 with Bernard's private list l23
         // It returns 404 because for a private list, if you don't have access, we return 404 to avoid leaking existence
-        mockMvc.perform(
-            post("/api/opinion-lists/$ANNA_LIST_ID/sync")
-                .header("Authorization", requesterToken)
-                .param("addedListId", l23Id.toString())
-        ).andExpect(status().isNotFound)
+        mockMvc
+            .perform(
+                post("/api/opinion-lists/$ANNA_LIST_ID/sync")
+                    .header("Authorization", requesterToken)
+                    .param("addedListId", l23Id.toString()),
+            ).andExpect(status().isNotFound)
     }
 
     @Test
@@ -381,16 +386,19 @@ class OpinionListSyncIntegrationTest {
         val l31Id = UUID.fromString("80000000-0000-0000-0000-000000000311")
 
         // Set l31 -> l11 sync weight to 0.5
-        mockMvc.perform(
-            post("/api/opinion-lists/$l11Id/sync")
-                .header("Authorization", u1Token)
-                .param("addedListId", l31Id.toString())
-                .param("weight", "0.5")
-        ).andExpect(status().isOk)
+        mockMvc
+            .perform(
+                post("/api/opinion-lists/$l11Id/sync")
+                    .header("Authorization", u1Token)
+                    .param("addedListId", l31Id.toString())
+                    .param("weight", "0.5"),
+            ).andExpect(status().isOk)
 
-        val result = mockMvc.perform(get("/api/opinion-lists/$l11Id").header("Authorization", u1Token))
-            .andExpect(status().isOk)
-            .andReturn()
+        val result =
+            mockMvc
+                .perform(get("/api/opinion-lists/$l11Id").header("Authorization", u1Token))
+                .andExpect(status().isOk)
+                .andReturn()
 
         val list = objectMapper.readValue(result.response.contentAsString, OpinionListDto::class.java)
         val s1 = list.opinionSummaries.find { it.subjectName == "Subject 1" }!!
@@ -398,15 +406,31 @@ class OpinionListSyncIntegrationTest {
         // Expected weights:
         // r11: 1.0 (own item weight is always 1.0)
         // r31: 1.0 (requester weight, default) * 0.5 (sync weight) = 0.5
-        
+
         // componentMark should be weighted average: (1.1 * 1.0 + 3.1 * 0.5) / (1.0 + 0.5)
         // (1.1 + 1.55) / 1.5 = 2.65 / 1.5 = 1.7666...
-        
-        assertThat(s1.opinions.find { it.opinion == UUID.fromString("40000000-0000-0000-0000-000000000011") }?.weight).isEqualTo(1.0)
-        assertThat(s1.opinions.find { it.opinion == UUID.fromString("40000000-0000-0000-0000-000000000031") }?.weight).isEqualTo(0.5)
-        
+
+        assertThat(
+            s1.opinions
+                .find {
+                    it.opinion == UUID.fromString("40000000-0000-0000-0000-000000000011")
+                }?.weight,
+        ).isEqualTo(1.0)
+        assertThat(
+            s1.opinions
+                .find {
+                    it.opinion == UUID.fromString("40000000-0000-0000-0000-000000000031")
+                }?.weight,
+        ).isEqualTo(0.5)
+
         // Currently it's a weighted average.
-        assertThat(s1.componentMark).isCloseTo(1.7666666666666666, org.assertj.core.api.Assertions.within(0.000000000000001))
+        assertThat(
+            s1.componentMark,
+        ).isCloseTo(
+            1.7666666666666666,
+            org.assertj.core.api.Assertions
+                .within(0.000000000000001),
+        )
     }
 
     @Test
@@ -422,24 +446,28 @@ class OpinionListSyncIntegrationTest {
         val r31Id = UUID.fromString("40000000-0000-0000-0000-000000000031")
 
         // First, set sync weight to 0.5
-        mockMvc.perform(
-            post("/api/opinion-lists/$l11Id/sync")
-                .header("Authorization", u1Token)
-                .param("addedListId", l31Id.toString())
-                .param("weight", "0.5") // Anna half-trusts u3 generally
-        ).andExpect(status().isOk)
+        mockMvc
+            .perform(
+                post("/api/opinion-lists/$l11Id/sync")
+                    .header("Authorization", u1Token)
+                    .param("addedListId", l31Id.toString())
+                    .param("weight", "0.5"), // Anna half-trusts u3 generally
+            ).andExpect(status().isOk)
 
         // Add r31 to l11 with weight 0.2
-        mockMvc.perform(
-            post("/api/opinion-lists/$l11Id/link")
-                .header("Authorization", u1Token)
-                .param("opinionId", r31Id.toString())
-                .param("weight", "0.2") // Anna explicitly sets weight to 0.2
-        ).andExpect(status().isOk)
+        mockMvc
+            .perform(
+                post("/api/opinion-lists/$l11Id/link")
+                    .header("Authorization", u1Token)
+                    .param("opinionId", r31Id.toString())
+                    .param("weight", "0.2"), // Anna explicitly sets weight to 0.2
+            ).andExpect(status().isOk)
 
-        val result = mockMvc.perform(get("/api/opinion-lists/$l11Id").header("Authorization", u1Token))
-            .andExpect(status().isOk)
-            .andReturn()
+        val result =
+            mockMvc
+                .perform(get("/api/opinion-lists/$l11Id").header("Authorization", u1Token))
+                .andExpect(status().isOk)
+                .andReturn()
 
         val list = objectMapper.readValue(result.response.contentAsString, OpinionListDto::class.java)
         val s1 = list.opinionSummaries.find { it.subjectName == "Subject 1" }!!
@@ -447,15 +475,21 @@ class OpinionListSyncIntegrationTest {
         // Expected weights for r31:
         // Option A: Strict Override - the manual link (0.2) completely overrides the synced link.
         // So r31 should only appear once with weight 0.2.
-        
+
         val r31References = s1.opinions.filter { it.opinion == r31Id }
         assertThat(r31References).hasSize(1)
         assertThat(r31References[0].weight).isEqualTo(0.2)
-        
+
         // r11 is also there: mark 1.1, weight 1.0 (own item weight is always 1.0)
         // componentMark = (1.1 * 1.0 + 3.1 * 0.2) / (1.0 + 0.2)
         // (1.1 + 0.62) / 1.2 = 1.72 / 1.2 = 1.4333...
-        
-        assertThat(s1.componentMark).isCloseTo(1.4333333333333333, org.assertj.core.api.Assertions.within(0.000000000000001))
+
+        assertThat(
+            s1.componentMark,
+        ).isCloseTo(
+            1.4333333333333333,
+            org.assertj.core.api.Assertions
+                .within(0.000000000000001),
+        )
     }
 }
