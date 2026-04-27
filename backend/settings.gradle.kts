@@ -11,6 +11,11 @@ include("mock-api-integration", "mock-sv/api-integration")
 include("mock-client", "mock-sv/client")
 include("mock-sv", "mock-sv/service")
 
+include("messaging-api", "messaging-sv/api")
+include("messaging-api-integration", "messaging-sv/api-integration")
+include("messaging-client", "messaging-sv/client")
+include("messaging-sv", "messaging-sv/service")
+
 include("users-api", "users-sv/api")
 include("users-api-integration", "users-sv/api-integration")
 include("users-client", "users-sv/client")

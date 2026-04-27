@@ -28,7 +28,7 @@ frontend_npx() { if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NOD
     prebuild-jars prepare-artifacts verify-artifacts docker-build docker-up \
     docker-certs docker-certs-force internal-certs internal-certs-force internal-certs-clean docker-certs-clean docker-secrets-clean docker-secrets-init edge-certs edge-certs-force \
     docker-down docker-logs clean-artifacts ensure-log-dirs clean-logs \
-    get-token refresh-token logout routed-request-opinion routed-request-mock routed-request-user-profile routed-request-gdpr direct-request-opinion direct-request-mock \
+    get-token refresh-token logout routed-request-opinion routed-request-mock routed-request-user-profile routed-request-gdpr routed-request-messaging-threads direct-request-opinion direct-request-mock \
     direct-request-swagger public-request-user routed-request-opinion-approved routed-request-opinion-forbidden routed-request-opinion-mine \
     docker-database-create-data-folder docker-database-drop-volume-personal docker-database-drop-volume-campus docker-database-run docker-database-connect \
     build-opinions who-ate-all-the-space clean-the-fuck-out-of-this-campus-machine \
@@ -210,12 +210,13 @@ $(addprefix local-stop-,$(SERVICES)): local-stop-%: ## Stop one local backend se
 	fi; \
 	$(LOAD_LOCAL_ENV) \
 	port=""; \
-	case "$*" in \
-		gateway) port="$$GATEWAY_PORT" ;; \
-		opinions) port="$$SERVICES_OPINIONS_PORT" ;; \
-		mock) port="$$SERVICES_MOCK_PORT" ;; \
-		users) port="$$SERVICES_USERS_PORT" ;; \
-	esac; \
+	if [ "$*" = "gateway" ]; then \
+		port="$$GATEWAY_PORT"; \
+	else \
+		service_key=$$(printf "%s" "$*" | tr "[:lower:]-" "[:upper:]_"); \
+		port_var="SERVICES_$${service_key}_PORT"; \
+		eval "port=\$${$$port_var:-}"; \
+	fi; \
 	if [ -n "$$port" ] && command -v lsof >/dev/null 2>&1; then \
 		pids="$$(lsof -ti tcp:$$port 2>/dev/null || true)"; \
 		[ -z "$$pids" ] || kill $$pids 2>/dev/null || true; \
@@ -382,6 +383,20 @@ routed-request-mock: ## Gateway request to mock (ENV=local|docker)
 	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
 	curl $$curl_args "$$protocol://$$host:$$port/api/opinion-lists/00000000-0000-0000-0000-000000000000/summary" -H "Authorization: Bearer $$(cat .access_token)"
 
+routed-request-messaging-threads: ## Gateway request to messaging thread summaries (ENV=local|docker)
+	@if [ ! -f .access_token ]; then $(MAKE) get-token ENV=$(ENV); fi
+	@if [ "$(ENV)" = "docker" ]; then \
+		$(LOAD_DOCKER_ENV) \
+		protocol=https; host=localhost; port=8080; \
+	else \
+		$(LOAD_LOCAL_ENV) \
+		protocol=$${INTERSERVICE_PROTOCOL:-http}; host=$${GATEWAY_HOST:-localhost}; port=$${GATEWAY_PORT:-8080}; \
+	fi; \
+	curl_args="-i"; \
+	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
+	curl $$curl_args "$$protocol://$$host:$$port/api/messaging/support/threads?page=0&size=10" \
+		-H "Authorization: Bearer $$(cat .access_token)"
+
 routed-request-user-profile: ## Gateway request to users-sv (ENV=local|docker)
 	@if [ ! -f .access_token ]; then $(MAKE) get-token ENV=$(ENV); fi
 	@if [ "$(ENV)" = "docker" ]; then \
@@ -539,6 +554,8 @@ test-github-backend: test-backend
 test-github-frontend: test-frontend
 
 test-github-e2e: test-e2e
+
+test-github: test-github-backend test-github-frontend test-github-e2e
 
 test-backend: lint-backend
 	cd backend && ./gradlew test

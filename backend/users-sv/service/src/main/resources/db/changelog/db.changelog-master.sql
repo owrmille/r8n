@@ -143,6 +143,8 @@ CREATE TABLE users.profile_avatars (
 ALTER TABLE users.users ADD COLUMN last_seen_at TIMESTAMPTZ;
 
 --changeset iatopchu:V7_add_session_os
+--preconditions onFail:MARK_RAN
+--precondition-sql-check expectedResult:0 SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = 'users' AND table_name = 'sessions' AND column_name = 'os';
 ALTER TABLE users.sessions
     ADD COLUMN os VARCHAR(255) NOT NULL DEFAULT 'Unknown';
 
@@ -177,6 +179,18 @@ ON CONFLICT DO NOTHING;
 INSERT INTO users.users_role_assignments (id, "user", role, granted_by, timestamp)
 VALUES ('b0b0b0b0-b0b0-b0b0-b0b0-b0b0b0b0b0b0', '30303030-3030-3030-3030-303030303030', 'MODERATOR', '00000000-0000-0000-0000-000000000000', '2024-01-01T12:00:00Z')
 ON CONFLICT DO NOTHING;
+
+--changeset iatopchu:V11_seed_support_role context:local,test
+--preconditions onFail:MARK_RAN
+--precondition-sql-check expectedResult:0 SELECT COUNT(*) FROM users.users_role_assignments WHERE id = '77777777-7777-7777-7777-777777777777';
+INSERT INTO users.users_role_assignments (id, "user", role, granted_by, timestamp)
+VALUES (
+    '77777777-7777-7777-7777-777777777777',
+    '10101010-1010-1010-1010-101010101010',
+    'SUPPORT',
+    '10101010-1010-1010-1010-101010101010',
+    '2024-01-01T12:00:00Z'
+);
 
 --changeset ditabisko:V12_unique_user_role_constraint
 ALTER TABLE users.users_role_assignments
