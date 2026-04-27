@@ -65,7 +65,10 @@ class UserService(
         )
     }
 
-    fun getMyName(userId: UUID): Username = Username(userId, getName(userId))
+    fun getMyName(userId: UUID): Username {
+        val roles = userRoleAssignmentRepository.findAllByUser(userId).map { it.role.name }
+        return Username(userId, getName(userId), roles.ifEmpty { listOf("USER") })
+    }
 
     fun getProfile(id: UUID): UserProfile {
         val user =

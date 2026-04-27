@@ -171,3 +171,7 @@ VALUES ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000
 --changeset codex:V10_normalized_email_unique_index
 UPDATE users.pii SET email = lower(trim(email));
 CREATE UNIQUE INDEX idx_pii_normalized_email ON users.pii (lower(email));
+
+--changeset ditabisko:V10_seed_test_user_roles context:local,test
+INSERT INTO users.users_role_assignments (id, "user", role, granted_by, timestamp)
+VALUES ('a0a0a0a0-a0a0-a0a0-a0a0-a0a0a0a0a0a0', '00000000-0000-0000-0000-000000000000', 'MODERATOR', '00000000-0000-0000-0000-000000000000', '2024-01-01T12:00:00Z');
