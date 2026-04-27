@@ -1,7 +1,7 @@
 package com.r8n.backend.export.api.dto
 
 import com.r8n.backend.core.api.PageResponseDto
-import com.r8n.backend.mock.api.dto.SupportThreadDto
+import com.r8n.backend.messaging.api.dto.SupportThreadDto
 import com.r8n.backend.opinions.api.access.dto.AccessRequestDto
 import com.r8n.backend.opinions.api.lists.dto.OpinionListDto
 import com.r8n.backend.users.api.dto.UserStatusEnumDto

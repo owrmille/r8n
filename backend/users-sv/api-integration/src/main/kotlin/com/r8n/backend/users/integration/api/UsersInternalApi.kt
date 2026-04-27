@@ -4,6 +4,7 @@ import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.users.integration.api.dto.UserDto
 import com.r8n.backend.users.integration.api.dto.UserSessionDto
+import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import java.util.UUID
@@ -32,6 +33,7 @@ interface UsersInternalApi {
     @GetMapping(SESSIONS_PATH)
     fun getSessionsForUser(
         @PathVariable id: UUID,
+        @Valid
         page: PageRequestDto? = null,
     ): PageResponseDto<UserSessionDto>
 
