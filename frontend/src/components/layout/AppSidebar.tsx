@@ -20,14 +20,15 @@ import {
 } from "@/components/ui/sidebar";
 import { useSidebar } from "@/components/ui/use-sidebar";
 
-const mainItems = [
+const baseItems = [
   { title: "Dashboard", url: "/", icon: Home },
   { title: "Discover", url: "/discover", icon: Search },
   { title: "My Lists", url: "/lists", icon: List },
   { title: "Requests", url: "/requests", icon: Bell },
   { title: "Messages", url: "/messages", icon: MessageSquare },
-  { title: "Moderation", url: "/moderation/opinions", icon: ShieldCheck },
 ];
+
+const moderationItem = { title: "Moderation", url: "/moderation/opinions", icon: ShieldCheck };
 
 export function AppSidebar() {
   const { state } = useSidebar();
@@ -46,6 +47,9 @@ export function AppSidebar() {
     { refetchInterval: 30_000 },
   );
   const pendingCount = pendingRequests?.total ?? 0;
+
+  const canModerate = me?.roles?.some((r) => r === "MODERATOR" || r === "ADMIN") ?? false;
+  const mainItems = canModerate ? [...baseItems, moderationItem] : baseItems;
 
   const isActive = (path: string) =>
     path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);

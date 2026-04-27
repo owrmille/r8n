@@ -5,6 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import RequireAuth from "@/components/auth/RequireAuth";
+import RequireRole from "@/components/auth/RequireRole";
 import AppLayout from "@/components/layout/AppLayout";
 import { createQueryClient } from "@/lib/server-state";
 
@@ -58,7 +59,9 @@ const App = () => (
                 <Route path="/lists" element={<MyLists />} />
                 <Route path="/requests" element={<Requests />} />
                 <Route path="/messages" element={<Messages />} />
-                <Route path="/moderation/opinions" element={<OpinionModeration />} />
+                <Route element={<RequireRole roles={["MODERATOR", "ADMIN"]} />}>
+                  <Route path="/moderation/opinions" element={<OpinionModeration />} />
+                </Route>
                 <Route path="/discover" element={<Discover />} />
                 <Route path="/create" element={<CreateReview />} />
                 <Route path="/lists/create" element={<CreateList />} />
