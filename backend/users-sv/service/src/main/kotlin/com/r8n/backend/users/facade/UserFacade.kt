@@ -1,17 +1,22 @@
 package com.r8n.backend.users.facade
 
+import com.r8n.backend.users.api.dto.AssignRoleRequestDto
+import com.r8n.backend.users.api.dto.RoleEnumDto
 import com.r8n.backend.users.api.dto.UpdateMyPublicProfileRequestDto
 import com.r8n.backend.users.api.dto.UserProfileDto
 import com.r8n.backend.users.api.dto.UserStatusEnumDto
+import com.r8n.backend.users.api.dto.UserWithRolesDto
 import com.r8n.backend.users.api.dto.UsernameDto
 import com.r8n.backend.users.domain.Consent
 import com.r8n.backend.users.domain.UserProfile
 import com.r8n.backend.users.domain.UserSession
 import com.r8n.backend.users.domain.UserStatusEnum
+import com.r8n.backend.users.domain.UserWithRoles
 import com.r8n.backend.users.domain.Username
 import com.r8n.backend.users.integration.api.dto.ConsentDto
 import com.r8n.backend.users.integration.api.dto.UserDto
 import com.r8n.backend.users.integration.api.dto.UserSessionDto
+import com.r8n.backend.users.persistence.RoleEnumPersistence
 import com.r8n.backend.users.service.UserService
 import com.r8n.backend.users.service.UserSessionService
 import org.springframework.data.domain.Page
@@ -27,6 +32,33 @@ class UserFacade(
     fun getMyName(userId: UUID): UsernameDto = userService.getMyName(userId).toDto()
 
     private fun Username.toDto() = UsernameDto(id, name)
+
+    fun listUsersWithRoles(): List<UserWithRolesDto> = userService.listUsersWithRoles().map { it.toDto() }
+
+    fun assignRole(
+        adminId: UUID,
+        request: AssignRoleRequestDto,
+        userId: UUID,
+    ) = userService.assignRole(adminId, userId, request.role.toPersistence())
+
+    fun revokeRole(
+        userId: UUID,
+        role: RoleEnumDto,
+    ) = userService.revokeRole(userId, role.toPersistence())
+
+    private fun UserWithRoles.toDto() =
+        UserWithRolesDto(
+            id = id,
+            name = name,
+            email = email,
+            status = status.toDto(),
+            isModerator = roles.contains(RoleEnumPersistence.MODERATOR),
+        )
+
+    private fun RoleEnumDto.toPersistence(): RoleEnumPersistence =
+        when (this) {
+            RoleEnumDto.MODERATOR -> RoleEnumPersistence.MODERATOR
+        }
 
     fun getUserProfile(id: UUID) = userService.getProfile(id).toDto()
 

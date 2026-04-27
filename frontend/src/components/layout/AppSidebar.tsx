@@ -1,4 +1,4 @@
-import { Home, Search, List, Bell, PenLine, ListPlus, LogOut, ShieldCheck, MessageSquare } from "lucide-react";
+import { Home, Search, List, Bell, PenLine, ListPlus, LogOut, ShieldCheck, MessageSquare, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { NavLink } from "@/components/NavLink";
@@ -27,6 +27,7 @@ const mainItems = [
   { title: "Requests", url: "/requests", icon: Bell },
   { title: "Messages", url: "/messages", icon: MessageSquare },
   { title: "Moderation", url: "/moderation/opinions", icon: ShieldCheck },
+  { title: "User Roles", url: "/moderation/roles", icon: Users },
 ];
 
 export function AppSidebar() {

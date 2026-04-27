@@ -23,6 +23,7 @@ const EditProfile = lazy(() => import("./pages/EditProfile"));
 const Login = lazy(() => import("./pages/Login"));
 const CreateProfile = lazy(() => import("./pages/CreateProfile"));
 const OpinionModeration = lazy(() => import("./pages/OpinionModeration"));
+const RoleAssignment = lazy(() => import("./pages/RoleAssignment"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -59,6 +60,7 @@ const App = () => (
                 <Route path="/requests" element={<Requests />} />
                 <Route path="/messages" element={<Messages />} />
                 <Route path="/moderation/opinions" element={<OpinionModeration />} />
+                <Route path="/moderation/roles" element={<RoleAssignment />} />
                 <Route path="/discover" element={<Discover />} />
                 <Route path="/create" element={<CreateReview />} />
                 <Route path="/lists/create" element={<CreateList />} />

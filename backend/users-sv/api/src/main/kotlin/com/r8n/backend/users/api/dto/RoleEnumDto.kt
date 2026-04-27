@@ -1,0 +1,5 @@
+package com.r8n.backend.users.api.dto
+
+enum class RoleEnumDto {
+    MODERATOR,
+}

@@ -32,6 +32,14 @@ export interface UpdateMyPublicProfileRequestDto {
   name: string;
 }
 
+export interface UserWithRolesDto {
+  id: Uuid;
+  name: string;
+  email: string;
+  status: UserStatusEnumDto;
+  isModerator: boolean;
+}
+
 export function createUsersApi(client: HttpClient = httpClient) {
   return {
     getMe(): Promise<UsernameDto> {
@@ -72,6 +80,21 @@ export function createUsersApi(client: HttpClient = httpClient) {
 
     deleteMyAvatar(): Promise<void> {
       return client.delete<void>("/users/me/avatar", { auth: "required" });
+    },
+
+    listUsersWithRoles(): Promise<UserWithRolesDto[]> {
+      return client.get<UserWithRolesDto[]>("/admin/users", { auth: "required" });
+    },
+
+    assignModerator(userId: Uuid): Promise<void> {
+      return client.post<void, { role: string }>(`/admin/users/${userId}/roles`, {
+        auth: "required",
+        body: { role: "MODERATOR" },
+      });
+    },
+
+    revokeModerator(userId: Uuid): Promise<void> {
+      return client.delete<void>(`/admin/users/${userId}/roles/MODERATOR`, { auth: "required" });
     },
   };
 }

@@ -2,8 +2,10 @@ package com.r8n.backend.users.service
 
 import com.r8n.backend.users.domain.User
 import com.r8n.backend.users.domain.UserProfile
+import com.r8n.backend.users.domain.UserWithRoles
 import com.r8n.backend.users.domain.Username
 import com.r8n.backend.users.persistence.RoleEnumPersistence
+import com.r8n.backend.users.persistence.UserRoleAssignmentPersistence
 import com.r8n.backend.users.provider.database.PIIRepository
 import com.r8n.backend.users.provider.database.UserRepository
 import com.r8n.backend.users.provider.database.UserRoleAssignmentRepository
@@ -13,6 +15,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
+import java.time.Instant
 import java.util.UUID
 
 @Service
@@ -66,6 +69,46 @@ class UserService(
     }
 
     fun getMyName(userId: UUID): Username = Username(userId, getName(userId))
+
+    fun listUsersWithRoles(): List<UserWithRoles> =
+        userRepository.findAll().map { user ->
+            val pii = piiRepository.findByIdOrNull(user.id)
+            val roles = userRoleAssignmentRepository.findAllByUser(user.id).map { it.role }
+            UserWithRoles(
+                id = user.id,
+                name = pii?.name ?: "Unknown",
+                email = pii?.email ?: "",
+                status = user.status,
+                roles = roles,
+            )
+        }
+
+    @Transactional
+    fun assignRole(
+        adminId: UUID,
+        userId: UUID,
+        role: RoleEnumPersistence,
+    ) {
+        if (!userRoleAssignmentRepository.existsByUserAndRole(userId, role)) {
+            userRoleAssignmentRepository.save(
+                UserRoleAssignmentPersistence(
+                    id = UUID.randomUUID(),
+                    user = userId,
+                    role = role,
+                    grantedBy = adminId,
+                    timestamp = Instant.now(),
+                ),
+            )
+        }
+    }
+
+    @Transactional
+    fun revokeRole(
+        userId: UUID,
+        role: RoleEnumPersistence,
+    ) {
+        userRoleAssignmentRepository.deleteByUserAndRole(userId, role)
+    }
 
     fun getProfile(id: UUID): UserProfile {
         val user =
