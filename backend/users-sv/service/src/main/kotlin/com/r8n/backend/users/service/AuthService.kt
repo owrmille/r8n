@@ -2,7 +2,6 @@ package com.r8n.backend.users.service
 
 import com.r8n.backend.users.api.dto.LoginRequestDto
 import com.r8n.backend.users.api.dto.RegisterRequestDto
-import com.r8n.backend.users.api.dto.RegistrationResponseDto
 import com.r8n.backend.users.domain.UserStatusEnum
 import com.r8n.backend.users.provider.database.UserRepository
 import com.r8n.backend.users.provider.database.UserRoleAssignmentRepository
@@ -33,6 +32,7 @@ class AuthService(
         val log: Logger = LoggerFactory.getLogger(AuthService::class.java)
         val EMAIL_PATTERN = Regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")
         const val EMAIL_MAX_LENGTH = 254
+        const val NAME_MAX_LENGTH = 255
         const val PASSWORD_MIN_LENGTH = 12
         const val PASSWORD_MAX_LENGTH = 128
         const val REGISTRATION_CONSENT_SESSION_OS = "Unknown"
@@ -46,10 +46,6 @@ class AuthService(
 
         if (user.passwordHash == null || !passwordEncoder.matches(request.password, user.passwordHash)) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials")
-        }
-
-        if (user.status == UserStatusEnum.EMAIL_VERIFICATION_PENDING) {
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Email verification required")
         }
 
         val roles = userRoleAssignmentRepository.findAllByUser(user.id).map { it.role.name }
@@ -68,8 +64,9 @@ class AuthService(
     fun register(
         request: RegisterRequestDto,
         auditContext: RegistrationAuditContext,
-    ): RegistrationResponseDto {
+    ) {
         val normalizedEmail = validateAndNormalizeRegistrationEmail(request.email)
+        val normalizedName = validateAndNormalizeRegistrationName(request.name)
         validateRegistrationPassword(request.password)
         validateRegistrationConsents(request)
 
@@ -88,7 +85,7 @@ class AuthService(
                 VALUES (?, ?, ?, ?)
                 """.trimIndent(),
                 userId,
-                UserStatusEnum.EMAIL_VERIFICATION_PENDING.name,
+                UserStatusEnum.ACTIVE.name,
                 Timestamp.from(now),
                 passwordEncoder.encode(request.password),
             )
@@ -99,7 +96,7 @@ class AuthService(
                 VALUES (?, ?, ?, NULL, NULL, NULL)
                 """.trimIndent(),
                 userId,
-                createPendingUserDisplayName(userId),
+                normalizedName,
                 normalizedEmail,
             )
 
@@ -142,8 +139,6 @@ class AuthService(
         } catch (_: DataIntegrityViolationException) {
             throw registrationConflict()
         }
-
-        return RegistrationResponseDto(emailVerificationRequired = true)
     }
 
     fun logout(refreshToken: String?) {
@@ -196,6 +191,19 @@ class AuthService(
         return normalizedEmail
     }
 
+    private fun validateAndNormalizeRegistrationName(name: String): String {
+        val normalizedName = name.trim()
+
+        if (normalizedName.isEmpty()) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Name is required")
+        }
+        if (normalizedName.length > NAME_MAX_LENGTH) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Name must be $NAME_MAX_LENGTH characters or fewer")
+        }
+
+        return normalizedName
+    }
+
     private fun validateRegistrationPassword(password: String) {
         if (password.trim().isEmpty()) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Password is required")
@@ -213,8 +221,6 @@ class AuthService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Privacy Policy and Terms of Service must be accepted")
         }
     }
-
-    private fun createPendingUserDisplayName(userId: UUID): String = "New user ${userId.toString().take(8)}"
 
     private fun normalizeEmail(email: String): String = email.trim().lowercase(Locale.ROOT)
 

@@ -11,6 +11,7 @@ import logo from "@/assets/logo.png";
 import { NavLink } from "@/components/NavLink";
 import { cn } from "@/lib/utils";
 import {
+  PROFILE_NAME_MAX_LENGTH,
   validateLoginForm,
   validateRegistrationForm,
   type AuthFieldErrors,
@@ -18,6 +19,7 @@ import {
 
 const Login = () => {
   const [isSignUp, setIsSignUp] = useState(false);
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -30,17 +32,15 @@ const Login = () => {
     },
   });
   const registerMutation = useRegisterMutation({
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       toast({
-        title: "Check your email",
-        description: "We created your account. Verify your email address before signing in.",
+        title: "Account created",
+        description: "You are signed in and ready to continue.",
       });
-      setIsSignUp(false);
-      setEmail("");
-      setPassword("");
-      setConfirmPassword("");
-      setGdprAccepted(false);
-      setFieldErrors({});
+      loginMutation.mutate({
+        login: variables.email,
+        password: variables.password,
+      });
     },
   });
   const isSubmitPending = loginMutation.isPending || registerMutation.isPending;
@@ -59,6 +59,7 @@ const Login = () => {
 
   const switchAuthMode = () => {
     setIsSignUp((currentValue) => !currentValue);
+    setName("");
     setEmail("");
     setPassword("");
     setConfirmPassword("");
@@ -71,6 +72,7 @@ const Login = () => {
 
     const validation = isSignUp
       ? validateRegistrationForm({
+        name,
         email,
         password,
         confirmPassword,
@@ -90,6 +92,7 @@ const Login = () => {
 
     if (isSignUp) {
       registerMutation.mutate({
+        name: validation.data.name,
         email: validation.data.email,
         password: validation.data.password,
         privacyPolicyAccepted: validation.data.gdprAccepted,
@@ -128,6 +131,35 @@ const Login = () => {
             className="space-y-4"
             noValidate
           >
+            {isSignUp && (
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-xs">Display name</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="Jane Reviewer"
+                  value={name}
+                  maxLength={PROFILE_NAME_MAX_LENGTH}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    clearFieldError("name");
+                  }}
+                  className={cn(
+                    "rounded-xl",
+                    fieldErrors.name && "border-destructive focus-visible:ring-destructive",
+                  )}
+                  autoComplete="name"
+                  aria-invalid={fieldErrors.name !== undefined}
+                  aria-describedby={fieldErrors.name ? "name-error" : undefined}
+                />
+                {fieldErrors.name && (
+                  <p id="name-error" role="alert" className="text-xs font-medium text-destructive">
+                    {fieldErrors.name}
+                  </p>
+                )}
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="email" className="text-xs">Email</Label>
               <Input

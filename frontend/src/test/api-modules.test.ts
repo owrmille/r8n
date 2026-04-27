@@ -121,11 +121,7 @@ describe("API modules", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(createEmptyResponse())
-      .mockResolvedValueOnce(
-        createJsonResponse({
-          emailVerificationRequired: true,
-        }),
-      );
+      .mockResolvedValueOnce(createEmptyResponse());
     const client = createHttpClient({
       baseUrl: "/api",
       fetchFn: fetchMock,
@@ -133,6 +129,7 @@ describe("API modules", () => {
     const authApi = createAuthApi(client);
 
     await authApi.register({
+      name: "New Reviewer",
       email: "new-user@test.test",
       password: "long-enough-password",
       privacyPolicyAccepted: true,
@@ -152,6 +149,7 @@ describe("API modules", () => {
       "/api/auth/register",
       expect.objectContaining({
         body: JSON.stringify({
+          name: "New Reviewer",
           email: "new-user@test.test",
           password: "long-enough-password",
           privacyPolicyAccepted: true,

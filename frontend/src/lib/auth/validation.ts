@@ -12,9 +12,13 @@ export const REGISTRATION_PASSWORD_MIN_LENGTH = readPositiveIntegerEnv(
   "VITE_REGISTRATION_PASSWORD_MIN_LENGTH",
   import.meta.env.VITE_REGISTRATION_PASSWORD_MIN_LENGTH,
 );
+export const PROFILE_NAME_MAX_LENGTH = readPositiveIntegerEnv(
+  "VITE_PROFILE_NAME_MAX_LENGTH",
+  import.meta.env.VITE_PROFILE_NAME_MAX_LENGTH,
+);
 
 export type AuthFieldErrors = Partial<
-  Record<"email" | "password" | "confirmPassword" | "gdprAccepted", string>
+  Record<"name" | "email" | "password" | "confirmPassword" | "gdprAccepted", string>
 >;
 
 export interface LoginFormValues {
@@ -23,6 +27,7 @@ export interface LoginFormValues {
 }
 
 export interface RegistrationFormValues extends LoginFormValues {
+  name: string;
   confirmPassword: string;
   gdprAccepted: boolean;
 }
@@ -47,6 +52,12 @@ const emailSchema = z
   .max(AUTH_EMAIL_MAX_LENGTH, "Email address is too long.")
   .email("Enter a valid email address.");
 
+const nameSchema = z
+  .string()
+  .trim()
+  .min(1, "Enter your display name.")
+  .max(PROFILE_NAME_MAX_LENGTH, `Display name must be ${PROFILE_NAME_MAX_LENGTH} characters or fewer.`);
+
 const loginFormSchema = z.object({
   email: emailSchema,
   password: z
@@ -57,6 +68,7 @@ const loginFormSchema = z.object({
 
 const registrationFormSchema = loginFormSchema
   .extend({
+    name: nameSchema,
     password: z
       .string()
       .min(
@@ -132,6 +144,7 @@ function toFieldErrors(error: z.ZodError): AuthFieldErrors {
 
 function isAuthField(field: string): field is keyof AuthFieldErrors {
   return (
+    field === "name" ||
     field === "email" ||
     field === "password" ||
     field === "confirmPassword" ||

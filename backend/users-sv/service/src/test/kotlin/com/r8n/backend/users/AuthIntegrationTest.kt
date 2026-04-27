@@ -11,7 +11,6 @@ import com.r8n.backend.users.provider.database.UserRoleAssignmentRepository
 import jakarta.persistence.EntityManager
 import jakarta.servlet.http.Cookie
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -197,10 +196,10 @@ class AuthIntegrationTest {
     }
 
     @Test
-    fun `register creates pending user with hashed password and consent audit records`() {
+    fun `register creates active user with hashed password and consent audit records`() {
         val email = "  New.User@Example.Test  "
         val normalizedEmail = "new.user@example.test"
-        val registerRequest = validRegisterRequest(email)
+        val registerRequest = validRegisterRequest(email, name = "  New Reviewer  ")
 
         val response =
             mockMvc
@@ -212,10 +211,10 @@ class AuthIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerRequest)),
                 ).andExpect(status().isCreated)
-                .andExpect(jsonPath("$.emailVerificationRequired").value(true))
                 .andReturn()
 
         assertNull(response.response.getHeader(HttpHeaders.SET_COOKIE))
+        assertTrue(response.response.contentAsString.isBlank())
 
         val user =
             jdbcTemplate.queryForMap(
@@ -230,10 +229,10 @@ class AuthIntegrationTest {
         val userId = user["id"] as UUID
         val passwordHash = user["password_hash"] as String
 
-        assertEquals("EMAIL_VERIFICATION_PENDING", user["status"])
+        assertEquals("ACTIVE", user["status"])
+        assertEquals("New Reviewer", user["name"])
         assertEquals(normalizedEmail, user["email"])
         assertTrue(passwordEncoder.matches(REGISTRATION_PASSWORD, passwordHash))
-        assertFalse((user["name"] as String).contains(normalizedEmail))
 
         val consentTypes =
             jdbcTemplate.queryForList(
@@ -278,8 +277,8 @@ class AuthIntegrationTest {
     }
 
     @Test
-    fun `registered pending user cannot login before email verification`() {
-        val email = "pending-login@example.test"
+    fun `registered active user can login immediately`() {
+        val email = "active-login@example.test"
 
         mockMvc
             .perform(
@@ -295,7 +294,7 @@ class AuthIntegrationTest {
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(LoginRequestDto(email, REGISTRATION_PASSWORD))),
-            ).andExpect(status().isForbidden)
+            ).andExpect(status().isOk)
     }
 
     @Test
@@ -308,6 +307,21 @@ class AuthIntegrationTest {
                     .content(
                         objectMapper.writeValueAsString(
                             validRegisterRequest("invalid-email").copy(password = "short"),
+                        ),
+                    ),
+            ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `register requires display name`() {
+        mockMvc
+            .perform(
+                post(REGISTER_PATH)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        objectMapper.writeValueAsString(
+                            validRegisterRequest("missing-name@example.test").copy(name = "   "),
                         ),
                     ),
             ).andExpect(status().isBadRequest)
@@ -463,8 +477,12 @@ class AuthIntegrationTest {
         assertTrue(setCookieHeader.contains("Path=/api/auth"))
     }
 
-    private fun validRegisterRequest(email: String) =
+    private fun validRegisterRequest(
+        email: String,
+        name: String = "User ${email.substringBefore("@").take(40)}",
+    ) =
         RegisterRequestDto(
+            name = name,
             email = email,
             password = REGISTRATION_PASSWORD,
             privacyPolicyAccepted = true,

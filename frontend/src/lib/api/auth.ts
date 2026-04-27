@@ -7,6 +7,7 @@ export interface LoginRequestDto {
 }
 
 export interface RegisterRequestDto {
+  name: string;
   email: string;
   password: string;
   privacyPolicyAccepted: boolean;
@@ -16,10 +17,6 @@ export interface RegisterRequestDto {
 export interface AuthenticationTokenDto {
   accessToken: string;
   expiresInMilliseconds: number;
-}
-
-export interface RegistrationResponseDto {
-  emailVerificationRequired: boolean;
 }
 
 const XSRF_TOKEN_COOKIE_NAME = "XSRF-TOKEN";
@@ -53,10 +50,10 @@ export function createAuthApi(client: HttpClient = httpClient) {
       });
     },
 
-    async register(request: RegisterRequestDto): Promise<RegistrationResponseDto> {
+    async register(request: RegisterRequestDto): Promise<void> {
       await ensureCsrfToken();
 
-      return client.post<RegistrationResponseDto, RegisterRequestDto>("/auth/register", {
+      return client.post<void, RegisterRequestDto>("/auth/register", {
         body: request,
         credentials: "include",
       });

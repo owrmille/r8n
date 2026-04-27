@@ -16,7 +16,6 @@ data class User(
 )
 
 enum class UserStatusEnum {
-    EMAIL_VERIFICATION_PENDING,
     ACTIVE,
     SUSPENDED,
     DELETION_PENDING,

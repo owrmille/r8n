@@ -131,11 +131,55 @@ describe("Login page", () => {
     expect(screen.getByPlaceholderText("test@test.test")).toBeInTheDocument();
   });
 
-  it("registers a new account and returns to sign in without creating a session", async () => {
-    registerMock.mockResolvedValue({
-      emailVerificationRequired: true,
+  it("registers a new account, signs in, and redirects to the dashboard", async () => {
+    registerMock.mockResolvedValue(undefined);
+    loginMock.mockResolvedValue({
+      accessToken: "registered-access-token-123",
+      expiresInMilliseconds: 60_000,
     });
 
+    renderLoginPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "Create one" }));
+    fireEvent.change(screen.getByLabelText("Display name"), {
+      target: { value: "New Reviewer" },
+    });
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "new-user@test.test" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "long-enough-password" },
+    });
+    fireEvent.change(screen.getByLabelText("Confirm password"), {
+      target: { value: "long-enough-password" },
+    });
+    fireEvent.click(screen.getByRole("checkbox"));
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+
+    await waitFor(() => {
+      expect(registerMock).toHaveBeenCalledWith({
+        name: "New Reviewer",
+        email: "new-user@test.test",
+        password: "long-enough-password",
+        privacyPolicyAccepted: true,
+        termsOfServiceAccepted: true,
+      });
+    });
+
+    await waitFor(() => {
+      expect(loginMock).toHaveBeenCalledWith({
+        login: "new-user@test.test",
+        password: "long-enough-password",
+      });
+      expect(setSessionMock).toHaveBeenCalledWith({
+        accessToken: "registered-access-token-123",
+        expiresInMilliseconds: 60_000,
+      });
+      expect(navigateMock).toHaveBeenCalledWith("/", { replace: true });
+    });
+  });
+
+  it("shows an inline error when registration name is empty", async () => {
     renderLoginPage();
 
     fireEvent.click(screen.getByRole("button", { name: "Create one" }));
@@ -151,22 +195,10 @@ describe("Login page", () => {
     fireEvent.click(screen.getByRole("checkbox"));
     fireEvent.click(screen.getByRole("button", { name: "Create account" }));
 
-    await waitFor(() => {
-      expect(loginMock).not.toHaveBeenCalled();
-      expect(registerMock).toHaveBeenCalledWith({
-        email: "new-user@test.test",
-        password: "long-enough-password",
-        privacyPolicyAccepted: true,
-        termsOfServiceAccepted: true,
-      });
-    });
-
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Sign in" })).toBeInTheDocument();
-      expect(screen.getByLabelText("Email")).toHaveValue("");
-      expect(setSessionMock).not.toHaveBeenCalled();
-      expect(navigateMock).not.toHaveBeenCalled();
-    });
+    expect(await screen.findByText("Enter your display name.")).toBeInTheDocument();
+    expect(screen.getByLabelText("Display name")).toHaveAttribute("aria-invalid", "true");
+    expect(loginMock).not.toHaveBeenCalled();
+    expect(registerMock).not.toHaveBeenCalled();
   });
 
   it("shows an inline error when login email is empty", async () => {
@@ -203,6 +235,9 @@ describe("Login page", () => {
     renderLoginPage();
 
     fireEvent.click(screen.getByRole("button", { name: "Create one" }));
+    fireEvent.change(screen.getByLabelText("Display name"), {
+      target: { value: "New Reviewer" },
+    });
     fireEvent.change(screen.getByLabelText("Email"), {
       target: { value: "new-user@test.test" },
     });
@@ -224,6 +259,9 @@ describe("Login page", () => {
     renderLoginPage();
 
     fireEvent.click(screen.getByRole("button", { name: "Create one" }));
+    fireEvent.change(screen.getByLabelText("Display name"), {
+      target: { value: "New Reviewer" },
+    });
     fireEvent.change(screen.getByLabelText("Email"), {
       target: { value: "new-user@test.test" },
     });
@@ -246,6 +284,9 @@ describe("Login page", () => {
     renderLoginPage();
 
     fireEvent.click(screen.getByRole("button", { name: "Create one" }));
+    fireEvent.change(screen.getByLabelText("Display name"), {
+      target: { value: "New Reviewer" },
+    });
     fireEvent.change(screen.getByLabelText("Email"), {
       target: { value: "new-user@test.test" },
     });
@@ -280,6 +321,7 @@ describe("Login page", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Create one" }));
 
+    expect(screen.getByLabelText("Display name")).toHaveValue("");
     expect(screen.getByLabelText("Email")).toHaveValue("");
     expect(screen.getByLabelText("Password")).toHaveValue("");
     expect(screen.getByLabelText("Confirm password")).toHaveValue("");

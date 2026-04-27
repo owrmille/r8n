@@ -3,7 +3,6 @@ package com.r8n.backend.users.api
 import com.r8n.backend.users.api.dto.AuthenticationTokenDto
 import com.r8n.backend.users.api.dto.LoginRequestDto
 import com.r8n.backend.users.api.dto.RegisterRequestDto
-import com.r8n.backend.users.api.dto.RegistrationResponseDto
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.CookieValue
 import org.springframework.web.bind.annotation.GetMapping
@@ -34,7 +33,7 @@ interface AuthApi {
     @ResponseStatus(HttpStatus.CREATED)
     fun register(
         @RequestBody request: RegisterRequestDto,
-    ): RegistrationResponseDto
+    )
 
     @PostMapping(LOGOUT_PATH)
     fun logout(

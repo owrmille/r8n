@@ -66,7 +66,6 @@ class UserFacade(
 
     private fun UserStatusEnum.toDto() =
         when (this) {
-            UserStatusEnum.EMAIL_VERIFICATION_PENDING -> UserStatusEnumDto.EMAIL_VERIFICATION_PENDING
             UserStatusEnum.ACTIVE -> UserStatusEnumDto.ACTIVE
             UserStatusEnum.SUSPENDED -> UserStatusEnumDto.SUSPENDED
             UserStatusEnum.DELETION_PENDING -> UserStatusEnumDto.DELETION_PENDING

@@ -5,7 +5,6 @@ import type {
   AuthenticationTokenDto,
   LoginRequestDto,
   RegisterRequestDto,
-  RegistrationResponseDto,
 } from "@/lib/api/auth";
 import {
   clearAuthSession,
@@ -37,7 +36,7 @@ export function useLoginMutation(
 
 export function useRegisterMutation(
   options?: UseMutationOptions<
-    RegistrationResponseDto,
+    void,
     Error,
     RegisterRequestDto,
     unknown

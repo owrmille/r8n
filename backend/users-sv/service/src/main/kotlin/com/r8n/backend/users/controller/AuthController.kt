@@ -4,7 +4,6 @@ import com.r8n.backend.users.api.AuthApi
 import com.r8n.backend.users.api.dto.AuthenticationTokenDto
 import com.r8n.backend.users.api.dto.LoginRequestDto
 import com.r8n.backend.users.api.dto.RegisterRequestDto
-import com.r8n.backend.users.api.dto.RegistrationResponseDto
 import com.r8n.backend.users.security.RefreshTokenCookieFactory
 import com.r8n.backend.users.service.AuthService
 import com.r8n.backend.users.service.RegistrationAuditContext
@@ -36,7 +35,7 @@ class AuthController(
         )
     }
 
-    override fun register(request: RegisterRequestDto): RegistrationResponseDto =
+    override fun register(request: RegisterRequestDto) {
         authService.register(
             request = request,
             auditContext =
@@ -45,6 +44,7 @@ class AuthController(
                     userAgent = currentRequest().getHeader(HttpHeaders.USER_AGENT) ?: "Unknown",
                 ),
         )
+    }
 
     override fun logout(refreshToken: String?) {
         authService.logout(refreshToken)
