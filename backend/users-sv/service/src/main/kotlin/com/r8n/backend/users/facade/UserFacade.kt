@@ -32,9 +32,11 @@ class UserFacade(
     fun getMyName(userId: UUID): UsernameDto = userService.getMyName(userId).toDto()
 
     private fun Username.toDto() =
-        UsernameDto(id, name, roles.mapNotNull { roleStr ->
-            runCatching { RoleEnumDto.valueOf(roleStr) }.getOrNull()
-        })
+        UsernameDto(
+            id,
+            name,
+            roles.mapNotNull { roleStr -> runCatching { RoleEnumDto.valueOf(roleStr) }.getOrNull() },
+        )
 
     fun listUsersWithRoles(): List<UserWithRolesDto> = userService.listUsersWithRoles().map { it.toDto() }
 
