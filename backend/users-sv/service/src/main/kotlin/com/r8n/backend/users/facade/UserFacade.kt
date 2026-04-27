@@ -64,6 +64,7 @@ class UserFacade(
     private fun RoleEnumDto.toPersistence(): RoleEnumPersistence =
         when (this) {
             RoleEnumDto.MODERATOR -> RoleEnumPersistence.MODERATOR
+            RoleEnumDto.ADMIN -> RoleEnumPersistence.ADMIN
             else -> throw org.springframework.web.server.ResponseStatusException(
                 org.springframework.http.HttpStatus.BAD_REQUEST,
                 "Role $this cannot be assigned via this endpoint",
