@@ -42,4 +42,19 @@ class OpinionListFacade(
         removedListId: UUID,
     ): OpinionListDto =
         opinionListMapper.toDto(opinionListService.unsyncWithOpinionList(userId, existingListId, removedListId))
+
+    fun linkOpinion(
+        userId: UUID,
+        listId: UUID,
+        opinionId: UUID,
+        weight: Double,
+    ): OpinionListDto =
+        opinionListMapper.toDto(opinionListService.linkOpinion(userId, listId, opinionId, weight))
+
+    fun unlinkOpinion(
+        userId: UUID,
+        listId: UUID,
+        opinionId: UUID,
+    ): OpinionListDto =
+        opinionListMapper.toDto(opinionListService.unlinkOpinion(userId, listId, opinionId))
 }

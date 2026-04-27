@@ -10,6 +10,7 @@ import com.r8n.backend.opinions.lists.domain.OpinionListPrivacyEnum
 import com.r8n.backend.opinions.lists.domain.OpinionSummary
 import com.r8n.backend.opinions.lists.persistence.OpinionListPersistence
 import com.r8n.backend.opinions.lists.persistence.OpinionListSyncPersistence
+import com.r8n.backend.opinions.lists.persistence.OpinionsToOpinionListsPersistence
 import com.r8n.backend.opinions.opinions.domain.WeightedOpinionReference
 import com.r8n.backend.opinions.opinions.service.OpinionService
 import org.springframework.data.domain.Page
@@ -90,6 +91,50 @@ class OpinionListService(
         return list.name
     }
 
+    @Transactional
+    fun linkOpinion(
+        userId: UUID,
+        listId: UUID,
+        opinionId: UUID,
+        weight: Double,
+    ): OpinionList {
+        if (!accessService.ownsOpinionList(userId, listId)) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't own this list")
+        }
+        // check opinion access
+        opinionService.getOpinion(opinionId, userId)
+
+        val existing = opinionsAssignmentRepository.findAllByOpinionList(listId).find { it.opinion == opinionId }
+        if (existing != null) {
+            existing.weight = weight
+            opinionsAssignmentRepository.save(existing)
+        } else {
+            opinionsAssignmentRepository.save(
+                OpinionsToOpinionListsPersistence(
+                    opinionList = listId,
+                    opinion = opinionId,
+                    weight = weight,
+                )
+            )
+        }
+        return getList(listId, userId)
+    }
+
+    @Transactional
+    fun unlinkOpinion(
+        userId: UUID,
+        listId: UUID,
+        opinionId: UUID,
+    ): OpinionList {
+        if (!accessService.ownsOpinionList(userId, listId)) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't own this list")
+        }
+        val assignments = opinionsAssignmentRepository.findAllByOpinionList(listId)
+        val toRemove = assignments.filter { it.opinion == opinionId }
+        opinionsAssignmentRepository.deleteAll(toRemove)
+        return getList(listId, userId)
+    }
+
     fun getList(
         listId: UUID,
         requesterId: UUID,
@@ -107,10 +152,14 @@ class OpinionListService(
 
         val assignments = opinionsAssignmentRepository.findAllByOpinionList(listId)
         val syncs = syncRepository.findAllByDestinationList(listId)
+
+        val opinionWeightsInDestList = assignments.associate { it.opinion to it.weight }
+
         val syncedAssignments =
             syncs.flatMap { sync ->
                 opinionsAssignmentRepository.findAllByOpinionList(sync.sourceList).map { asmt ->
-                    asmt.copy(weight = asmt.weight * sync.weight)
+                    val requesterWeight = opinionWeightsInDestList[asmt.opinion] ?: 1.0
+                    asmt.copy(weight = requesterWeight * sync.weight)
                 }
             }
 

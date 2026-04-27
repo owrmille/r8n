@@ -25,6 +25,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.testcontainers.junit.jupiter.Container
@@ -94,6 +95,26 @@ class OpinionListSyncIntegrationTest {
         whenever(usersInternalApi.isAnyModerator(any())).thenReturn(false)
         whenever(usersInternalApi.isHumanModerator(any())).thenReturn(false)
         whenever(usersInternalApi.getUserName(any())).thenReturn("Anna Müller")
+
+        // Clean up syncs and links created in tests
+        val l11Id = UUID.fromString("80000000-0000-0000-0000-000000000111")
+        val l31Id = UUID.fromString("80000000-0000-0000-0000-000000000311")
+        val r31Id = UUID.fromString("40000000-0000-0000-0000-000000000031")
+
+        // Reset sync weight to 1.0 (preseeded value)
+        mockMvc.perform(
+            post("/api/opinion-lists/$l11Id/sync")
+                .header("Authorization", requesterToken)
+                .param("addedListId", l31Id.toString())
+                .param("weight", "1.0")
+        )
+
+        // Remove r31 from l11 if it was added
+        mockMvc.perform(
+            patch("/api/opinion-lists/$l11Id/unlink")
+                .header("Authorization", requesterToken)
+                .param("opinionId", r31Id.toString())
+        )
     }
 
     @Test
@@ -387,5 +408,56 @@ class OpinionListSyncIntegrationTest {
         // Currently it's likely (1.1*1.0 + 3.1*0.5) = 2.65 because it's just a sum in the code.
         // Let's see what it actually is.
         assertThat(s1.componentMark).isCloseTo(1.7666666666666666, org.assertj.core.api.Assertions.within(0.000000000000001))
+    }
+
+    @Test
+    fun `requester weight override works`() {
+        // r31 is in l31 with weight 1.0 (preseeded)
+        // Anna syncs l31 with weight 0.5.
+        // weight = 1.0 (requester default) * 0.5 (sync) = 0.5
+
+        // Now Anna adds r31 to HER list l11 with weight 0.2
+        val u1Token = "Bearer " + serviceTokenService.generateAccessToken(ANNA_ID, listOf("USER"))
+        val l11Id = UUID.fromString("80000000-0000-0000-0000-000000000111")
+        val l31Id = UUID.fromString("80000000-0000-0000-0000-000000000311")
+        val r31Id = UUID.fromString("40000000-0000-0000-0000-000000000031")
+
+        // First, set sync weight to 0.5
+        mockMvc.perform(
+            post("/api/opinion-lists/$l11Id/sync")
+                .header("Authorization", u1Token)
+                .param("addedListId", l31Id.toString())
+                .param("weight", "0.5")
+        ).andExpect(status().isOk)
+
+        // Add r31 to l11 with weight 0.2
+        mockMvc.perform(
+            post("/api/opinion-lists/$l11Id/link")
+                .header("Authorization", u1Token)
+                .param("opinionId", r31Id.toString())
+                .param("weight", "0.2")
+        ).andExpect(status().isOk)
+
+        val result = mockMvc.perform(get("/api/opinion-lists/$l11Id").header("Authorization", u1Token))
+            .andExpect(status().isOk)
+            .andReturn()
+
+        val list = objectMapper.readValue(result.response.contentAsString, OpinionListDto::class.java)
+        val s1 = list.opinionSummaries.find { it.subjectName == "Subject 1" }!!
+
+        // Expected weights for r31:
+        // 1. Direct: 0.2
+        // 2. Synced: 0.2 (requester weight) * 0.5 (sync weight) = 0.1
+        // Total weight contribution for r31 = 0.3
+        
+        val r31References = s1.opinions.filter { it.opinion == r31Id }
+        assertThat(r31References).hasSize(2)
+        assertThat(r31References.map { it.weight }).containsExactlyInAnyOrder(0.2, 0.1)
+        
+        // r11 is also there: mark 1.1, weight 1.0 (direct)
+        // componentMark = (1.1 * 1.0 + 3.1 * 0.3) / (1.0 + 0.3)
+        // (1.1 + 0.93) / 1.3 = 2.03 / 1.3 = 1.5615384615384615
+        
+        assertThat(s1.componentMark).isCloseTo(1.5615384615384615, org.assertj.core.api.Assertions.within(0.000000000000001))
     }
 }

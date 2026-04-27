@@ -67,6 +67,10 @@ interface OpinionListsApi {
         listId: UUID,
         @RequestParam(required = true)
         opinionId: UUID,
+        @RequestParam(defaultValue = "1.0")
+        @Min(0)
+        @Max(1)
+        weight: Double,
     ): OpinionListDto
 
     @PatchMapping(UNLINK_PATH)

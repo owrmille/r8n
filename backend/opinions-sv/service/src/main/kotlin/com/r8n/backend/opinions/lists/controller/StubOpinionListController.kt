@@ -40,13 +40,14 @@ class StubOpinionListController(
     override fun linkOpinion(
         listId: UUID,
         opinionId: UUID,
-    ) = OpinionListTestDataFactory.getList(listId)
+        weight: Double,
+    ) = opinionListFacade.linkOpinion(getCurrentUserId(), listId, opinionId, weight)
 
     @PreAuthorize(IS_USER)
     override fun unlinkOpinion(
         listId: UUID,
         opinionId: UUID,
-    ) = OpinionListTestDataFactory.getList(listId)
+    ) = opinionListFacade.unlinkOpinion(getCurrentUserId(), listId, opinionId)
 
     @PreAuthorize(IS_USER)
     override fun search(
