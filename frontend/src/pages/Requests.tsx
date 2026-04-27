@@ -103,7 +103,7 @@ const Requests = () => {
                 onClick={() => setShowApproved(!showApproved)}
               >
                 {showApproved ? <EyeOff className="h-3 w-3" /> : <Check className="h-3 w-3" />}
-                {showApproved ? "Hide approved" : "Has access"} ({approvedItems.length})
+                {showApproved ? "Hide access granted" : "Show access granted"} ({approvedItems.length})
               </Button>
             )}
             {hiddenItems.length > 0 && (
@@ -222,7 +222,7 @@ const Requests = () => {
 
         {showApproved && approvedItems.length > 0 && (
           <div className="mt-6">
-            <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground/50 mb-2 px-1">Has access</p>
+            <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground/50 mb-2 px-1">Access granted</p>
             <div className="rounded-2xl border border-dashed border-border overflow-hidden opacity-70">
               {approvedItems.map((req) => (
                 <div
@@ -233,7 +233,7 @@ const Requests = () => {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{req.requesterName}</p>
                     <p className="text-xs text-muted-foreground truncate">
-                      Has access to: <span className="font-medium text-foreground/70">{req.opinionListName}</span>
+                      Access granted to: <span className="font-medium text-foreground/70">{req.opinionListName}</span>
                     </p>
                   </div>
                   <span className="text-[10px] text-muted-foreground/60 shrink-0">{formatRelativeTime(req.timestamp)}</span>
