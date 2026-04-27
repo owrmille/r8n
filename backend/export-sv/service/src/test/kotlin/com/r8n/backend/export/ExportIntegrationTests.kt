@@ -6,8 +6,11 @@ import com.r8n.backend.export.api.ExportApi
 import com.r8n.backend.export.api.dto.ExportStateDto
 import com.r8n.backend.export.api.dto.ExportStatus
 import com.r8n.backend.export.api.dto.UserCompleteDataDto
-import com.r8n.backend.mock.api.MessagingApi
-import com.r8n.backend.mock.stub.MiscTestFactory
+import com.r8n.backend.messaging.api.MessagingApi
+import com.r8n.backend.messaging.api.dto.SupportThreadDto
+import com.r8n.backend.messaging.api.dto.messaging.SupportMessageDto
+import com.r8n.backend.messaging.api.dto.messaging.SupportParticipantRoleEnumDto
+import com.r8n.backend.messaging.api.dto.messaging.SupportThreadSummaryDto
 import com.r8n.backend.opinions.api.access.IncomingAccessRequestApi
 import com.r8n.backend.opinions.api.access.OutgoingAccessRequestApi
 import com.r8n.backend.opinions.api.access.dto.AccessRequestDto
@@ -80,7 +83,12 @@ class ExportIntegrationTests {
         val opinions = OpinionListTestDataFactory.getList()
         val incomingAccessRequests = AccessRequestsTestDataFactory.get()
         val outgoingAccessRequests = AccessRequestsTestDataFactory.get()
-        val supportMessages = MiscTestFactory.getSupportMessage()
+        val supportThreadId = UUID.fromString("00000000-0000-0000-0000-000000000001")
+        val supportMessages =
+            SupportThreadDto(
+                supportThreadId,
+                listOf("I have issue with post"),
+            )
     }
 
     @Autowired
@@ -142,8 +150,31 @@ class ExportIntegrationTests {
         whenever(outgoingAccessRequestClient.get(anyOrNull(), anyOrNull(), anyOrNull(), any())).thenReturn(
             PageImpl(listOf(outgoingAccessRequests)).toResponse(),
         )
-        whenever(messageClient.getSupportThreads()).thenReturn(
-            PageImpl(listOf(supportMessages)).toResponse(),
+        whenever(messageClient.getSupportThreadSummaries(any())).thenReturn(
+            PageImpl(
+                listOf(
+                    SupportThreadSummaryDto(
+                        id = supportThreadId,
+                        ownerUserId = UUID.fromString(USER_ID),
+                        createdAt = timestamp,
+                        lastMessageAt = timestamp,
+                    ),
+                ),
+            ).toResponse(),
+        )
+        whenever(messageClient.getSupportThreadMessages(any(), any())).thenReturn(
+            PageImpl(
+                listOf(
+                    SupportMessageDto(
+                        id = UUID.fromString("00000000-0000-0000-0000-000000000002"),
+                        threadId = supportThreadId,
+                        authorUserId = UUID.fromString(USER_ID),
+                        authorRole = SupportParticipantRoleEnumDto.USER,
+                        text = "I have issue with post",
+                        createdAt = timestamp,
+                    ),
+                ),
+            ).toResponse(),
         )
     }
 

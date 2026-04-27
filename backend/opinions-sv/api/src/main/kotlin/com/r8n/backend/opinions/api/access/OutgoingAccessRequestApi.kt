@@ -4,6 +4,7 @@ import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.opinions.api.access.dto.AccessRequestDto
 import com.r8n.backend.opinions.api.access.dto.RequestStatusEnumDto
+import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -27,6 +28,7 @@ interface OutgoingAccessRequestApi {
         since: Instant?,
         @RequestParam(required = false)
         status: RequestStatusEnumDto?,
+        @Valid
         pageable: PageRequestDto,
     ): PageResponseDto<AccessRequestDto>
 

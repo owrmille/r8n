@@ -3,6 +3,7 @@ import { clearSession, setSession } from "@/lib/auth/session";
 import { createHttpClient } from "@/lib/http-client";
 import { createAccessRequestsApi } from "@/lib/api/access-requests";
 import { createAuthApi } from "@/lib/api/auth";
+import { createMessagingApi } from "@/lib/api/messaging";
 import { createOpinionListsApi } from "@/lib/api/opinion-lists";
 import { createOpinionsApi } from "@/lib/api/opinions";
 import { createSelectorsApi } from "@/lib/api/selectors";
@@ -582,10 +583,6 @@ describe("API modules", () => {
       selector: ".review-card",
       subjectId: "22222222-2222-2222-2222-222222222222",
     });
-    await selectorsApi.disagree({
-      comment: "Selector is outdated",
-      selectorId: "33333333-3333-3333-3333-333333333333",
-    });
 
     expect(fetchMock.mock.calls[0][0]).toBe(
       "/api/selectors/for-url?page=0&size=20&url=https%3A%2F%2Fexample.com%2Fcafe",
@@ -596,11 +593,26 @@ describe("API modules", () => {
     expect(fetchMock.mock.calls[2][0]).toBe(
       "/api/selectors/for-subject/22222222-2222-2222-2222-222222222222?selector=.review-card",
     );
-    expect(fetchMock.mock.calls[3][0]).toBe(
-      "/api/selectors/33333333-3333-3333-3333-333333333333/disagree?comment=Selector+is+outdated",
-    );
-    expect(fetchMock.mock.calls[3][1]).toEqual(
-      expect.objectContaining({ method: "POST" }),
+  });
+
+  it("matches backend messaging support thread route", async () => {
+    const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(createJsonResponse({})));
+    const client = createHttpClient({
+      baseUrl: "/api",
+      fetchFn: fetchMock,
+    });
+    const messagingApi = createMessagingApi(client);
+
+    await messagingApi.createSupportThread({
+      initialMessage: "Selector is outdated",
+    });
+
+    expect(fetchMock.mock.calls[0][0]).toBe("/api/messaging/support/threads");
+    expect(fetchMock.mock.calls[0][1]).toEqual(
+      expect.objectContaining({
+        body: JSON.stringify({ initialMessage: "Selector is outdated" }),
+        method: "POST",
+      }),
     );
   });
 });
