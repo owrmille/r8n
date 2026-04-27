@@ -21,7 +21,8 @@ import {
 import { useSidebar } from "@/components/ui/use-sidebar";
 
 const mainItems = [
-  { title: "Dashboard", url: "/", icon: Home },
+  // TODO #195: Dashboard is not implemented yet — hide from nav until ready
+  // { title: "Dashboard", url: "/", icon: Home },
   { title: "Discover", url: "/discover", icon: Search },
   { title: "My Lists", url: "/lists", icon: List },
   { title: "Requests", url: "/requests", icon: Bell },
