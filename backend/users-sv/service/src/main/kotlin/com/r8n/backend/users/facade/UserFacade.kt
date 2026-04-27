@@ -31,7 +31,10 @@ class UserFacade(
 ) {
     fun getMyName(userId: UUID): UsernameDto = userService.getMyName(userId).toDto()
 
-    private fun Username.toDto() = UsernameDto(id, name)
+    private fun Username.toDto() =
+        UsernameDto(id, name, roles.mapNotNull { roleStr ->
+            runCatching { RoleEnumDto.valueOf(roleStr) }.getOrNull()
+        })
 
     fun listUsersWithRoles(): List<UserWithRolesDto> = userService.listUsersWithRoles().map { it.toDto() }
 
@@ -58,6 +61,10 @@ class UserFacade(
     private fun RoleEnumDto.toPersistence(): RoleEnumPersistence =
         when (this) {
             RoleEnumDto.MODERATOR -> RoleEnumPersistence.MODERATOR
+            else -> throw org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.BAD_REQUEST,
+                "Role $this cannot be assigned via this endpoint",
+            )
         }
 
     fun getUserProfile(id: UUID) = userService.getProfile(id).toDto()

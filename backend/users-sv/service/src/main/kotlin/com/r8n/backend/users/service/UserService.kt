@@ -2,6 +2,7 @@ package com.r8n.backend.users.service
 
 import com.r8n.backend.users.domain.User
 import com.r8n.backend.users.domain.UserProfile
+import com.r8n.backend.users.domain.UserStatusEnum
 import com.r8n.backend.users.domain.UserWithRoles
 import com.r8n.backend.users.domain.Username
 import com.r8n.backend.users.persistence.RoleEnumPersistence
@@ -68,20 +69,27 @@ class UserService(
         )
     }
 
-    fun getMyName(userId: UUID): Username = Username(userId, getName(userId))
+    fun getMyName(userId: UUID): Username {
+        val dbRoles = userRoleAssignmentRepository.findAllByUser(userId).map { it.role.name }
+        val roles = (listOf("USER") + dbRoles).distinct()
+        return Username(userId, getName(userId), roles)
+    }
 
     fun listUsersWithRoles(): List<UserWithRoles> =
-        userRepository.findAll().map { user ->
-            val pii = piiRepository.findByIdOrNull(user.id)
-            val roles = userRoleAssignmentRepository.findAllByUser(user.id).map { it.role }
-            UserWithRoles(
-                id = user.id,
-                name = pii?.name ?: "Unknown",
-                email = pii?.email ?: "",
-                status = user.status,
-                roles = roles,
-            )
-        }
+        userRepository
+            .findAll()
+            .filter { it.status != UserStatusEnum.DELETED }
+            .map { user ->
+                val pii = piiRepository.findByIdOrNull(user.id)
+                val roles = userRoleAssignmentRepository.findAllByUser(user.id).map { it.role }
+                UserWithRoles(
+                    id = user.id,
+                    name = pii?.name ?: "Unknown",
+                    email = pii?.email ?: "",
+                    status = user.status,
+                    roles = roles,
+                )
+            }
 
     @Transactional
     fun assignRole(
@@ -89,6 +97,12 @@ class UserService(
         userId: UUID,
         role: RoleEnumPersistence,
     ) {
+        val user =
+            userRepository.findByIdOrNull(userId)
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User $userId not found")
+        if (user.status == UserStatusEnum.DELETED) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Cannot assign roles to a deleted user")
+        }
         if (!userRoleAssignmentRepository.existsByUserAndRole(userId, role)) {
             userRoleAssignmentRepository.save(
                 UserRoleAssignmentPersistence(

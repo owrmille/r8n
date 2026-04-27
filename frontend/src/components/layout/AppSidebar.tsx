@@ -26,9 +26,9 @@ const mainItems = [
   { title: "My Lists", url: "/lists", icon: List },
   { title: "Requests", url: "/requests", icon: Bell },
   { title: "Messages", url: "/messages", icon: MessageSquare },
-  { title: "Moderation", url: "/moderation/opinions", icon: ShieldCheck },
-  { title: "User Roles", url: "/moderation/roles", icon: Users },
-];
+  { title: "Moderation", url: "/moderation/opinions", icon: ShieldCheck, roles: ["MODERATOR", "ADMIN"] },
+  { title: "User Roles", url: "/moderation/roles", icon: Users, roles: ["ADMIN"] },
+] as const;
 
 export function AppSidebar() {
   const { state } = useSidebar();
@@ -91,7 +91,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainItems.map((item) => (
+              {mainItems.filter((item) => !("roles" in item) || item.roles.some((r) => me?.roles?.includes(r))).map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink

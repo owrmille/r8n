@@ -2,9 +2,12 @@ import type { HttpClient } from "@/lib/http-client";
 import { httpClient } from "@/lib/http-client";
 import type { Uuid } from "@/lib/api/shared";
 
+export type RoleDto = "USER" | "MODERATOR" | "ADMIN";
+
 export interface UsernameDto {
   id: Uuid;
   name: string;
+  roles: RoleDto[];
 }
 
 export type UserStatusEnumDto =

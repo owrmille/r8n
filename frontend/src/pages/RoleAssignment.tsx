@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Shield, ShieldOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -12,13 +13,17 @@ import {
 import type { UserWithRolesDto } from "@/lib/api/users";
 
 const RoleAssignment = () => {
-  const { data: users = [], isLoading } = useUsersWithRoles();
-  const assignModerator = useAssignModeratorMutation();
-  const revokeModerator = useRevokeModeratorMutation();
-
-  const isBusy = assignModerator.isPending || revokeModerator.isPending;
+  const { data: users = [], isLoading, isError } = useUsersWithRoles();
+  const [pendingUserId, setPendingUserId] = useState<string | null>(null);
+  const assignModerator = useAssignModeratorMutation({
+    onSettled: () => setPendingUserId(null),
+  });
+  const revokeModerator = useRevokeModeratorMutation({
+    onSettled: () => setPendingUserId(null),
+  });
 
   const handleToggle = (user: UserWithRolesDto) => {
+    setPendingUserId(user.id);
     if (user.isModerator) {
       revokeModerator.mutate(user.id);
     } else {
@@ -44,6 +49,10 @@ const RoleAssignment = () => {
 
       {isLoading ? (
         <div className="py-16 text-center text-sm text-muted-foreground">Loading users…</div>
+      ) : isError ? (
+        <div className="py-16 text-center text-sm text-destructive">
+          Failed to load users. You may not have permission to view this page.
+        </div>
       ) : (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -72,7 +81,7 @@ const RoleAssignment = () => {
                   variant={user.isModerator ? "outline" : "default"}
                   size="sm"
                   className="shrink-0 rounded-xl"
-                  disabled={isBusy}
+                  disabled={pendingUserId === user.id}
                   onClick={() => handleToggle(user)}
                 >
                   {user.isModerator ? (
