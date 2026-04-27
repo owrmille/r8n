@@ -481,12 +481,11 @@ class AuthIntegrationTest {
     private fun validRegisterRequest(
         email: String,
         name: String = "User ${email.substringBefore("@").take(40)}",
-    ) =
-        RegisterRequestDto(
-            name = name,
-            email = email,
-            password = REGISTRATION_PASSWORD,
-            privacyPolicyAccepted = true,
-            termsOfServiceAccepted = true,
-        )
+    ) = RegisterRequestDto(
+        name = name,
+        email = email,
+        password = REGISTRATION_PASSWORD,
+        privacyPolicyAccepted = true,
+        termsOfServiceAccepted = true,
+    )
 }

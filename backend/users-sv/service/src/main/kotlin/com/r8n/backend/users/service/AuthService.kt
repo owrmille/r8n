@@ -209,16 +209,25 @@ class AuthService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Password is required")
         }
         if (password.length < PASSWORD_MIN_LENGTH) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at least $PASSWORD_MIN_LENGTH characters")
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Password must be at least $PASSWORD_MIN_LENGTH characters",
+            )
         }
         if (password.length > PASSWORD_MAX_LENGTH) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be $PASSWORD_MAX_LENGTH characters or fewer")
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Password must be $PASSWORD_MAX_LENGTH characters or fewer",
+            )
         }
     }
 
     private fun validateRegistrationConsents(request: RegisterRequestDto) {
         if (!request.privacyPolicyAccepted || !request.termsOfServiceAccepted) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Privacy Policy and Terms of Service must be accepted")
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Privacy Policy and Terms of Service must be accepted",
+            )
         }
     }
 
