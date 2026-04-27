@@ -8,6 +8,7 @@ spring:
     enabled: true
     change-log: db/changelog/messaging/db.changelog-master.sql
     default-schema: messaging
+    liquibase-schema: public
     contexts: test
   datasource:
     driver-class-name: org.postgresql.Driver
