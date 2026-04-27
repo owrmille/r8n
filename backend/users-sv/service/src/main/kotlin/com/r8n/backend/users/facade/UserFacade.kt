@@ -58,6 +58,7 @@ class UserFacade(
             email = email,
             status = status.toDto(),
             isModerator = roles.contains(RoleEnumPersistence.MODERATOR),
+            isAdmin = roles.contains(RoleEnumPersistence.ADMIN),
         )
 
     private fun RoleEnumDto.toPersistence(): RoleEnumPersistence =
