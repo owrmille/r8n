@@ -170,7 +170,11 @@ CREATE INDEX idx_api_keys_key_identifier ON users.api_keys(key_identifier);
 INSERT INTO users.api_keys (id, user_id, key_identifier, key_hash, name, created_at)
 VALUES ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'test-key', '$2a$12$lxo9e8RbWABER4/mkU./s.njgArpJleAB9Vdq7C7rlNWIRYEw0Oym', 'Test Key', '2024-01-01T12:00:00Z');
 
---changeset iatopchu:V10_seed_support_role context:local,test
+--changeset ditabisko:V10_seed_test_user_roles context:local,test
+INSERT INTO users.users_role_assignments (id, "user", role, granted_by, timestamp)
+VALUES ('a0a0a0a0-a0a0-a0a0-a0a0-a0a0a0a0a0a0', '00000000-0000-0000-0000-000000000000', 'MODERATOR', '00000000-0000-0000-0000-000000000000', '2024-01-01T12:00:00Z');
+
+--changeset iatopchu:V11_seed_support_role context:local,test
 --preconditions onFail:MARK_RAN
 --precondition-sql-check expectedResult:0 SELECT COUNT(*) FROM users.users_role_assignments WHERE id = '77777777-7777-7777-7777-777777777777';
 INSERT INTO users.users_role_assignments (id, "user", role, granted_by, timestamp)

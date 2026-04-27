@@ -26,7 +26,7 @@ class UserFacade(
 ) {
     fun getMyName(userId: UUID): UsernameDto = userService.getMyName(userId).toDto()
 
-    private fun Username.toDto() = UsernameDto(id, name)
+    private fun Username.toDto() = UsernameDto(id, name, roles)
 
     fun getUserProfile(id: UUID) = userService.getProfile(id).toDto()
 
