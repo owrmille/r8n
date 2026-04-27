@@ -155,7 +155,7 @@ export function useAssignModeratorMutation(
       ...options?.meta,
     } as ApiErrorMeta,
     onSuccess: (data, variables, context) => {
-      invalidate(usersKeys.withRoles);
+      invalidate(usersKeys.withRoles());
       options?.onSuccess?.(data, variables, context);
     },
   });
@@ -174,7 +174,7 @@ export function useRevokeModeratorMutation(
       ...options?.meta,
     } as ApiErrorMeta,
     onSuccess: (data, variables, context) => {
-      invalidate(usersKeys.withRoles);
+      invalidate(usersKeys.withRoles());
       options?.onSuccess?.(data, variables, context);
     },
   });
@@ -193,7 +193,7 @@ export function useAssignAdminMutation(
       ...options?.meta,
     } as ApiErrorMeta,
     onSuccess: (data, variables, context) => {
-      invalidate(usersKeys.withRoles);
+      invalidate(usersKeys.withRoles());
       options?.onSuccess?.(data, variables, context);
     },
   });
@@ -212,7 +212,7 @@ export function useRevokeAdminMutation(
       ...options?.meta,
     } as ApiErrorMeta,
     onSuccess: (data, variables, context) => {
-      invalidate(usersKeys.withRoles);
+      invalidate(usersKeys.withRoles());
       options?.onSuccess?.(data, variables, context);
     },
   });
