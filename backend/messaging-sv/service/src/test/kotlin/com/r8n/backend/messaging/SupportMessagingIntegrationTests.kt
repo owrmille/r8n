@@ -33,6 +33,7 @@ import java.util.UUID
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 class SupportMessagingIntegrationTests {
     private companion object {
+        @Suppress("unused") // used to store test database container
         @Container
         @ServiceConnection
         val postgres: PostgreSQLContainer =
@@ -256,7 +257,7 @@ class SupportMessagingIntegrationTests {
                 .andReturn()
 
         val body = objectMapper.readTree(result.response.contentAsString)
-        return UUID.fromString(body["id"].asText())
+        return UUID.fromString(body["id"].asString())
     }
 
     private fun addMessage(

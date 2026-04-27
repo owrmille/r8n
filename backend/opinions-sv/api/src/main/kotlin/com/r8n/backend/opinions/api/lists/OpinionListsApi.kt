@@ -6,6 +6,11 @@ import com.r8n.backend.opinions.api.lists.dto.OpinionListDto
 import com.r8n.backend.opinions.api.lists.dto.OpinionListPrivacyEnumDto
 import com.r8n.backend.opinions.api.lists.dto.OpinionListSummaryDto
 import jakarta.validation.Valid
+import jakarta.validation.constraints.Max
+import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -13,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import java.util.UUID
 
+@Validated
 interface OpinionListsApi {
     companion object {
         private const val ROOT_PATH = "/api/opinion-lists"
@@ -43,6 +49,8 @@ interface OpinionListsApi {
         @PathVariable
         listId: UUID,
         @RequestParam(required = true)
+        @NotBlank
+        @Size(min = 1, max = 255)
         name: String,
     ): OpinionListDto
 
@@ -60,6 +68,10 @@ interface OpinionListsApi {
         listId: UUID,
         @RequestParam(required = true)
         opinionId: UUID,
+        @RequestParam(defaultValue = "1.0")
+        @Min(0)
+        @Max(1)
+        weight: Double,
     ): OpinionListDto
 
     @PatchMapping(UNLINK_PATH)
@@ -88,6 +100,10 @@ interface OpinionListsApi {
         existingListId: UUID,
         @RequestParam(required = true)
         addedListId: UUID,
+        @RequestParam(defaultValue = "1.0")
+        @Min(0)
+        @Max(1)
+        weight: Double,
     ): OpinionListDto
 
     @PostMapping(UNSYNC_PATH)
