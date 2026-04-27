@@ -9,6 +9,7 @@ import com.r8n.backend.messaging.persistence.SupportMessagePersistence
 import com.r8n.backend.messaging.persistence.SupportParticipantRoleEnumPersistence
 import com.r8n.backend.messaging.service.SupportActor
 import com.r8n.backend.messaging.service.SupportMessagingService
+import com.r8n.backend.messaging.service.SupportThreadSummary
 import com.r8n.backend.messaging.service.SupportThreadWithMessages
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -22,8 +23,7 @@ class SupportMessagingFacade(
     fun getSupportThreadSummaries(
         actor: SupportActor,
         pageable: Pageable,
-    ): Page<SupportThreadSummaryDto> =
-        supportMessagingService.listThreadWithMessages(actor, pageable).map { it.toSummaryDto() }
+    ): Page<SupportThreadSummaryDto> = supportMessagingService.listThreadSummaries(actor, pageable).map { it.toDto() }
 
     fun createSupportThread(
         actor: SupportActor,
@@ -49,6 +49,14 @@ class SupportMessagingFacade(
             ownerUserId = thread.ownerUserId,
             createdAt = requireNotNull(messages.minOfOrNull { it.createdAt }),
             lastMessageAt = messages.maxOfOrNull { it.createdAt },
+        )
+
+    private fun SupportThreadSummary.toDto(): SupportThreadSummaryDto =
+        SupportThreadSummaryDto(
+            id = id,
+            ownerUserId = ownerUserId,
+            createdAt = createdAt,
+            lastMessageAt = lastMessageAt,
         )
 
     private fun SupportMessagePersistence.toDto(): SupportMessageDto =

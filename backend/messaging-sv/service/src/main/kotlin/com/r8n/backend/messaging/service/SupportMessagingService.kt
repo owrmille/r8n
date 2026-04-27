@@ -5,6 +5,7 @@ import com.r8n.backend.messaging.persistence.SupportParticipantRoleEnumPersisten
 import com.r8n.backend.messaging.persistence.SupportThreadPersistence
 import com.r8n.backend.messaging.provider.database.SupportMessageRepository
 import com.r8n.backend.messaging.provider.database.SupportThreadRepository
+import com.r8n.backend.messaging.provider.database.SupportThreadSummaryProjection
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
@@ -54,6 +55,19 @@ class SupportMessagingService(
                 },
             pageable = pageable,
         )
+
+    fun listThreadSummaries(
+        actor: SupportActor,
+        pageable: Pageable,
+    ): Page<SupportThreadSummary> =
+        supportThreadRepository
+            .findVisibleSummariesOrderByLastMessageAtDesc(
+                ownerUserId =
+                    actor.userId.takeUnless {
+                        actor.role == SupportParticipantRoleEnumPersistence.SUPPORT
+                    },
+                pageable = pageable,
+            ).map { it.toSummary() }
 
     @Transactional
     fun createThread(
@@ -143,3 +157,18 @@ data class SupportThreadWithMessages(
     val thread: SupportThreadPersistence,
     val messages: List<SupportMessagePersistence>,
 )
+
+data class SupportThreadSummary(
+    val id: UUID,
+    val ownerUserId: UUID,
+    val createdAt: Instant,
+    val lastMessageAt: Instant,
+)
+
+private fun SupportThreadSummaryProjection.toSummary(): SupportThreadSummary =
+    SupportThreadSummary(
+        id = id,
+        ownerUserId = ownerUserId,
+        createdAt = createdAt,
+        lastMessageAt = lastMessageAt,
+    )
