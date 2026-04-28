@@ -2,6 +2,8 @@ package com.r8n.backend.opinions.lists.controller
 
 import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.utils.toResponse
+import com.r8n.backend.opinions.access.database.AccessRequestRepository
+import com.r8n.backend.opinions.access.domain.RequestStatusEnum
 import com.r8n.backend.opinions.api.lists.OpinionListsApi
 import com.r8n.backend.opinions.api.lists.dto.OpinionListPrivacyEnumDto
 import com.r8n.backend.opinions.api.lists.dto.OpinionListSummaryDto
@@ -17,6 +19,7 @@ import java.util.UUID
 @RestController
 class StubOpinionListController(
     private val opinionListFacade: OpinionListFacade,
+    private val accessRequestRepository: AccessRequestRepository,
 ) : OpinionListsApi {
     @PreAuthorize(IS_USER)
     override fun getListSummary(listId: UUID): OpinionListSummaryDto = OpinionListTestDataFactory.getListSummary(listId)
@@ -55,9 +58,14 @@ class StubOpinionListController(
         authorId: UUID?,
         authorNameSubstring: String?,
         pageable: PageRequestDto,
-    ) = PageImpl(
-        listOf(OpinionListTestDataFactory.getListSummary()),
-    ).toResponse()
+    ): com.r8n.backend.core.api.PageResponseDto<OpinionListSummaryDto> {
+        // Only implement search by name substring as per scope
+        if (nameSubstring != null && nameSubstring.isNotBlank()) {
+            return opinionListFacade.searchOpinionListsByName(nameSubstring, pageable)
+        }
+        // Return empty page if no search criteria provided
+        return PageImpl<OpinionListSummaryDto>(emptyList()).toResponse()
+    }
 
     @PreAuthorize(IS_USER)
     override fun syncWithOpinionList(
@@ -73,5 +81,30 @@ class StubOpinionListController(
     ) = opinionListFacade.unsyncWithOpinionList(getCurrentUserId(), existingListId, removedListId)
 
     @PreAuthorize(IS_USER)
-    override fun getMine(pageable: PageRequestDto) = search(null, null, null, pageable)
+    override fun getMine(pageable: PageRequestDto): com.r8n.backend.core.api.PageResponseDto<OpinionListSummaryDto> {
+        val fullLists = opinionListFacade.getListsFull(getCurrentUserId(), pageable)
+        // Convert full DTOs to summary DTOs
+        return com.r8n.backend.core.api.PageResponseDto(
+            items =
+                fullLists.items.map { full ->
+                    val grantedAccessCount =
+                        accessRequestRepository.countByListAndStatus(
+                            full.id,
+                            RequestStatusEnum.ACCEPTED,
+                        )
+                    OpinionListSummaryDto(
+                        listId = full.id,
+                        listName = full.listName,
+                        owner = full.owner,
+                        ownerName = full.ownerName,
+                        opinionsCount = full.opinionSummaries.size.toLong(),
+                        grantedAccessCount = grantedAccessCount.toInt(),
+                        privacy = full.privacy,
+                    )
+                },
+            total = fullLists.total,
+            page = fullLists.page,
+            size = fullLists.size,
+        )
+    }
 }
