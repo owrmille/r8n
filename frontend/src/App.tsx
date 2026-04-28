@@ -31,8 +31,10 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = createQueryClient();
+const isE2eAuthBypassEnabled =
+  import.meta.env.DEV && import.meta.env.VITE_E2E_BYPASS_AUTH === "true";
 
-if (import.meta.env.VITE_E2E_BYPASS_AUTH === "true") {
+if (isE2eAuthBypassEnabled) {
   seedE2eQueryData(queryClient);
 }
 

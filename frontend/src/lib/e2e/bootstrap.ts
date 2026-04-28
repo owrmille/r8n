@@ -12,12 +12,7 @@ const E2E_MODERATION_REQUEST = {
   pageable: {
     page: 0,
     size: 50,
-    sort: [
-      {
-        property: "timestamp",
-        direction: "DESC" as const,
-      },
-    ],
+    sort: [],
   },
 };
 

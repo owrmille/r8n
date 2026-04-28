@@ -83,12 +83,7 @@ describe("OpinionModeration", () => {
       pageable: {
         page: 0,
         size: 50,
-        sort: [
-          {
-            property: "timestamp",
-            direction: "DESC",
-          },
-        ],
+        sort: [],
       },
     });
     expect(screen.getByText("Espresso Lab Mitte")).toBeInTheDocument();
