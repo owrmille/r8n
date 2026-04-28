@@ -1,5 +1,5 @@
 import type { QueryClient } from "@tanstack/react-query";
-import type { OpinionDto } from "@/lib/api/opinions";
+import type { ModerationDecisionDto, OpinionDto } from "@/lib/api/opinions";
 import type { PageResponseDto } from "@/lib/api/shared";
 import type { UsernameDto } from "@/lib/api/users";
 import { setSession } from "@/lib/auth/session";
@@ -46,6 +46,13 @@ const e2eModerationQueue: PageResponseDto<OpinionDto> = {
   total: 1,
 };
 
+const e2eModerationDecisions: PageResponseDto<ModerationDecisionDto> = {
+  items: [],
+  page: 0,
+  size: 20,
+  total: 0,
+};
+
 export function seedE2eQueryData(queryClient: QueryClient): void {
   setSession({
     accessToken: "e2e-access-token",
@@ -56,5 +63,9 @@ export function seedE2eQueryData(queryClient: QueryClient): void {
   queryClient.setQueryData(
     opinionsKeys.moderation(E2E_MODERATION_REQUEST),
     e2eModerationQueue,
+  );
+  queryClient.setQueryData(
+    opinionsKeys.moderationDecisions({ pageable: { page: 0, size: 20, sort: [] } }),
+    e2eModerationDecisions,
   );
 }

@@ -1,21 +1,24 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import OpinionModeration from "@/pages/OpinionModeration";
-import type { OpinionDto } from "@/lib/api/opinions";
+import type { ModerationDecisionDto, OpinionDto } from "@/lib/api/opinions";
 import type { PageResponseDto } from "@/lib/api/shared";
 import {
   useApproveOpinionMutation,
+  useModerationDecisions,
   useModerationOpinions,
   useRejectOpinionMutation,
 } from "@/lib/server-state/hooks/opinions";
 
 vi.mock("@/lib/server-state/hooks/opinions", () => ({
   useApproveOpinionMutation: vi.fn(),
+  useModerationDecisions: vi.fn(),
   useModerationOpinions: vi.fn(),
   useRejectOpinionMutation: vi.fn(),
 }));
 
 const mockUseModerationOpinions = vi.mocked(useModerationOpinions);
+const mockUseModerationDecisions = vi.mocked(useModerationDecisions);
 const mockUseApproveOpinionMutation = vi.mocked(useApproveOpinionMutation);
 const mockUseRejectOpinionMutation = vi.mocked(useRejectOpinionMutation);
 
@@ -38,7 +41,21 @@ const pendingOpinion: OpinionDto = {
   timestamp: new Date(Date.now() - 10 * 60_000).toISOString(),
 };
 
-function pageResponse(items: OpinionDto[]): PageResponseDto<OpinionDto> {
+const rejectedDecision: ModerationDecisionDto = {
+  action: "REJECTED",
+  createdAt: new Date(Date.now() - 5 * 60_000).toISOString(),
+  id: "decision-1",
+  moderatorId: "moderator-1",
+  moderatorName: "Morgan Moderator",
+  newStatus: "REJECTED",
+  opinionId: "opinion-2",
+  ownerName: "Rejected Reviewer",
+  previousStatus: "PENDING_PREMODERATION",
+  reason: "Needs factual support.",
+  subjectName: "Rejected Espresso",
+};
+
+function pageResponse<TItem>(items: TItem[]): PageResponseDto<TItem> {
   return {
     items,
     page: 0,
@@ -58,11 +75,23 @@ function mockModerationQuery(overrides: Record<string, unknown> = {}) {
   } as ReturnType<typeof useModerationOpinions>);
 }
 
+function mockDecisionQuery(overrides: Record<string, unknown> = {}) {
+  mockUseModerationDecisions.mockReturnValue({
+    data: pageResponse([rejectedDecision]),
+    error: null,
+    isError: false,
+    isLoading: false,
+    refetch,
+    ...overrides,
+  } as ReturnType<typeof useModerationDecisions>);
+}
+
 describe("OpinionModeration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
     mockModerationQuery();
+    mockDecisionQuery();
     mockUseApproveOpinionMutation.mockReturnValue({
       isPending: false,
       mutateAsync: approveMutateAsync,
@@ -91,7 +120,16 @@ describe("OpinionModeration", () => {
     expect(screen.getByText(/Consistent coffee quality/)).toBeInTheDocument();
     expect(screen.getByText(/Receipt from 2026-04-12/)).toBeInTheDocument();
     expect(screen.getByText("1 pending")).toBeInTheDocument();
-    expect(screen.queryByText("Recent decisions")).not.toBeInTheDocument();
+    expect(screen.getByText("Recent decisions")).toBeInTheDocument();
+    expect(screen.getByText("Rejected Espresso")).toBeInTheDocument();
+    expect(screen.getByText("Needs factual support.")).toBeInTheDocument();
+    expect(mockUseModerationDecisions).toHaveBeenCalledWith({
+      pageable: {
+        page: 0,
+        size: 20,
+        sort: [],
+      },
+    });
   });
 
   it("shows loading, empty, and error states", () => {

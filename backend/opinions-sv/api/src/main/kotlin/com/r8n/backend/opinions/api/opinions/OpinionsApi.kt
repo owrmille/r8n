@@ -2,6 +2,7 @@ package com.r8n.backend.opinions.api.opinions
 
 import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
+import com.r8n.backend.opinions.api.opinions.dto.ModerationDecisionDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionStatusEnumDto
 import com.r8n.backend.opinions.api.opinions.dto.RejectOpinionRequestDto
@@ -25,6 +26,7 @@ interface OpinionsApi {
         const val DELETE_PATH = "$ROOT_PATH/{opinionId}"
         const val SUBMIT_FOR_MODERATION_PATH = "$ROOT_PATH/{opinionId}/submit-for-moderation"
         const val MODERATION_PATH = "$ROOT_PATH/moderation"
+        const val MODERATION_DECISIONS_PATH = "$ROOT_PATH/moderation/decisions"
         const val APPROVE_PATH = "$ROOT_PATH/{opinionId}/approve"
         const val REJECT_PATH = "$ROOT_PATH/{opinionId}/reject"
         const val LINK_PATH = "$ROOT_PATH/link"
@@ -82,6 +84,12 @@ interface OpinionsApi {
         @Valid
         pageable: PageRequestDto,
     ): PageResponseDto<OpinionDto>
+
+    @GetMapping(MODERATION_DECISIONS_PATH)
+    fun getModerationDecisions(
+        @Valid
+        pageable: PageRequestDto,
+    ): PageResponseDto<ModerationDecisionDto>
 
     @PostMapping(APPROVE_PATH)
     fun approveOpinion(

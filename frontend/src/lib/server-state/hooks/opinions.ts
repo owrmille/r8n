@@ -4,11 +4,13 @@ import type {
   AdjustOpinionComponentWeightRequestDto,
   CreateOpinionRequestDto,
   DeleteOpinionRequestDto,
+  GetModerationDecisionsRequestDto,
   GetModerationOpinionsRequestDto,
   GetOpinionByIdRequestDto,
   GetOpinionForSubjectRequestDto,
   LinkOpinionComponentRequestDto,
   ModerateOpinionRequestDto,
+  ModerationDecisionDto,
   OpinionDto,
   RejectOpinionRequestDto,
   SubmitOpinionForModerationRequestDto,
@@ -63,6 +65,25 @@ export function useModerationOpinions(
   return useAuthorizedQuery({
     queryKey: opinionsKeys.moderation(request),
     queryFn: () => opinionsApi.getModerationQueue(request),
+    ...options,
+  });
+}
+
+export function useModerationDecisions(
+  request: GetModerationDecisionsRequestDto,
+  options?: Omit<
+    UseQueryOptions<
+      PageResponseDto<ModerationDecisionDto>,
+      Error,
+      PageResponseDto<ModerationDecisionDto>,
+      QueryKey
+    >,
+    "queryKey" | "queryFn"
+  >,
+) {
+  return useAuthorizedQuery({
+    queryKey: opinionsKeys.moderationDecisions(request),
+    queryFn: () => opinionsApi.getModerationDecisions(request),
     ...options,
   });
 }

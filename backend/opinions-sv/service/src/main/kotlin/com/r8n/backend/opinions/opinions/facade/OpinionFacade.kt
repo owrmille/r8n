@@ -4,6 +4,7 @@ import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.core.utils.toPageable
 import com.r8n.backend.core.utils.toResponse
+import com.r8n.backend.opinions.api.opinions.dto.ModerationDecisionDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionStatusEnumDto
 import com.r8n.backend.opinions.opinions.service.OpinionService
@@ -64,12 +65,22 @@ class OpinionFacade(
             ).map { opinionMapper.toDto(it) }
             .toResponse()
 
-    fun approveOpinion(opinionId: UUID): OpinionDto = opinionMapper.toDto(opinionService.approveOpinion(opinionId))
+    fun getModerationDecisions(pageable: PageRequestDto): PageResponseDto<ModerationDecisionDto> =
+        opinionService
+            .getModerationDecisions(pageable.toPageable())
+            .map { opinionMapper.toDto(it) }
+            .toResponse()
+
+    fun approveOpinion(
+        opinionId: UUID,
+        moderatorId: UUID,
+    ): OpinionDto = opinionMapper.toDto(opinionService.approveOpinion(opinionId, moderatorId))
 
     fun rejectOpinion(
         opinionId: UUID,
+        moderatorId: UUID,
         reason: String,
-    ): OpinionDto = opinionMapper.toDto(opinionService.rejectOpinion(opinionId, reason))
+    ): OpinionDto = opinionMapper.toDto(opinionService.rejectOpinion(opinionId, moderatorId, reason))
 
     fun linkComponent(
         parentOpinionId: UUID,

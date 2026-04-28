@@ -444,3 +444,20 @@ VALUES
     ('a0000000-0000-0000-0000-000000000101', '80000000-0000-0000-0000-000000000001', '80000000-0000-0000-0000-000000000000', 0.8), -- Bernard synced to Smoke List
     ('a0000000-0000-0000-0000-000000000102', '80000000-0000-0000-0000-000000000002', '80000000-0000-0000-0000-000000000000', 1.0)  -- Anna synced to Smoke List
 ON CONFLICT (id) DO NOTHING;
+
+--changeset codex:V15_moderation_decisions
+CREATE TABLE IF NOT EXISTS opinions.moderation_decisions (
+    id UUID PRIMARY KEY,
+    opinion UUID NOT NULL,
+    moderator UUID NOT NULL,
+    action VARCHAR(32) NOT NULL,
+    previous_status VARCHAR(32) NOT NULL,
+    new_status VARCHAR(32) NOT NULL,
+    reason TEXT,
+    created_at TIMESTAMPTZ NOT NULL,
+    CONSTRAINT fk_moderation_decisions_opinion FOREIGN KEY (opinion) REFERENCES opinions.opinions(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_moderation_decisions_opinion ON opinions.moderation_decisions(opinion);
+CREATE INDEX IF NOT EXISTS idx_moderation_decisions_moderator ON opinions.moderation_decisions(moderator);
+CREATE INDEX IF NOT EXISTS idx_moderation_decisions_created_at ON opinions.moderation_decisions(created_at);

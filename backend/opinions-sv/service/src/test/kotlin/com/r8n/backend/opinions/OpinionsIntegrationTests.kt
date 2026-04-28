@@ -1,6 +1,8 @@
 package com.r8n.backend.opinions
 
 import com.r8n.backend.core.api.PageResponseDto
+import com.r8n.backend.opinions.api.opinions.dto.ModerationDecisionActionDto
+import com.r8n.backend.opinions.api.opinions.dto.ModerationDecisionDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionStatusEnumDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionSubjectDto
@@ -86,6 +88,8 @@ class OpinionsIntegrationTests {
             .thenReturn(bernardReferent.name)
         whenever(usersInternalApi.getUserName(eq(REQUESTER)))
             .thenReturn(bernardReferent.name)
+        whenever(usersInternalApi.getUserName(eq(STRANGER)))
+            .thenReturn("Moderator User")
     }
 
     @Test
@@ -460,6 +464,27 @@ class OpinionsIntegrationTests {
         val actual: OpinionDto = objectMapper.readValue(approveResult.response.contentAsString)
         assertEquals(created.id, actual.id)
         assertEquals(OpinionStatusEnumDto.PUBLISHED, actual.status)
+
+        val decisionsResult =
+            mockMvc
+                .perform(
+                    get("/api/opinions/moderation/decisions")
+                        .with(csrf())
+                        .queryParam("page", "0")
+                        .queryParam("size", "20")
+                        .header("Authorization", "Bearer $moderatorToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val decisions: PageResponseDto<ModerationDecisionDto> =
+            objectMapper.readValue(decisionsResult.response.contentAsString)
+        val decision = decisions.items.first { it.opinionId == created.id }
+        assertEquals(ModerationDecisionActionDto.APPROVED, decision.action)
+        assertEquals(OpinionStatusEnumDto.PENDING_PREMODERATION, decision.previousStatus)
+        assertEquals(OpinionStatusEnumDto.PUBLISHED, decision.newStatus)
+        assertEquals(STRANGER, decision.moderatorId)
+        assertEquals("Moderator User", decision.moderatorName)
+        assertEquals(null, decision.reason)
     }
 
     @Test
@@ -487,6 +512,40 @@ class OpinionsIntegrationTests {
         val actual: OpinionDto = objectMapper.readValue(rejectResult.response.contentAsString)
         assertEquals(created.id, actual.id)
         assertEquals(OpinionStatusEnumDto.REJECTED, actual.status)
+
+        val decisionsResult =
+            mockMvc
+                .perform(
+                    get("/api/opinions/moderation/decisions")
+                        .with(csrf())
+                        .queryParam("page", "0")
+                        .queryParam("size", "20")
+                        .header("Authorization", "Bearer $moderatorToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val decisions: PageResponseDto<ModerationDecisionDto> =
+            objectMapper.readValue(decisionsResult.response.contentAsString)
+        val decision = decisions.items.first { it.opinionId == created.id }
+        assertEquals(ModerationDecisionActionDto.REJECTED, decision.action)
+        assertEquals(OpinionStatusEnumDto.PENDING_PREMODERATION, decision.previousStatus)
+        assertEquals(OpinionStatusEnumDto.REJECTED, decision.newStatus)
+        assertEquals("Please remove unsupported personal claims.", decision.reason)
+    }
+
+    @Test
+    @WithMockUser
+    fun `regular user cannot list moderation decisions`() {
+        val accessToken = serviceTokenService.generateAccessToken(REQUESTER, listOf("USER"))
+
+        mockMvc
+            .perform(
+                get("/api/opinions/moderation/decisions")
+                    .with(csrf())
+                    .queryParam("page", "0")
+                    .queryParam("size", "20")
+                    .header("Authorization", "Bearer $accessToken"),
+            ).andExpect(status().isForbidden)
     }
 
     @Test
