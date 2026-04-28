@@ -7,6 +7,7 @@ import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.DELETE_PATH
 import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.GET_BY_ID_PATH
 import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.GET_FOR_SUBJECT_PATH
 import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.LINK_PATH
+import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.SUBMIT_FOR_MODERATION_PATH
 import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.UNLINK_PATH
 import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.UPDATE_PATH
 import com.r8n.backend.opinions.api.opinions.dto.OpinionDto
@@ -77,6 +78,13 @@ class OpinionsRestClient(
             .retrieve()
             .toBodilessEntity()
     }
+
+    override fun submitOpinionForModeration(opinionId: UUID): OpinionDto =
+        restClient
+            .post()
+            .uri(SUBMIT_FOR_MODERATION_PATH, opinionId)
+            .retrieve()
+            .body<OpinionDto>()!!
 
     override fun linkComponent(
         parentOpinionId: UUID,

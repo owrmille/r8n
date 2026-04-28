@@ -17,6 +17,7 @@ interface OpinionsApi {
         const val CREATE_PATH = ROOT_PATH
         const val UPDATE_PATH = "$ROOT_PATH/{opinionId}"
         const val DELETE_PATH = "$ROOT_PATH/{opinionId}"
+        const val SUBMIT_FOR_MODERATION_PATH = "$ROOT_PATH/{opinionId}/submit-for-moderation"
         const val LINK_PATH = "$ROOT_PATH/link"
         const val UNLINK_PATH = "$ROOT_PATH/unlink/{linkId}"
         const val ADJUST_WEIGHT_PATH = "$ROOT_PATH/adjust-weight/{linkId}"
@@ -59,6 +60,11 @@ interface OpinionsApi {
     fun deleteOpinion(
         @PathVariable opinionId: UUID,
     )
+
+    @PostMapping(SUBMIT_FOR_MODERATION_PATH)
+    fun submitOpinionForModeration(
+        @PathVariable opinionId: UUID,
+    ): OpinionDto
 
     @PostMapping(LINK_PATH)
     fun linkComponent(

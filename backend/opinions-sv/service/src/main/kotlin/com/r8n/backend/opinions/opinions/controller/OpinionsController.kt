@@ -6,8 +6,10 @@ import com.r8n.backend.opinions.opinions.facade.OpinionFacade
 import com.r8n.backend.security.Authority.IS_USER
 import com.r8n.backend.security.Authority.IS_USER_OR_SERVICE
 import com.r8n.backend.security.CurrentUserIdentifier.getCurrentUserId
+import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 
 @RestController
@@ -40,6 +42,10 @@ class OpinionsController(
     override fun deleteOpinion(opinionId: UUID) {
         opinionFacade.deleteOpinion(opinionId, getCurrentUserId())
     }
+
+    @PreAuthorize(IS_USER)
+    override fun submitOpinionForModeration(opinionId: UUID): OpinionDto =
+        throw ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "Opinion submission is not implemented yet")
 
     @PreAuthorize(IS_USER)
     override fun linkComponent(
