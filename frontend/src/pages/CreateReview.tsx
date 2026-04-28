@@ -71,7 +71,7 @@ const SupplierSearch = ({
   const trimmedQuery = query.trim();
   const findReferents = useFindReferents(
     { query: trimmedQuery, pageable: { page: 0, size: 10, sort: [{ property: "name", direction: "ASC" }] } },
-    { enabled: open && trimmedQuery.length > 0 },
+    { enabled: open && trimmedQuery.length > 0, staleTime: 0 },
   );
   const createReferent = useCreateReferentMutation();
 
