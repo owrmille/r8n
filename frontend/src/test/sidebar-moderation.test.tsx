@@ -72,6 +72,19 @@ describe("sidebar moderation visibility", () => {
     expect(screen.getByText("Moderation")).toBeInTheDocument();
   });
 
+  it("shows the Moderation item for a user with the SUPPORT role", () => {
+    const queryClient = makeQueryClient();
+    queryClient.setQueryData(["users", "me"], {
+      id: "00000000-0000-0000-0000-000000000001",
+      name: "Support User",
+      roles: ["SUPPORT"],
+    });
+
+    renderSidebar(queryClient);
+
+    expect(screen.getByText("Moderation")).toBeInTheDocument();
+  });
+
   it("hides the Moderation item for a user with only the USER role", () => {
     const queryClient = makeQueryClient();
     queryClient.setQueryData(["users", "me"], {

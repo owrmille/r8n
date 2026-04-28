@@ -1,7 +1,9 @@
 package com.r8n.backend.users.api
 
+import com.r8n.backend.users.api.dto.AssignRoleRequestDto
 import com.r8n.backend.users.api.dto.UpdateMyPublicProfileRequestDto
 import com.r8n.backend.users.api.dto.UserProfileDto
+import com.r8n.backend.users.api.dto.UserWithRolesDto
 import com.r8n.backend.users.api.dto.UsernameDto
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -23,6 +25,10 @@ interface UsersApi {
         const val MY_PUBLIC_PROFILE_PATH = "$ME_PATH/public-profile"
         const val MY_AVATAR_PATH = "$ME_PATH/avatar"
         const val USER_AVATAR_PATH = "$USER_PATH/avatar"
+        private const val ADMIN_ROOT_PATH = "/api/admin/users"
+        const val ADMIN_USERS_PATH = ADMIN_ROOT_PATH
+        const val ADMIN_USER_ROLES_PATH = "$ADMIN_ROOT_PATH/{userId}/roles"
+        const val ADMIN_USER_ROLE_PATH = "$ADMIN_ROOT_PATH/{userId}/roles/{role}"
     }
 
     @GetMapping(ME_PATH)
@@ -57,4 +63,19 @@ interface UsersApi {
 
     @DeleteMapping(MY_AVATAR_PATH)
     fun deleteMyAvatar(): ResponseEntity<Void>
+
+    @GetMapping(ADMIN_USERS_PATH)
+    fun listUsersWithRoles(): List<UserWithRolesDto>
+
+    @PostMapping(ADMIN_USER_ROLES_PATH)
+    fun assignRole(
+        @PathVariable userId: UUID,
+        @RequestBody request: AssignRoleRequestDto,
+    ): ResponseEntity<Void>
+
+    @DeleteMapping(ADMIN_USER_ROLE_PATH)
+    fun revokeRole(
+        @PathVariable userId: UUID,
+        @PathVariable role: String,
+    ): ResponseEntity<Void>
 }

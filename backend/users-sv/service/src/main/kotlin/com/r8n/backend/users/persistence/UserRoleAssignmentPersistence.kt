@@ -17,9 +17,9 @@ class UserRoleAssignmentPersistence(
     @Id
     @GeneratedValue
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
-    var id: UUID,
+    var id: UUID? = null,
 //
-    @Column(nullable = false)
+    @Column(name = "\"user\"", nullable = false)
     val user: UUID,
 //
     @Column(nullable = false)
