@@ -9,6 +9,7 @@ import type {
   SearchOpinionListsRequestDto,
 } from "@/lib/api/opinion-lists";
 import type {
+  GetModerationDecisionsRequestDto,
   GetModerationOpinionsRequestDto,
   GetOpinionByIdRequestDto,
   GetOpinionForSubjectRequestDto,
@@ -30,6 +31,11 @@ export const opinionsKeys = {
     "opinions",
     "moderation",
     request.filters ?? null,
+    request.pageable,
+  ] as const,
+  moderationDecisions: (request: GetModerationDecisionsRequestDto) => [
+    "opinions",
+    "moderation-decisions",
     request.pageable,
   ] as const,
 };

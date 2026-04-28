@@ -13,6 +13,8 @@ export type OpinionStatusEnumDto =
   | "PUBLISHED"
   | "REJECTED";
 
+export type ModerationDecisionActionDto = "APPROVED" | "REJECTED";
+
 export interface WeightedOpinionReferenceDto {
   id: Uuid;
   opinion: Uuid;
@@ -40,6 +42,20 @@ export interface OpinionDto {
   subjective: string[];
   subjectName: string;
   timestamp: string;
+}
+
+export interface ModerationDecisionDto {
+  action: ModerationDecisionActionDto;
+  createdAt: string;
+  id: Uuid;
+  moderatorId: Uuid;
+  moderatorName: string;
+  newStatus: OpinionStatusEnumDto;
+  opinionId: Uuid;
+  ownerName: string;
+  previousStatus: OpinionStatusEnumDto;
+  reason: string | null;
+  subjectName: string;
 }
 
 export interface GetOpinionByIdRequestDto {
@@ -78,6 +94,10 @@ export interface GetModerationOpinionsFiltersDto {
 
 export interface GetModerationOpinionsRequestDto {
   filters?: GetModerationOpinionsFiltersDto;
+  pageable: PageRequestDto;
+}
+
+export interface GetModerationDecisionsRequestDto {
   pageable: PageRequestDto;
 }
 
@@ -171,6 +191,18 @@ export function createOpinionsApi(client: HttpClient = httpClient) {
           status: request.filters?.status,
         },
       });
+    },
+
+    getModerationDecisions(
+      request: GetModerationDecisionsRequestDto,
+    ): Promise<PageResponseDto<ModerationDecisionDto>> {
+      return client.get<PageResponseDto<ModerationDecisionDto>>(
+        "/opinions/moderation/decisions",
+        {
+          auth: "required",
+          query: createPageQuery(request.pageable),
+        },
+      );
     },
 
     approve(request: ModerateOpinionRequestDto): Promise<OpinionDto> {

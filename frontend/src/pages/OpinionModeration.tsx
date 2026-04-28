@@ -16,9 +16,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import type { GetModerationOpinionsRequestDto, OpinionDto } from "@/lib/api/opinions";
+import type {
+  GetModerationDecisionsRequestDto,
+  GetModerationOpinionsRequestDto,
+  ModerationDecisionDto,
+  OpinionDto,
+} from "@/lib/api/opinions";
 import {
   useApproveOpinionMutation,
+  useModerationDecisions,
   useModerationOpinions,
   useRejectOpinionMutation,
 } from "@/lib/server-state/hooks/opinions";
@@ -35,7 +41,16 @@ const MODERATION_QUEUE_REQUEST = {
   },
 } satisfies GetModerationOpinionsRequestDto;
 
+const MODERATION_DECISIONS_REQUEST = {
+  pageable: {
+    page: 0,
+    size: 20,
+    sort: [],
+  },
+} satisfies GetModerationDecisionsRequestDto;
+
 const EMPTY_OPINIONS: OpinionDto[] = [];
+const EMPTY_DECISIONS: ModerationDecisionDto[] = [];
 
 function formatRelativeTime(timestamp: string): string {
   const createdAt = new Date(timestamp).getTime();
@@ -84,6 +99,7 @@ const OpinionRating = ({ opinion }: { opinion: OpinionDto }) => {
 
 const OpinionModeration = () => {
   const moderation = useModerationOpinions(MODERATION_QUEUE_REQUEST);
+  const decisions = useModerationDecisions(MODERATION_DECISIONS_REQUEST);
   const approveOpinion = useApproveOpinionMutation();
   const rejectOpinion = useRejectOpinionMutation();
   const [rejectingOpinionId, setRejectingOpinionId] = useState<string | null>(null);
@@ -91,6 +107,7 @@ const OpinionModeration = () => {
   const [rejectionError, setRejectionError] = useState<string | null>(null);
 
   const pendingOpinions = moderation.data?.items ?? EMPTY_OPINIONS;
+  const recentDecisions = decisions.data?.items ?? EMPTY_DECISIONS;
   const isMutating = approveOpinion.isPending || rejectOpinion.isPending;
   const rejectingOpinion = useMemo(
     () => pendingOpinions.find((opinion) => opinion.id === rejectingOpinionId) ?? null,
@@ -248,6 +265,67 @@ const OpinionModeration = () => {
                       <Check className="h-4 w-4" />
                       Approve
                     </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </QueryState>
+      </motion.section>
+
+      <motion.section
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.15 }}
+        className="mt-12"
+      >
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight text-foreground">Recent decisions</h2>
+            <p className="text-sm text-muted-foreground">
+              Stored moderation actions from the current backend database.
+            </p>
+          </div>
+          <Badge variant="outline" className="rounded-full border-border px-3 py-1 text-xs font-medium">
+            {decisions.data?.total ?? recentDecisions.length} logged
+          </Badge>
+        </div>
+
+        <QueryState
+          isLoading={decisions.isLoading}
+          isError={decisions.isError}
+          error={decisions.error}
+          onRetry={() => void decisions.refetch()}
+          isEmpty={recentDecisions.length === 0}
+          loadingMessage="Loading moderation decisions..."
+          emptyMessage="No moderation decisions have been recorded yet."
+        >
+          <div className="space-y-3">
+            {recentDecisions.map((decision) => (
+              <Card key={decision.id} className="rounded-2xl border-border">
+                <CardContent className="flex flex-col gap-4 px-5 py-4 md:flex-row md:items-start md:justify-between md:px-6">
+                  <div className="min-w-0">
+                    <div className="mb-1 flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-semibold text-foreground">{decision.subjectName}</p>
+                      <Badge
+                        className={cn(
+                          decision.action === "APPROVED"
+                            ? "bg-primary/10 text-primary hover:bg-primary/10"
+                            : "bg-destructive/10 text-destructive hover:bg-destructive/10",
+                        )}
+                      >
+                        {decision.action === "APPROVED" ? "Approved" : "Rejected"}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {decision.ownerName} · moderated by {decision.moderatorName} ·{" "}
+                      {formatRelativeTime(decision.createdAt)}
+                    </p>
+                    {decision.reason && (
+                      <p className="mt-3 text-sm leading-relaxed text-foreground/85">
+                        <span className="font-medium text-foreground">Reason:</span> {decision.reason}
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>

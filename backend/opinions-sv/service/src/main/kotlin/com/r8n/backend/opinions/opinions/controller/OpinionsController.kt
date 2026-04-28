@@ -57,13 +57,17 @@ class OpinionsController(
     ): PageResponseDto<OpinionDto> = opinionFacade.getModerationOpinions(status, pageable)
 
     @PreAuthorize(IS_MODERATOR)
-    override fun approveOpinion(opinionId: UUID): OpinionDto = opinionFacade.approveOpinion(opinionId)
+    override fun getModerationDecisions(pageable: PageRequestDto) = opinionFacade.getModerationDecisions(pageable)
+
+    @PreAuthorize(IS_MODERATOR)
+    override fun approveOpinion(opinionId: UUID): OpinionDto =
+        opinionFacade.approveOpinion(opinionId, getCurrentUserId())
 
     @PreAuthorize(IS_MODERATOR)
     override fun rejectOpinion(
         opinionId: UUID,
         request: RejectOpinionRequestDto,
-    ): OpinionDto = opinionFacade.rejectOpinion(opinionId, request.reason)
+    ): OpinionDto = opinionFacade.rejectOpinion(opinionId, getCurrentUserId(), request.reason)
 
     @PreAuthorize(IS_USER)
     override fun linkComponent(

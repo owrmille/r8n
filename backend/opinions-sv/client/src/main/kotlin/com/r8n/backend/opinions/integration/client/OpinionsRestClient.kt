@@ -10,11 +10,13 @@ import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.DELETE_PATH
 import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.GET_BY_ID_PATH
 import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.GET_FOR_SUBJECT_PATH
 import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.LINK_PATH
+import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.MODERATION_DECISIONS_PATH
 import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.MODERATION_PATH
 import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.REJECT_PATH
 import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.SUBMIT_FOR_MODERATION_PATH
 import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.UNLINK_PATH
 import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.UPDATE_PATH
+import com.r8n.backend.opinions.api.opinions.dto.ModerationDecisionDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionStatusEnumDto
 import com.r8n.backend.opinions.api.opinions.dto.RejectOpinionRequestDto
@@ -113,6 +115,22 @@ class OpinionsRestClient(
                     }.build()
             }.retrieve()
             .body<PageResponseDto<OpinionDto>>()!!
+
+    override fun getModerationDecisions(pageable: PageRequestDto): PageResponseDto<ModerationDecisionDto> =
+        restClient
+            .get()
+            .uri { uriBuilder ->
+                uriBuilder
+                    .path(MODERATION_DECISIONS_PATH)
+                    .queryParam("page", pageable.page)
+                    .queryParam("size", pageable.size)
+                    .apply {
+                        pageable.sort.forEach {
+                            queryParam("sort", "${it.property},${it.direction}")
+                        }
+                    }.build()
+            }.retrieve()
+            .body<PageResponseDto<ModerationDecisionDto>>()!!
 
     override fun approveOpinion(opinionId: UUID): OpinionDto =
         restClient

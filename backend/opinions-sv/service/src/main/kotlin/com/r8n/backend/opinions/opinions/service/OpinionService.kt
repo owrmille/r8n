@@ -2,9 +2,13 @@ package com.r8n.backend.opinions.opinions.service
 
 import com.r8n.backend.opinions.access.domain.OpinionPermissionEnum
 import com.r8n.backend.opinions.access.service.AccessService
+import com.r8n.backend.opinions.opinions.database.ModerationDecisionRepository
 import com.r8n.backend.opinions.opinions.database.OpinionRepository
+import com.r8n.backend.opinions.opinions.domain.ModerationDecision
+import com.r8n.backend.opinions.opinions.domain.ModerationDecisionAction
 import com.r8n.backend.opinions.opinions.domain.Opinion
 import com.r8n.backend.opinions.opinions.domain.OpinionStatusEnum
+import com.r8n.backend.opinions.opinions.persistence.ModerationDecisionPersistence
 import com.r8n.backend.opinions.opinions.persistence.OpinionPersistence
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.domain.Page
@@ -22,6 +26,7 @@ class OpinionService(
     private val noteService: OpinionNoteService,
     private val componentService: ComponentService,
     private val opinionRepository: OpinionRepository,
+    private val moderationDecisionRepository: ModerationDecisionRepository,
     private val accessService: AccessService,
 ) {
     fun getOpinion(
@@ -143,19 +148,28 @@ class OpinionService(
     }
 
     @Transactional
-    fun approveOpinion(opinionId: UUID): Opinion = transitionPendingOpinion(opinionId, OpinionStatusEnum.PUBLISHED)
+    fun approveOpinion(
+        opinionId: UUID,
+        moderatorId: UUID,
+    ): Opinion = transitionPendingOpinion(opinionId, OpinionStatusEnum.PUBLISHED, moderatorId, null)
 
     @Transactional
     fun rejectOpinion(
         opinionId: UUID,
+        moderatorId: UUID,
         reason: String,
     ): Opinion {
-        if (reason.trim().isEmpty()) {
+        val trimmedReason = reason.trim()
+        if (trimmedReason.isEmpty()) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Rejection reason must not be blank")
         }
 
-        return transitionPendingOpinion(opinionId, OpinionStatusEnum.REJECTED)
+        return transitionPendingOpinion(opinionId, OpinionStatusEnum.REJECTED, moderatorId, trimmedReason)
     }
+
+    @Transactional(readOnly = true)
+    fun getModerationDecisions(pageable: Pageable): Page<ModerationDecision> =
+        moderationDecisionRepository.findAllByOrderByCreatedAtDesc(pageable).map { it.toDomain() }
 
     @Transactional
     fun linkComponent(
@@ -233,6 +247,8 @@ class OpinionService(
     private fun transitionPendingOpinion(
         opinionId: UUID,
         targetStatus: OpinionStatusEnum,
+        moderatorId: UUID,
+        reason: String?,
     ): Opinion {
         val opinion =
             opinionRepository
@@ -245,10 +261,33 @@ class OpinionService(
             )
         }
 
+        val previousStatus = opinion.status
         opinion.status = targetStatus
-        opinion.timestamp = Instant.now()
-        return opinionRepository.save(opinion).toDomain()
+        val decisionTimestamp = Instant.now()
+        opinion.timestamp = decisionTimestamp
+        val savedOpinion = opinionRepository.save(opinion)
+        moderationDecisionRepository.save(
+            ModerationDecisionPersistence(
+                opinion = savedOpinion.id!!,
+                moderator = moderatorId,
+                action = targetStatus.toModerationDecisionAction(),
+                previousStatus = previousStatus,
+                newStatus = targetStatus,
+                reason = reason,
+                createdAt = decisionTimestamp,
+            ),
+        )
+        return savedOpinion.toDomain()
     }
+
+    private fun OpinionStatusEnum.toModerationDecisionAction(): ModerationDecisionAction =
+        when (this) {
+            OpinionStatusEnum.PUBLISHED -> ModerationDecisionAction.APPROVED
+            OpinionStatusEnum.REJECTED -> ModerationDecisionAction.REJECTED
+            OpinionStatusEnum.DRAFT,
+            OpinionStatusEnum.PENDING_PREMODERATION,
+                -> throw IllegalArgumentException("Unsupported moderation decision status: $this")
+        }
 
     private fun OpinionPersistence.toDomain(): Opinion =
         Opinion(
@@ -263,4 +302,25 @@ class OpinionService(
             status,
             timestamp,
         )
+
+    private fun ModerationDecisionPersistence.toDomain(): ModerationDecision {
+        val opinionPersistence =
+            opinionRepository
+                .findById(opinion)
+                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
+        val opinionId = opinionPersistence.id ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+
+        return ModerationDecision(
+            id!!,
+            opinionId,
+            subjectService.getSubjectName(opinionPersistence.subject) ?: "UNNAMED",
+            opinionPersistence.owner,
+            moderator,
+            action,
+            previousStatus,
+            newStatus,
+            reason,
+            createdAt,
+        )
+    }
 }
