@@ -43,6 +43,11 @@ class OpinionFacade(
         opinionService.deleteOpinion(opinionId, ownerId)
     }
 
+    fun submitOpinionForModeration(
+        opinionId: UUID,
+        ownerId: UUID,
+    ): OpinionDto = opinionMapper.toDto(opinionService.submitOpinionForModeration(opinionId, ownerId))
+
     fun linkComponent(
         parentOpinionId: UUID,
         childOpinionId: UUID,

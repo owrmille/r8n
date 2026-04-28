@@ -106,6 +106,28 @@ class OpinionService(
     }
 
     @Transactional
+    fun submitOpinionForModeration(
+        opinionId: UUID,
+        requesterId: UUID,
+    ): Opinion {
+        val opinion =
+            opinionRepository
+                .findById(
+                    opinionId,
+                ).orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
+        if (opinion.owner != requesterId) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Only the opinion owner can submit it for moderation")
+        }
+        if (opinion.status != OpinionStatusEnum.DRAFT) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Only draft opinions can be submitted for moderation")
+        }
+
+        opinion.status = OpinionStatusEnum.PENDING_PREMODERATION
+        opinion.timestamp = Instant.now()
+        return opinionRepository.save(opinion).toDomain()
+    }
+
+    @Transactional
     fun linkComponent(
         parentOpinionId: UUID,
         childOpinionId: UUID,
