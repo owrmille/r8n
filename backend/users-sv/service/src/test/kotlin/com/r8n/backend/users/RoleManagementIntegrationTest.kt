@@ -5,8 +5,6 @@ import com.r8n.backend.opinions.api.access.OutgoingAccessRequestApi
 import com.r8n.backend.opinions.integration.api.OpinionListsInternalApi
 import com.r8n.backend.users.api.dto.RoleEnumDto
 import com.r8n.backend.users.service.TokenService
-import tools.jackson.databind.ObjectMapper
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -28,6 +26,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.postgresql.PostgreSQLContainer
+import tools.jackson.databind.ObjectMapper
 import java.util.UUID
 
 @ActiveProfiles("test")
@@ -81,13 +80,14 @@ class RoleManagementIntegrationTest {
         userId: UUID,
         role: RoleEnumDto,
     ) {
-        mockMvc.perform(
-            post("/api/admin/users/$userId/roles")
-                .with(csrf())
-                .header("Authorization", "Bearer $adminToken")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(mapOf("role" to role.name))),
-        ).andExpect(status().isNoContent)
+        mockMvc
+            .perform(
+                post("/api/admin/users/$userId/roles")
+                    .with(csrf())
+                    .header("Authorization", "Bearer $adminToken")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(mapOf("role" to role.name))),
+            ).andExpect(status().isNoContent)
     }
 
     private fun seedUser(userId: UUID) {
@@ -163,7 +163,10 @@ class RoleManagementIntegrationTest {
             .perform(
                 delete("/api/admin/users/$ADMIN_ID/roles/ADMIN")
                     .with(csrf())
-                    .header("Authorization", "Bearer ${tokenService.generateAccessToken(secondAdminId, listOf("ADMIN"))}"),
+                    .header(
+                        "Authorization",
+                        "Bearer ${tokenService.generateAccessToken(secondAdminId, listOf("ADMIN"))}",
+                    ),
             ).andExpect(status().isUnprocessableEntity)
     }
 }
