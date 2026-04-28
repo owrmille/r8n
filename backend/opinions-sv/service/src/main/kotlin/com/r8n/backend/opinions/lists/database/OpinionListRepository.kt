@@ -16,4 +16,9 @@ interface OpinionListRepository : JpaRepository<OpinionListPersistence, UUID> {
         owner: UUID,
         pageable: Pageable,
     ): Page<OpinionListPersistence>
+
+    fun findByNameContainingIgnoreCase(
+        name: String,
+        pageable: Pageable,
+    ): Page<OpinionListPersistence>
 }

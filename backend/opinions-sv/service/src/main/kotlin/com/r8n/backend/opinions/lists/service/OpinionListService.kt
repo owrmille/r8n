@@ -290,6 +290,24 @@ class OpinionListService(
             .findByOwner(ownerId, pageable)
             .map { getList(it.id!!, ownerId) }
 
+    fun searchOpinionListsByName(
+        nameSubstring: String,
+        requesterId: UUID,
+        pageable: Pageable,
+    ): Page<OpinionListPersistence> {
+        val results = opinionListRepository.findByNameContainingIgnoreCase(nameSubstring, pageable)
+
+        // Filter by privacy: only show SEARCHABLE lists to non-owners
+        val filtered =
+            results.content.filter { list ->
+                accessService.ownsOpinionList(requesterId, list.id!!) ||
+                    list.privacy == OpinionListPrivacyEnum.SEARCHABLE
+            }
+
+        return org.springframework.data.domain
+            .PageImpl(filtered, pageable, filtered.size.toLong())
+    }
+
     private companion object {
         fun toDomain(
             list: OpinionListPersistence,

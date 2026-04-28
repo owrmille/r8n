@@ -5,7 +5,9 @@ import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.core.utils.toPageable
 import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.opinions.api.lists.dto.OpinionListDto
+import com.r8n.backend.opinions.api.lists.dto.OpinionListSummaryDto
 import com.r8n.backend.opinions.lists.service.OpinionListService
+import com.r8n.backend.security.CurrentUserIdentifier
 import org.springframework.stereotype.Component
 import java.util.UUID
 
@@ -27,6 +29,21 @@ class OpinionListFacade(
             .getListsFull(ownerId, pageable.toPageable())
             .map { opinionListMapper.toDto(it) }
             .toResponse()
+
+    fun searchOpinionListsByName(
+        nameSubstring: String,
+        pageable: PageRequestDto,
+    ): PageResponseDto<OpinionListSummaryDto> {
+        val requesterId = CurrentUserIdentifier.getCurrentUserId()
+        val results = opinionListService.searchOpinionListsByName(nameSubstring, requesterId, pageable.toPageable())
+
+        return results
+            .map { persistence ->
+                val opinionsCount = 0L // TODO: Implement opinion count calculation
+                val grantedAccessCount = 0 // TODO: Implement granted access count calculation
+                opinionListMapper.toSummaryDto(persistence, opinionsCount, grantedAccessCount)
+            }.toResponse()
+    }
 
     fun syncWithOpinionList(
         userId: UUID,

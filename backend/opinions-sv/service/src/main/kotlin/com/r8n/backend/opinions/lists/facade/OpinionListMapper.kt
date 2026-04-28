@@ -2,10 +2,12 @@ package com.r8n.backend.opinions.lists.facade
 
 import com.r8n.backend.opinions.api.lists.dto.OpinionListDto
 import com.r8n.backend.opinions.api.lists.dto.OpinionListPrivacyEnumDto
+import com.r8n.backend.opinions.api.lists.dto.OpinionListSummaryDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionSummaryDto
 import com.r8n.backend.opinions.lists.domain.OpinionList
 import com.r8n.backend.opinions.lists.domain.OpinionListPrivacyEnum
 import com.r8n.backend.opinions.lists.domain.OpinionSummary
+import com.r8n.backend.opinions.lists.persistence.OpinionListPersistence
 import com.r8n.backend.opinions.opinions.facade.OpinionMapper
 import com.r8n.backend.opinions.opinions.service.SubjectService
 import com.r8n.backend.users.integration.api.UsersInternalApi
@@ -25,6 +27,23 @@ class OpinionListMapper(
                 owner = owner,
                 ownerName = usersClient.getUserName(owner),
                 opinionSummaries = opinionSummaries.map { toDto(it) },
+                privacy = privacy.toDto(),
+            )
+        }
+
+    fun toSummaryDto(
+        persistence: OpinionListPersistence,
+        opinionsCount: Long,
+        grantedAccessCount: Int,
+    ): OpinionListSummaryDto =
+        with(persistence) {
+            OpinionListSummaryDto(
+                listId = id!!,
+                listName = name,
+                owner = owner,
+                ownerName = usersClient.getUserName(owner),
+                opinionsCount = opinionsCount,
+                grantedAccessCount = grantedAccessCount,
                 privacy = privacy.toDto(),
             )
         }
