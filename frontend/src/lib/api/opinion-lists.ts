@@ -71,6 +71,7 @@ export interface SearchOpinionListsRequestDto {
 export interface SyncOpinionListsRequestDto {
   addedListId: Uuid;
   existingListId: Uuid;
+  weight: number;
 }
 
 export interface UnsyncOpinionListsRequestDto {
@@ -171,6 +172,7 @@ export function createOpinionListsApi(client: HttpClient = httpClient) {
           auth: "required",
           query: {
             addedListId: request.addedListId,
+            weight: request.weight,
           },
         },
       );
