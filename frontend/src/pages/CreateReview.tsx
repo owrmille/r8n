@@ -7,7 +7,9 @@ import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useMyOpinionLists, useLinkOpinionToListMutation } from "@/lib/server-state/hooks/opinion-lists";
 import { useCreateOpinionMutation } from "@/lib/server-state/hooks/opinions";
-import { useCreateSubjectMutation, useFindSubjects } from "@/lib/server-state/hooks/subjects";
+import { useCreateSubjectMutation, useFindSubjects, useSetPrimaryReferentMutation } from "@/lib/server-state/hooks/subjects";
+import { useCreateReferentMutation, useFindReferents } from "@/lib/server-state/hooks/referents";
+import type { Uuid } from "@/lib/api/shared";
 
 const RatingRow = ({
   label,
@@ -47,16 +49,13 @@ const RatingRow = ({
 );
 
 interface LinkedSupplier {
-  id: string;
+  id: Uuid;
   name: string;
   type: string;
   isNew?: boolean;
-  referent?: {
-    name: string;
-    address: string | null;
-    latitude: number | null;
-    longitude: number | null;
-  };
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 const SUPPLIER_TYPES = ["Restaurant", "Café", "Brand", "Shop", "Hotel", "Service"];
@@ -75,11 +74,11 @@ const SupplierSearch = ({
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   const trimmedQuery = query.trim();
-  const findSubjects = useFindSubjects(
+  const findReferents = useFindReferents(
     { query: trimmedQuery, pageable: { page: 0, size: 10, sort: [{ property: "name", direction: "ASC" }] } },
     { enabled: open && trimmedQuery.length > 0 },
   );
-  const createSubject = useCreateSubjectMutation();
+  const createReferent = useCreateReferentMutation();
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -140,30 +139,26 @@ const SupplierSearch = ({
             <div className="max-h-48 overflow-y-auto">
               {trimmedQuery.length === 0 ? (
                 <p className="px-4 py-3 text-xs text-muted-foreground">Start typing to search</p>
-              ) : findSubjects.isLoading ? (
+              ) : findReferents.isLoading ? (
                 <p className="px-4 py-3 text-xs text-muted-foreground">Searching…</p>
-              ) : (findSubjects.data?.items?.length ?? 0) === 0 ? (
+              ) : (findReferents.data?.items?.length ?? 0) === 0 ? (
                 <p className="px-4 py-3 text-xs text-muted-foreground">No results found</p>
               ) : (
                 <div className="py-1">
-                  {(findSubjects.data?.items ?? []).map((subject) => {
-                    const referentName = subject.primaryReferent?.name ?? subject.name;
-                    const address = subject.primaryReferent?.address;
+                  {(findReferents.data?.items ?? []).map((referent) => {
+                    const address = referent.address;
                     return (
                       <button
-                        key={subject.id}
+                        key={referent.id}
                         type="button"
                         onClick={() => {
                           onChange({
-                            id: subject.id,
-                            name: referentName,
+                            id: referent.id,
+                            name: referent.name,
                             type: "Existing",
-                            referent: {
-                              name: referentName,
-                              address: subject.primaryReferent?.address ?? null,
-                              latitude: subject.primaryReferent?.latitude ?? null,
-                              longitude: subject.primaryReferent?.longitude ?? null,
-                            },
+                            address: referent.address,
+                            latitude: referent.latitude,
+                            longitude: referent.longitude,
                           });
                           setQuery("");
                           setOpen(false);
@@ -172,7 +167,7 @@ const SupplierSearch = ({
                         }}
                         className="flex w-full flex-col gap-0.5 px-4 py-2.5 text-left hover:bg-muted/40 transition-colors"
                       >
-                        <span className="text-sm font-medium text-foreground">{referentName}</span>
+                        <span className="text-sm font-medium text-foreground">{referent.name}</span>
                         {address ? (
                           <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
                             <MapPin className="h-3 w-3" />
@@ -222,24 +217,19 @@ const SupplierSearch = ({
                 <Button
                   type="button"
                   size="sm"
-                  disabled={!newType || createSubject.isPending}
+                  disabled={!newType || createReferent.isPending}
                   onClick={async () => {
                     try {
-                      const created = await createSubject.mutateAsync({
+                      const created = await createReferent.mutateAsync({
                         name: trimmedQuery,
-                        referentName: trimmedQuery,
                       });
-                      const referentName = created.primaryReferent?.name ?? created.name;
                       onChange({
                         id: created.id,
-                        name: referentName,
+                        name: created.name,
                         type: newType,
-                        referent: {
-                          name: referentName,
-                          address: created.primaryReferent?.address ?? null,
-                          latitude: created.primaryReferent?.latitude ?? null,
-                          longitude: created.primaryReferent?.longitude ?? null,
-                        },
+                        address: created.address,
+                        latitude: created.latitude,
+                        longitude: created.longitude,
                       });
                       setQuery("");
                       setOpen(false);
@@ -283,6 +273,7 @@ const CreateReview = () => {
     { enabled: false },
   );
   const createSubject = useCreateSubjectMutation();
+  const setPrimaryReferent = useSetPrimaryReferentMutation();
 
   const isSubmitting = createOpinion.isPending || linkOpinion.isPending;
 
@@ -316,22 +307,20 @@ const CreateReview = () => {
         results.data?.items.find((s) => s.name.toLowerCase() === trimmedSubject.toLowerCase()) ??
         results.data?.items.find((s) => (s.primaryReferent?.name ?? s.name).toLowerCase() === trimmedSubject.toLowerCase());
 
-      const primaryReferent = linkedSupplier.referent ?? {
-        name: linkedSupplier.name,
-        address: null,
-        latitude: null,
-        longitude: null,
-      };
-
       const subject =
         existingMatch ??
         (await createSubject.mutateAsync({
           name: trimmedSubject,
-          referentName: primaryReferent.name,
-          address: primaryReferent.address,
-          latitude: primaryReferent.latitude,
-          longitude: primaryReferent.longitude,
+          primaryReferentId: linkedSupplier.id,
+          referentName: null,
+          address: null,
+          latitude: null,
+          longitude: null,
         }));
+
+      if (existingMatch && existingMatch.primaryReferent?.id !== linkedSupplier.id) {
+        await setPrimaryReferent.mutateAsync({ subjectId: existingMatch.id, referentId: linkedSupplier.id });
+      }
 
       const opinion = await createOpinion.mutateAsync({
         subjectId: subject.id,

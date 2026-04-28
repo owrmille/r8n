@@ -5,7 +5,7 @@ import type {
   FindSubjectsRequestDto,
   OpinionSubjectDto,
 } from "@/lib/api/subjects";
-import type { PageResponseDto } from "@/lib/api/shared";
+import type { PageResponseDto, Uuid } from "@/lib/api/shared";
 import { subjectsKeys } from "@/lib/server-state/query-keys";
 import type { ApiErrorMeta } from "@/lib/server-state/query-client";
 import { useApiInvalidation, useAuthorizedMutation, useAuthorizedQuery } from "@/lib/server-state/hooks/authorized";
@@ -44,6 +44,35 @@ export function useCreateSubjectMutation(
     ...options,
     meta: {
       errorTitle: "Subject creation failed",
+      ...options?.meta,
+    } as ApiErrorMeta,
+    onSuccess: (data, variables, context) => {
+      invalidate(subjectsKeys.all);
+      options?.onSuccess?.(data, variables, context);
+    },
+  });
+}
+
+export interface SetPrimaryReferentRequestDto {
+  referentId: Uuid;
+  subjectId: Uuid;
+}
+
+export function useSetPrimaryReferentMutation(
+  options?: UseMutationOptions<
+    OpinionSubjectDto,
+    Error,
+    SetPrimaryReferentRequestDto,
+    unknown
+  >,
+) {
+  const invalidate = useApiInvalidation();
+
+  return useAuthorizedMutation({
+    mutationFn: (variables) => subjectsApi.setPrimaryReferent(variables),
+    ...options,
+    meta: {
+      errorTitle: "Location update failed",
       ...options?.meta,
     } as ApiErrorMeta,
     onSuccess: (data, variables, context) => {

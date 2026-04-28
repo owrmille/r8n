@@ -4,6 +4,8 @@ import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionStatusEnumDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionSubjectDto
+import com.r8n.backend.opinions.api.opinions.dto.ReferentDto
+import com.r8n.backend.opinions.api.referents.dto.CreateReferentRequestDto
 import com.r8n.backend.opinions.api.subjects.dto.CreateSubjectRequestDto
 import com.r8n.backend.opinions.api.subjects.dto.SUBJECT_NAME_MAX_LENGTH
 import com.r8n.backend.opinions.stub.OpinionSubjectTestDataFactory.bernardReferent
@@ -159,6 +161,161 @@ class OpinionsIntegrationTests {
 
         val found: PageResponseDto<OpinionSubjectDto> = objectMapper.readValue(findResult.response.contentAsString)
         assertEquals(listOf(created.id), found.items.map { it.id })
+    }
+
+    @Test
+    @WithMockUser
+    fun `create and find referent works`() {
+        val accessToken = serviceTokenService.generateAccessToken(REQUESTER, listOf("USER"))
+        val request =
+            CreateReferentRequestDto(
+                name = "Berlin 42",
+                address = "Berlin, Teststraße 42",
+                latitude = 52.51,
+                longitude = 13.37,
+            )
+
+        val createResult =
+            mockMvc
+                .perform(
+                    post("/api/referents")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val created: ReferentDto = objectMapper.readValue(createResult.response.contentAsString)
+        assertEquals(request.name, created.name)
+        assertEquals(request.address, created.address)
+        assertEquals(request.latitude, created.latitude)
+        assertEquals(request.longitude, created.longitude)
+
+        val findResult =
+            mockMvc
+                .perform(
+                    get("/api/referents/find")
+                        .with(csrf())
+                        .queryParam("query", "Berlin 4")
+                        .queryParam("page", "0")
+                        .queryParam("size", "10")
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val found: PageResponseDto<ReferentDto> = objectMapper.readValue(findResult.response.contentAsString)
+        assertEquals(listOf(created.id), found.items.map { it.id })
+    }
+
+    @Test
+    @WithMockUser
+    fun `create subject can reuse primary referent id`() {
+        val accessToken = serviceTokenService.generateAccessToken(REQUESTER, listOf("USER"))
+        val referentRequest =
+            CreateReferentRequestDto(
+                name = "Coda Dessert Bar",
+                address = "Berlin, Teststraße 99",
+                latitude = 52.49,
+                longitude = 13.41,
+            )
+        val referentResult =
+            mockMvc
+                .perform(
+                    post("/api/referents")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(referentRequest))
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val referent: ReferentDto = objectMapper.readValue(referentResult.response.contentAsString)
+
+        val subjectRequest =
+            CreateSubjectRequestDto(
+                name = "Berlin 42 chairs",
+                primaryReferentId = referent.id,
+                referentName = null,
+                address = null,
+                latitude = null,
+                longitude = null,
+            )
+        val subjectResult =
+            mockMvc
+                .perform(
+                    post("/api/subjects")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(subjectRequest))
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val created: OpinionSubjectDto = objectMapper.readValue(subjectResult.response.contentAsString)
+        assertEquals(subjectRequest.name, created.name)
+        assertEquals(referent.id, created.primaryReferent?.id)
+        assertEquals(referent.name, created.primaryReferent?.name)
+    }
+
+    @Test
+    @WithMockUser
+    fun `set primary referent updates subject`() {
+        val accessToken = serviceTokenService.generateAccessToken(REQUESTER, listOf("USER"))
+        val subjectRequest =
+            CreateSubjectRequestDto(
+                name = "Subject referent update test",
+                referentName = "Initial Place",
+                address = null,
+                latitude = null,
+                longitude = null,
+            )
+        val subjectResult =
+            mockMvc
+                .perform(
+                    post("/api/subjects")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(subjectRequest))
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+        val subject: OpinionSubjectDto = objectMapper.readValue(subjectResult.response.contentAsString)
+
+        val referentRequest =
+            CreateReferentRequestDto(
+                name = "Updated Place",
+                address = "Berlin, Updated street 1",
+                latitude = 52.52,
+                longitude = 13.40,
+            )
+        val referentResult =
+            mockMvc
+                .perform(
+                    post("/api/referents")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(referentRequest))
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+        val referent: ReferentDto = objectMapper.readValue(referentResult.response.contentAsString)
+
+        val patchResult =
+            mockMvc
+                .perform(
+                    patch("/api/subjects/${subject.id}/set-primary-referent")
+                        .with(csrf())
+                        .queryParam("referentId", referent.id.toString())
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val updated: OpinionSubjectDto = objectMapper.readValue(patchResult.response.contentAsString)
+        assertEquals(subject.id, updated.id)
+        assertEquals(referent.id, updated.primaryReferent?.id)
+        assertEquals(referent.name, updated.primaryReferent?.name)
+        assertEquals(referent.address, updated.primaryReferent?.address)
     }
 
     @Test

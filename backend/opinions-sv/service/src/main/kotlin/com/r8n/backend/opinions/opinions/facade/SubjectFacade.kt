@@ -27,10 +27,16 @@ class SubjectFacade(
         subjectMapper.toDto(
             subjectService.createSubject(
                 name = request.name,
+                primaryReferentId = request.primaryReferentId,
                 referentName = request.referentName,
                 address = request.address,
                 latitude = request.latitude,
                 longitude = request.longitude,
             ),
         )
+
+    fun setPrimaryReferent(
+        subjectId: java.util.UUID,
+        referentId: java.util.UUID,
+    ): OpinionSubjectDto = subjectMapper.toDto(subjectService.setPrimaryReferent(subjectId, referentId))
 }

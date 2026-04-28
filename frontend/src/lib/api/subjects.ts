@@ -32,6 +32,7 @@ export interface CreateSubjectRequestDto {
   latitude?: number | null;
   longitude?: number | null;
   name: string;
+  primaryReferentId?: Uuid | null;
   referentName?: string | null;
 }
 
@@ -56,6 +57,7 @@ export function createSubjectsApi(client: HttpClient = httpClient) {
         auth: "required",
         body: {
           name: request.name,
+          primaryReferentId: request.primaryReferentId,
           referentName: request.referentName,
           address: request.address,
           latitude: request.latitude,
@@ -63,8 +65,16 @@ export function createSubjectsApi(client: HttpClient = httpClient) {
         },
       });
     },
+
+    setPrimaryReferent(request: { subjectId: Uuid; referentId: Uuid }): Promise<OpinionSubjectDto> {
+      return client.patch<OpinionSubjectDto>(`/subjects/${request.subjectId}/set-primary-referent`, {
+        auth: "required",
+        query: {
+          referentId: request.referentId,
+        },
+      });
+    },
   };
 }
 
 export const subjectsApi = createSubjectsApi();
-

@@ -7,6 +7,7 @@ import com.r8n.backend.opinions.opinions.facade.SubjectFacade
 import com.r8n.backend.security.Authority.IS_USER
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
+import java.util.UUID
 
 @RestController
 class SubjectsController(
@@ -20,4 +21,10 @@ class SubjectsController(
 
     @PreAuthorize(IS_USER)
     override fun createSubject(request: CreateSubjectRequestDto) = subjectFacade.createSubject(request)
+
+    @PreAuthorize(IS_USER)
+    override fun setPrimaryReferent(
+        subjectId: UUID,
+        referentId: UUID,
+    ) = subjectFacade.setPrimaryReferent(subjectId, referentId)
 }
