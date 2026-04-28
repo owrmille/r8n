@@ -31,11 +31,18 @@ class OpinionListRestClient(
             .retrieve()
             .body<OpinionListSummaryDto>()!!
 
-    override fun getList(listId: UUID): OpinionListDto =
+    override fun getList(
+        listId: UUID,
+        publishedAfter: java.time.Instant?,
+    ): OpinionListDto =
         restClient
             .get()
-            .uri(GET_PATH, listId)
-            .retrieve()
+            .uri { uriBuilder ->
+                uriBuilder
+                    .path(GET_PATH)
+                    .queryParamIfPresent("publishedAfter", Optional.ofNullable(publishedAfter))
+                    .build(listId)
+            }.retrieve()
             .body<OpinionListDto>()!!
 
     override fun renameList(
