@@ -26,7 +26,7 @@ const mainItems = [
   { title: "My Lists", url: "/lists", icon: List },
   { title: "Requests", url: "/requests", icon: Bell },
   { title: "Messages", url: "/messages", icon: MessageSquare },
-  { title: "Moderation", url: "/moderation/opinions", icon: ShieldCheck, roles: ["MODERATOR", "ADMIN"] },
+  { title: "Moderation", url: "/moderation/opinions", icon: ShieldCheck, roles: ["MODERATOR", "SUPPORT", "ADMIN"] },
   { title: "User Roles", url: "/moderation/roles", icon: Users, roles: ["ADMIN"] },
 ] as const;
 

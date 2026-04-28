@@ -60,7 +60,7 @@ const App = () => (
                 <Route path="/lists" element={<MyLists />} />
                 <Route path="/requests" element={<Requests />} />
                 <Route path="/messages" element={<Messages />} />
-                <Route element={<RequireRole roles={["MODERATOR", "ADMIN"]} />}>
+                <Route element={<RequireRole roles={["MODERATOR", "SUPPORT", "ADMIN"]} />}>
                   <Route path="/moderation/opinions" element={<OpinionModeration />} />
                 </Route>
                 <Route element={<RequireRole roles={["ADMIN"]} />}>

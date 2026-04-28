@@ -156,6 +156,7 @@ export function useAssignModeratorMutation(
     } as ApiErrorMeta,
     onSuccess: (data, variables, context) => {
       invalidate(usersKeys.withRoles());
+      invalidate(usersKeys.me());
       options?.onSuccess?.(data, variables, context);
     },
   });
@@ -175,6 +176,7 @@ export function useRevokeModeratorMutation(
     } as ApiErrorMeta,
     onSuccess: (data, variables, context) => {
       invalidate(usersKeys.withRoles());
+      invalidate(usersKeys.me());
       options?.onSuccess?.(data, variables, context);
     },
   });
@@ -194,6 +196,7 @@ export function useAssignSupportMutation(
     } as ApiErrorMeta,
     onSuccess: (data, variables, context) => {
       invalidate(usersKeys.withRoles());
+      invalidate(usersKeys.me());
       options?.onSuccess?.(data, variables, context);
     },
   });
@@ -213,6 +216,7 @@ export function useRevokeSupportMutation(
     } as ApiErrorMeta,
     onSuccess: (data, variables, context) => {
       invalidate(usersKeys.withRoles());
+      invalidate(usersKeys.me());
       options?.onSuccess?.(data, variables, context);
     },
   });
@@ -232,6 +236,7 @@ export function useAssignAdminMutation(
     } as ApiErrorMeta,
     onSuccess: (data, variables, context) => {
       invalidate(usersKeys.withRoles());
+      invalidate(usersKeys.me());
       options?.onSuccess?.(data, variables, context);
     },
   });
@@ -251,6 +256,7 @@ export function useRevokeAdminMutation(
     } as ApiErrorMeta,
     onSuccess: (data, variables, context) => {
       invalidate(usersKeys.withRoles());
+      invalidate(usersKeys.me());
       options?.onSuccess?.(data, variables, context);
     },
   });

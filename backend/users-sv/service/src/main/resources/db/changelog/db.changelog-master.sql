@@ -195,3 +195,9 @@ VALUES (
 --changeset ditabisko:V12_unique_user_role_constraint
 ALTER TABLE users.users_role_assignments
     ADD CONSTRAINT uq_user_role UNIQUE ("user", role);
+
+--changeset ditabisko:V13_upgrade_test_user_to_admin context:local,test
+UPDATE users.users_role_assignments
+SET role = 'ADMIN'
+WHERE id = 'a0a0a0a0-a0a0-a0a0-a0a0-a0a0a0a0a0a0'
+  AND role <> 'ADMIN';

@@ -10,10 +10,12 @@ import com.r8n.backend.users.persistence.UserRoleAssignmentPersistence
 import com.r8n.backend.users.provider.database.PIIRepository
 import com.r8n.backend.users.provider.database.UserRepository
 import com.r8n.backend.users.provider.database.UserRoleAssignmentRepository
+import org.springframework.dao.CannotSerializeTransactionException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import java.time.Instant
@@ -36,7 +38,8 @@ class UserService(
 
     fun isAnyModerator(id: UUID): Boolean = isHumanModerator(id) || isAiModerator(id)
 
-    fun isHumanModerator(id: UUID): Boolean = hasRole(id, RoleEnumPersistence.MODERATOR)
+    fun isHumanModerator(id: UUID): Boolean =
+        hasAnyRole(id, RoleEnumPersistence.MODERATOR, RoleEnumPersistence.SUPPORT, RoleEnumPersistence.ADMIN)
 
     fun isAiModerator(id: UUID): Boolean = hasRole(id, RoleEnumPersistence.AI_MODERATOR)
 
@@ -46,6 +49,11 @@ class UserService(
         userId: UUID,
         role: RoleEnumPersistence,
     ): Boolean = userRoleAssignmentRepository.findAllByUser(userId).any { it.role == role }
+
+    private fun hasAnyRole(
+        userId: UUID,
+        vararg roles: RoleEnumPersistence,
+    ): Boolean = userRoleAssignmentRepository.findAllByUser(userId).any { it.role in roles }
 
     fun getUser(id: UUID): User {
         val userPersistence =
@@ -115,21 +123,25 @@ class UserService(
         }
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     fun revokeRole(
         adminId: UUID,
         userId: UUID,
         role: RoleEnumPersistence,
     ) {
-        if (role == RoleEnumPersistence.ADMIN) {
-            if (adminId == userId) {
-                throw ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot remove your own admin role")
+        try {
+            if (role == RoleEnumPersistence.ADMIN) {
+                if (adminId == userId) {
+                    throw ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot remove your own admin role")
+                }
+                if (userRoleAssignmentRepository.countByRoleExcludingStatus(RoleEnumPersistence.ADMIN, UserStatusEnum.DELETED) <= 1) {
+                    throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Cannot remove the last admin")
+                }
             }
-            if (userRoleAssignmentRepository.countByRole(RoleEnumPersistence.ADMIN) <= 1) {
-                throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Cannot remove the last admin")
-            }
+            userRoleAssignmentRepository.deleteByUserAndRole(userId, role)
+        } catch (_: CannotSerializeTransactionException) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Cannot remove the last admin")
         }
-        userRoleAssignmentRepository.deleteByUserAndRole(userId, role)
     }
 
     fun getProfile(id: UUID): UserProfile {
