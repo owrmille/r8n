@@ -1,6 +1,8 @@
 package com.r8n.backend.opinions.lists.service
 
+import com.r8n.backend.opinions.access.database.AccessRequestRepository
 import com.r8n.backend.opinions.access.domain.OpinionListPermissionEnum
+import com.r8n.backend.opinions.access.domain.RequestStatusEnum
 import com.r8n.backend.opinions.access.service.AccessService
 import com.r8n.backend.opinions.lists.database.OpinionListRepository
 import com.r8n.backend.opinions.lists.database.OpinionListSyncRepository
@@ -22,6 +24,12 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 
+data class OpinionListSearchResult(
+    val persistence: OpinionListPersistence,
+    val opinionsCount: Long,
+    val grantedAccessCount: Long,
+)
+
 @Service
 class OpinionListService(
     private val opinionListRepository: OpinionListRepository,
@@ -29,6 +37,7 @@ class OpinionListService(
     private val opinionsAssignmentRepository: OpinionsToOpinionListsRepository,
     private val accessService: AccessService,
     private val syncRepository: OpinionListSyncRepository,
+    private val accessRequestRepository: AccessRequestRepository,
 ) {
     fun syncWithOpinionList(
         userId: UUID,
@@ -294,18 +303,34 @@ class OpinionListService(
         nameSubstring: String,
         requesterId: UUID,
         pageable: Pageable,
-    ): Page<OpinionListPersistence> {
-        val results = opinionListRepository.findByNameContainingIgnoreCase(nameSubstring, pageable)
+    ): Page<OpinionListSearchResult> {
+        // Privacy filtering is now done in the database query
+        val results =
+            opinionListRepository.findByNameContainingIgnoreCaseAndPrivacyFilter(
+                nameSubstring,
+                requesterId,
+                OpinionListPrivacyEnum.SEARCHABLE,
+                pageable,
+            )
 
-        // Filter by privacy: only show SEARCHABLE lists to non-owners
-        val filtered =
-            results.content.filter { list ->
-                accessService.ownsOpinionList(requesterId, list.id!!) ||
-                    list.privacy == OpinionListPrivacyEnum.SEARCHABLE
+        // Calculate counts for each result
+        val searchResults =
+            results.content.map { persistence ->
+                val listId = persistence.id!!
+                val opinionsCount = opinionsAssignmentRepository.countByOpinionList(listId)
+                val grantedAccessCount =
+                    accessRequestRepository.countByListAndStatus(
+                        listId,
+                        RequestStatusEnum.ACCEPTED,
+                    )
+                OpinionListSearchResult(persistence, opinionsCount, grantedAccessCount)
             }
 
-        return org.springframework.data.domain
-            .PageImpl(filtered, pageable, filtered.size.toLong())
+        return org.springframework.data.domain.PageImpl(
+            searchResults,
+            pageable,
+            results.totalElements,
+        )
     }
 
     private companion object {

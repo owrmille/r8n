@@ -38,10 +38,12 @@ class OpinionListFacade(
         val results = opinionListService.searchOpinionListsByName(nameSubstring, requesterId, pageable.toPageable())
 
         return results
-            .map { persistence ->
-                val opinionsCount = 0L // TODO: Implement opinion count calculation
-                val grantedAccessCount = 0 // TODO: Implement granted access count calculation
-                opinionListMapper.toSummaryDto(persistence, opinionsCount, grantedAccessCount)
+            .map { searchResult ->
+                opinionListMapper.toSummaryDto(
+                    searchResult.persistence,
+                    searchResult.opinionsCount,
+                    searchResult.grantedAccessCount.toInt(),
+                )
             }.toResponse()
     }
 

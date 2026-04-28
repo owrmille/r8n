@@ -2,6 +2,8 @@ package com.r8n.backend.opinions.lists.controller
 
 import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.utils.toResponse
+import com.r8n.backend.opinions.access.database.AccessRequestRepository
+import com.r8n.backend.opinions.access.domain.RequestStatusEnum
 import com.r8n.backend.opinions.api.lists.OpinionListsApi
 import com.r8n.backend.opinions.api.lists.dto.OpinionListPrivacyEnumDto
 import com.r8n.backend.opinions.api.lists.dto.OpinionListSummaryDto
@@ -17,6 +19,7 @@ import java.util.UUID
 @RestController
 class StubOpinionListController(
     private val opinionListFacade: OpinionListFacade,
+    private val accessRequestRepository: AccessRequestRepository,
 ) : OpinionListsApi {
     @PreAuthorize(IS_USER)
     override fun getListSummary(listId: UUID): OpinionListSummaryDto = OpinionListTestDataFactory.getListSummary(listId)
@@ -84,13 +87,18 @@ class StubOpinionListController(
         return com.r8n.backend.core.api.PageResponseDto(
             items =
                 fullLists.items.map { full ->
+                    val grantedAccessCount =
+                        accessRequestRepository.countByListAndStatus(
+                            full.id,
+                            RequestStatusEnum.ACCEPTED,
+                        )
                     OpinionListSummaryDto(
                         listId = full.id,
                         listName = full.listName,
                         owner = full.owner,
                         ownerName = full.ownerName,
                         opinionsCount = full.opinionSummaries.size.toLong(),
-                        grantedAccessCount = 0, // TODO: Implement granted access count
+                        grantedAccessCount = grantedAccessCount.toInt(),
                         privacy = full.privacy,
                     )
                 },
