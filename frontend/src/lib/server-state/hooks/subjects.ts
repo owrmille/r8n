@@ -43,7 +43,7 @@ export function useCreateSubjectMutation(
     mutationFn: (variables) => subjectsApi.create(variables),
     ...options,
     meta: {
-      errorTitle: "Supplier creation failed",
+      errorTitle: "Subject creation failed",
       ...options?.meta,
     } as ApiErrorMeta,
     onSuccess: (data, variables, context) => {
@@ -52,4 +52,3 @@ export function useCreateSubjectMutation(
     },
   });
 }
-

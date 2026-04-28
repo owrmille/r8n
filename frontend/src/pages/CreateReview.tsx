@@ -51,6 +51,12 @@ interface LinkedSupplier {
   name: string;
   type: string;
   isNew?: boolean;
+  referent?: {
+    name: string;
+    address: string | null;
+    latitude: number | null;
+    longitude: number | null;
+  };
 }
 
 const SUPPLIER_TYPES = ["Restaurant", "Café", "Brand", "Shop", "Hotel", "Service"];
@@ -148,7 +154,17 @@ const SupplierSearch = ({
                         key={subject.id}
                         type="button"
                         onClick={() => {
-                          onChange({ id: subject.id, name: referentName, type: "Existing" });
+                          onChange({
+                            id: subject.id,
+                            name: referentName,
+                            type: "Existing",
+                            referent: {
+                              name: referentName,
+                              address: subject.primaryReferent?.address ?? null,
+                              latitude: subject.primaryReferent?.latitude ?? null,
+                              longitude: subject.primaryReferent?.longitude ?? null,
+                            },
+                          });
                           setQuery("");
                           setOpen(false);
                           setShowCreateForm(false);
@@ -214,7 +230,17 @@ const SupplierSearch = ({
                         referentName: trimmedQuery,
                       });
                       const referentName = created.primaryReferent?.name ?? created.name;
-                      onChange({ id: created.id, name: referentName, type: newType });
+                      onChange({
+                        id: created.id,
+                        name: referentName,
+                        type: newType,
+                        referent: {
+                          name: referentName,
+                          address: created.primaryReferent?.address ?? null,
+                          latitude: created.primaryReferent?.latitude ?? null,
+                          longitude: created.primaryReferent?.longitude ?? null,
+                        },
+                      });
                       setQuery("");
                       setOpen(false);
                       setShowCreateForm(false);
@@ -252,6 +278,11 @@ const CreateReview = () => {
 
   const createOpinion = useCreateOpinionMutation();
   const linkOpinion = useLinkOpinionToListMutation();
+  const findSubjects = useFindSubjects(
+    { query: subjectName.trim(), pageable: { page: 0, size: 10, sort: [{ property: "name", direction: "ASC" }] } },
+    { enabled: false },
+  );
+  const createSubject = useCreateSubjectMutation();
 
   const isSubmitting = createOpinion.isPending || linkOpinion.isPending;
 
@@ -265,6 +296,11 @@ const CreateReview = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const trimmedSubject = subjectName.trim();
+    if (!trimmedSubject) {
+      toast({ title: "Missing subject", description: "Please fill in what you are reviewing." });
+      return;
+    }
     if (!linkedSupplier) {
       toast({ title: "Missing supplier", description: "Please link this review to a place or brand." });
       return;
@@ -275,8 +311,30 @@ const CreateReview = () => {
     }
 
     try {
+      const results = await findSubjects.refetch();
+      const existingMatch =
+        results.data?.items.find((s) => s.name.toLowerCase() === trimmedSubject.toLowerCase()) ??
+        results.data?.items.find((s) => (s.primaryReferent?.name ?? s.name).toLowerCase() === trimmedSubject.toLowerCase());
+
+      const primaryReferent = linkedSupplier.referent ?? {
+        name: linkedSupplier.name,
+        address: null,
+        latitude: null,
+        longitude: null,
+      };
+
+      const subject =
+        existingMatch ??
+        (await createSubject.mutateAsync({
+          name: trimmedSubject,
+          referentName: primaryReferent.name,
+          address: primaryReferent.address,
+          latitude: primaryReferent.latitude,
+          longitude: primaryReferent.longitude,
+        }));
+
       const opinion = await createOpinion.mutateAsync({
-        subjectId: linkedSupplier.id,
+        subjectId: subject.id,
         mark: rating,
         subjective: subjectiveText.trim() ? [subjectiveText.trim()] : undefined,
         objective: objectiveText.trim() ? [objectiveText.trim()] : undefined,
