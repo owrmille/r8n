@@ -59,4 +59,9 @@ interface AccessRequestRepository : JpaRepository<AccessRequestPersistence, UUID
         list: UUID,
         status: RequestStatusEnum,
     ): Boolean
+
+    fun countByListAndStatus(
+        list: UUID,
+        status: RequestStatusEnum,
+    ): Long
 }
