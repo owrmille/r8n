@@ -4,6 +4,7 @@ import com.r8n.backend.migration.api.dto.ExportStateDto
 import com.r8n.backend.migration.api.dto.ExportStatus
 import com.r8n.backend.migration.api.dto.UserCompleteDataDto
 import com.r8n.backend.migration.service.DataExportService
+import com.r8n.backend.migration.service.DataImportService
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
@@ -13,7 +14,7 @@ import java.util.UUID
 @Service
 class MigrationFacade(
     private val dataExportService: DataExportService,
-    private val dataImportService: com.r8n.backend.migration.service.DataImportService,
+    private val dataImportService: DataImportService,
 ) {
     fun startExport(userId: UUID) {
         dataExportService.startExport(userId)

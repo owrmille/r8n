@@ -167,8 +167,8 @@ services:
       SERVICES_MESSAGING_PORT: ${SERVICES_MESSAGING_PORT:?}
       SERVICES_USERS_HOST: ${SERVICES_USERS_HOST:?}
       SERVICES_USERS_PORT: ${SERVICES_USERS_PORT:?}
-      SERVICES_EXPORT_HOST: ${SERVICES_EXPORT_HOST:?}
-      SERVICES_EXPORT_PORT: ${SERVICES_EXPORT_PORT:?}
+      SERVICES_MIGRATION_HOST: ${SERVICES_MIGRATION_HOST:?}
+      SERVICES_MIGRATION_PORT: ${SERVICES_MIGRATION_PORT:?}
       LOGGING_FILE_NAME: ${LOGGING_FILE_NAME:?}
     ports:
       - "${GATEWAY_HOST_PORT:?}:${GATEWAY_CONTAINER_PORT:?}"
@@ -177,7 +177,7 @@ services:
       - mock
       - messaging
       - users
-      - export
+      - migration
       - database
     networks:
       - r8n_net

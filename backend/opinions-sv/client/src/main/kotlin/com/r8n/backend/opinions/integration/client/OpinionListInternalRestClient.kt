@@ -5,6 +5,7 @@ import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.opinions.api.lists.dto.OpinionListDto
 import com.r8n.backend.opinions.integration.api.OpinionListsInternalApi
 import com.r8n.backend.opinions.integration.api.OpinionListsInternalApi.Companion.MINE_FULL_PATH
+import com.r8n.backend.opinions.integration.api.OpinionsInternalApi.Companion.RESTORE_PATH
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.body
 
@@ -30,7 +31,7 @@ class OpinionListInternalRestClient(
     override fun restoreOpinionList(list: OpinionListDto) {
         restClient
             .post()
-            .uri("/api/internal/opinion-lists/restore")
+            .uri(RESTORE_PATH)
             .body(list)
             .retrieve()
             .toBodilessEntity()

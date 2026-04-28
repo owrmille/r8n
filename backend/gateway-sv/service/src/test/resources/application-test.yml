@@ -32,13 +32,17 @@ spring:
               predicates:
                 - Path=/api/users/**
             - id: messaging
-              uri: http://localhost:8083
+              uri: http://localhost:8084
               predicates:
                 - Path=/api/messaging/**
             - id: mock
               uri: http://localhost:8090
               predicates:
                 - Path=/api/selectors/**
+            - id: migration
+              uri: http://localhost:8083
+              predicates:
+                - Path=/api/export/**,/api/import/**
 r8n:
   security:
     public-paths: /api/auth/**

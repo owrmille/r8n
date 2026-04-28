@@ -28,7 +28,7 @@ frontend_npx() { if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NOD
     prebuild-jars prepare-artifacts verify-artifacts docker-build docker-up \
     docker-certs docker-certs-force internal-certs internal-certs-force internal-certs-clean docker-certs-clean docker-secrets-clean docker-secrets-init edge-certs edge-certs-force \
     docker-down docker-logs clean-artifacts ensure-log-dirs clean-logs \
-    get-token refresh-token logout routed-request-opinion routed-request-mock routed-request-user-profile routed-request-gdpr routed-request-messaging-threads direct-request-opinion direct-request-mock \
+    get-token refresh-token logout routed-request-opinion routed-request-mock routed-request-user-profile routed-request-gdpr routed-import-gdpr routed-request-messaging-threads direct-request-opinion direct-request-mock \
     direct-request-swagger public-request-user routed-request-opinion-approved routed-request-opinion-forbidden routed-request-opinion-mine \
     docker-database-create-data-folder docker-database-drop-volume-personal docker-database-drop-volume-campus docker-database-run docker-database-connect \
     build-opinions who-ate-all-the-space clean-the-fuck-out-of-this-campus-machine \
@@ -455,8 +455,31 @@ routed-request-gdpr: ## Gateway GDPR export request with timeout (ENV=local|dock
 	\
 	echo "=== Step 3: Downloading export data..."; \
 	curl $$curl_args "$$protocol://$$host:$$port/api/export/download" \
-		-H "Authorization: Bearer $$(cat .access_token)" | head -c 500; \
-	echo "..."
+		-H "Authorization: Bearer $$(cat .access_token)" > export.log
+
+routed-import-gdpr: ## Gateway GDPR import request (ENV=local|docker)
+	@if [ ! -f .access_token ]; then $(MAKE) get-token ENV=$(ENV); fi
+	@if [ "$(ENV)" = "docker" ]; then \
+		$(LOAD_DOCKER_ENV) \
+		protocol=https; host=localhost; port=8080; \
+	else \
+		$(LOAD_LOCAL_ENV) \
+		protocol=$${INTERSERVICE_PROTOCOL:-http}; host=$${GATEWAY_HOST:-localhost}; port=$${GATEWAY_PORT:-8080}; \
+	fi; \
+	curl_args="-i"; \
+	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
+	if [ ! -f export.log ]; then echo "No export.log found. Run 'make routed-request-gdpr' first."; exit 1; fi; \
+	echo "=== Cleaning export.log (removing HTTP headers)..."; \
+	awk 'BEGIN {RS="\r?\n\r?\n"; ORS=""} NR==2 {print $$0; exit}' export.log > export_clean.json; \
+	if [ ! -s export_clean.json ]; then \
+		echo "Failed to extract JSON from export.log. Check if it contains a blank line separating headers and body."; \
+		exit 1; \
+	fi; \
+	echo "=== Uploading data to /api/import..."; \
+	curl $$curl_args -X POST "$$protocol://$$host:$$port/api/import" \
+		-H "Authorization: Bearer $$(cat .access_token)" \
+		-F "file=@export_clean.json"; \
+	rm export_clean.json
 
 routed-request-opinion-list: ## Gateway request to smoke test opinion list (ENV=local|docker)
 	@if [ ! -f .access_token ]; then $(MAKE) get-token ENV=$(ENV); fi

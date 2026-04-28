@@ -2,6 +2,8 @@ package com.r8n.backend.opinions.integration.configuration
 
 import com.r8n.backend.opinions.api.opinions.OpinionsApi
 import com.r8n.backend.opinions.api.subjects.SubjectsApi
+import com.r8n.backend.opinions.integration.api.OpinionsInternalApi
+import com.r8n.backend.opinions.integration.client.OpinionsInternalRestClient
 import com.r8n.backend.opinions.integration.client.OpinionsRestClient
 import com.r8n.backend.opinions.integration.client.SubjectsRestClient
 import com.r8n.backend.security.SecurityContextTokenInterceptor
@@ -35,4 +37,9 @@ class OpinionsRestClientConfiguration {
     fun subjectRestClient(
         @Qualifier("opinionsRestBaseClient") restClient: RestClient,
     ): SubjectsApi = SubjectsRestClient(restClient)
+
+    @Bean
+    fun opinionInternalRestClient(
+        @Qualifier("opinionsRestBaseClient") restClient: RestClient,
+    ): OpinionsInternalApi = OpinionsInternalRestClient(restClient)
 }
