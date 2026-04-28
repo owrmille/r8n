@@ -51,14 +51,10 @@ const RatingRow = ({
 interface LinkedSupplier {
   id: Uuid;
   name: string;
-  type: string;
-  isNew?: boolean;
   address: string | null;
   latitude: number | null;
   longitude: number | null;
 }
-
-const SUPPLIER_TYPES = ["Restaurant", "Café", "Brand", "Shop", "Hotel", "Service"];
 
 const SupplierSearch = ({
   value,
@@ -69,7 +65,6 @@ const SupplierSearch = ({
 }) => {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
-  const [newType, setNewType] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -97,7 +92,7 @@ const SupplierSearch = ({
         <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
         <div className="flex-1">
           <p className="text-sm font-medium text-foreground">{value.name}</p>
-          <p className="text-[11px] text-muted-foreground">{value.type}{value.isNew ? " · New" : ""}</p>
+          {value.address && <p className="text-[11px] text-muted-foreground">{value.address}</p>}
         </div>
         <button
           type="button"
@@ -155,7 +150,6 @@ const SupplierSearch = ({
                           onChange({
                             id: referent.id,
                             name: referent.name,
-                            type: "Existing",
                             address: referent.address,
                             latitude: referent.latitude,
                             longitude: referent.longitude,
@@ -163,7 +157,6 @@ const SupplierSearch = ({
                           setQuery("");
                           setOpen(false);
                           setShowCreateForm(false);
-                          setNewType("");
                         }}
                         className="flex w-full flex-col gap-0.5 px-4 py-2.5 text-left hover:bg-muted/40 transition-colors"
                       >
@@ -195,29 +188,11 @@ const SupplierSearch = ({
             )}
 
             {showCreateForm && (
-              <div className="border-t border-border p-3 space-y-2">
-                <p className="text-xs font-medium text-foreground">Create: {query}</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {SUPPLIER_TYPES.map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => setNewType(t)}
-                      className={cn(
-                        "rounded-full border px-2.5 py-1 text-[11px] font-medium transition-all",
-                        newType === t
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border text-muted-foreground hover:border-primary/30"
-                      )}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
+              <div className="border-t border-border p-3">
                 <Button
                   type="button"
                   size="sm"
-                  disabled={!newType || createReferent.isPending}
+                  disabled={createReferent.isPending}
                   onClick={async () => {
                     try {
                       const created = await createReferent.mutateAsync({
@@ -226,7 +201,6 @@ const SupplierSearch = ({
                       onChange({
                         id: created.id,
                         name: created.name,
-                        type: newType,
                         address: created.address,
                         latitude: created.latitude,
                         longitude: created.longitude,
@@ -234,15 +208,14 @@ const SupplierSearch = ({
                       setQuery("");
                       setOpen(false);
                       setShowCreateForm(false);
-                      setNewType("");
                     } catch {
                       // error surfaced via mutation meta errorTitle
                     }
                   }}
-                  className="w-full rounded-lg text-xs mt-1"
+                  className="w-full rounded-lg text-xs"
                 >
                   <Plus className="h-3 w-3 mr-1" />
-                  Add {newType || "supplier"}
+                  Add "{trimmedQuery}"
                 </Button>
               </div>
             )}
