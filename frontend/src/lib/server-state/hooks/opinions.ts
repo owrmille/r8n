@@ -4,14 +4,18 @@ import type {
   AdjustOpinionComponentWeightRequestDto,
   CreateOpinionRequestDto,
   DeleteOpinionRequestDto,
+  GetModerationOpinionsRequestDto,
   GetOpinionByIdRequestDto,
   GetOpinionForSubjectRequestDto,
   LinkOpinionComponentRequestDto,
+  ModerateOpinionRequestDto,
   OpinionDto,
+  RejectOpinionRequestDto,
   SubmitOpinionForModerationRequestDto,
   UnlinkOpinionComponentRequestDto,
   UpdateOpinionRequestDto,
 } from "@/lib/api/opinions";
+import type { PageResponseDto } from "@/lib/api/shared";
 import { opinionListsKeys, opinionsKeys } from "@/lib/server-state/query-keys";
 import type { ApiErrorMeta } from "@/lib/server-state/query-client";
 import { useApiInvalidation, useAuthorizedMutation, useAuthorizedQuery } from "@/lib/server-state/hooks/authorized";
@@ -40,6 +44,25 @@ export function useOpinionForSubject(
   return useAuthorizedQuery({
     queryKey: opinionsKeys.forSubject(request),
     queryFn: () => opinionsApi.getForSubject(request),
+    ...options,
+  });
+}
+
+export function useModerationOpinions(
+  request: GetModerationOpinionsRequestDto,
+  options?: Omit<
+    UseQueryOptions<
+      PageResponseDto<OpinionDto>,
+      Error,
+      PageResponseDto<OpinionDto>,
+      QueryKey
+    >,
+    "queryKey" | "queryFn"
+  >,
+) {
+  return useAuthorizedQuery({
+    queryKey: opinionsKeys.moderation(request),
+    queryFn: () => opinionsApi.getModerationQueue(request),
     ...options,
   });
 }
@@ -134,6 +157,56 @@ export function useSubmitOpinionForModerationMutation(
     ...options,
     meta: {
       errorTitle: "Opinion submission failed",
+      ...options?.meta,
+    } as ApiErrorMeta,
+    onSuccess: (data, variables, context) => {
+      invalidate(opinionsKeys.all);
+      invalidate(opinionListsKeys.all);
+      options?.onSuccess?.(data, variables, context);
+    },
+  });
+}
+
+export function useApproveOpinionMutation(
+  options?: UseMutationOptions<
+    OpinionDto,
+    Error,
+    ModerateOpinionRequestDto,
+    unknown
+  >,
+) {
+  const invalidate = useApiInvalidation();
+
+  return useAuthorizedMutation({
+    mutationFn: (variables) => opinionsApi.approve(variables),
+    ...options,
+    meta: {
+      errorTitle: "Opinion approval failed",
+      ...options?.meta,
+    } as ApiErrorMeta,
+    onSuccess: (data, variables, context) => {
+      invalidate(opinionsKeys.all);
+      invalidate(opinionListsKeys.all);
+      options?.onSuccess?.(data, variables, context);
+    },
+  });
+}
+
+export function useRejectOpinionMutation(
+  options?: UseMutationOptions<
+    OpinionDto,
+    Error,
+    RejectOpinionRequestDto,
+    unknown
+  >,
+) {
+  const invalidate = useApiInvalidation();
+
+  return useAuthorizedMutation({
+    mutationFn: (variables) => opinionsApi.reject(variables),
+    ...options,
+    meta: {
+      errorTitle: "Opinion rejection failed",
       ...options?.meta,
     } as ApiErrorMeta,
     onSuccess: (data, variables, context) => {

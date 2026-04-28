@@ -495,6 +495,68 @@ describe("API modules", () => {
     );
   });
 
+  it("uses backend routes for opinion moderation", async () => {
+    setCookie("XSRF-TOKEN", "xsrf-token");
+    const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(
+      createJsonResponse({
+        items: [],
+        page: 0,
+        size: 20,
+        total: 0,
+      }),
+    ));
+    const client = createHttpClient({
+      baseUrl: "/api",
+      fetchFn: fetchMock,
+    });
+    const opinionsApi = createOpinionsApi(client);
+
+    await opinionsApi.getModerationQueue({
+      filters: { status: "PENDING_PREMODERATION" },
+      pageable: {
+        page: 0,
+        size: 20,
+        sort: [{ direction: "DESC", property: "timestamp" }],
+      },
+    });
+    await opinionsApi.approve({
+      opinionId: "11111111-1111-1111-1111-111111111111",
+    });
+    await opinionsApi.reject({
+      opinionId: "22222222-2222-2222-2222-222222222222",
+      reason: "Please remove unsupported personal claims.",
+    });
+
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      "/api/opinions/moderation?page=0&size=20&sort=timestamp%2CDESC&status=PENDING_PREMODERATION",
+    );
+    expect(fetchMock.mock.calls[1][0]).toBe(
+      "/api/opinions/11111111-1111-1111-1111-111111111111/approve",
+    );
+    expect(fetchMock.mock.calls[2][0]).toBe(
+      "/api/opinions/22222222-2222-2222-2222-222222222222/reject",
+    );
+
+    expect(fetchMock.mock.calls[0][1]).toEqual(
+      expect.objectContaining({ method: "GET" }),
+    );
+    expect(fetchMock.mock.calls[1][1]).toEqual(
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(fetchMock.mock.calls[2][1]).toEqual(
+      expect.objectContaining({
+        body: JSON.stringify({
+          reason: "Please remove unsupported personal claims.",
+        }),
+        method: "POST",
+      }),
+    );
+
+    const rejectHeaders = new Headers(fetchMock.mock.calls[2][1].headers);
+    expect(rejectHeaders.get("Authorization")).toBe("Bearer stub-access-token-123");
+    expect(rejectHeaders.get("X-XSRF-TOKEN")).toBe("xsrf-token");
+  });
+
   it("uses backend path parameters and query names for opinion lists", async () => {
     const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(createJsonResponse({})));
     const client = createHttpClient({
