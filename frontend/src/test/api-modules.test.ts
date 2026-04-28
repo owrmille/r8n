@@ -516,7 +516,7 @@ describe("API modules", () => {
       pageable: {
         page: 0,
         size: 20,
-        sort: [{ direction: "DESC", property: "timestamp" }],
+        sort: [],
       },
     });
     await opinionsApi.approve({
@@ -528,7 +528,7 @@ describe("API modules", () => {
     });
 
     expect(fetchMock.mock.calls[0][0]).toBe(
-      "/api/opinions/moderation?page=0&size=20&sort=timestamp%2CDESC&status=PENDING_PREMODERATION",
+      "/api/opinions/moderation?page=0&size=20&status=PENDING_PREMODERATION",
     );
     expect(fetchMock.mock.calls[1][0]).toBe(
       "/api/opinions/11111111-1111-1111-1111-111111111111/approve",

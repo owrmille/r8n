@@ -31,12 +31,7 @@ const MODERATION_QUEUE_REQUEST = {
   pageable: {
     page: 0,
     size: 50,
-    sort: [
-      {
-        property: "timestamp",
-        direction: "DESC",
-      },
-    ],
+    sort: [],
   },
 } satisfies GetModerationOpinionsRequestDto;
 
