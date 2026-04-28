@@ -15,9 +15,10 @@ class SubjectsController(
 ) : SubjectsApi {
     @PreAuthorize(IS_USER)
     override fun findSubject(
-        query: String,
+        query: String?,
+        referentId: UUID?,
         pageable: PageRequestDto,
-    ) = subjectFacade.findSubject(query, pageable)
+    ) = subjectFacade.findSubject(query, referentId, pageable)
 
     @PreAuthorize(IS_USER)
     override fun createSubject(request: CreateSubjectRequestDto) = subjectFacade.createSubject(request)

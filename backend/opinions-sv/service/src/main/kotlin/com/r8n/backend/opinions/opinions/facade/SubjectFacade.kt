@@ -15,11 +15,12 @@ class SubjectFacade(
     private val subjectMapper: SubjectMapper,
 ) {
     fun findSubject(
-        query: String,
+        query: String?,
+        referentId: java.util.UUID?,
         pageable: PageRequestDto,
     ): PageResponseDto<OpinionSubjectDto> =
         subjectService
-            .findSubjects(query, pageable.toPageable())
+            .findSubjects(query, referentId, pageable.toPageable())
             .map { subjectMapper.toDto(it) }
             .toResponse()
 

@@ -24,16 +24,17 @@ class SubjectService(
 
     @Transactional(readOnly = true)
     fun findSubjects(
-        query: String,
+        query: String?,
+        referentId: UUID?,
         pageable: Pageable,
     ): Page<SubjectDetails> {
-        val trimmedQuery = query.trim()
-        if (trimmedQuery.isEmpty()) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "query must not be blank")
+        val trimmedQuery = query?.trim()?.takeIf { it.isNotEmpty() }
+        if (trimmedQuery == null && referentId == null) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "query or referentId must be provided")
         }
 
         return opinionSubjectRepository
-            .findByNameContainingIgnoreCaseOrderByNameAsc(trimmedQuery, pageable)
+            .findByOptionalFilters(trimmedQuery, referentId, pageable)
             .map { it.toModel() }
     }
 

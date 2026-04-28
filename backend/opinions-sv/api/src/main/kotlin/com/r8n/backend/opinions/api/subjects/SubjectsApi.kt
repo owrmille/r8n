@@ -5,7 +5,6 @@ import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionSubjectDto
 import com.r8n.backend.opinions.api.subjects.dto.CreateSubjectRequestDto
 import jakarta.validation.Valid
-import jakarta.validation.constraints.NotBlank
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -24,9 +23,10 @@ interface SubjectsApi {
 
     @GetMapping(FIND_PATH)
     fun findSubject(
-        @RequestParam(required = true)
-        @NotBlank
-        query: String,
+        @RequestParam(required = false)
+        query: String?,
+        @RequestParam(required = false)
+        referentId: UUID?,
         @Valid
         pageable: PageRequestDto,
     ): PageResponseDto<OpinionSubjectDto>

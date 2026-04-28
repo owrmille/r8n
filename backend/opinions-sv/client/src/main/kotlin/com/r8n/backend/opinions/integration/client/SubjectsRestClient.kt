@@ -16,7 +16,8 @@ class SubjectsRestClient(
     private val restClient: RestClient,
 ) : SubjectsApi {
     override fun findSubject(
-        query: String,
+        query: String?,
+        referentId: UUID?,
         pageable: PageRequestDto,
     ): PageResponseDto<OpinionSubjectDto> =
         restClient
@@ -24,7 +25,8 @@ class SubjectsRestClient(
             .uri { uriBuilder ->
                 uriBuilder
                     .path(FIND_PATH)
-                    .queryParam("query", query)
+                    .queryParamIfPresent("query", java.util.Optional.ofNullable(query))
+                    .queryParamIfPresent("referentId", java.util.Optional.ofNullable(referentId))
                     .queryParam("page", pageable.page)
                     .queryParam("size", pageable.size)
                     .apply {
