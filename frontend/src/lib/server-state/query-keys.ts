@@ -96,7 +96,8 @@ export const subjectsKeys = {
   find: (request: FindSubjectsRequestDto) => [
     "subjects",
     "find",
-    request.query,
+    request.query ?? null,
+    request.referentId ?? null,
     request.pageable,
   ] as const,
 };

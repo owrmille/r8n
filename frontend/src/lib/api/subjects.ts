@@ -24,7 +24,8 @@ export interface OpinionSubjectDto {
 
 export interface FindSubjectsRequestDto {
   pageable: PageRequestDto;
-  query: string;
+  query?: string;
+  referentId?: Uuid;
 }
 
 export interface CreateSubjectRequestDto {
@@ -43,7 +44,8 @@ export function createSubjectsApi(client: HttpClient = httpClient) {
     ): Promise<PageResponseDto<OpinionSubjectDto>> {
       const query: HttpQueryParams = {
         ...createPageQuery(request.pageable),
-        query: request.query,
+        ...(request.query ? { query: request.query } : {}),
+        ...(request.referentId ? { referentId: request.referentId } : {}),
       };
 
       return client.get<PageResponseDto<OpinionSubjectDto>>("/subjects/find", {

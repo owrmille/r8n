@@ -269,7 +269,11 @@ const CreateReview = () => {
   const createOpinion = useCreateOpinionMutation();
   const linkOpinion = useLinkOpinionToListMutation();
   const findSubjects = useFindSubjects(
-    { query: subjectName.trim(), pageable: { page: 0, size: 10, sort: [{ property: "name", direction: "ASC" }] } },
+    {
+      query: subjectName.trim() || undefined,
+      referentId: linkedSupplier?.id,
+      pageable: { page: 0, size: 10, sort: [{ property: "name", direction: "ASC" }] },
+    },
     { enabled: false },
   );
   const createSubject = useCreateSubjectMutation();
@@ -303,9 +307,9 @@ const CreateReview = () => {
 
     try {
       const results = await findSubjects.refetch();
-      const existingMatch =
-        results.data?.items.find((s) => s.name.toLowerCase() === trimmedSubject.toLowerCase()) ??
-        results.data?.items.find((s) => (s.primaryReferent?.name ?? s.name).toLowerCase() === trimmedSubject.toLowerCase());
+      const existingMatch = results.data?.items.find(
+        (s) => s.name.toLowerCase() === trimmedSubject.toLowerCase(),
+      );
 
       const subject =
         existingMatch ??
