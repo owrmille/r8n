@@ -445,6 +445,9 @@ describe("API modules", () => {
     await opinionsApi.delete({
       opinionId: "44444444-4444-4444-4444-444444444444",
     });
+    await opinionsApi.submitForModeration({
+      opinionId: "77777777-7777-7777-7777-777777777777",
+    });
     await opinionsApi.unlinkComponent({
       linkId: "55555555-5555-5555-5555-555555555555",
     });
@@ -466,9 +469,12 @@ describe("API modules", () => {
       "/api/opinions/44444444-4444-4444-4444-444444444444",
     );
     expect(fetchMock.mock.calls[4][0]).toBe(
-      "/api/opinions/unlink/55555555-5555-5555-5555-555555555555",
+      "/api/opinions/77777777-7777-7777-7777-777777777777/submit-for-moderation",
     );
     expect(fetchMock.mock.calls[5][0]).toBe(
+      "/api/opinions/unlink/55555555-5555-5555-5555-555555555555",
+    );
+    expect(fetchMock.mock.calls[6][0]).toBe(
       "/api/opinions/adjust-weight/66666666-6666-6666-6666-666666666666?weight=0.5",
     );
 
@@ -480,6 +486,9 @@ describe("API modules", () => {
     );
     expect(fetchMock.mock.calls[3][1]).toEqual(
       expect.objectContaining({ method: "DELETE" }),
+    );
+    expect(fetchMock.mock.calls[4][1]).toEqual(
+      expect.objectContaining({ method: "POST" }),
     );
     expect(new Headers(fetchMock.mock.calls[0][1].headers).get("Authorization")).toBe(
       "Bearer stub-access-token-123",

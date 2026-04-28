@@ -8,6 +8,7 @@ import type {
   GetOpinionForSubjectRequestDto,
   LinkOpinionComponentRequestDto,
   OpinionDto,
+  SubmitOpinionForModerationRequestDto,
   UnlinkOpinionComponentRequestDto,
   UpdateOpinionRequestDto,
 } from "@/lib/api/opinions";
@@ -108,6 +109,31 @@ export function useDeleteOpinionMutation(
     ...options,
     meta: {
       errorTitle: "Opinion deletion failed",
+      ...options?.meta,
+    } as ApiErrorMeta,
+    onSuccess: (data, variables, context) => {
+      invalidate(opinionsKeys.all);
+      invalidate(opinionListsKeys.all);
+      options?.onSuccess?.(data, variables, context);
+    },
+  });
+}
+
+export function useSubmitOpinionForModerationMutation(
+  options?: UseMutationOptions<
+    OpinionDto,
+    Error,
+    SubmitOpinionForModerationRequestDto,
+    unknown
+  >,
+) {
+  const invalidate = useApiInvalidation();
+
+  return useAuthorizedMutation({
+    mutationFn: (variables) => opinionsApi.submitForModeration(variables),
+    ...options,
+    meta: {
+      errorTitle: "Opinion submission failed",
       ...options?.meta,
     } as ApiErrorMeta,
     onSuccess: (data, variables, context) => {

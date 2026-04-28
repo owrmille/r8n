@@ -63,6 +63,10 @@ export interface DeleteOpinionRequestDto {
   opinionId: Uuid;
 }
 
+export interface SubmitOpinionForModerationRequestDto {
+  opinionId: Uuid;
+}
+
 export interface LinkOpinionComponentRequestDto {
   childOpinionId: Uuid;
   parentOpinionId: Uuid;
@@ -107,6 +111,17 @@ export function createOpinionsApi(client: HttpClient = httpClient) {
       return client.delete<void>(`/opinions/${request.opinionId}`, {
         auth: "required",
       });
+    },
+
+    submitForModeration(
+      request: SubmitOpinionForModerationRequestDto,
+    ): Promise<OpinionDto> {
+      return client.post<OpinionDto>(
+        `/opinions/${request.opinionId}/submit-for-moderation`,
+        {
+          auth: "required",
+        },
+      );
     },
 
     getById(request: GetOpinionByIdRequestDto): Promise<OpinionDto> {
