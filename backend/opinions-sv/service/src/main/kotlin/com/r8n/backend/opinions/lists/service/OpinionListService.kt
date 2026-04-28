@@ -243,7 +243,7 @@ class OpinionListService(
         val totalWeight = ops.mapNotNull { if (it.mark != null) it.weight else null }.sum()
 
         val componentMark =
-            if (totalWeight > 0 && weightedMarks.size == ops.size) {
+            if (totalWeight > 0) {
                 weightedMarks.sum() / totalWeight
             } else {
                 null

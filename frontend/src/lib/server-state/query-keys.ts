@@ -85,6 +85,7 @@ export const usersKeys = {
   me: () => ["users", "me"] as const,
   detail: (id: string) => ["users", "detail", id] as const,
   avatar: (id: string) => ["users", "avatar", id] as const,
+  withRoles: () => ["users", "with-roles"] as const,
 };
 
 export const queryKeys = {

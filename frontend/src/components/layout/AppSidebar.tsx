@@ -1,4 +1,4 @@
-import { Home, Search, List, Bell, PenLine, ListPlus, LogOut, ShieldCheck, MessageSquare } from "lucide-react";
+import { Home, Search, List, Bell, PenLine, ListPlus, LogOut, ShieldCheck, MessageSquare, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { NavLink } from "@/components/NavLink";
@@ -20,15 +20,15 @@ import {
 } from "@/components/ui/sidebar";
 import { useSidebar } from "@/components/ui/use-sidebar";
 
-const baseItems = [
+const mainItems = [
   { title: "Dashboard", url: "/", icon: Home },
   { title: "Discover", url: "/discover", icon: Search },
   { title: "My Lists", url: "/lists", icon: List },
   { title: "Requests", url: "/requests", icon: Bell },
   { title: "Messages", url: "/messages", icon: MessageSquare },
-];
-
-const moderationItem = { title: "Moderation", url: "/moderation/opinions", icon: ShieldCheck };
+  { title: "Moderation", url: "/moderation/opinions", icon: ShieldCheck, roles: ["MODERATOR", "SUPPORT", "ADMIN"] },
+  { title: "User Roles", url: "/moderation/roles", icon: Users, roles: ["ADMIN"] },
+] as const;
 
 export function AppSidebar() {
   const { state } = useSidebar();
@@ -47,9 +47,6 @@ export function AppSidebar() {
     { refetchInterval: 30_000 },
   );
   const pendingCount = pendingRequests?.total ?? 0;
-
-  const canModerate = me?.roles?.some((r) => r === "MODERATOR" || r === "ADMIN") ?? false;
-  const mainItems = canModerate ? [...baseItems, moderationItem] : baseItems;
 
   const isActive = (path: string) =>
     path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
@@ -94,7 +91,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainItems.map((item) => (
+              {mainItems.filter((item) => !("roles" in item) || item.roles.some((r) => me?.roles?.includes(r))).map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink

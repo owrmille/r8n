@@ -174,9 +174,15 @@ VALUES ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000
 UPDATE users.pii SET email = lower(trim(email));
 CREATE UNIQUE INDEX idx_pii_normalized_email ON users.pii (lower(email));
 
---changeset ditabisko:V10_seed_test_user_roles context:local,test
+--changeset ditabisko:V10_seed_test_admin_role context:local,test
 INSERT INTO users.users_role_assignments (id, "user", role, granted_by, timestamp)
-VALUES ('a0a0a0a0-a0a0-a0a0-a0a0-a0a0a0a0a0a0', '00000000-0000-0000-0000-000000000000', 'MODERATOR', '00000000-0000-0000-0000-000000000000', '2024-01-01T12:00:00Z');
+VALUES ('a0a0a0a0-a0a0-a0a0-a0a0-a0a0a0a0a0a0', '00000000-0000-0000-0000-000000000000', 'ADMIN', '00000000-0000-0000-0000-000000000000', '2024-01-01T12:00:00Z')
+ON CONFLICT DO NOTHING;
+
+--changeset ditabisko:V11_seed_lena_moderator_role context:local,test
+INSERT INTO users.users_role_assignments (id, "user", role, granted_by, timestamp)
+VALUES ('b0b0b0b0-b0b0-b0b0-b0b0-b0b0b0b0b0b0', '30303030-3030-3030-3030-303030303030', 'MODERATOR', '00000000-0000-0000-0000-000000000000', '2024-01-01T12:00:00Z')
+ON CONFLICT DO NOTHING;
 
 --changeset iatopchu:V11_seed_support_role context:local,test
 --preconditions onFail:MARK_RAN
@@ -189,3 +195,13 @@ VALUES (
     '10101010-1010-1010-1010-101010101010',
     '2024-01-01T12:00:00Z'
 );
+
+--changeset ditabisko:V12_unique_user_role_constraint
+ALTER TABLE users.users_role_assignments
+    ADD CONSTRAINT uq_user_role UNIQUE ("user", role);
+
+--changeset ditabisko:V13_upgrade_test_user_to_admin context:local,test
+UPDATE users.users_role_assignments
+SET role = 'ADMIN'
+WHERE id = 'a0a0a0a0-a0a0-a0a0-a0a0-a0a0a0a0a0a0'
+  AND role <> 'ADMIN';
