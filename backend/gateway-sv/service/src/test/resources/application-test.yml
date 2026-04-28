@@ -26,7 +26,7 @@ spring:
             - id: opinions
               uri: http://localhost:8081
               predicates:
-                - Path=/api/access-requests/**,/api/opinion-lists/**,/api/opinions/**
+                - Path=/api/access-requests/**,/api/opinion-lists/**,/api/opinions/**,/api/subjects/**
             - id: users
               uri: http://localhost:8082
               predicates:
