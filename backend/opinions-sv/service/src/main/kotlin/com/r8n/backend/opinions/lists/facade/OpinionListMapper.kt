@@ -44,12 +44,16 @@ class OpinionListMapper(
 
     fun toDto(opinionSummary: OpinionSummary) =
         with(opinionSummary) {
+            val subjectDetails = subjectService.getSubject(subject)
             OpinionSummaryDto(
                 subject = subject,
-                subjectName = subjectService.getSubjectName(subject) ?: "UNNAMED",
+                subjectName = subjectDetails?.name ?: "UNNAMED",
+                address = subjectDetails?.primaryReferent?.address,
+                latitude = subjectDetails?.primaryReferent?.latitude,
+                longitude = subjectDetails?.primaryReferent?.longitude,
                 ownMark = ownMark,
                 componentMark = componentMark,
-                opinions = opinions.map { opinionMapper.toDto(it) },
+                opinions = opinions.map { opinionMapper.toRowDto(it) },
             )
         }
 

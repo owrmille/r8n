@@ -51,6 +51,7 @@ export interface SetOpinionListPrivacyRequestDto {
 export interface LinkOpinionToListRequestDto {
   listId: Uuid;
   opinionId: Uuid;
+  weight?: number;
 }
 
 export interface UnlinkOpinionFromListRequestDto {
@@ -84,8 +85,23 @@ export interface GetMyOpinionListsRequestDto {
   pageable: PageRequestDto;
 }
 
+export interface CreateOpinionListRequestDto {
+  name: string;
+  privacy: OpinionListPrivacyEnumDto;
+}
+
 export function createOpinionListsApi(client: HttpClient = httpClient) {
   return {
+    create(request: CreateOpinionListRequestDto): Promise<OpinionListDto> {
+      return client.post<OpinionListDto>("/opinion-lists", {
+        auth: "required",
+        query: {
+          name: request.name,
+          privacy: request.privacy,
+        },
+      });
+    },
+
     getMine(
       request: GetMyOpinionListsRequestDto,
     ): Promise<PageResponseDto<OpinionListSummaryDto>> {
@@ -121,6 +137,7 @@ export function createOpinionListsApi(client: HttpClient = httpClient) {
         auth: "required",
         query: {
           opinionId: request.opinionId,
+          weight: request.weight,
         },
       });
     },

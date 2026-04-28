@@ -24,6 +24,7 @@ interface OpinionListsApi {
         private const val ROOT_PATH = "/api/opinion-lists"
         const val SUMMARY_PATH = "$ROOT_PATH/{listId}/summary"
         const val GET_PATH = "$ROOT_PATH/{listId}"
+        const val CREATE_PATH = ROOT_PATH
         const val RENAME_PATH = "$ROOT_PATH/{listId}/rename"
         const val SET_PRIVACY_PATH = "$ROOT_PATH/{listId}/set-privacy"
         const val LINK_PATH = "$ROOT_PATH/{listId}/link"
@@ -43,6 +44,16 @@ interface OpinionListsApi {
     fun getList(
         @PathVariable listId: UUID,
         @RequestParam(required = false) publishedAfter: java.time.Instant?,
+    ): OpinionListDto
+
+    @PostMapping(CREATE_PATH)
+    fun createList(
+        @RequestParam(required = true)
+        @NotBlank
+        @Size(min = 1, max = 255)
+        name: String,
+        @RequestParam(required = true)
+        privacy: OpinionListPrivacyEnumDto,
     ): OpinionListDto
 
     @PatchMapping(RENAME_PATH)

@@ -13,7 +13,6 @@ import com.r8n.backend.opinions.lists.persistence.OpinionListPersistence
 import com.r8n.backend.opinions.lists.persistence.OpinionListSyncPersistence
 import com.r8n.backend.opinions.lists.persistence.OpinionsToOpinionListsPersistence
 import com.r8n.backend.opinions.opinions.domain.Opinion
-import com.r8n.backend.opinions.opinions.domain.WeightedOpinionReference
 import com.r8n.backend.opinions.opinions.service.OpinionService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -31,6 +30,23 @@ class OpinionListService(
     private val accessService: AccessService,
     private val syncRepository: OpinionListSyncRepository,
 ) {
+    @Transactional
+    fun createList(
+        ownerId: UUID,
+        name: String,
+        privacy: OpinionListPrivacyEnum,
+    ): OpinionList {
+        val saved =
+            opinionListRepository.save(
+                OpinionListPersistence(
+                    owner = ownerId,
+                    name = name,
+                    privacy = privacy,
+                ),
+            )
+        return getList(saved.id!!, ownerId)
+    }
+
     fun syncWithOpinionList(
         userId: UUID,
         existingListId: UUID,
@@ -259,14 +275,7 @@ class OpinionListService(
             subject = subject,
             ownMark = own?.mark,
             componentMark = componentMark,
-            opinions =
-                ops.map {
-                    WeightedOpinionReference(
-                        id = it.id,
-                        opinion = it.id,
-                        weight = it.weight!!,
-                    )
-                },
+            opinions = ops,
         )
     }
 
@@ -278,14 +287,7 @@ class OpinionListService(
             subject = subject,
             ownMark = ownOpinion.mark,
             componentMark = null,
-            opinions =
-                listOf(
-                    WeightedOpinionReference(
-                        id = ownOpinion.id,
-                        opinion = ownOpinion.id,
-                        weight = ownOpinion.weight!!,
-                    ),
-                ),
+            opinions = listOf(ownOpinion),
         )
 
     fun getListInfo(
@@ -329,6 +331,33 @@ class OpinionListService(
         opinionListRepository
             .findByOwner(ownerId, pageable)
             .map { getList(it.id!!, ownerId) }
+
+    @Transactional(readOnly = true)
+    fun searchAccessible(
+        requesterId: UUID,
+        nameSubstring: String?,
+        authorId: UUID?,
+        pageable: Pageable,
+    ): Page<OpinionListInfo> {
+        val trimmedName = nameSubstring?.trim().takeIf { !it.isNullOrEmpty() } ?: return Page.empty(pageable)
+
+        return opinionListRepository
+            .searchAccessible(
+                requesterId = requesterId,
+                nameSubstring = trimmedName,
+                authorId = authorId,
+                pageable = pageable,
+            ).map { list ->
+                OpinionListInfo(
+                    id = list.id!!,
+                    name = list.name,
+                    owner = list.owner,
+                    privacy = list.privacy,
+                    opinionsCount = opinionsAssignmentRepository.countByOpinionList(list.id!!),
+                    grantedAccessCount = accessService.countAcceptedForList(list.id!!),
+                )
+            }
+    }
 
     private companion object {
         fun toDomain(

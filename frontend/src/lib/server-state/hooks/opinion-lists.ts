@@ -1,6 +1,7 @@
 import type { QueryKey, UseMutationOptions, UseQueryOptions } from "@tanstack/react-query";
-import { opinionListsApi } from "@/lib/api";
+import { opinionListsApi, opinionsApi } from "@/lib/api";
 import type {
+  CreateOpinionListRequestDto,
   GetMyOpinionListsRequestDto,
   GetOpinionListRequestDto,
   GetOpinionListSummaryRequestDto,
@@ -14,7 +15,7 @@ import type {
   UnlinkOpinionFromListRequestDto,
   UnsyncOpinionListsRequestDto,
 } from "@/lib/api/opinion-lists";
-import type { PageResponseDto } from "@/lib/api/shared";
+import type { PageResponseDto, Uuid } from "@/lib/api/shared";
 import { opinionListsKeys } from "@/lib/server-state/query-keys";
 import type { ApiErrorMeta } from "@/lib/server-state/query-client";
 import { useApiInvalidation, useAuthorizedMutation, useAuthorizedQuery } from "@/lib/server-state/hooks/authorized";
@@ -85,6 +86,30 @@ export function useSearchOpinionLists(
   });
 }
 
+export function useCreateOpinionListMutation(
+  options?: UseMutationOptions<
+    OpinionListDto,
+    Error,
+    CreateOpinionListRequestDto,
+    unknown
+  >,
+) {
+  const invalidate = useApiInvalidation();
+
+  return useAuthorizedMutation({
+    mutationFn: (variables) => opinionListsApi.create(variables),
+    ...options,
+    meta: {
+      errorTitle: "List creation failed",
+      ...options?.meta,
+    } as ApiErrorMeta,
+    onSuccess: (data, variables, context) => {
+      invalidate(opinionListsKeys.all);
+      options?.onSuccess?.(data, variables, context);
+    },
+  });
+}
+
 export function useRenameOpinionListMutation(
   options?: UseMutationOptions<
     OpinionListDto,
@@ -148,6 +173,43 @@ export function useLinkOpinionToListMutation(
     ...options,
     meta: {
       errorTitle: "Link opinion failed",
+      ...options?.meta,
+    } as ApiErrorMeta,
+    onSuccess: (data, variables, context) => {
+      invalidate(opinionListsKeys.all);
+      options?.onSuccess?.(data, variables, context);
+    },
+  });
+}
+
+export interface LinkMyOpinionForSubjectToListRequestDto {
+  listId: Uuid;
+  subjectId: Uuid;
+  weight?: number;
+}
+
+export function useLinkMyOpinionForSubjectToListMutation(
+  options?: UseMutationOptions<
+    OpinionListDto,
+    Error,
+    LinkMyOpinionForSubjectToListRequestDto,
+    unknown
+  >,
+) {
+  const invalidate = useApiInvalidation();
+
+  return useAuthorizedMutation({
+    mutationFn: async (variables) => {
+      const opinion = await opinionsApi.getForSubject({ subjectId: variables.subjectId });
+      return opinionListsApi.linkOpinion({
+        listId: variables.listId,
+        opinionId: opinion.id,
+        weight: variables.weight,
+      });
+    },
+    ...options,
+    meta: {
+      errorTitle: "Import opinion failed",
       ...options?.meta,
     } as ApiErrorMeta,
     onSuccess: (data, variables, context) => {

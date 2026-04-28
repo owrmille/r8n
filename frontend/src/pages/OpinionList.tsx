@@ -17,11 +17,13 @@ import {
 import {
   useOpinionList,
   useLinkOpinionToListMutation,
+  useLinkMyOpinionForSubjectToListMutation,
   useSyncOpinionListsMutation,
   useSearchOpinionLists,
 } from "@/lib/server-state/hooks/opinion-lists";
-import { useOpinion, useCreateOpinionMutation, useAdjustOpinionComponentWeightMutation } from "@/lib/server-state/hooks/opinions";
-import type { OpinionSummaryDto, WeightedOpinionReferenceDto } from "@/lib/api/opinions";
+import { useCreateOpinionMutation } from "@/lib/server-state/hooks/opinions";
+import { useFindSubjects } from "@/lib/server-state/hooks/subjects";
+import type { OpinionRowDto, OpinionSummaryDto } from "@/lib/api/opinions";
 import type { OpinionListSummaryDto } from "@/lib/api/opinion-lists";
 import type { Uuid } from "@/lib/api/shared";
 
@@ -37,15 +39,14 @@ const OpinionListPage = () => {
     { enabled: !!listId },
   );
 
-  const adjustWeight = useAdjustOpinionComponentWeightMutation();
   const createOpinion = useCreateOpinionMutation();
   const linkOpinion = useLinkOpinionToListMutation();
 
   const summaries = data?.opinionSummaries ?? [];
 
-  const handleAdjustWeight = useCallback((linkId: Uuid, weight: number) => {
-    adjustWeight.mutate({ linkId, weight });
-  }, [adjustWeight]);
+  const handleAdjustWeight = useCallback((opinionId: Uuid, weight: number) => {
+    linkOpinion.mutate({ listId: listId!, opinionId, weight });
+  }, [linkOpinion, listId]);
 
   const handleAddReview = useCallback(async (
     subjectId: Uuid,
@@ -101,7 +102,7 @@ const OpinionListPage = () => {
 
           <div className="flex flex-wrap items-center gap-2 mb-6">
             <Button variant="default" size="sm" className="rounded-lg text-xs" asChild>
-              <Link to="/create">
+              <Link to={listId ? `/create?listId=${listId}` : "/create"}>
                 <Plus className="mr-1 h-3 w-3" /> Write review
               </Link>
             </Button>
@@ -181,7 +182,7 @@ const OpinionListPage = () => {
                       onToggle={() => setExpandedItem(expandedItem === summary.subject ? null : summary.subject)}
                       onAdjustWeight={handleAdjustWeight}
                       onAddReview={handleAddReview}
-                      isAdjustingWeight={adjustWeight.isPending}
+                      isAdjustingWeight={linkOpinion.isPending}
                       isAddingReview={createOpinion.isPending || linkOpinion.isPending}
                     />
                   ))}
@@ -207,7 +208,7 @@ const ItemRow = ({
   summary: OpinionSummaryDto;
   isExpanded: boolean;
   onToggle: () => void;
-  onAdjustWeight: (linkId: Uuid, weight: number) => void;
+  onAdjustWeight: (opinionId: Uuid, weight: number) => void;
   onAddReview: (subjectId: Uuid, mark: number, subjective: string, objective: string) => Promise<void>;
   isAdjustingWeight: boolean;
   isAddingReview: boolean;
@@ -301,7 +302,7 @@ const ItemRow = ({
                         <tbody>
                           {summary.opinions.map((ref) => (
                             <OpinionRow
-                              key={ref.id}
+                              key={ref.opinionId}
                               ref_={ref}
                               onWeightChange={onAdjustWeight}
                               isAdjustingWeight={isAdjustingWeight}
@@ -395,32 +396,22 @@ const OpinionRow = ({
   onWeightChange,
   isAdjustingWeight,
 }: {
-  ref_: WeightedOpinionReferenceDto;
-  onWeightChange: (linkId: Uuid, weight: number) => void;
+  ref_: OpinionRowDto;
+  onWeightChange: (opinionId: Uuid, weight: number) => void;
   isAdjustingWeight: boolean;
 }) => {
-  const { data: opinion, isLoading } = useOpinion({ id: ref_.opinion });
-
-  if (isLoading) {
-    return (
-      <tr className="border-b border-border last:border-0">
-        <td colSpan={6} className="px-3 py-2.5 text-muted-foreground">Loading…</td>
-      </tr>
-    );
-  }
-
   return (
     <tr className="border-b border-border last:border-0">
       <td className="px-3 py-2.5 text-foreground font-medium">
         <div className="flex items-center gap-2">
-          <UserAvatar userId={opinion?.owner} name={opinion?.ownerName ?? "?"} size="sm" />
-          {opinion?.ownerName ?? "—"}
+          <UserAvatar userId={ref_.owner} name={ref_.ownerName} size="sm" />
+          {ref_.ownerName}
         </div>
       </td>
-      <td className="px-3 py-2.5 text-muted-foreground">{opinion?.subjective.join(", ") ?? "—"}</td>
-      <td className="px-3 py-2.5 text-muted-foreground hidden sm:table-cell">{opinion?.objective.join(", ") ?? "—"}</td>
+      <td className="px-3 py-2.5 text-muted-foreground">{ref_.subjective.join(", ")}</td>
+      <td className="px-3 py-2.5 text-muted-foreground hidden sm:table-cell">{ref_.objective.join(", ")}</td>
       <td className="px-3 py-2.5 font-mono font-medium text-foreground">
-        {opinion?.mark !== null && opinion?.mark !== undefined ? opinion.mark.toFixed(1) : "—"}
+        {ref_.mark !== null ? ref_.mark.toFixed(1) : "—"}
       </td>
       <td className="px-3 py-1.5 font-mono text-muted-foreground hidden md:table-cell">
         <Input
@@ -433,14 +424,14 @@ const OpinionRow = ({
           disabled={isAdjustingWeight}
           onChange={(e) => {
             const val = parseFloat(e.target.value);
-            if (!isNaN(val)) onWeightChange(ref_.id, Math.min(1, Math.max(0, val)));
+            if (!isNaN(val)) onWeightChange(ref_.opinionId, Math.min(1, Math.max(0, val)));
           }}
           onClick={(e) => e.stopPropagation()}
           className="h-7 w-16 px-2 text-xs font-mono bg-transparent border-border"
         />
       </td>
       <td className="px-3 py-2.5 text-muted-foreground hidden lg:table-cell capitalize">
-        {opinion?.status.toLowerCase().replace("_", " ") ?? "—"}
+        {ref_.status.toLowerCase().replace("_", " ")}
       </td>
     </tr>
   );
@@ -456,32 +447,94 @@ const LinkOpinionDialog = ({
   listId: Uuid;
 }) => {
   const [opinionId, setOpinionId] = useState("");
+  const [subjectQuery, setSubjectQuery] = useState("");
   const linkOpinion = useLinkOpinionToListMutation({
     onSuccess: () => {
       setOpinionId("");
+      setSubjectQuery("");
       onClose();
     },
   });
+
+  const importOpinion = useLinkMyOpinionForSubjectToListMutation({
+    onSuccess: () => {
+      setOpinionId("");
+      setSubjectQuery("");
+      onClose();
+    },
+  });
+
+  const trimmedSubjectQuery = subjectQuery.trim();
+  const { data: subjectsData, isLoading: isSubjectsLoading } = useFindSubjects(
+    { query: trimmedSubjectQuery, pageable: { page: 0, size: 8, sort: [{ property: "name", direction: "ASC" }] } },
+    { enabled: open && trimmedSubjectQuery.length >= 2 },
+  );
+  const subjectResults = subjectsData?.items ?? [];
 
   const handleSubmit = () => {
     if (!opinionId.trim()) return;
     linkOpinion.mutate({ listId, opinionId: opinionId.trim() });
   };
 
+  const handleImport = (subjectId: Uuid) => {
+    importOpinion.mutate({ listId, subjectId });
+  };
+
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Link existing opinion</DialogTitle>
         </DialogHeader>
-        <div className="space-y-2 py-2">
-          <label className="text-xs font-medium text-muted-foreground">Opinion ID</label>
-          <Input
-            placeholder="Paste opinion UUID…"
-            value={opinionId}
-            onChange={(e) => setOpinionId(e.target.value)}
-            className="text-xs font-mono"
-          />
+        <div className="space-y-4 py-2">
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">Opinion ID</label>
+            <Input
+              placeholder="Paste opinion UUID…"
+              value={opinionId}
+              onChange={(e) => setOpinionId(e.target.value)}
+              className="text-xs font-mono"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">Import my opinion by subject</label>
+            <Input
+              placeholder="Search subject name…"
+              value={subjectQuery}
+              onChange={(e) => setSubjectQuery(e.target.value)}
+              className="text-xs"
+            />
+            {trimmedSubjectQuery.length >= 2 && (
+              <div className="rounded-lg border border-border overflow-hidden">
+                {isSubjectsLoading ? (
+                  <p className="px-3 py-2 text-xs text-muted-foreground">Searching…</p>
+                ) : subjectResults.length === 0 ? (
+                  <p className="px-3 py-2 text-xs text-muted-foreground">No subjects found.</p>
+                ) : (
+                  <div className="max-h-40 overflow-y-auto divide-y divide-border">
+                    {subjectResults.map((s) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => handleImport(s.id)}
+                        className="w-full px-3 py-2 text-left text-xs hover:bg-muted/50 transition-colors"
+                        disabled={importOpinion.isPending}
+                      >
+                        <span className="block text-foreground">{s.name}</span>
+                        <span className="block text-muted-foreground text-[11px]">
+                          {s.primaryReferent?.address ?? "No address"}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            <p className="text-[11px] text-muted-foreground">
+              Picks your latest opinion for that subject and links it here.
+            </p>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>

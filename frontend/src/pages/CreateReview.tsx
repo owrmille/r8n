@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ImagePlus, Search, Plus, Building2, MapPin } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useMyOpinionLists, useLinkOpinionToListMutation } from "@/lib/server-state/hooks/opinion-lists";
 import { useCreateOpinionMutation } from "@/lib/server-state/hooks/opinions";
+import { useCreateSubjectMutation, useFindSubjects } from "@/lib/server-state/hooks/subjects";
 
 const RatingRow = ({
   label,
@@ -67,6 +68,13 @@ const SupplierSearch = ({
   const [showCreateForm, setShowCreateForm] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
+  const trimmedQuery = query.trim();
+  const findSubjects = useFindSubjects(
+    { query: trimmedQuery, pageable: { page: 0, size: 10, sort: [{ property: "name", direction: "ASC" }] } },
+    { enabled: open && trimmedQuery.length > 0 },
+  );
+  const createSubject = useCreateSubjectMutation();
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
@@ -124,12 +132,47 @@ const SupplierSearch = ({
             className="absolute z-50 mt-1.5 w-full rounded-xl border border-border bg-card shadow-lg overflow-hidden"
           >
             <div className="max-h-48 overflow-y-auto">
-              <p className="px-4 py-3 text-xs text-muted-foreground">
-                {query.length > 0 ? "No results found" : "Start typing to search"}
-              </p>
+              {trimmedQuery.length === 0 ? (
+                <p className="px-4 py-3 text-xs text-muted-foreground">Start typing to search</p>
+              ) : findSubjects.isLoading ? (
+                <p className="px-4 py-3 text-xs text-muted-foreground">Searching…</p>
+              ) : (findSubjects.data?.items?.length ?? 0) === 0 ? (
+                <p className="px-4 py-3 text-xs text-muted-foreground">No results found</p>
+              ) : (
+                <div className="py-1">
+                  {(findSubjects.data?.items ?? []).map((subject) => {
+                    const referentName = subject.primaryReferent?.name ?? subject.name;
+                    const address = subject.primaryReferent?.address;
+                    return (
+                      <button
+                        key={subject.id}
+                        type="button"
+                        onClick={() => {
+                          onChange({ id: subject.id, name: referentName, type: "Existing" });
+                          setQuery("");
+                          setOpen(false);
+                          setShowCreateForm(false);
+                          setNewType("");
+                        }}
+                        className="flex w-full flex-col gap-0.5 px-4 py-2.5 text-left hover:bg-muted/40 transition-colors"
+                      >
+                        <span className="text-sm font-medium text-foreground">{referentName}</span>
+                        {address ? (
+                          <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {address}
+                          </span>
+                        ) : (
+                          <span className="text-[11px] text-muted-foreground">No address</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
-            {query.length > 0 && !showCreateForm && (
+            {trimmedQuery.length > 0 && !showCreateForm && (
               <button
                 type="button"
                 onClick={() => setShowCreateForm(true)}
@@ -163,13 +206,22 @@ const SupplierSearch = ({
                 <Button
                   type="button"
                   size="sm"
-                  disabled={!newType}
-                  onClick={() => {
-                    onChange({ id: `new-${Date.now()}`, name: query, type: newType, isNew: true });
-                    setQuery("");
-                    setOpen(false);
-                    setShowCreateForm(false);
-                    setNewType("");
+                  disabled={!newType || createSubject.isPending}
+                  onClick={async () => {
+                    try {
+                      const created = await createSubject.mutateAsync({
+                        name: trimmedQuery,
+                        referentName: trimmedQuery,
+                      });
+                      const referentName = created.primaryReferent?.name ?? created.name;
+                      onChange({ id: created.id, name: referentName, type: newType });
+                      setQuery("");
+                      setOpen(false);
+                      setShowCreateForm(false);
+                      setNewType("");
+                    } catch {
+                      // error surfaced via mutation meta errorTitle
+                    }
                   }}
                   className="w-full rounded-lg text-xs mt-1"
                 >
@@ -187,6 +239,7 @@ const SupplierSearch = ({
 
 const CreateReview = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [subjectName, setSubjectName] = useState("");
   const [linkedSupplier, setLinkedSupplier] = useState<LinkedSupplier | null>(null);
   const [rating, setRating] = useState<number | null>(null);
@@ -202,15 +255,18 @@ const CreateReview = () => {
 
   const isSubmitting = createOpinion.isPending || linkOpinion.isPending;
 
+  useEffect(() => {
+    const listId = searchParams.get("listId");
+    if (listId) {
+      setSelectedList(listId);
+    }
+  }, [searchParams]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!linkedSupplier) {
       toast({ title: "Missing supplier", description: "Please link this review to a place or brand." });
-      return;
-    }
-    if (linkedSupplier.isNew) {
-      toast({ title: "Not supported yet", description: "Creating new suppliers is not yet available." });
       return;
     }
     if (!rating) {

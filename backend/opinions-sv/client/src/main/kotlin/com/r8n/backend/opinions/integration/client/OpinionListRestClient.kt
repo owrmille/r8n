@@ -3,6 +3,7 @@ package com.r8n.backend.opinions.integration.client
 import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.opinions.api.lists.OpinionListsApi
+import com.r8n.backend.opinions.api.lists.OpinionListsApi.Companion.CREATE_PATH
 import com.r8n.backend.opinions.api.lists.OpinionListsApi.Companion.GET_PATH
 import com.r8n.backend.opinions.api.lists.OpinionListsApi.Companion.LINK_PATH
 import com.r8n.backend.opinions.api.lists.OpinionListsApi.Companion.MINE_PATH
@@ -42,6 +43,21 @@ class OpinionListRestClient(
                     .path(GET_PATH)
                     .queryParamIfPresent("publishedAfter", Optional.ofNullable(publishedAfter))
                     .build(listId)
+            }.retrieve()
+            .body<OpinionListDto>()!!
+
+    override fun createList(
+        name: String,
+        privacy: OpinionListPrivacyEnumDto,
+    ): OpinionListDto =
+        restClient
+            .post()
+            .uri { uriBuilder ->
+                uriBuilder
+                    .path(CREATE_PATH)
+                    .queryParam("name", name)
+                    .queryParam("privacy", privacy)
+                    .build()
             }.retrieve()
             .body<OpinionListDto>()!!
 

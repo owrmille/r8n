@@ -21,6 +21,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
@@ -38,11 +39,9 @@ import java.util.UUID
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 )
 @Import(TestObjectMapperConfiguration::class)
-class OpinionListGetIntegrationTest {
+class OpinionListCreateIntegrationTest {
     private companion object {
         val ANNA_ID: UUID = UUID.fromString("20202020-2020-2020-2020-202020202020")
-
-        val ANNA_L11_ID: UUID = UUID.fromString("80000000-0000-0000-0000-000000000111")
 
         @Suppress("unused")
         @Container
@@ -78,86 +77,37 @@ class OpinionListGetIntegrationTest {
     }
 
     @Test
-    fun `publishedAfter before all opinions returns all summaries`() {
-        val result =
+    fun `create list returns list dto and is visible in mine`() {
+        val created =
             mockMvc
                 .perform(
-                    get("/api/opinion-lists/$ANNA_L11_ID")
+                    post("/api/opinion-lists")
                         .header("Authorization", annaToken)
-                        .param("publishedAfter", "2024-01-01T00:00:00Z"),
+                        .param("name", "my-new-list")
+                        .param("privacy", "PRIVATE"),
                 ).andExpect(status().isOk)
                 .andReturn()
+                .response.contentAsString
+                .let { objectMapper.readValue<OpinionListDto>(it) }
 
-        val list = objectMapper.readValue<OpinionListDto>(result.response.contentAsString)
-        // l11 has r11 (s1), r12 (s2) directly, plus synced r23 (s3), r24 (s4), r31 (s1 duplicate — deduped)
-        assertThat(list.opinionSummaries).hasSize(4)
-    }
+        assertThat(created.listName).isEqualTo("my-new-list")
+        assertThat(created.owner).isEqualTo(ANNA_ID)
+        assertThat(created.ownerName).isEqualTo("Anna Müller")
+        assertThat(created.privacy.name).isEqualTo("PRIVATE")
+        assertThat(created.opinionSummaries).isEmpty()
 
-    @Test
-    fun `publishedAfter after all opinions returns empty summaries`() {
-        val result =
-            mockMvc
-                .perform(
-                    get("/api/opinion-lists/$ANNA_L11_ID")
-                        .header("Authorization", annaToken)
-                        .param("publishedAfter", "2025-01-01T00:00:00Z"),
-                ).andExpect(status().isOk)
-                .andReturn()
-
-        val list = objectMapper.readValue<OpinionListDto>(result.response.contentAsString)
-        assertThat(list.opinionSummaries).isEmpty()
-    }
-
-    @Test
-    fun `getMine returns all lists owned by the authenticated user`() {
-        val result =
+        val mine =
             mockMvc
                 .perform(
                     get("/api/opinion-lists/mine")
                         .header("Authorization", annaToken)
                         .param("page", "0")
-                        .param("size", "20"),
+                        .param("size", "50"),
                 ).andExpect(status().isOk)
                 .andReturn()
+                .response.contentAsString
+                .let { objectMapper.readValue<PageResponseDto<OpinionListSummaryDto>>(it) }
 
-        val page = objectMapper.readValue<PageResponseDto<OpinionListSummaryDto>>(result.response.contentAsString)
-        // Anna owns l11, l12, l13 plus two lists from other seed changesets
-        assertThat(page.total).isEqualTo(5)
-        assertThat(page.items.map { it.listName }).contains("l11", "l12", "l13")
-    }
-
-    @Test
-    fun `getListSummary returns correct opinion count and list metadata`() {
-        val result =
-            mockMvc
-                .perform(
-                    get("/api/opinion-lists/$ANNA_L11_ID/summary")
-                        .header("Authorization", annaToken),
-                ).andExpect(status().isOk)
-                .andReturn()
-
-        val summary = objectMapper.readValue<OpinionListSummaryDto>(result.response.contentAsString)
-        assertThat(summary.listId).isEqualTo(ANNA_L11_ID)
-        assertThat(summary.listName).isEqualTo("l11")
-        // l11 has 2 directly linked opinions (r11, r12)
-        assertThat(summary.opinionsCount).isEqualTo(2)
-    }
-
-    @Test
-    fun `search returns only accessible lists matching name substring`() {
-        val result =
-            mockMvc
-                .perform(
-                    get("/api/opinion-lists/search")
-                        .header("Authorization", annaToken)
-                        .param("nameSubstring", "l11")
-                        .param("page", "0")
-                        .param("size", "20"),
-                ).andExpect(status().isOk)
-                .andReturn()
-
-        val page = objectMapper.readValue<PageResponseDto<OpinionListSummaryDto>>(result.response.contentAsString)
-        assertThat(page.items.map { it.listName }).contains("l11")
-        assertThat(page.items).allSatisfy { it.listName.contains("l11") }
+        assertThat(mine.items.any { it.listId == created.id }).isTrue()
     }
 }

@@ -5,4 +5,5 @@ export * from "@/lib/api/opinion-lists";
 export * from "@/lib/api/opinions";
 export * from "@/lib/api/selectors";
 export * from "@/lib/api/shared";
+export * from "@/lib/api/subjects";
 export * from "@/lib/api/users";
