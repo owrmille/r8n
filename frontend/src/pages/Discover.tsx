@@ -7,13 +7,13 @@ import { QueryState } from "@/components/server-state/QueryState";
 import { Link } from "react-router-dom";
 import { useSearchOpinionLists } from "@/lib/server-state/hooks/opinion-lists";
 
-// Trending reviewers: no user search endpoint yet
-const trendingReviewers = [
-  { id: "alex-kruger", name: "Alex Krüger", reviews: 47, bio: "Berlin food writer" },
-  { id: "mia-svensson", name: "Mia Svensson", reviews: 31, bio: "Nordic cuisine enthusiast" },
-  { id: "tobias-richter", name: "Tobias Richter", reviews: 22, bio: "Weekend explorer" },
-  { id: "sophie-chen", name: "Sophie Chen", reviews: 19, bio: "Coffee & dessert focused" },
-];
+// TODO #195: Suggested Reviewers not implemented yet — hidden until user search endpoint is available
+// const trendingReviewers = [
+//   { id: "alex-kruger", name: "Alex Krüger", reviews: 47, bio: "Berlin food writer" },
+//   { id: "mia-svensson", name: "Mia Svensson", reviews: 31, bio: "Nordic cuisine enthusiast" },
+//   { id: "tobias-richter", name: "Tobias Richter", reviews: 22, bio: "Weekend explorer" },
+//   { id: "sophie-chen", name: "Sophie Chen", reviews: 19, bio: "Coffee & dessert focused" },
+// ];
 
 const Discover = () => {
   const [query, setQuery] = useState("");
@@ -49,8 +49,8 @@ const Discover = () => {
         />
       </div>
 
-      {/* Suggested Reviewers — no user search endpoint yet */}
-      {!query && (
+      {/* TODO #195: Suggested Reviewers hidden until user search endpoint is available */}
+      {/* {!query && (
         <motion.section
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -75,7 +75,7 @@ const Discover = () => {
             ))}
           </div>
         </motion.section>
-      )}
+      )} */}
 
       {/* Lists */}
       <motion.section

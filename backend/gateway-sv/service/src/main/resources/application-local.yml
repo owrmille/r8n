@@ -33,7 +33,7 @@ spring:
             - id: opinions
               uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_OPINIONS_HOST}:${SERVICES_OPINIONS_PORT}
               predicates:
-                - Path=/api/access-requests/**,/api/opinion-lists/**,/api/opinions/**
+                - Path=/api/access-requests/**,/api/opinion-lists/**,/api/opinions/**,/api/subjects/**
             - id: users_v3_api_docs
               uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_USERS_HOST}:${SERVICES_USERS_PORT}
               predicates:
