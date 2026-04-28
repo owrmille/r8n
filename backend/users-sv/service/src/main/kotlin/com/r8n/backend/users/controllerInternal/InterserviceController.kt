@@ -53,4 +53,9 @@ class InterserviceController(
         val sessions = userFacade.getSessionsForUser(id, pageable)
         return sessions.toResponse()
     }
+
+    @PreAuthorize(Authority.IS_SERVICE)
+    override fun restoreUser(user: UserDto) {
+        userFacade.restoreUser(user)
+    }
 }

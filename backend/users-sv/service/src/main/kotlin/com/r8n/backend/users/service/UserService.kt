@@ -1,12 +1,18 @@
 package com.r8n.backend.users.service
 
+import com.r8n.backend.users.api.dto.UserStatusEnumDto
 import com.r8n.backend.users.domain.User
 import com.r8n.backend.users.domain.UserProfile
 import com.r8n.backend.users.domain.UserStatusEnum
 import com.r8n.backend.users.domain.UserWithRoles
 import com.r8n.backend.users.domain.Username
+import com.r8n.backend.users.integration.api.dto.UserDto
+import com.r8n.backend.users.persistence.ConsentPersistence
+import com.r8n.backend.users.persistence.PIIPersistence
 import com.r8n.backend.users.persistence.RoleEnumPersistence
+import com.r8n.backend.users.persistence.UserPersistence
 import com.r8n.backend.users.persistence.UserRoleAssignmentPersistence
+import com.r8n.backend.users.persistence.UserSessionPersistence
 import com.r8n.backend.users.provider.database.PIIRepository
 import com.r8n.backend.users.provider.database.UserRepository
 import com.r8n.backend.users.provider.database.UserRoleAssignmentRepository
@@ -27,6 +33,8 @@ class UserService(
     private val userRepository: UserRepository,
     private val piiRepository: PIIRepository,
     private val userRoleAssignmentRepository: UserRoleAssignmentRepository,
+    private val userSessionRepository: com.r8n.backend.users.provider.database.UserSessionRepository,
+    private val consentRepository: com.r8n.backend.users.provider.database.ConsentRepository,
 ) {
     private companion object {
         const val NAME_MAX_LENGTH = 255
@@ -193,6 +201,60 @@ class UserService(
 
         return getProfile(userId)
     }
+
+    @Transactional
+    fun restoreUser(userDto: UserDto) {
+        val user =
+            UserPersistence(
+                id = userDto.id,
+                status = userDto.status.toPersistence(),
+                statusTimestamp = userDto.statusTimestamp,
+                lastSeenAt = Instant.now(),
+            )
+        userRepository.save(user)
+
+        val pii =
+            PIIPersistence(
+                userId = userDto.id,
+                name = userDto.name,
+                email = userDto.email,
+                phone = null,
+                about = null,
+                location = null,
+            )
+        piiRepository.save(pii)
+
+        userDto.consents.forEach { consentDto ->
+            val session =
+                UserSessionPersistence(
+                    id = consentDto.session.id,
+                    userId = userDto.id,
+                    created = consentDto.session.created,
+                    expires = consentDto.session.expires,
+                    ip = consentDto.session.ip,
+                    os = consentDto.session.os,
+                    userAgent = consentDto.session.userAgent,
+                )
+            userSessionRepository.save(session)
+
+            val consent =
+                ConsentPersistence(
+                    userId = userDto.id,
+                    type = consentDto.type,
+                    accepted = consentDto.accepted,
+                    session = consentDto.session.id,
+                )
+            consentRepository.save(consent)
+        }
+    }
+
+    private fun UserStatusEnumDto.toPersistence() =
+        when (this) {
+            UserStatusEnumDto.ACTIVE -> UserStatusEnum.ACTIVE
+            UserStatusEnumDto.SUSPENDED -> UserStatusEnum.SUSPENDED
+            UserStatusEnumDto.DELETION_PENDING -> UserStatusEnum.DELETION_PENDING
+            UserStatusEnumDto.DELETED -> UserStatusEnum.DELETED
+        }
 
     private fun normalizeRequiredText(
         value: String,

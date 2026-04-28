@@ -14,4 +14,9 @@ interface OpinionRepository : JpaRepository<OpinionPersistence, UUID> {
         id: UUID,
         owner: UUID,
     ): Boolean
+
+    fun findAllByOwnerOrderByTimestampDesc(
+        owner: UUID,
+        pageable: org.springframework.data.domain.Pageable,
+    ): org.springframework.data.domain.Page<OpinionPersistence>
 }

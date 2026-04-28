@@ -17,4 +17,9 @@ class OpinionListInternalController(
     @PreAuthorize(Authority.IS_USER_OR_SERVICE)
     override fun getMineFull(pageable: PageRequestDto): PageResponseDto<OpinionListDto> =
         opinionListFacade.getListsFull(CurrentUserIdentifier.getCurrentUserId(), pageable)
+
+    @PreAuthorize(Authority.IS_SERVICE)
+    override fun restoreOpinionList(list: OpinionListDto) {
+        opinionListFacade.restoreOpinionList(list)
+    }
 }

@@ -2,6 +2,8 @@ package com.r8n.backend.opinions.opinions.service
 
 import com.r8n.backend.opinions.access.domain.OpinionPermissionEnum
 import com.r8n.backend.opinions.access.service.AccessService
+import com.r8n.backend.opinions.api.opinions.dto.OpinionDto
+import com.r8n.backend.opinions.api.opinions.dto.OpinionStatusEnumDto
 import com.r8n.backend.opinions.opinions.database.OpinionRepository
 import com.r8n.backend.opinions.opinions.domain.Opinion
 import com.r8n.backend.opinions.opinions.domain.OpinionStatusEnum
@@ -88,6 +90,12 @@ class OpinionService(
         noteService.replace(savedOpinion.id!!, subjective, objective)
         return savedOpinion.toDomain()
     }
+
+    fun getMyFullOpinions(
+        ownerId: UUID,
+        pageable: org.springframework.data.domain.Pageable,
+    ): org.springframework.data.domain.Page<Opinion> =
+        opinionRepository.findAllByOwnerOrderByTimestampDesc(ownerId, pageable).map { it.toDomain() }
 
     @Transactional
     fun deleteOpinion(
@@ -177,6 +185,36 @@ class OpinionService(
         }
         return getOpinion(parentOpinionId, requesterId)
     }
+
+    @Transactional
+    fun restoreOpinion(dto: OpinionDto) {
+        subjectService.restoreSubject(dto.subject, dto.subjectName)
+
+        val opinion =
+            opinionRepository.save(
+                OpinionPersistence(
+                    id = dto.id,
+                    owner = dto.owner,
+                    subject = dto.subject,
+                    mark = dto.mark,
+                    status = dto.status.toPersistence(),
+                    timestamp = dto.timestamp,
+                ),
+            )
+        noteService.replace(opinion.id!!, dto.subjective, dto.objective)
+
+        dto.components.forEach { ref ->
+            componentService.linkComponent(opinion.id!!, ref.opinion, ref.weight)
+        }
+    }
+
+    private fun OpinionStatusEnumDto.toPersistence() =
+        when (this) {
+            OpinionStatusEnumDto.DRAFT -> OpinionStatusEnum.DRAFT
+            OpinionStatusEnumDto.PENDING_PREMODERATION -> OpinionStatusEnum.PENDING_PREMODERATION
+            OpinionStatusEnumDto.PUBLISHED -> OpinionStatusEnum.PUBLISHED
+            OpinionStatusEnumDto.REJECTED -> OpinionStatusEnum.REJECTED
+        }
 
     private fun OpinionPersistence.toDomain(): Opinion =
         Opinion(

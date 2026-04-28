@@ -114,18 +114,18 @@ services:
     depends_on:
       - database
 
-  export:
+  migration:
     build:
-      context: ./deployment/export
+      context: ./deployment/migration
       dockerfile: Dockerfile
     env_file:
       - ./deployment/config/docker.env
       - ./deployment/secrets/docker.secrets.env
     environment:
       <<: [*tls-common-env, *tls-client-common-env]
-      SERVICE_NAME: export
-      SERVER_SSL_KEY_STORE: /certs/keystore-export.p12
-      SERVICES_EXPORT_PORT: ${SERVICES_EXPORT_PORT:?}
+      SERVICE_NAME: migration
+      SERVER_SSL_KEY_STORE: /certs/keystore-migration.p12
+      SERVICES_MIGRATION_PORT: ${SERVICES_MIGRATION_PORT:?}
       INTERSERVICE_PROTOCOL: ${INTERSERVICE_PROTOCOL:?}
       SERVICES_USERS_HOST: ${SERVICES_USERS_HOST:?}
       SERVICES_USERS_PORT: ${SERVICES_USERS_PORT:?}
@@ -136,7 +136,7 @@ services:
     networks:
       - r8n_net
     volumes:
-      - ./deployment/export/logs:/var/log/r8n
+      - ./deployment/migration/logs:/var/log/r8n
       - ./deployment/certs/internal:/certs:ro
     depends_on:
       - database

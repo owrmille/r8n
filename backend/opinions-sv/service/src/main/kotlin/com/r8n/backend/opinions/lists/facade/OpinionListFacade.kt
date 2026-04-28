@@ -74,4 +74,8 @@ class OpinionListFacade(
         listId: UUID,
         opinionId: UUID,
     ): OpinionListDto = opinionListMapper.toDto(opinionListService.unlinkOpinion(userId, listId, opinionId))
+
+    fun restoreOpinionList(dto: OpinionListDto) {
+        opinionListService.restoreOpinionList(dto)
+    }
 }

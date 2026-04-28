@@ -119,7 +119,7 @@ docker-logs: ## Tail logs for all services
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml logs -f $(SERVICES)
 
 clean-logs: ## Remove deployment log files
-	find deployment -type f -name '*.log' -delete
+	find deployment -type f -name '*.log' -delete || true
 
 $(addprefix docker-logs-,$(SERVICES)): docker-logs-%: ## Tail logs for one service
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml logs -f $*

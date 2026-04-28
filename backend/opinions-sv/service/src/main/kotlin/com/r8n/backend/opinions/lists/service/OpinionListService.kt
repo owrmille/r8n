@@ -4,6 +4,9 @@ import com.r8n.backend.opinions.access.database.AccessRequestRepository
 import com.r8n.backend.opinions.access.domain.OpinionListPermissionEnum
 import com.r8n.backend.opinions.access.domain.RequestStatusEnum
 import com.r8n.backend.opinions.access.service.AccessService
+import com.r8n.backend.opinions.api.lists.dto.OpinionListDto
+import com.r8n.backend.opinions.api.lists.dto.OpinionListPrivacyEnumDto
+import com.r8n.backend.opinions.api.opinions.dto.OpinionDto
 import com.r8n.backend.opinions.lists.database.OpinionListRepository
 import com.r8n.backend.opinions.lists.database.OpinionListSyncRepository
 import com.r8n.backend.opinions.lists.database.OpinionsToOpinionListsRepository
@@ -345,6 +348,40 @@ class OpinionListService(
                 opinionSummaries = summaries,
                 privacy = privacy,
             )
+        }
+    }
+
+    @Transactional
+    fun restoreOpinion(dto: OpinionDto) {
+        opinionService.restoreOpinion(dto)
+    }
+
+    @Transactional
+    fun restoreOpinionList(dto: OpinionListDto) {
+        val list =
+            opinionListRepository.save(
+                OpinionListPersistence(
+                    id = dto.id,
+                    owner = dto.owner,
+                    name = dto.listName,
+                    privacy =
+                        when (dto.privacy) {
+                            OpinionListPrivacyEnumDto.SEARCHABLE -> OpinionListPrivacyEnum.SEARCHABLE
+                            OpinionListPrivacyEnumDto.PRIVATE -> OpinionListPrivacyEnum.PRIVATE
+                        },
+                ),
+            )
+
+        dto.opinionSummaries.forEach { summary ->
+            summary.opinions.forEach { opRef ->
+                opinionsAssignmentRepository.save(
+                    OpinionsToOpinionListsPersistence(
+                        opinionList = list.id!!,
+                        opinion = opRef.opinion,
+                        weight = opRef.weight,
+                    ),
+                )
+            }
         }
     }
 }

@@ -7,17 +7,21 @@ import com.r8n.backend.users.integration.api.dto.UserSessionDto
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import java.util.UUID
 
 interface UsersInternalApi {
     companion object {
-        const val ID_PATH = "/api/internal/users/{id}"
+        const val USERS_PATH = "/api/internal/users"
+        const val ID_PATH = "$USERS_PATH/{id}"
         const val NAME_PATH = "$ID_PATH/name"
         const val SESSIONS_PATH = "$ID_PATH/sessions"
         const val IS_ANY_MODERATOR_PATH = "$ID_PATH/is-any-moderator"
         const val IS_HUMAN_MODERATOR_PATH = "$ID_PATH/is-human-moderator"
         const val IS_AI_MODERATOR_PATH = "$ID_PATH/is-ai-moderator"
         const val IS_ADMIN_PATH = "$ID_PATH/is-admin"
+        const val RESTORE_PATH = "$ID_PATH/restore"
     }
 
     @GetMapping(NAME_PATH)
@@ -56,4 +60,9 @@ interface UsersInternalApi {
     fun isAdmin(
         @PathVariable id: UUID,
     ): Boolean
+
+    @PostMapping(RESTORE_PATH)
+    fun restoreUser(
+        @RequestBody user: UserDto,
+    )
 }

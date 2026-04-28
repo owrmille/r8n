@@ -9,6 +9,7 @@ import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.IS_AI_MO
 import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.IS_ANY_MODERATOR_PATH
 import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.IS_HUMAN_MODERATOR_PATH
 import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.NAME_PATH
+import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.RESTORE_PATH
 import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.SESSIONS_PATH
 import com.r8n.backend.users.integration.api.dto.UserDto
 import com.r8n.backend.users.integration.api.dto.UserSessionDto
@@ -76,4 +77,13 @@ class UsersRestClient(
             .uri(IS_ADMIN_PATH, id)
             .retrieve()
             .body<Boolean>()!!
+
+    override fun restoreUser(user: UserDto) {
+        restClient
+            .post()
+            .uri(RESTORE_PATH)
+            .body(user)
+            .retrieve()
+            .toBodilessEntity()
+    }
 }

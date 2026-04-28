@@ -1,5 +1,9 @@
 package com.r8n.backend.opinions.opinions.facade
 
+import com.r8n.backend.core.api.PageRequestDto
+import com.r8n.backend.core.api.PageResponseDto
+import com.r8n.backend.core.utils.toPageable
+import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.opinions.api.opinions.dto.OpinionDto
 import com.r8n.backend.opinions.opinions.service.OpinionService
 import org.springframework.stereotype.Component
@@ -36,6 +40,15 @@ class OpinionFacade(
         ownerId: UUID,
     ): OpinionDto = opinionMapper.toDto(opinionService.updateOpinion(opinionId, subjective, objective, mark, ownerId))
 
+    fun getMyFullOpinions(
+        ownerId: UUID,
+        pageable: PageRequestDto,
+    ): PageResponseDto<OpinionDto> =
+        opinionService
+            .getMyFullOpinions(ownerId, pageable.toPageable())
+            .map { opinionMapper.toDto(it) }
+            .toResponse()
+
     fun deleteOpinion(
         opinionId: UUID,
         ownerId: UUID,
@@ -60,4 +73,8 @@ class OpinionFacade(
         weight: Double,
         ownerId: UUID,
     ): OpinionDto = opinionMapper.toDto(opinionService.adjustComponentWeight(linkId, weight, ownerId))
+
+    fun restoreOpinion(dto: OpinionDto) {
+        opinionService.restoreOpinion(dto)
+    }
 }

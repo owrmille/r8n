@@ -26,4 +26,13 @@ class OpinionListInternalRestClient(
                     }.build()
             }.retrieve()
             .body<PageResponseDto<OpinionListDto>>()!!
+
+    override fun restoreOpinionList(list: OpinionListDto) {
+        restClient
+            .post()
+            .uri("/api/internal/opinion-lists/restore")
+            .body(list)
+            .retrieve()
+            .toBodilessEntity()
+    }
 }
