@@ -5,6 +5,7 @@ import com.r8n.backend.opinions.api.opinions.dto.OpinionDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionStatusEnumDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionSubjectDto
 import com.r8n.backend.opinions.api.subjects.dto.CreateSubjectRequestDto
+import com.r8n.backend.opinions.api.subjects.dto.SUBJECT_NAME_MAX_LENGTH
 import com.r8n.backend.opinions.stub.OpinionSubjectTestDataFactory.bernardReferent
 import com.r8n.backend.opinions.stub.OpinionSubjectTestDataFactory.cappuccino1A
 import com.r8n.backend.opinions.stub.OpinionSubjectTestDataFactory.cappuccino1G
@@ -158,6 +159,52 @@ class OpinionsIntegrationTests {
 
         val found: PageResponseDto<OpinionSubjectDto> = objectMapper.readValue(findResult.response.contentAsString)
         assertEquals(listOf(created.id), found.items.map { it.id })
+    }
+
+    @Test
+    @WithMockUser
+    fun `creating subject with oversized name returns bad request`() {
+        val accessToken = serviceTokenService.generateAccessToken(REQUESTER, listOf("USER"))
+        val request =
+            CreateSubjectRequestDto(
+                name = "a".repeat(SUBJECT_NAME_MAX_LENGTH + 1),
+                referentName = "Valid referent name",
+                address = null,
+                latitude = null,
+                longitude = null,
+            )
+
+        mockMvc
+            .perform(
+                post("/api/subjects")
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request))
+                    .header("Authorization", "Bearer $accessToken"),
+            ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    @WithMockUser
+    fun `creating subject with oversized referent name returns bad request`() {
+        val accessToken = serviceTokenService.generateAccessToken(REQUESTER, listOf("USER"))
+        val request =
+            CreateSubjectRequestDto(
+                name = "Valid subject name",
+                referentName = "a".repeat(SUBJECT_NAME_MAX_LENGTH + 1),
+                address = null,
+                latitude = null,
+                longitude = null,
+            )
+
+        mockMvc
+            .perform(
+                post("/api/subjects")
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request))
+                    .header("Authorization", "Bearer $accessToken"),
+            ).andExpect(status().isBadRequest)
     }
 
     @Test
