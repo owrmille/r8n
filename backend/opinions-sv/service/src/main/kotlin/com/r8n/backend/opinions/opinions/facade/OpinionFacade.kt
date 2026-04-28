@@ -1,6 +1,11 @@
 package com.r8n.backend.opinions.opinions.facade
 
+import com.r8n.backend.core.api.PageRequestDto
+import com.r8n.backend.core.api.PageResponseDto
+import com.r8n.backend.core.utils.toPageable
+import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.opinions.api.opinions.dto.OpinionDto
+import com.r8n.backend.opinions.api.opinions.dto.OpinionStatusEnumDto
 import com.r8n.backend.opinions.opinions.service.OpinionService
 import org.springframework.stereotype.Component
 import java.util.UUID
@@ -47,6 +52,24 @@ class OpinionFacade(
         opinionId: UUID,
         ownerId: UUID,
     ): OpinionDto = opinionMapper.toDto(opinionService.submitOpinionForModeration(opinionId, ownerId))
+
+    fun getModerationOpinions(
+        status: OpinionStatusEnumDto?,
+        pageable: PageRequestDto,
+    ): PageResponseDto<OpinionDto> =
+        opinionService
+            .getModerationOpinions(
+                status?.let { with(opinionMapper) { it.fromDto() } },
+                pageable.toPageable(),
+            ).map { opinionMapper.toDto(it) }
+            .toResponse()
+
+    fun approveOpinion(opinionId: UUID): OpinionDto = opinionMapper.toDto(opinionService.approveOpinion(opinionId))
+
+    fun rejectOpinion(
+        opinionId: UUID,
+        reason: String,
+    ): OpinionDto = opinionMapper.toDto(opinionService.rejectOpinion(opinionId, reason))
 
     fun linkComponent(
         parentOpinionId: UUID,

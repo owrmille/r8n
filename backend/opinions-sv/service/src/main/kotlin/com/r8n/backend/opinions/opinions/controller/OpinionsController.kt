@@ -11,10 +11,8 @@ import com.r8n.backend.security.Authority.IS_MODERATOR
 import com.r8n.backend.security.Authority.IS_USER
 import com.r8n.backend.security.Authority.IS_USER_OR_SERVICE
 import com.r8n.backend.security.CurrentUserIdentifier.getCurrentUserId
-import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 
 @RestController
@@ -56,19 +54,16 @@ class OpinionsController(
     override fun getModerationOpinions(
         status: OpinionStatusEnumDto?,
         pageable: PageRequestDto,
-    ): PageResponseDto<OpinionDto> =
-        throw ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "Opinion moderation queue is not implemented yet")
+    ): PageResponseDto<OpinionDto> = opinionFacade.getModerationOpinions(status, pageable)
 
     @PreAuthorize(IS_MODERATOR)
-    override fun approveOpinion(opinionId: UUID): OpinionDto =
-        throw ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "Opinion approval is not implemented yet")
+    override fun approveOpinion(opinionId: UUID): OpinionDto = opinionFacade.approveOpinion(opinionId)
 
     @PreAuthorize(IS_MODERATOR)
     override fun rejectOpinion(
         opinionId: UUID,
         request: RejectOpinionRequestDto,
-    ): OpinionDto =
-        throw ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "Opinion rejection is not implemented yet")
+    ): OpinionDto = opinionFacade.rejectOpinion(opinionId, request.reason)
 
     @PreAuthorize(IS_USER)
     override fun linkComponent(

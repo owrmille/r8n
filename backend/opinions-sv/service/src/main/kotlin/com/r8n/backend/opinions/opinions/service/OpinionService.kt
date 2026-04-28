@@ -7,6 +7,8 @@ import com.r8n.backend.opinions.opinions.domain.Opinion
 import com.r8n.backend.opinions.opinions.domain.OpinionStatusEnum
 import com.r8n.backend.opinions.opinions.persistence.OpinionPersistence
 import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -127,6 +129,34 @@ class OpinionService(
         return opinionRepository.save(opinion).toDomain()
     }
 
+    @Transactional(readOnly = true)
+    fun getModerationOpinions(
+        status: OpinionStatusEnum?,
+        pageable: Pageable,
+    ): Page<Opinion> {
+        val requestedStatus = status ?: OpinionStatusEnum.PENDING_PREMODERATION
+        if (requestedStatus != OpinionStatusEnum.PENDING_PREMODERATION) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Moderation queue only supports pending opinions")
+        }
+
+        return opinionRepository.findAllByStatus(requestedStatus, pageable).map { it.toDomain() }
+    }
+
+    @Transactional
+    fun approveOpinion(opinionId: UUID): Opinion = transitionPendingOpinion(opinionId, OpinionStatusEnum.PUBLISHED)
+
+    @Transactional
+    fun rejectOpinion(
+        opinionId: UUID,
+        reason: String,
+    ): Opinion {
+        if (reason.trim().isEmpty()) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Rejection reason must not be blank")
+        }
+
+        return transitionPendingOpinion(opinionId, OpinionStatusEnum.REJECTED)
+    }
+
     @Transactional
     fun linkComponent(
         parentOpinionId: UUID,
@@ -198,6 +228,26 @@ class OpinionService(
             throw ResponseStatusException(HttpStatus.NOT_FOUND)
         }
         return getOpinion(parentOpinionId, requesterId)
+    }
+
+    private fun transitionPendingOpinion(
+        opinionId: UUID,
+        targetStatus: OpinionStatusEnum,
+    ): Opinion {
+        val opinion =
+            opinionRepository
+                .findById(opinionId)
+                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
+        if (opinion.status != OpinionStatusEnum.PENDING_PREMODERATION) {
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Only opinions pending premoderation can be moderated",
+            )
+        }
+
+        opinion.status = targetStatus
+        opinion.timestamp = Instant.now()
+        return opinionRepository.save(opinion).toDomain()
     }
 
     private fun OpinionPersistence.toDomain(): Opinion =

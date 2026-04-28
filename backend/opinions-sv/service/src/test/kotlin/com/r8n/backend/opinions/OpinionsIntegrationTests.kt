@@ -4,6 +4,7 @@ import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionStatusEnumDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionSubjectDto
+import com.r8n.backend.opinions.api.opinions.dto.RejectOpinionRequestDto
 import com.r8n.backend.opinions.api.subjects.dto.CreateSubjectRequestDto
 import com.r8n.backend.opinions.api.subjects.dto.SUBJECT_NAME_MAX_LENGTH
 import com.r8n.backend.opinions.stub.OpinionSubjectTestDataFactory.bernardReferent
@@ -396,6 +397,128 @@ class OpinionsIntegrationTests {
                 post("/api/opinions/${created.id}/submit-for-moderation")
                     .with(csrf())
                     .header("Authorization", "Bearer $accessToken"),
+            ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    @WithMockUser
+    fun `moderator can list pending moderation opinions`() {
+        val ownerToken = serviceTokenService.generateAccessToken(REQUESTER, listOf("USER"))
+        val moderatorToken = serviceTokenService.generateAccessToken(STRANGER, listOf("MODERATOR"))
+        val created = createDraftOpinion(ownerToken, "moderation queue subjective")
+        submitForModeration(ownerToken, created.id)
+
+        val result =
+            mockMvc
+                .perform(
+                    get("/api/opinions/moderation")
+                        .with(csrf())
+                        .queryParam("status", "PENDING_PREMODERATION")
+                        .queryParam("page", "0")
+                        .queryParam("size", "20")
+                        .header("Authorization", "Bearer $moderatorToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val actual: PageResponseDto<OpinionDto> = objectMapper.readValue(result.response.contentAsString)
+        assertEquals(true, actual.items.any { it.id == created.id })
+        assertEquals(true, actual.items.all { it.status == OpinionStatusEnumDto.PENDING_PREMODERATION })
+    }
+
+    @Test
+    @WithMockUser
+    fun `regular user cannot list pending moderation opinions`() {
+        val accessToken = serviceTokenService.generateAccessToken(REQUESTER, listOf("USER"))
+
+        mockMvc
+            .perform(
+                get("/api/opinions/moderation")
+                    .with(csrf())
+                    .queryParam("page", "0")
+                    .queryParam("size", "20")
+                    .header("Authorization", "Bearer $accessToken"),
+            ).andExpect(status().isForbidden)
+    }
+
+    @Test
+    @WithMockUser
+    fun `moderator can approve pending opinion`() {
+        val ownerToken = serviceTokenService.generateAccessToken(REQUESTER, listOf("USER"))
+        val moderatorToken = serviceTokenService.generateAccessToken(STRANGER, listOf("MODERATOR"))
+        val created = createDraftOpinion(ownerToken, "approval subjective")
+        submitForModeration(ownerToken, created.id)
+
+        val approveResult =
+            mockMvc
+                .perform(
+                    post("/api/opinions/${created.id}/approve")
+                        .with(csrf())
+                        .header("Authorization", "Bearer $moderatorToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val actual: OpinionDto = objectMapper.readValue(approveResult.response.contentAsString)
+        assertEquals(created.id, actual.id)
+        assertEquals(OpinionStatusEnumDto.PUBLISHED, actual.status)
+    }
+
+    @Test
+    @WithMockUser
+    fun `moderator can reject pending opinion with reason`() {
+        val ownerToken = serviceTokenService.generateAccessToken(REQUESTER, listOf("USER"))
+        val moderatorToken = serviceTokenService.generateAccessToken(STRANGER, listOf("MODERATOR"))
+        val created = createDraftOpinion(ownerToken, "rejection subjective")
+        submitForModeration(ownerToken, created.id)
+
+        val rejectResult =
+            mockMvc
+                .perform(
+                    post("/api/opinions/${created.id}/reject")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                            objectMapper.writeValueAsString(
+                                RejectOpinionRequestDto("Please remove unsupported personal claims."),
+                            ),
+                        ).header("Authorization", "Bearer $moderatorToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val actual: OpinionDto = objectMapper.readValue(rejectResult.response.contentAsString)
+        assertEquals(created.id, actual.id)
+        assertEquals(OpinionStatusEnumDto.REJECTED, actual.status)
+    }
+
+    @Test
+    @WithMockUser
+    fun `reject opinion requires non blank reason`() {
+        val ownerToken = serviceTokenService.generateAccessToken(REQUESTER, listOf("USER"))
+        val moderatorToken = serviceTokenService.generateAccessToken(STRANGER, listOf("MODERATOR"))
+        val created = createDraftOpinion(ownerToken, "blank rejection subjective")
+        submitForModeration(ownerToken, created.id)
+
+        mockMvc
+            .perform(
+                post("/api/opinions/${created.id}/reject")
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(RejectOpinionRequestDto(" ")))
+                    .header("Authorization", "Bearer $moderatorToken"),
+            ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    @WithMockUser
+    fun `moderator cannot approve draft opinion`() {
+        val ownerToken = serviceTokenService.generateAccessToken(REQUESTER, listOf("USER"))
+        val moderatorToken = serviceTokenService.generateAccessToken(STRANGER, listOf("MODERATOR"))
+        val created = createDraftOpinion(ownerToken, "draft approval subjective")
+
+        mockMvc
+            .perform(
+                post("/api/opinions/${created.id}/approve")
+                    .with(csrf())
+                    .header("Authorization", "Bearer $moderatorToken"),
             ).andExpect(status().isBadRequest)
     }
 
@@ -846,5 +969,37 @@ class OpinionsIntegrationTests {
                     .queryParam("weight", "0.50")
                     .header("Authorization", "Bearer $otherUserToken"),
             ).andExpect(status().isForbidden)
+    }
+
+    private fun createDraftOpinion(
+        accessToken: String?,
+        subjective: String,
+    ): OpinionDto {
+        val createResult =
+            mockMvc
+                .perform(
+                    post("/api/opinions")
+                        .with(csrf())
+                        .queryParam("subjectId", "15151515-1515-1515-1515-151515151515")
+                        .queryParam("subjective", subjective)
+                        .queryParam("objective", "moderation objective")
+                        .queryParam("mark", "5.00")
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        return objectMapper.readValue(createResult.response.contentAsString)
+    }
+
+    private fun submitForModeration(
+        accessToken: String?,
+        opinionId: UUID,
+    ) {
+        mockMvc
+            .perform(
+                post("/api/opinions/$opinionId/submit-for-moderation")
+                    .with(csrf())
+                    .header("Authorization", "Bearer $accessToken"),
+            ).andExpect(status().isOk)
     }
 }
