@@ -134,7 +134,11 @@ class UserService(
                 if (adminId == userId) {
                     throw ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot remove your own admin role")
                 }
-                if (userRoleAssignmentRepository.countByRoleExcludingStatus(RoleEnumPersistence.ADMIN, UserStatusEnum.DELETED) <= 1) {
+                if (userRoleAssignmentRepository.countByRoleExcludingStatus(
+                        RoleEnumPersistence.ADMIN,
+                        UserStatusEnum.DELETED,
+                    ) <= 1
+                ) {
                     throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Cannot remove the last admin")
                 }
             }
