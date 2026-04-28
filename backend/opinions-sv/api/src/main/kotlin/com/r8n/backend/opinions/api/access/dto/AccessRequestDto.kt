@@ -9,7 +9,7 @@ data class AccessRequestDto(
     val opinionListName: String,
     val owner: UUID,
     val ownerName: String,
-    val requester: UUID,
+    var requester: UUID,
     val requesterName: String,
     val timestamp: Instant,
     val status: RequestStatusEnumDto,

@@ -100,9 +100,7 @@ class UserFacade(
             )
         }
 
-    fun restoreUser(userDto: UserDto) {
-        userService.restoreUser(userDto)
-    }
+    fun restoreUser(userDto: UserDto): UUID = userService.restoreUser(userDto)
 
     private fun UserProfile.toDto() =
         UserProfileDto(

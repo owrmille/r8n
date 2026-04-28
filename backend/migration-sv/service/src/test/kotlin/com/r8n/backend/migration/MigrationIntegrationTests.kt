@@ -39,6 +39,7 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
 import org.springframework.data.domain.PageImpl
+import org.springframework.mock.web.MockMultipartFile
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
@@ -263,6 +264,8 @@ class MigrationIntegrationTests {
     @Test
     @WithMockUser(username = USER_ID)
     fun `import process restores data`() {
+        val accessToken = serviceTokenService.generateAccessToken(UUID.fromString(USER_ID), listOf("USER"))
+
         val data =
             UserCompleteDataDto(
                 id = UUID.fromString(USER_ID),
@@ -283,7 +286,7 @@ class MigrationIntegrationTests {
             )
         val json = objectMapper.writeValueAsString(data)
         val file =
-            org.springframework.mock.web.MockMultipartFile(
+            MockMultipartFile(
                 "file",
                 "export.json",
                 "application/json",
@@ -293,6 +296,7 @@ class MigrationIntegrationTests {
         mockMvc
             .perform(
                 multipart("/api/migration/import")
+                    .header("Authorization", "Bearer $accessToken")
                     .file(file),
             ).andExpect(status().isOk)
 

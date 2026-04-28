@@ -72,7 +72,7 @@ class DataExportService(
         val sessions = usersClient.getSessionsForUser(userId, PageRequestDto(0, Int.MAX_VALUE))
 
         return UserCompleteDataDto(
-            id = user.id,
+            id = user.id!!,
             status = user.status,
             statusTimestamp = user.statusTimestamp,
             consents =

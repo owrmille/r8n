@@ -78,12 +78,11 @@ class UsersRestClient(
             .retrieve()
             .body<Boolean>()!!
 
-    override fun restoreUser(user: UserDto) {
+    override fun restoreUser(user: UserDto): UUID =
         restClient
             .post()
             .uri(RESTORE_PATH)
             .body(user)
             .retrieve()
-            .toBodilessEntity()
-    }
+            .body<UUID>()!!
 }

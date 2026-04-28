@@ -55,7 +55,5 @@ class InterserviceController(
     }
 
     @PreAuthorize(Authority.IS_SERVICE)
-    override fun restoreUser(user: UserDto) {
-        userFacade.restoreUser(user)
-    }
+    override fun restoreUser(user: UserDto): UUID = userFacade.restoreUser(user)
 }

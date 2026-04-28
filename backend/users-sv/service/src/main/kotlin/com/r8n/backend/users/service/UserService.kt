@@ -203,10 +203,10 @@ class UserService(
     }
 
     @Transactional
-    fun restoreUser(userDto: UserDto) {
+    fun restoreUser(userDto: UserDto): UUID {
         val user =
             UserPersistence(
-                id = userDto.id,
+                id = userDto.id ?: UUID.randomUUID(),
                 status = userDto.status.toPersistence(),
                 statusTimestamp = userDto.statusTimestamp,
                 lastSeenAt = Instant.now(),
@@ -215,7 +215,7 @@ class UserService(
 
         val pii =
             PIIPersistence(
-                userId = userDto.id,
+                userId = user.id,
                 name = userDto.name,
                 email = userDto.email,
                 phone = null,
@@ -228,7 +228,7 @@ class UserService(
             val session =
                 UserSessionPersistence(
                     id = consentDto.session.id,
-                    userId = userDto.id,
+                    userId = user.id,
                     created = consentDto.session.created,
                     expires = consentDto.session.expires,
                     ip = consentDto.session.ip,
@@ -239,13 +239,14 @@ class UserService(
 
             val consent =
                 ConsentPersistence(
-                    userId = userDto.id,
+                    userId = user.id,
                     type = consentDto.type,
                     accepted = consentDto.accepted,
                     session = consentDto.session.id,
                 )
             consentRepository.save(consent)
         }
+        return user.id
     }
 
     private fun UserStatusEnumDto.toPersistence() =

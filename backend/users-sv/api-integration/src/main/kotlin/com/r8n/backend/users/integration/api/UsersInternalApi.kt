@@ -64,5 +64,5 @@ interface UsersInternalApi {
     @PostMapping(RESTORE_PATH)
     fun restoreUser(
         @RequestBody user: UserDto,
-    )
+    ): UUID
 }
