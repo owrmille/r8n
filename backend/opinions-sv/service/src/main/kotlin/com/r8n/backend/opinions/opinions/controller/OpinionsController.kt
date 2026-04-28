@@ -1,13 +1,20 @@
 package com.r8n.backend.opinions.opinions.controller
 
+import com.r8n.backend.core.api.PageRequestDto
+import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.opinions.api.opinions.OpinionsApi
 import com.r8n.backend.opinions.api.opinions.dto.OpinionDto
+import com.r8n.backend.opinions.api.opinions.dto.OpinionStatusEnumDto
+import com.r8n.backend.opinions.api.opinions.dto.RejectOpinionRequestDto
 import com.r8n.backend.opinions.opinions.facade.OpinionFacade
+import com.r8n.backend.security.Authority.IS_MODERATOR
 import com.r8n.backend.security.Authority.IS_USER
 import com.r8n.backend.security.Authority.IS_USER_OR_SERVICE
 import com.r8n.backend.security.CurrentUserIdentifier.getCurrentUserId
+import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 
 @RestController
@@ -44,6 +51,24 @@ class OpinionsController(
     @PreAuthorize(IS_USER)
     override fun submitOpinionForModeration(opinionId: UUID): OpinionDto =
         opinionFacade.submitOpinionForModeration(opinionId, getCurrentUserId())
+
+    @PreAuthorize(IS_MODERATOR)
+    override fun getModerationOpinions(
+        status: OpinionStatusEnumDto?,
+        pageable: PageRequestDto,
+    ): PageResponseDto<OpinionDto> =
+        throw ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "Opinion moderation queue is not implemented yet")
+
+    @PreAuthorize(IS_MODERATOR)
+    override fun approveOpinion(opinionId: UUID): OpinionDto =
+        throw ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "Opinion approval is not implemented yet")
+
+    @PreAuthorize(IS_MODERATOR)
+    override fun rejectOpinion(
+        opinionId: UUID,
+        request: RejectOpinionRequestDto,
+    ): OpinionDto =
+        throw ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "Opinion rejection is not implemented yet")
 
     @PreAuthorize(IS_USER)
     override fun linkComponent(
