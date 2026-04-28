@@ -22,6 +22,10 @@ class ApiConventionPlugin : Plugin<Project> {
 
                 add("compileOnly", libs.findLibrary("spring-web").get())
                 add("compileOnly", libs.findLibrary("spring-boot-starter-validation").get())
+
+                add("implementation", libs.findLibrary("jakarta-validation").get())
+                add("implementation", libs.findLibrary("spring-context").get())
+                add("implementation", libs.findLibrary("spring-swagger-annotations-jakarta").get())
             }
         }
     }

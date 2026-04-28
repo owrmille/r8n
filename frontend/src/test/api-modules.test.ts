@@ -471,6 +471,7 @@ describe("API modules", () => {
     await opinionListsApi.sync({
       addedListId: "77777777-7777-7777-7777-777777777777",
       existingListId: "88888888-8888-8888-8888-888888888888",
+      weight: 0.75,
     });
     await opinionListsApi.unlinkOpinion({
       listId: "99999999-9999-9999-9999-999999999999",
@@ -497,7 +498,7 @@ describe("API modules", () => {
       "/api/opinion-lists/66666666-6666-6666-6666-666666666666/set-privacy?privacy=PRIVATE",
     );
     expect(fetchMock.mock.calls[5][0]).toBe(
-      "/api/opinion-lists/88888888-8888-8888-8888-888888888888/sync?addedListId=77777777-7777-7777-7777-777777777777",
+      "/api/opinion-lists/88888888-8888-8888-8888-888888888888/sync?addedListId=77777777-7777-7777-7777-777777777777&weight=0.75",
     );
     expect(fetchMock.mock.calls[6][0]).toBe(
       "/api/opinion-lists/99999999-9999-9999-9999-999999999999/unlink?opinionId=aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",

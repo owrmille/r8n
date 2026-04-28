@@ -34,7 +34,7 @@ frontend_npx() { if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NOD
     build-opinions who-ate-all-the-space clean-the-fuck-out-of-this-campus-machine \
     frontend-install frontend-install-all frontend-check-node frontend-dev frontend-build frontend-lint \
     frontend-test frontend-test-unit frontend-test-e2e frontend-test-e2e-ui frontend-test-e2e-api frontend-clean frontend-clean-all frontend-cert frontend-cert-clean \
-    lint-backend test-backend test-frontend-prepare test-frontend test-e2e \
+    lint-backend test-backend test-frontend-prepare test-frontend test-e2e routed-request-opinion-list \
     test-github-backend test-github-frontend test-github-e2e test-github \
     clean fclean re move-caches-to-goinfre gradle-%-bootJar check-makefile
 
@@ -457,6 +457,20 @@ routed-request-gdpr: ## Gateway GDPR export request with timeout (ENV=local|dock
 	curl $$curl_args "$$protocol://$$host:$$port/api/export/download" \
 		-H "Authorization: Bearer $$(cat .access_token)" | head -c 500; \
 	echo "..."
+
+routed-request-opinion-list: ## Gateway request to smoke test opinion list (ENV=local|docker)
+	@if [ ! -f .access_token ]; then $(MAKE) get-token ENV=$(ENV); fi
+	@if [ "$(ENV)" = "docker" ]; then \
+		$(LOAD_DOCKER_ENV) \
+		protocol=https; host=localhost; port=8080; \
+	else \
+		$(LOAD_LOCAL_ENV) \
+		protocol=$${INTERSERVICE_PROTOCOL:-http}; host=$${GATEWAY_HOST:-localhost}; port=$${GATEWAY_PORT:-8080}; \
+	fi; \
+	curl_args="-i"; \
+	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
+	curl $$curl_args "$$protocol://$$host:$$port/api/opinion-lists/80000000-0000-0000-0000-000000000000" \
+		-H "Authorization: Bearer $$(cat .access_token)"
 
 public-request-user: ## user-sv access through public api
 	@if [ "$(ENV)" = "docker" ]; then \
