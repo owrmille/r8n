@@ -1,20 +1,35 @@
 import { useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, List, ChevronDown, Plus } from "lucide-react";
+import { ArrowLeft, List, ChevronDown, Plus, Link2, GitMerge, Search } from "lucide-react";
 import UserAvatar from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { QueryState } from "@/components/server-state/QueryState";
 import { cn } from "@/lib/utils";
-import { useOpinionList, useLinkOpinionToListMutation } from "@/lib/server-state/hooks/opinion-lists";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  useOpinionList,
+  useLinkOpinionToListMutation,
+  useSyncOpinionListsMutation,
+  useSearchOpinionLists,
+} from "@/lib/server-state/hooks/opinion-lists";
 import { useOpinion, useCreateOpinionMutation, useAdjustOpinionComponentWeightMutation } from "@/lib/server-state/hooks/opinions";
 import type { OpinionSummaryDto, WeightedOpinionReferenceDto } from "@/lib/api/opinions";
+import type { OpinionListSummaryDto } from "@/lib/api/opinion-lists";
 import type { Uuid } from "@/lib/api/shared";
 
 const OpinionListPage = () => {
   const { id: listId } = useParams<{ id: string }>();
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [syncDialogOpen, setSyncDialogOpen] = useState(false);
 
   const { data, isLoading, isError, error, refetch } = useOpinionList(
     { listId: listId! },
@@ -85,11 +100,38 @@ const OpinionListPage = () => {
 
           <div className="flex flex-wrap gap-2 mb-6">
             <Button variant="default" size="sm" className="rounded-lg text-xs" asChild>
-              <Link to="/review/create">
-                <Plus className="mr-1 h-3 w-3" /> Add new
+              <Link to="/create">
+                <Plus className="mr-1 h-3 w-3" /> Write review
               </Link>
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-lg text-xs"
+              onClick={() => setLinkDialogOpen(true)}
+            >
+              <Link2 className="mr-1 h-3 w-3" /> Link existing
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-lg text-xs"
+              onClick={() => setSyncDialogOpen(true)}
+            >
+              <GitMerge className="mr-1 h-3 w-3" /> Sync list
+            </Button>
           </div>
+
+          <LinkOpinionDialog
+            open={linkDialogOpen}
+            onClose={() => setLinkDialogOpen(false)}
+            listId={listId!}
+          />
+          <SyncListDialog
+            open={syncDialogOpen}
+            onClose={() => setSyncDialogOpen(false)}
+            listId={listId!}
+          />
 
           <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -381,6 +423,156 @@ const OpinionRow = ({
         {opinion?.status.toLowerCase().replace("_", " ") ?? "—"}
       </td>
     </tr>
+  );
+};
+
+const LinkOpinionDialog = ({
+  open,
+  onClose,
+  listId,
+}: {
+  open: boolean;
+  onClose: () => void;
+  listId: Uuid;
+}) => {
+  const [opinionId, setOpinionId] = useState("");
+  const linkOpinion = useLinkOpinionToListMutation({
+    onSuccess: () => {
+      setOpinionId("");
+      onClose();
+    },
+  });
+
+  const handleSubmit = () => {
+    if (!opinionId.trim()) return;
+    linkOpinion.mutate({ listId, opinionId: opinionId.trim() });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Link existing opinion</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2 py-2">
+          <label className="text-xs font-medium text-muted-foreground">Opinion ID</label>
+          <Input
+            placeholder="Paste opinion UUID…"
+            value={opinionId}
+            onChange={(e) => setOpinionId(e.target.value)}
+            className="text-xs font-mono"
+          />
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+          <Button
+            size="sm"
+            disabled={!opinionId.trim() || linkOpinion.isPending}
+            onClick={handleSubmit}
+          >
+            Link
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const SyncListDialog = ({
+  open,
+  onClose,
+  listId,
+}: {
+  open: boolean;
+  onClose: () => void;
+  listId: Uuid;
+}) => {
+  const [query, setQuery] = useState("");
+  const [selected, setSelected] = useState<OpinionListSummaryDto | null>(null);
+  const [weight, setWeight] = useState("1.0");
+
+  const { data } = useSearchOpinionLists(
+    { filters: query.length >= 2 ? { nameSubstring: query } : undefined, pageable: { page: 0, size: 10, sort: [] } },
+    { enabled: open },
+  );
+  const results = (data?.items ?? []).filter((l) => l.listId !== listId);
+
+  const syncList = useSyncOpinionListsMutation({
+    onSuccess: () => {
+      setQuery("");
+      setSelected(null);
+      setWeight("1.0");
+      onClose();
+    },
+  });
+
+  const handleSubmit = () => {
+    if (!selected) return;
+    const w = parseFloat(weight);
+    syncList.mutate({ existingListId: listId, addedListId: selected.listId, weight: isNaN(w) ? 1.0 : w });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) { setQuery(""); setSelected(null); onClose(); } }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Sync with another list</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search lists by name…"
+              value={query}
+              onChange={(e) => { setQuery(e.target.value); setSelected(null); }}
+              className="pl-9 text-xs"
+            />
+          </div>
+          {results.length > 0 && (
+            <div className="rounded-lg border border-border divide-y divide-border max-h-48 overflow-y-auto">
+              {results.map((list) => (
+                <button
+                  key={list.listId}
+                  type="button"
+                  onClick={() => setSelected(list)}
+                  className={cn(
+                    "w-full px-3 py-2 text-left text-xs transition-colors hover:bg-muted/50",
+                    selected?.listId === list.listId && "bg-muted font-medium",
+                  )}
+                >
+                  <span className="block text-foreground">{list.listName}</span>
+                  <span className="text-muted-foreground">{list.ownerName}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          {selected && (
+            <div className="flex items-center gap-3">
+              <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">Weight</label>
+              <Input
+                type="number"
+                min={0}
+                max={1}
+                step={0.1}
+                value={weight}
+                onChange={(e) => setWeight(e.target.value)}
+                className="h-8 w-20 text-xs font-mono"
+              />
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" size="sm" onClick={() => { setQuery(""); setSelected(null); onClose(); }}>Cancel</Button>
+          <Button
+            size="sm"
+            disabled={!selected || syncList.isPending}
+            onClick={handleSubmit}
+          >
+            Sync
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
