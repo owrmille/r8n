@@ -15,6 +15,11 @@ class OpinionListFacade(
     private val opinionListService: OpinionListService,
     private val opinionListMapper: OpinionListMapper,
 ) {
+    fun getListSummary(
+        listId: UUID,
+        requesterId: UUID,
+    ): OpinionListSummaryDto = opinionListMapper.toSummaryDto(opinionListService.getListInfo(listId, requesterId))
+
     fun getList(
         listId: UUID,
         requesterId: UUID,

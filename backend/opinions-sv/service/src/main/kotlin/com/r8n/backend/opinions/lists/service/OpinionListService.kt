@@ -283,6 +283,25 @@ class OpinionListService(
                 ),
         )
 
+    fun getListInfo(
+        listId: UUID,
+        requesterId: UUID,
+    ): OpinionListInfo {
+        val list =
+            opinionListRepository
+                .findById(listId)
+                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
+        validateAccess(list, requesterId)
+        return OpinionListInfo(
+            id = list.id!!,
+            name = list.name,
+            owner = list.owner,
+            privacy = list.privacy,
+            opinionsCount = opinionsAssignmentRepository.countByOpinionList(list.id!!),
+            grantedAccessCount = accessService.countAcceptedForList(list.id!!),
+        )
+    }
+
     fun getMine(
         ownerId: UUID,
         pageable: Pageable,

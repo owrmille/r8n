@@ -19,7 +19,8 @@ class StubOpinionListController(
     private val opinionListFacade: OpinionListFacade,
 ) : OpinionListsApi {
     @PreAuthorize(IS_USER)
-    override fun getListSummary(listId: UUID): OpinionListSummaryDto = OpinionListTestDataFactory.getListSummary(listId)
+    override fun getListSummary(listId: UUID): OpinionListSummaryDto =
+        opinionListFacade.getListSummary(listId, getCurrentUserId())
 
     @PreAuthorize(IS_USER)
     override fun getList(listId: UUID) = opinionListFacade.getList(listId, getCurrentUserId())
