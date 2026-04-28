@@ -40,6 +40,8 @@ const MODERATION_QUEUE_REQUEST = {
   },
 } satisfies GetModerationOpinionsRequestDto;
 
+const EMPTY_OPINIONS: OpinionDto[] = [];
+
 function formatRelativeTime(timestamp: string): string {
   const createdAt = new Date(timestamp).getTime();
 
@@ -93,7 +95,7 @@ const OpinionModeration = () => {
   const [rejectionReason, setRejectionReason] = useState("");
   const [rejectionError, setRejectionError] = useState<string | null>(null);
 
-  const pendingOpinions = moderation.data?.items ?? [];
+  const pendingOpinions = moderation.data?.items ?? EMPTY_OPINIONS;
   const isMutating = approveOpinion.isPending || rejectOpinion.isPending;
   const rejectingOpinion = useMemo(
     () => pendingOpinions.find((opinion) => opinion.id === rejectingOpinionId) ?? null,
