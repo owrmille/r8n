@@ -39,6 +39,7 @@ export const opinionListsKeys = {
     "opinion-lists",
     "detail",
     request.listId,
+    request.publishedAfter ?? null,
   ] as const,
   search: (request: SearchOpinionListsRequestDto) => [
     "opinion-lists",

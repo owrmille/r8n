@@ -23,7 +23,8 @@ class OpinionListFacade(
     fun getList(
         listId: UUID,
         requesterId: UUID,
-    ): OpinionListDto = opinionListMapper.toDto(opinionListService.getList(listId, requesterId))
+        publishedAfter: java.time.Instant? = null,
+    ): OpinionListDto = opinionListMapper.toDto(opinionListService.getList(listId, requesterId, publishedAfter))
 
     fun getMine(
         ownerId: UUID,

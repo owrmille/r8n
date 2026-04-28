@@ -23,7 +23,10 @@ class StubOpinionListController(
         opinionListFacade.getListSummary(listId, getCurrentUserId())
 
     @PreAuthorize(IS_USER)
-    override fun getList(listId: UUID) = opinionListFacade.getList(listId, getCurrentUserId())
+    override fun getList(
+        listId: UUID,
+        publishedAfter: java.time.Instant?,
+    ) = opinionListFacade.getList(listId, getCurrentUserId(), publishedAfter)
 
     @PreAuthorize(IS_USER)
     override fun renameList(

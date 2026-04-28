@@ -35,6 +35,7 @@ export interface GetOpinionListSummaryRequestDto {
 
 export interface GetOpinionListRequestDto {
   listId: Uuid;
+  publishedAfter?: string;
 }
 
 export interface RenameOpinionListRequestDto {
@@ -111,6 +112,7 @@ export function createOpinionListsApi(client: HttpClient = httpClient) {
     getById(request: GetOpinionListRequestDto): Promise<OpinionListDto> {
       return client.get<OpinionListDto>(`/opinion-lists/${request.listId}`, {
         auth: "required",
+        query: request.publishedAfter ? { publishedAfter: request.publishedAfter } : undefined,
       });
     },
 

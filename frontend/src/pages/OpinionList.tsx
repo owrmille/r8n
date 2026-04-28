@@ -30,9 +30,10 @@ const OpinionListPage = () => {
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [syncDialogOpen, setSyncDialogOpen] = useState(false);
+  const [publishedAfter, setPublishedAfter] = useState("");
 
   const { data, isLoading, isError, error, refetch } = useOpinionList(
-    { listId: listId! },
+    { listId: listId!, publishedAfter: publishedAfter ? new Date(publishedAfter).toISOString() : undefined },
     { enabled: !!listId },
   );
 
@@ -98,7 +99,7 @@ const OpinionListPage = () => {
             </p>
           </motion.div>
 
-          <div className="flex flex-wrap gap-2 mb-6">
+          <div className="flex flex-wrap items-center gap-2 mb-6">
             <Button variant="default" size="sm" className="rounded-lg text-xs" asChild>
               <Link to="/create">
                 <Plus className="mr-1 h-3 w-3" /> Write review
@@ -120,6 +121,25 @@ const OpinionListPage = () => {
             >
               <GitMerge className="mr-1 h-3 w-3" /> Sync list
             </Button>
+            <div className="ml-auto flex items-center gap-2">
+              <label className="text-[10px] font-medium text-muted-foreground whitespace-nowrap">Published after</label>
+              <Input
+                type="date"
+                value={publishedAfter}
+                onChange={(e) => setPublishedAfter(e.target.value)}
+                className="h-8 w-36 text-xs"
+              />
+              {publishedAfter && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-2 text-xs"
+                  onClick={() => setPublishedAfter("")}
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
           </div>
 
           <LinkOpinionDialog

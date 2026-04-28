@@ -42,6 +42,7 @@ interface OpinionListsApi {
     @GetMapping(GET_PATH)
     fun getList(
         @PathVariable listId: UUID,
+        @RequestParam(required = false) publishedAfter: java.time.Instant?,
     ): OpinionListDto
 
     @PatchMapping(RENAME_PATH)

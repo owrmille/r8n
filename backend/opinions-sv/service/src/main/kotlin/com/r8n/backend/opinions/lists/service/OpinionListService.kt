@@ -140,6 +140,7 @@ class OpinionListService(
     fun getList(
         listId: UUID,
         requesterId: UUID,
+        publishedAfter: java.time.Instant? = null,
     ): OpinionList {
         val list =
             opinionListRepository
@@ -149,7 +150,7 @@ class OpinionListService(
         validateAccess(list, requesterId)
 
         val assignments = resolveAllAssignments(listId)
-        val opinions = fetchAndEnrichOpinions(assignments, requesterId)
+        val opinions = fetchAndEnrichOpinions(assignments, requesterId, publishedAfter)
         val summaries = calculateSummaries(list, opinions, requesterId)
 
         return toDomain(list, summaries)
@@ -198,10 +199,14 @@ class OpinionListService(
     private fun fetchAndEnrichOpinions(
         assignments: List<OpinionsToOpinionListsPersistence>,
         requesterId: UUID,
+        publishedAfter: java.time.Instant? = null,
     ): List<Opinion> =
         assignments.mapNotNull { asmt ->
             try {
                 val opinion = opinionService.getOpinion(asmt.opinion, requesterId)
+                if (publishedAfter != null && opinion.timestamp < publishedAfter) {
+                    return@mapNotNull null
+                }
                 val weight = if (opinion.owner == requesterId) 1.0 else asmt.weight
                 opinion.copy(weight = weight)
             } catch (e: ResponseStatusException) {
