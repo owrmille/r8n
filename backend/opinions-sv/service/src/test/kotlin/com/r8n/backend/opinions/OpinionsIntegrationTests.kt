@@ -1,7 +1,10 @@
 package com.r8n.backend.opinions
 
+import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionStatusEnumDto
+import com.r8n.backend.opinions.api.opinions.dto.OpinionSubjectDto
+import com.r8n.backend.opinions.api.subjects.dto.CreateSubjectRequestDto
 import com.r8n.backend.opinions.stub.OpinionSubjectTestDataFactory.bernardReferent
 import com.r8n.backend.opinions.stub.OpinionSubjectTestDataFactory.cappuccino1A
 import com.r8n.backend.opinions.stub.OpinionSubjectTestDataFactory.cappuccino1G
@@ -18,6 +21,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
+import org.springframework.http.MediaType
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.test.context.ActiveProfiles
@@ -80,6 +84,80 @@ class OpinionsIntegrationTests {
             .thenReturn(bernardReferent.name)
         whenever(usersInternalApi.getUserName(eq(REQUESTER)))
             .thenReturn(bernardReferent.name)
+    }
+
+    @Test
+    @WithMockUser
+    fun `find subject works`() {
+        val accessToken = serviceTokenService.generateAccessToken(REQUESTER, listOf("USER"))
+        val result =
+            mockMvc
+                .perform(
+                    get("/api/subjects/find")
+                        .with(csrf())
+                        .queryParam("query", "CAPPUCCINO")
+                        .queryParam("page", "0")
+                        .queryParam("size", "10")
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val actual: PageResponseDto<OpinionSubjectDto> = objectMapper.readValue(result.response.contentAsString)
+
+        assertEquals(0, actual.page)
+        assertEquals(10, actual.size)
+        assertEquals(
+            listOf(cappuccino1A.id, cappuccino1G.id),
+            actual.items.map { it.id },
+        )
+        assertEquals(cappuccino1A.name, actual.items.first().name)
+    }
+
+    @Test
+    @WithMockUser
+    fun `create subject works`() {
+        val accessToken = serviceTokenService.generateAccessToken(REQUESTER, listOf("USER"))
+        val request =
+            CreateSubjectRequestDto(
+                name = "Subject API Test Espresso",
+                referentName = "Subject API Test Espresso at Test Cafe",
+                address = "Berlin, Teststraße 27",
+                latitude = 52.5,
+                longitude = 13.4,
+            )
+        val createResult =
+            mockMvc
+                .perform(
+                    post("/api/subjects")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val created: OpinionSubjectDto = objectMapper.readValue(createResult.response.contentAsString)
+        assertEquals(request.name, created.name)
+        assertEquals(request.referentName, created.primaryReferent?.name)
+        assertEquals(request.address, created.primaryReferent?.address)
+        assertEquals(request.latitude, created.primaryReferent?.latitude)
+        assertEquals(request.longitude, created.primaryReferent?.longitude)
+        assertEquals(0, created.alternativeReferents.size)
+
+        val findResult =
+            mockMvc
+                .perform(
+                    get("/api/subjects/find")
+                        .with(csrf())
+                        .queryParam("query", request.name)
+                        .queryParam("page", "0")
+                        .queryParam("size", "10")
+                        .header("Authorization", "Bearer $accessToken"),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val found: PageResponseDto<OpinionSubjectDto> = objectMapper.readValue(findResult.response.contentAsString)
+        assertEquals(listOf(created.id), found.items.map { it.id })
     }
 
     @Test
