@@ -486,6 +486,35 @@ describe("API modules", () => {
     );
   });
 
+  it("passes publishedAfter as a query param when set on getById", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(createJsonResponse({}));
+    const client = createHttpClient({ baseUrl: "/api", fetchFn: fetchMock });
+    const opinionListsApi = createOpinionListsApi(client);
+
+    await opinionListsApi.getById({
+      listId: "11111111-1111-1111-1111-111111111111",
+      publishedAfter: "2024-06-01T00:00:00.000Z",
+    });
+
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      "/api/opinion-lists/11111111-1111-1111-1111-111111111111?publishedAfter=2024-06-01T00%3A00%3A00.000Z",
+    );
+  });
+
+  it("omits publishedAfter query param when not set on getById", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(createJsonResponse({}));
+    const client = createHttpClient({ baseUrl: "/api", fetchFn: fetchMock });
+    const opinionListsApi = createOpinionListsApi(client);
+
+    await opinionListsApi.getById({
+      listId: "22222222-2222-2222-2222-222222222222",
+    });
+
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      "/api/opinion-lists/22222222-2222-2222-2222-222222222222",
+    );
+  });
+
   it("uses backend path parameters and query names for opinion lists", async () => {
     const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(createJsonResponse({})));
     const client = createHttpClient({
