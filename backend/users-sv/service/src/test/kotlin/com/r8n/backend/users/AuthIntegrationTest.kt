@@ -5,10 +5,13 @@ import com.r8n.backend.opinions.api.access.OutgoingAccessRequestApi
 import com.r8n.backend.opinions.integration.api.OpinionListsInternalApi
 import com.r8n.backend.users.api.AuthApi.Companion.REFRESH_TOKEN_COOKIE_NAME
 import com.r8n.backend.users.api.dto.LoginRequestDto
+import com.r8n.backend.users.api.dto.RegisterRequestDto
 import com.r8n.backend.users.provider.database.PIIRepository
 import com.r8n.backend.users.provider.database.UserRoleAssignmentRepository
 import jakarta.persistence.EntityManager
 import jakarta.servlet.http.Cookie
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -65,9 +68,11 @@ class AuthIntegrationTest {
         // yes, this is a duplicate from AuthApi, left intentional to detect changes
         const val CSRF_PATH = "/api/auth/csrf"
         const val LOGIN_PATH = "/api/auth/login"
+        const val REGISTER_PATH = "/api/auth/register"
         const val REFRESH_PATH = "/api/auth/refresh"
         const val EMAIL = "test@test.test"
         const val PASSWORD = "1234"
+        const val REGISTRATION_PASSWORD = "long-enough-password"
     }
 
     @Autowired
@@ -189,6 +194,163 @@ class AuthIntegrationTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(loginRequest)),
             ).andExpect(status().isUnauthorized)
+    }
+
+    @Test
+    fun `register creates active user with hashed password and consent audit records`() {
+        val email = "  New.User@Example.Test  "
+        val normalizedEmail = "new.user@example.test"
+        val registerRequest = validRegisterRequest(email, name = "  New Reviewer  ")
+
+        val response =
+            mockMvc
+                .perform(
+                    post(REGISTER_PATH)
+                        .with(csrf())
+                        .header("X-Forwarded-For", "203.0.113.10")
+                        .header(HttpHeaders.USER_AGENT, "Registration Test Agent")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerRequest)),
+                ).andExpect(status().isCreated)
+                .andReturn()
+
+        assertNull(response.response.getHeader(HttpHeaders.SET_COOKIE))
+        assertTrue(response.response.contentAsString.isBlank())
+
+        val user =
+            jdbcTemplate.queryForMap(
+                """
+                SELECT u.id, u.status, u.password_hash, p.email, p.name
+                FROM users.users u
+                JOIN users.pii p ON p.user_id = u.id
+                WHERE p.email = ?
+                """.trimIndent(),
+                normalizedEmail,
+            )
+        val userId = user["id"] as UUID
+        val passwordHash = user["password_hash"] as String
+
+        assertEquals("ACTIVE", user["status"])
+        assertEquals("New Reviewer", user["name"])
+        assertEquals(normalizedEmail, user["email"])
+        assertTrue(passwordEncoder.matches(REGISTRATION_PASSWORD, passwordHash))
+
+        val consentTypes =
+            jdbcTemplate.queryForList(
+                "SELECT type FROM users.consents WHERE user_id = ? ORDER BY type",
+                String::class.java,
+                userId,
+            )
+        assertEquals(listOf("PRIVACY_POLICY", "TERMS_OF_SERVICE"), consentTypes)
+
+        val session =
+            jdbcTemplate.queryForMap(
+                """
+                SELECT s.ip, s.user_agent
+                FROM users.sessions s
+                JOIN users.consents c ON c.session = s.id
+                WHERE c.user_id = ?
+                LIMIT 1
+                """.trimIndent(),
+                userId,
+            )
+        assertEquals("203.0.113.10", session["ip"])
+        assertEquals("Registration Test Agent", session["user_agent"])
+    }
+
+    @Test
+    fun `register rejects duplicate normalized email`() {
+        mockMvc
+            .perform(
+                post(REGISTER_PATH)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(validRegisterRequest("duplicate@example.test"))),
+            ).andExpect(status().isCreated)
+
+        mockMvc
+            .perform(
+                post(REGISTER_PATH)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(validRegisterRequest(" DUPLICATE@example.test "))),
+            ).andExpect(status().isConflict)
+    }
+
+    @Test
+    fun `registered active user can login immediately`() {
+        val email = "active-login@example.test"
+
+        mockMvc
+            .perform(
+                post(REGISTER_PATH)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(validRegisterRequest(email))),
+            ).andExpect(status().isCreated)
+
+        mockMvc
+            .perform(
+                post(LOGIN_PATH)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(LoginRequestDto(email, REGISTRATION_PASSWORD))),
+            ).andExpect(status().isOk)
+    }
+
+    @Test
+    fun `register rejects invalid input`() {
+        mockMvc
+            .perform(
+                post(REGISTER_PATH)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        objectMapper.writeValueAsString(
+                            validRegisterRequest("invalid-email").copy(password = "short"),
+                        ),
+                    ),
+            ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `register requires display name`() {
+        mockMvc
+            .perform(
+                post(REGISTER_PATH)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        objectMapper.writeValueAsString(
+                            validRegisterRequest("missing-name@example.test").copy(name = "   "),
+                        ),
+                    ),
+            ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `register requires consent acceptance`() {
+        mockMvc
+            .perform(
+                post(REGISTER_PATH)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        objectMapper.writeValueAsString(
+                            validRegisterRequest("missing-consent@example.test").copy(termsOfServiceAccepted = false),
+                        ),
+                    ),
+            ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `register requires CSRF`() {
+        mockMvc
+            .perform(
+                post(REGISTER_PATH)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(validRegisterRequest("csrf@example.test"))),
+            ).andExpect(status().isForbidden)
     }
 
     @Test
@@ -315,4 +477,15 @@ class AuthIntegrationTest {
         assertTrue(setCookieHeader.contains("HttpOnly"))
         assertTrue(setCookieHeader.contains("Path=/api/auth"))
     }
+
+    private fun validRegisterRequest(
+        email: String,
+        name: String = "User ${email.substringBefore("@").take(40)}",
+    ) = RegisterRequestDto(
+        name = name,
+        email = email,
+        password = REGISTRATION_PASSWORD,
+        privacyPolicyAccepted = true,
+        termsOfServiceAccepted = true,
+    )
 }
