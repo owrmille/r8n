@@ -73,5 +73,5 @@ class StubOpinionListController(
     ) = opinionListFacade.unsyncWithOpinionList(getCurrentUserId(), existingListId, removedListId)
 
     @PreAuthorize(IS_USER)
-    override fun getMine(pageable: PageRequestDto) = search(null, null, null, pageable)
+    override fun getMine(pageable: PageRequestDto) = opinionListFacade.getMine(getCurrentUserId(), pageable)
 }

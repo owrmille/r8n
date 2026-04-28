@@ -5,6 +5,7 @@ import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.core.utils.toPageable
 import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.opinions.api.lists.dto.OpinionListDto
+import com.r8n.backend.opinions.api.lists.dto.OpinionListSummaryDto
 import com.r8n.backend.opinions.lists.service.OpinionListService
 import org.springframework.stereotype.Component
 import java.util.UUID
@@ -18,6 +19,15 @@ class OpinionListFacade(
         listId: UUID,
         requesterId: UUID,
     ): OpinionListDto = opinionListMapper.toDto(opinionListService.getList(listId, requesterId))
+
+    fun getMine(
+        ownerId: UUID,
+        pageable: PageRequestDto,
+    ): PageResponseDto<OpinionListSummaryDto> =
+        opinionListService
+            .getMine(ownerId, pageable.toPageable())
+            .map { opinionListMapper.toSummaryDto(it) }
+            .toResponse()
 
     fun getListsFull(
         ownerId: UUID,

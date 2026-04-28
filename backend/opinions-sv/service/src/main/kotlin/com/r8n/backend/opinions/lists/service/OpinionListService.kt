@@ -6,6 +6,7 @@ import com.r8n.backend.opinions.lists.database.OpinionListRepository
 import com.r8n.backend.opinions.lists.database.OpinionListSyncRepository
 import com.r8n.backend.opinions.lists.database.OpinionsToOpinionListsRepository
 import com.r8n.backend.opinions.lists.domain.OpinionList
+import com.r8n.backend.opinions.lists.domain.OpinionListInfo
 import com.r8n.backend.opinions.lists.domain.OpinionListPrivacyEnum
 import com.r8n.backend.opinions.lists.domain.OpinionSummary
 import com.r8n.backend.opinions.lists.persistence.OpinionListPersistence
@@ -281,6 +282,21 @@ class OpinionListService(
                     ),
                 ),
         )
+
+    fun getMine(
+        ownerId: UUID,
+        pageable: Pageable,
+    ): Page<OpinionListInfo> =
+        opinionListRepository.findByOwner(ownerId, pageable).map { list ->
+            OpinionListInfo(
+                id = list.id!!,
+                name = list.name,
+                owner = list.owner,
+                privacy = list.privacy,
+                opinionsCount = opinionsAssignmentRepository.countByOpinionList(list.id!!),
+                grantedAccessCount = accessService.countAcceptedForList(list.id!!),
+            )
+        }
 
     fun getListsFull(
         ownerId: UUID,
