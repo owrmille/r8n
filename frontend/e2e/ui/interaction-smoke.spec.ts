@@ -34,7 +34,7 @@ test("sidebar and quick actions navigate through key routes without browser cons
 test("discover page renders search and lists section without console issues", async ({ page }) => {
   await page.goto("/discover");
 
-  await expect(page.getByPlaceholder("Search lists by name...")).toBeVisible();
+  await expect(page.getByPlaceholder("Search everything...")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Lists" })).toBeVisible();
 
   await waitForUiToSettle(page);
