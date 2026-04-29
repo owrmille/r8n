@@ -187,17 +187,17 @@ ON CONFLICT (id) DO NOTHING;
 -- New referents (Berlin coffee spots)
 INSERT INTO opinions.referents (id, name, address, latitude, longitude, referent_group)
 VALUES
-    ('16161616-1616-1616-1616-161616161616', 'The Barn', 'Berlin, Auguststraße 58', 52.5264, 13.3982, '41414141-4141-4141-4141-414141414141'),
-    ('17171717-1717-1717-1717-171717171717', 'Five Elephant', 'Berlin, Reichenberger Str. 101', 52.4942, 13.4246, '41414141-4141-4141-4141-414141414141'),
-    ('18181818-1818-1818-1818-181818181818', 'Father Carpenter', 'Berlin, Münzstraße 21', 52.5253, 13.4072, '41414141-4141-4141-4141-414141414141')
+    ('16161616-1616-1616-1616-161616161616', 'espresso @ The Barn', 'Berlin, Auguststraße 58', 52.5264, 13.3982, '41414141-4141-4141-4141-414141414141'),
+    ('17171717-1717-1717-1717-171717171717', 'flat white @ Five Elephant', 'Berlin, Reichenberger Str. 101', 52.4942, 13.4246, '41414141-4141-4141-4141-414141414141'),
+    ('18181818-1818-1818-1818-181818181818', 'latte @ Father Carpenter', 'Berlin, Münzstraße 21', 52.5253, 13.4072, '41414141-4141-4141-4141-414141414141')
 ON CONFLICT (id) DO NOTHING;
 
 -- New subjects
 INSERT INTO opinions.subjects (id, name, referent)
 VALUES
-    ('1a1a1a1a-1a1a-1a1a-1a1a-1a1a1a1a1a1a', 'espresso', '16161616-1616-1616-1616-161616161616'),
-    ('1b1b1b1b-1b1b-1b1b-1b1b-1b1b1b1b1b1b', 'flat white', '17171717-1717-1717-1717-171717171717'),
-    ('1c1c1c1c-1c1c-1c1c-1c1c-1c1c1c1c1c1c', 'latte', '18181818-1818-1818-1818-181818181818')
+    ('1a1a1a1a-1a1a-1a1a-1a1a-1a1a1a1a1a1a', 'espresso @ The Barn', '16161616-1616-1616-1616-161616161616'),
+    ('1b1b1b1b-1b1b-1b1b-1b1b-1b1b1b1b1b1b', 'flat white @ Five Elephant', '17171717-1717-1717-1717-171717171717'),
+    ('1c1c1c1c-1c1c-1c1c-1c1c-1c1c1c1c1c1c', 'latte @ Father Carpenter', '18181818-1818-1818-1818-181818181818')
 ON CONFLICT (id) DO NOTHING;
 
 -- Opinions for Anna, Lena, Max, Sofia, Jonas + Test Testsson's second opinion
@@ -467,3 +467,19 @@ CREATE TABLE IF NOT EXISTS opinions.moderation_decisions (
 CREATE INDEX IF NOT EXISTS idx_moderation_decisions_opinion ON opinions.moderation_decisions(opinion);
 CREATE INDEX IF NOT EXISTS idx_moderation_decisions_moderator ON opinions.moderation_decisions(moderator);
 CREATE INDEX IF NOT EXISTS idx_moderation_decisions_created_at ON opinions.moderation_decisions(created_at);
+
+--changeset ditabisko:V16_fix_seed_names context:local,test
+
+UPDATE opinions.referents SET name = 'The Barn'
+  WHERE id = '16161616-1616-1616-1616-161616161616' AND name = 'espresso @ The Barn';
+UPDATE opinions.referents SET name = 'Five Elephant'
+  WHERE id = '17171717-1717-1717-1717-171717171717' AND name = 'flat white @ Five Elephant';
+UPDATE opinions.referents SET name = 'Father Carpenter'
+  WHERE id = '18181818-1818-1818-1818-181818181818' AND name = 'latte @ Father Carpenter';
+
+UPDATE opinions.subjects SET name = 'espresso'
+  WHERE id = '1a1a1a1a-1a1a-1a1a-1a1a-1a1a1a1a1a1a' AND name = 'espresso @ The Barn';
+UPDATE opinions.subjects SET name = 'flat white'
+  WHERE id = '1b1b1b1b-1b1b-1b1b-1b1b-1b1b1b1b1b1b' AND name = 'flat white @ Five Elephant';
+UPDATE opinions.subjects SET name = 'latte'
+  WHERE id = '1c1c1c1c-1c1c-1c1c-1c1c-1c1c1c1c1c1c' AND name = 'latte @ Father Carpenter';
