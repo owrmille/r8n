@@ -223,8 +223,7 @@ class OpinionListService(
                 if (publishedAfter != null && opinion.timestamp < publishedAfter) {
                     return@mapNotNull null
                 }
-                val weight = if (opinion.owner == requesterId) 1.0 else asmt.weight
-                opinion.copy(weight = weight)
+                opinion.copy(weight = asmt.weight)
             } catch (e: ResponseStatusException) {
                 if (e.statusCode == HttpStatus.FORBIDDEN || e.statusCode == HttpStatus.NOT_FOUND) {
                     null
