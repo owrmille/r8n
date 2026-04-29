@@ -55,6 +55,8 @@ class DirectMessagingService(
         val sender = getActiveUserOrThrow(actor.userId)
         getActiveUserOrThrow(recipientUserId)
 
+        conversationRepository.lockDirectConversationPair(actor.userId.directPairKey(recipientUserId))
+
         val existingConversation =
             conversationRepository.findDirectConversationBetweenUsers(
                 type = ConversationTypeEnumPersistence.DIRECT,
@@ -213,6 +215,11 @@ class DirectMessagingService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "$fieldName cannot be blank")
         }
     }
+
+    private fun UUID.directPairKey(otherUserId: UUID): String =
+        listOf(this, otherUserId)
+            .sorted()
+            .joinToString(separator = ":")
 }
 
 data class DirectConversationWithMessages(

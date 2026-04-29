@@ -48,6 +48,10 @@ import org.testcontainers.utility.DockerImageName
 import tools.jackson.databind.ObjectMapper
 import java.time.Instant
 import java.util.UUID
+import java.util.concurrent.Callable
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 @ActiveProfiles("test")
 @Testcontainers
@@ -775,6 +779,68 @@ class SupportMessagingIntegrationTests {
             ).andExpect(status().isOk)
             .andExpect(jsonPath("$.id").value(conversationId.toString()))
             .andExpect(jsonPath("$.lastMessageText").value("Second"))
+
+        mockMvc
+            .perform(
+                get(directMessagesPath(conversationId))
+                    .param("page", "0")
+                    .param("size", "20")
+                    .with(user(userAId.toString()).roles("USER")),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.items.length()").value(2))
+    }
+
+    @Test
+    fun `concurrent direct conversation creation reuses one conversation for a user pair`() {
+        val start = CountDownLatch(1)
+        val executor = Executors.newFixedThreadPool(2)
+        val tasks =
+            listOf("First concurrent message", "Second concurrent message").map { message ->
+                Callable {
+                    start.await(5, TimeUnit.SECONDS)
+                    mockMvc
+                        .perform(
+                            post(DIRECT_CONVERSATIONS_PATH)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                    objectMapper.writeValueAsString(
+                                        mapOf(
+                                            "recipientUserId" to userBId.toString(),
+                                            "initialMessage" to message,
+                                        ),
+                                    ),
+                                ).with(user(userAId.toString()).roles("USER"))
+                                .with(csrf()),
+                        ).andExpect(status().isOk)
+                        .andReturn()
+                }
+            }
+
+        val conversationIds =
+            try {
+                val futures = tasks.map { executor.submit(it) }
+                start.countDown()
+                futures.map { future ->
+                    UUID.fromString(
+                        objectMapper.readTree(future.get(10, TimeUnit.SECONDS).response.contentAsString)["id"].asString(),
+                    )
+                }
+            } finally {
+                executor.shutdown()
+            }
+
+        assertEquals(1, conversationIds.toSet().size)
+        assertTrue(executor.awaitTermination(5, TimeUnit.SECONDS))
+
+        val conversationId = conversationIds.toSet().single()
+        assertEquals(
+            1,
+            conversationRepository
+                .findAllByTypeOrderByLastMessageAtDesc(
+                    ConversationTypeEnumPersistence.DIRECT,
+                    org.springframework.data.domain.Pageable.unpaged(),
+                ).totalElements,
+        )
 
         mockMvc
             .perform(

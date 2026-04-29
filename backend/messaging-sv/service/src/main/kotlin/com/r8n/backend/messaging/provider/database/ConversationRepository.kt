@@ -42,6 +42,12 @@ interface ConversationRepository : JpaRepository<ConversationPersistence, UUID> 
         pageable: Pageable,
     ): Page<ConversationPersistence>
 
+    @Query(value = "SELECT pg_advisory_xact_lock(hashtextextended(:pairKey, 0))", nativeQuery = true)
+    fun lockDirectConversationPair(
+        @Param("pairKey")
+        pairKey: String,
+    )
+
     @Query(
         """
         SELECT conversation
