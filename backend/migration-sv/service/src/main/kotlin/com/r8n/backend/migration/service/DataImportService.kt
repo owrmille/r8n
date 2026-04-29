@@ -57,23 +57,52 @@ class DataImportService(
         we add these created opinions to those lists
          */
         val subjectToOpinionId = mutableMapOf<UUID, UUID>()
+        val oldOpinionIdToNewId = mutableMapOf<UUID, UUID>()
+        if (data.opinions.items.isEmpty()) {
+            return subjectToOpinionId
+        }
         data.opinions.items[0].opinionSummaries.forEach { opinionSummary ->
             with(opinionSummary) {
-                        val createdOpinion =
-                            try {
+                val createdOpinion =
+                    try {
                         opinionsClient.createOpinion(
                             subjectId = subject,
                             subjective = opinions[0].subjective,
                             objective = opinions[0].objective,
                             mark = ownMark,
                         )
-                            } catch (e: Exception) {
-                                logger.error("Error restoring opinion {}: {}", subject, e.message)
-                                throw e
-                            }
-                        subjectToOpinionId[subject] = createdOpinion.id
+                    } catch (e: Exception) {
+                        logger.error("Error restoring opinion {}: {}", subject, e.message)
+                        throw e
+                    }
+                subjectToOpinionId[subject] = createdOpinion.id
+                oldOpinionIdToNewId[opinions[0].opinionId] = createdOpinion.id
             }
         }
+
+        // Restore links (components) between OWN opinions
+        data.opinions.items[0].opinionSummaries.forEach { summary ->
+            summary.opinions.forEach { row ->
+                val parentOpinionId = oldOpinionIdToNewId[row.opinionId]
+                if (parentOpinionId != null) {
+                    row.components.forEach { component ->
+                        val childOpinionId = oldOpinionIdToNewId[component.opinion]
+                        if (childOpinionId != null) {
+                            try {
+                                opinionsClient.linkComponent(
+                                    parentOpinionId = parentOpinionId,
+                                    childOpinionId = childOpinionId,
+                                    weight = component.weight,
+                                )
+                            } catch (e: Exception) {
+                                logger.warn("Could not restore component link: {}", e.message)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         logger.debug("Opinions restored for user: {}", userId)
         return subjectToOpinionId
     }

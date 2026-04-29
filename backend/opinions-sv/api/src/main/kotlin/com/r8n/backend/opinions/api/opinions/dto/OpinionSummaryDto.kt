@@ -13,6 +13,7 @@ data class OpinionRowDto(
     val status: OpinionStatusEnumDto,
     val timestamp: Instant,
     val weight: Double,
+    val components: List<WeightedOpinionReferenceDto> = emptyList(),
 )
 
 data class OpinionSummaryDto(
