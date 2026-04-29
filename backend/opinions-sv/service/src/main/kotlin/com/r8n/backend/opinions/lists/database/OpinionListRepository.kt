@@ -1,5 +1,6 @@
 package com.r8n.backend.opinions.lists.database
 
+import com.r8n.backend.opinions.lists.domain.OpinionListPrivacyEnum
 import com.r8n.backend.opinions.lists.persistence.OpinionListPersistence
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable

@@ -9,5 +9,5 @@ interface OpinionsToOpinionListsRepository : JpaRepository<OpinionsToOpinionList
 
     fun findAllByOpinion(opinionId: UUID): List<OpinionsToOpinionListsPersistence>
 
-    fun countByOpinionList(opinionList: UUID): Long
+    fun countByOpinionList(opinionListId: UUID): Long
 }

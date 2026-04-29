@@ -9,6 +9,7 @@ import com.r8n.backend.opinions.api.lists.dto.OpinionListPrivacyEnumDto
 import com.r8n.backend.opinions.api.lists.dto.OpinionListSummaryDto
 import com.r8n.backend.opinions.lists.domain.OpinionListPrivacyEnum
 import com.r8n.backend.opinions.lists.service.OpinionListService
+import com.r8n.backend.security.CurrentUserIdentifier
 import org.springframework.stereotype.Component
 import java.util.UUID
 

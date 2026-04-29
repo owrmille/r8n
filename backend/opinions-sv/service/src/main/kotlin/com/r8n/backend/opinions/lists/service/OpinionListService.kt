@@ -1,6 +1,8 @@
 package com.r8n.backend.opinions.lists.service
 
+import com.r8n.backend.opinions.access.database.AccessRequestRepository
 import com.r8n.backend.opinions.access.domain.OpinionListPermissionEnum
+import com.r8n.backend.opinions.access.domain.RequestStatusEnum
 import com.r8n.backend.opinions.access.service.AccessService
 import com.r8n.backend.opinions.lists.database.OpinionListRepository
 import com.r8n.backend.opinions.lists.database.OpinionListSyncRepository
@@ -22,6 +24,12 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 
+data class OpinionListSearchResult(
+    val persistence: OpinionListPersistence,
+    val opinionsCount: Long,
+    val grantedAccessCount: Long,
+)
+
 @Service
 class OpinionListService(
     private val opinionListRepository: OpinionListRepository,
@@ -29,6 +37,7 @@ class OpinionListService(
     private val opinionsAssignmentRepository: OpinionsToOpinionListsRepository,
     private val accessService: AccessService,
     private val syncRepository: OpinionListSyncRepository,
+    private val accessRequestRepository: AccessRequestRepository,
 ) {
     @Transactional
     fun createList(
