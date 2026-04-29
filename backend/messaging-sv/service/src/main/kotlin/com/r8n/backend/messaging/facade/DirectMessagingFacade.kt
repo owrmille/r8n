@@ -93,8 +93,7 @@ class DirectMessagingFacade(
         conversationId: UUID,
     ) = directMessagingService.markConversationAsRead(actor, conversationId)
 
-    fun countUnreadMessages(actor: DirectActor): Long =
-        directMessagingService.countUnreadMessages(actor)
+    fun countUnreadMessages(actor: DirectActor): Long = directMessagingService.countUnreadMessages(actor)
 
     private fun DirectConversationWithMessages.toSummaryDto(actor: DirectActor): DirectConversationSummaryDto =
         conversation.toSummaryDto(

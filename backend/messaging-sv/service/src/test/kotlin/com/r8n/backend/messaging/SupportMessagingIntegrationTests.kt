@@ -870,7 +870,11 @@ class SupportMessagingIntegrationTests {
                 start.countDown()
                 futures.map { future ->
                     UUID.fromString(
-                        objectMapper.readTree(future.get(10, TimeUnit.SECONDS).response.contentAsString)["id"].asString(),
+                        objectMapper
+                            .readTree(
+                                future.get(10, TimeUnit.SECONDS).response.contentAsString,
+                            )["id"]
+                            .asString(),
                     )
                 }
             } finally {
@@ -886,7 +890,8 @@ class SupportMessagingIntegrationTests {
             conversationRepository
                 .findAllByTypeOrderByLastMessageAtDesc(
                     ConversationTypeEnumPersistence.DIRECT,
-                    org.springframework.data.domain.Pageable.unpaged(),
+                    org.springframework.data.domain.Pageable
+                        .unpaged(),
                 ).totalElements,
         )
 
