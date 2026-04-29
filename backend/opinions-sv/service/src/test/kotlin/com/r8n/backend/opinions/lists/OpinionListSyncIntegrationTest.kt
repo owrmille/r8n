@@ -253,7 +253,7 @@ class OpinionListSyncIntegrationTest {
         val s1 = list.opinionSummaries.find { it.subjectName == "Subject 1" }!!
         assertThat(s1.ownMark).isEqualTo(1.1)
         assertThat(s1.opinions).hasSize(2)
-        assertThat(s1.opinions.map { it.opinion }).containsExactlyInAnyOrder(
+        assertThat(s1.opinions.map { it.opinionId }).containsExactlyInAnyOrder(
             UUID.fromString("40000000-0000-0000-0000-000000000011"),
             UUID.fromString("40000000-0000-0000-0000-000000000031"),
         )
@@ -265,12 +265,12 @@ class OpinionListSyncIntegrationTest {
         val s3 = list.opinionSummaries.find { it.subjectName == "Subject 3" }!!
         assertThat(s3.ownMark).isNull()
         assertThat(s3.opinions).hasSize(1)
-        assertThat(s3.opinions[0].opinion).isEqualTo(UUID.fromString("40000000-0000-0000-0000-000000000023"))
+        assertThat(s3.opinions[0].opinionId).isEqualTo(UUID.fromString("40000000-0000-0000-0000-000000000023"))
 
         val s4 = list.opinionSummaries.find { it.subjectName == "Subject 4" }!!
         assertThat(s4.ownMark).isNull()
         assertThat(s4.opinions).hasSize(1)
-        assertThat(s4.opinions[0].opinion).isEqualTo(UUID.fromString("40000000-0000-0000-0000-000000000024"))
+        assertThat(s4.opinions[0].opinionId).isEqualTo(UUID.fromString("40000000-0000-0000-0000-000000000024"))
     }
 
     @Test
@@ -306,7 +306,7 @@ class OpinionListSyncIntegrationTest {
         // r11 (direct), r31 (synced from l31)
         // it should NOT have r11 again (synced from l21 <- l11) or r11 (synced from l21 <- l12)
         assertThat(s1.opinions).hasSize(2)
-        assertThat(s1.opinions.map { it.opinion }).containsExactlyInAnyOrder(
+        assertThat(s1.opinions.map { it.opinionId }).containsExactlyInAnyOrder(
             UUID.fromString("40000000-0000-0000-0000-000000000011"),
             UUID.fromString("40000000-0000-0000-0000-000000000031"),
         )
@@ -413,13 +413,13 @@ class OpinionListSyncIntegrationTest {
         assertThat(
             s1.opinions
                 .find {
-                    it.opinion == UUID.fromString("40000000-0000-0000-0000-000000000011")
+                    it.opinionId == UUID.fromString("40000000-0000-0000-0000-000000000011")
                 }?.weight,
         ).isEqualTo(1.0)
         assertThat(
             s1.opinions
                 .find {
-                    it.opinion == UUID.fromString("40000000-0000-0000-0000-000000000031")
+                    it.opinionId == UUID.fromString("40000000-0000-0000-0000-000000000031")
                 }?.weight,
         ).isEqualTo(0.5)
 
@@ -476,7 +476,7 @@ class OpinionListSyncIntegrationTest {
         // Option A: Strict Override - the manual link (0.2) completely overrides the synced link.
         // So r31 should only appear once with weight 0.2.
 
-        val r31References = s1.opinions.filter { it.opinion == r31Id }
+        val r31References = s1.opinions.filter { it.opinionId == r31Id }
         assertThat(r31References).hasSize(1)
         assertThat(r31References[0].weight).isEqualTo(0.2)
 

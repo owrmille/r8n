@@ -15,11 +15,12 @@ class SubjectFacade(
     private val subjectMapper: SubjectMapper,
 ) {
     fun findSubject(
-        query: String,
+        query: String?,
+        referentId: java.util.UUID?,
         pageable: PageRequestDto,
     ): PageResponseDto<OpinionSubjectDto> =
         subjectService
-            .findSubjects(query, pageable.toPageable())
+            .findSubjects(query, referentId, pageable.toPageable())
             .map { subjectMapper.toDto(it) }
             .toResponse()
 
@@ -27,10 +28,16 @@ class SubjectFacade(
         subjectMapper.toDto(
             subjectService.createSubject(
                 name = request.name,
+                primaryReferentId = request.primaryReferentId,
                 referentName = request.referentName,
                 address = request.address,
                 latitude = request.latitude,
                 longitude = request.longitude,
             ),
         )
+
+    fun setPrimaryReferent(
+        subjectId: java.util.UUID,
+        referentId: java.util.UUID,
+    ): OpinionSubjectDto = subjectMapper.toDto(subjectService.setPrimaryReferent(subjectId, referentId))
 }
