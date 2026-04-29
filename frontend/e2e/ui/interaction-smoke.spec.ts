@@ -44,7 +44,7 @@ test("create review form renders and accepts input without console issues", asyn
   await page.goto("/create");
 
   await page.getByLabel("What are you reviewing?").fill("Flat White");
-  await page.getByRole("button", { name: "8" }).click();
+  await page.getByRole("spinbutton").fill("8");
   await page.getByLabel("Objective Notes").fill(
     "Balanced extraction, silky milk texture, served warm."
   );
