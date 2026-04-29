@@ -9,6 +9,7 @@ import com.r8n.backend.messaging.api.MessagingApi.Companion.DIRECT_CONVERSATION_
 import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREADS_PATH
 import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREAD_MESSAGES_PATH
 import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREAD_PATH
+import com.r8n.backend.messaging.api.MessagingApi.Companion.UNREAD_COUNT_PATH
 import com.r8n.backend.messaging.api.dto.messaging.CreateDirectConversationRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.CreateDirectMessageRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.CreateSupportMessageRequestDto
@@ -17,6 +18,7 @@ import com.r8n.backend.messaging.api.dto.messaging.DirectConversationSummaryDto
 import com.r8n.backend.messaging.api.dto.messaging.DirectMessageDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportMessageDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportThreadSummaryDto
+import com.r8n.backend.messaging.api.dto.messaging.UnreadMessagesCountDto
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.body
 import java.util.UUID
@@ -24,6 +26,13 @@ import java.util.UUID
 class MessagingRestClient(
     private val restClient: RestClient,
 ) : MessagingApi {
+    override fun getUnreadMessagesCount(): UnreadMessagesCountDto =
+        restClient
+            .get()
+            .uri(UNREAD_COUNT_PATH)
+            .retrieve()
+            .body<UnreadMessagesCountDto>()!!
+
     override fun getDirectConversationSummaries(
         pageable: PageRequestDto,
     ): PageResponseDto<DirectConversationSummaryDto> =
