@@ -44,7 +44,7 @@ class OpinionListSearchIntegrationTest {
     private companion object {
         val ANNA_ID: UUID = UUID.fromString("20202020-2020-2020-2020-202020202020")
         val BOB_ID: UUID = UUID.fromString("30303030-3030-3030-3030-303030303030")
-        
+
         @Suppress("unused")
         @Container
         @ServiceConnection
@@ -86,7 +86,7 @@ class OpinionListSearchIntegrationTest {
                         .header("Authorization", annaToken)
                         .param("nameSubstring", "l11")
                         .param("page", "0")
-                        .param("size", "10")
+                        .param("size", "10"),
                 ).andExpect(status().isOk)
                 .andReturn()
 
@@ -104,7 +104,7 @@ class OpinionListSearchIntegrationTest {
                         .header("Authorization", annaToken)
                         .param("authorId", ANNA_ID.toString())
                         .param("page", "0")
-                        .param("size", "10")
+                        .param("size", "10"),
                 ).andExpect(status().isOk)
                 .andReturn()
 
@@ -115,9 +115,9 @@ class OpinionListSearchIntegrationTest {
 
     @Test
     fun `search by authorNameSubstring works via usersApi`() {
-        val BERNARD_ID = UUID.fromString("10101010-1010-1010-1010-101010101010")
+        val bernardId = UUID.fromString("10101010-1010-1010-1010-101010101010")
         val mockUserDto = org.mockito.kotlin.mock<UserDto>()
-        whenever(mockUserDto.id).thenReturn(BERNARD_ID)
+        whenever(mockUserDto.id).thenReturn(bernardId)
         whenever(usersInternalApi.findUsersByNameSubstring("Bernard")).thenReturn(listOf(mockUserDto))
 
         // Bernard owns l21, l22, l23 (from seed data)
@@ -128,13 +128,13 @@ class OpinionListSearchIntegrationTest {
                         .header("Authorization", annaToken)
                         .param("authorNameSubstring", "Bernard")
                         .param("page", "0")
-                        .param("size", "10")
+                        .param("size", "10"),
                 ).andExpect(status().isOk)
                 .andReturn()
 
         val page = objectMapper.readValue<PageResponseDto<OpinionListSummaryDto>>(result.response.contentAsString)
         assertThat(page.items.map { it.listName }).contains("l21", "l22", "l23")
-        assertThat(page.items).allSatisfy { assertThat(it.owner).isEqualTo(BERNARD_ID) }
+        assertThat(page.items).allSatisfy { assertThat(it.owner).isEqualTo(bernardId) }
     }
 
     @Test
@@ -147,7 +147,7 @@ class OpinionListSearchIntegrationTest {
                         .param("nameSubstring", "l11")
                         .param("authorId", ANNA_ID.toString())
                         .param("page", "0")
-                        .param("size", "10")
+                        .param("size", "10"),
                 ).andExpect(status().isOk)
                 .andReturn()
 
@@ -157,18 +157,19 @@ class OpinionListSearchIntegrationTest {
 
     @Test
     fun `search shows own private lists but hides others private lists`() {
-        // Seed data: 
+        // Seed data:
         // l11, l12, l13 are SEARCHABLE, owned by Anna (20202020-...)
         // l21, l22, l23 are SEARCHABLE, owned by Bernard (10101010-...)
         // l24 is PRIVATE, owned by Bernard (10101010-...)
-        
+
         // a private list for Anna to test she can see it
         mockMvc
             .perform(
-                org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/opinion-lists")
+                org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                    .post("/api/opinion-lists")
                     .header("Authorization", annaToken)
                     .param("name", "Anna's secret list")
-                    .param("privacy", "PRIVATE")
+                    .param("privacy", "PRIVATE"),
             ).andExpect(status().isOk)
 
         // Anna searches for lists:
@@ -179,13 +180,13 @@ class OpinionListSearchIntegrationTest {
                         .header("Authorization", annaToken)
                         .param("nameSubstring", "l")
                         .param("page", "0")
-                        .param("size", "50")
+                        .param("size", "50"),
                 ).andExpect(status().isOk)
                 .andReturn()
 
         val page = objectMapper.readValue<PageResponseDto<OpinionListSummaryDto>>(result.response.contentAsString)
         val names = page.items.map { it.listName }
-        
+
         assertThat(names).contains("l11", "l12", "l13") // Anna's searchable lists
         assertThat(names).contains("l21", "l22", "l23") // Bernard's searchable lists
         assertThat(names).doesNotContain("l24") // Bernard's private list
@@ -199,7 +200,7 @@ class OpinionListSearchIntegrationTest {
                     get("/api/opinion-lists/approved")
                         .header("Authorization", annaToken)
                         .param("page", "0")
-                        .param("size", "50")
+                        .param("size", "50"),
                 ).andExpect(status().isOk)
                 .andReturn()
 
@@ -219,7 +220,7 @@ class OpinionListSearchIntegrationTest {
                     get("/api/opinion-lists/mine/names")
                         .header("Authorization", annaToken)
                         .param("page", "0")
-                        .param("size", "50")
+                        .param("size", "50"),
                 ).andExpect(status().isOk)
                 .andReturn()
 
