@@ -154,6 +154,18 @@ class DirectMessagingService(
         return message
     }
 
+    @Transactional
+    fun markConversationAsRead(
+        actor: DirectActor,
+        conversationId: UUID,
+    ) {
+        val participant =
+            conversationParticipantRepository.findByConversationIdAndUserId(conversationId, actor.userId)
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Conversation not found")
+        participant.lastReadAt = Instant.now()
+        conversationParticipantRepository.save(participant)
+    }
+
     private fun findConversationVisibleForActor(
         actor: DirectActor,
         conversationId: UUID,

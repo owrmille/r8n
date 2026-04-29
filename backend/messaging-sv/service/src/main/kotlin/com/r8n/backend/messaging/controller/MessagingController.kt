@@ -52,6 +52,10 @@ class MessagingController(
     ): DirectMessageDto = directMessagingFacade.addDirectConversationMessage(getDirectActor(), conversationId, request)
 
     @PreAuthorize(IS_EXPLICIT_USER_OR_MODERATOR_OR_SUPPORT_OR_ADMIN)
+    override fun markDirectConversationAsRead(conversationId: UUID) =
+        directMessagingFacade.markConversationAsRead(getDirectActor(), conversationId)
+
+    @PreAuthorize(IS_EXPLICIT_USER_OR_MODERATOR_OR_SUPPORT_OR_ADMIN)
     override fun getSupportThreadSummaries(pageable: PageRequestDto) =
         supportMessagingFacade.getSupportThreadSummaries(getSupportActor(), pageable.toPageable()).toResponse()
 

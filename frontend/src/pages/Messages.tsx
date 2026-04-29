@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { motion } from "framer-motion";
 import {
@@ -38,6 +38,7 @@ import {
   useDeleteSupportThreadMutation,
   useDirectConversationMessages,
   useDirectConversationSummaries,
+  useMarkDirectConversationAsReadMutation,
   useMe,
   useSupportThreadMessages,
   useSupportThreadSummaries,
@@ -110,7 +111,7 @@ function mapDirectSummaryToThread(summary: DirectConversationSummaryDto): Messag
     participantRole: "User",
     context: "Direct message",
     updatedAt,
-    unreadCount: 0,
+    unreadCount: summary.unreadCount,
     messages: [
       {
         id: `direct-preview-${summary.id}`,
@@ -359,7 +360,7 @@ const Messages = () => {
                 }}
                 placeholder="Search active users or enter R8N Support"
               />
-              {!isSupportRecipient && newRecipient.trim().length >= 2 && (
+              {!isSupportRecipient && newRecipient.trim().length >= 2 && !selectedRecipient && (
                 <RecipientSearchResults
                   isError={userSearchQuery.isError}
                   isLoading={userSearchQuery.isLoading}
@@ -558,6 +559,12 @@ const DirectChatPanel = ({
   onDraftSent,
   thread,
 }: DirectChatPanelProps) => {
+  const markAsReadMutation = useMarkDirectConversationAsReadMutation();
+  useEffect(() => {
+    markAsReadMutation.mutate(thread.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [thread.id]);
+
   const messagesQuery = useDirectConversationMessages(
     {
       conversationId: thread.id,
@@ -628,10 +635,15 @@ const SupportChatPanel = ({
   onDeleted,
   thread,
 }: SupportChatPanelProps) => {
-  const messagesQuery = useSupportThreadMessages({
-    pageable: SUPPORT_MESSAGES_PAGE,
-    threadId: thread.id,
-  });
+  const messagesQuery = useSupportThreadMessages(
+    {
+      pageable: SUPPORT_MESSAGES_PAGE,
+      threadId: thread.id,
+    },
+    {
+      refetchInterval: 5000,
+    },
+  );
   const addMessageMutation = useAddSupportThreadMessageMutation({
     onSuccess: () => onDraftSent(),
   });

@@ -178,6 +178,12 @@ export function createMessagingApi(client: HttpClient = httpClient) {
       );
     },
 
+    markDirectConversationAsRead(conversationId: Uuid): Promise<void> {
+      return client.post<void>(`/messaging/direct/conversations/${conversationId}/read`, {
+        auth: "required",
+      });
+    },
+
     deleteSupportThread(threadId: Uuid): Promise<void> {
       return client.delete<void>(`/messaging/support/threads/${threadId}`, {
         auth: "required",

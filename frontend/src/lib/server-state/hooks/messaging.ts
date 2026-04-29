@@ -191,6 +191,21 @@ export function useUnreadMessagesCount(options?: { refetchInterval?: number }) {
   return supportUnread + directUnread;
 }
 
+export function useMarkDirectConversationAsReadMutation(
+  options?: UseMutationOptions<void, Error, Uuid, unknown>,
+) {
+  const invalidate = useApiInvalidation();
+
+  return useAuthorizedMutation({
+    mutationFn: (conversationId) => messagingApi.markDirectConversationAsRead(conversationId),
+    ...options,
+    onSuccess: (data, variables, context) => {
+      invalidate(messagingKeys.all);
+      options?.onSuccess?.(data, variables, context);
+    },
+  });
+}
+
 export function useDeleteSupportThreadMutation(
   options?: UseMutationOptions<void, Error, Uuid, unknown>,
 ) {

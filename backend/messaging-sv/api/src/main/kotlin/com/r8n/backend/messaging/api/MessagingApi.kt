@@ -33,7 +33,9 @@ interface MessagingApi {
         const val SUPPORT_THREAD_MESSAGES_PATH = "$SUPPORT_THREADS_PATH/{threadId}/messages"
         const val DIRECT_PATH = "$ROOT_PATH/direct"
         const val DIRECT_CONVERSATIONS_PATH = "$DIRECT_PATH/conversations"
-        const val DIRECT_CONVERSATION_MESSAGES_PATH = "$DIRECT_CONVERSATIONS_PATH/{conversationId}/messages"
+        const val DIRECT_CONVERSATION_PATH = "$DIRECT_CONVERSATIONS_PATH/{conversationId}"
+        const val DIRECT_CONVERSATION_MESSAGES_PATH = "$DIRECT_CONVERSATION_PATH/messages"
+        const val DIRECT_CONVERSATION_READ_PATH = "$DIRECT_CONVERSATION_PATH/read"
     }
 
     @GetMapping(DIRECT_CONVERSATIONS_PATH)
@@ -65,6 +67,13 @@ interface MessagingApi {
         @RequestBody
         request: CreateDirectMessageRequestDto,
     ): DirectMessageDto
+
+    @PostMapping(DIRECT_CONVERSATION_READ_PATH)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun markDirectConversationAsRead(
+        @PathVariable
+        conversationId: UUID,
+    )
 
     @GetMapping(SUPPORT_THREADS_PATH)
     @Operation(

@@ -15,4 +15,9 @@ interface ConversationParticipantRepository : JpaRepository<ConversationParticip
         conversationId: UUID,
         userId: UUID,
     ): Boolean
+
+    fun findByConversationIdAndUserId(
+        conversationId: UUID,
+        userId: UUID,
+    ): ConversationParticipantPersistence?
 }

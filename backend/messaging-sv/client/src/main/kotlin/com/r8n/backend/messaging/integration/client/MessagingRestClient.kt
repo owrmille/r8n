@@ -5,6 +5,7 @@ import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.messaging.api.MessagingApi
 import com.r8n.backend.messaging.api.MessagingApi.Companion.DIRECT_CONVERSATIONS_PATH
 import com.r8n.backend.messaging.api.MessagingApi.Companion.DIRECT_CONVERSATION_MESSAGES_PATH
+import com.r8n.backend.messaging.api.MessagingApi.Companion.DIRECT_CONVERSATION_READ_PATH
 import com.r8n.backend.messaging.api.dto.messaging.CreateDirectConversationRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.CreateDirectMessageRequestDto
 import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREAD_MESSAGES_PATH
@@ -76,6 +77,14 @@ class MessagingRestClient(
             .body(request)
             .retrieve()
             .body<DirectMessageDto>()!!
+
+    override fun markDirectConversationAsRead(conversationId: UUID) {
+        restClient
+            .post()
+            .uri(DIRECT_CONVERSATION_READ_PATH, conversationId)
+            .retrieve()
+            .toBodilessEntity()
+    }
 
     override fun getSupportThreadSummaries(pageable: PageRequestDto): PageResponseDto<SupportThreadSummaryDto> =
         restClient

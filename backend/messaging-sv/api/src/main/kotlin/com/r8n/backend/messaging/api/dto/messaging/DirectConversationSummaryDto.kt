@@ -10,4 +10,5 @@ data class DirectConversationSummaryDto(
     val createdAt: Instant,
     val lastMessageAt: Instant?,
     val lastMessageText: String?,
+    val unreadCount: Long,
 )

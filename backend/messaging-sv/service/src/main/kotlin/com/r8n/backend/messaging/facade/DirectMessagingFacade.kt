@@ -32,10 +32,11 @@ class DirectMessagingFacade(
     ): Page<DirectConversationSummaryDto> {
         val conversations = directMessagingService.listVisibleConversations(actor, pageable)
         val conversationIds = conversations.content.mapNotNull { it.id }
-        val participantsByConversationId =
-            conversationParticipantRepository
-                .findAllByConversationIdIn(conversationIds)
-                .groupBy { it.conversationId }
+        val allParticipants = conversationParticipantRepository.findAllByConversationIdIn(conversationIds)
+        val participantsByConversationId = allParticipants.groupBy { it.conversationId }
+        val actorLastReadAtByConversationId = allParticipants
+            .filter { it.userId == actor.userId }
+            .associateBy({ it.conversationId }, { it.lastReadAt })
         val messagesByConversationId =
             messageRepository
                 .findAllByConversationIdInOrderByConversationIdAscCreatedAtAsc(conversationIds)
@@ -43,10 +44,18 @@ class DirectMessagingFacade(
         val displayNamesByUserId = mutableMapOf<UUID, String>()
 
         return conversations.map { conversation ->
+            val conversationId = requireNotNull(conversation.id)
+            val actorLastReadAt = actorLastReadAtByConversationId[conversationId]
+            val messages = messagesByConversationId[conversationId].orEmpty()
+            val unreadCount = messages.count { msg ->
+                msg.authorUserId != actor.userId &&
+                    (actorLastReadAt == null || msg.createdAt > actorLastReadAt)
+            }.toLong()
             conversation.toSummaryDto(
                 actor = actor,
-                participantUserIds = participantsByConversationId[requireNotNull(conversation.id)].orEmpty().map { it.userId },
-                messages = messagesByConversationId[conversation.id].orEmpty(),
+                participantUserIds = participantsByConversationId[conversationId].orEmpty().map { it.userId },
+                messages = messages,
+                unreadCount = unreadCount,
                 displayNamesByUserId = displayNamesByUserId,
             )
         }
@@ -76,11 +85,17 @@ class DirectMessagingFacade(
             .addConversationMessage(actor, conversationId, request.text.trim())
             .toDto()
 
+    fun markConversationAsRead(
+        actor: DirectActor,
+        conversationId: UUID,
+    ) = directMessagingService.markConversationAsRead(actor, conversationId)
+
     private fun DirectConversationWithMessages.toSummaryDto(actor: DirectActor): DirectConversationSummaryDto =
         conversation.toSummaryDto(
             actor = actor,
             participantUserIds = participants.map { it.userId },
             messages = messages,
+            unreadCount = 0L,
             displayNamesByUserId = mutableMapOf(),
         )
 
@@ -88,6 +103,7 @@ class DirectMessagingFacade(
         actor: DirectActor,
         participantUserIds: List<UUID>,
         messages: List<MessagePersistence>,
+        unreadCount: Long,
         displayNamesByUserId: MutableMap<UUID, String>,
     ): DirectConversationSummaryDto {
         val otherParticipantId =
@@ -104,6 +120,7 @@ class DirectMessagingFacade(
             createdAt = createdAt,
             lastMessageAt = lastMessageAt,
             lastMessageText = latestMessage?.text,
+            unreadCount = unreadCount,
         )
     }
 
