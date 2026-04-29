@@ -15,7 +15,6 @@ import java.util.UUID
 @RestController
 class StubOpinionListController(
     private val opinionListFacade: OpinionListFacade,
-    private val accessRequestRepository: AccessRequestRepository,
 ) : OpinionListsApi {
     @PreAuthorize(IS_USER)
     override fun getListSummary(listId: UUID): OpinionListSummaryDto =
