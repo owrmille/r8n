@@ -8,7 +8,7 @@ import type {
   SupportMessageDto,
   SupportThreadSummaryDto,
 } from "@/lib/api/messaging";
-import type { PageResponseDto } from "@/lib/api/shared";
+import type { PageResponseDto, Uuid } from "@/lib/api/shared";
 import type { ApiErrorMeta } from "@/lib/server-state/query-client";
 import { messagingKeys } from "@/lib/server-state/query-keys";
 import {
@@ -71,6 +71,25 @@ export function useCreateSupportThreadMutation(
     ...options,
     meta: {
       errorTitle: "Support thread creation failed",
+      ...options?.meta,
+    } as ApiErrorMeta,
+    onSuccess: (data, variables, context) => {
+      invalidate(messagingKeys.all);
+      options?.onSuccess?.(data, variables, context);
+    },
+  });
+}
+
+export function useDeleteSupportThreadMutation(
+  options?: UseMutationOptions<void, Error, Uuid, unknown>,
+) {
+  const invalidate = useApiInvalidation();
+
+  return useAuthorizedMutation({
+    mutationFn: (threadId) => messagingApi.deleteSupportThread(threadId),
+    ...options,
+    meta: {
+      errorTitle: "Support thread deletion failed",
       ...options?.meta,
     } as ApiErrorMeta,
     onSuccess: (data, variables, context) => {

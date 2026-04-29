@@ -6,6 +6,7 @@ import {
   MessageCircle,
   Plus,
   SendHorizontal,
+  Trash2,
   UserRound,
 } from "lucide-react";
 import UserAvatar from "@/components/UserAvatar";
@@ -25,6 +26,7 @@ import { MOCK_MESSAGE_THREADS, type MessageDirection, type MessageThread, type T
 import {
   useAddSupportThreadMessageMutation,
   useCreateSupportThreadMutation,
+  useDeleteSupportThreadMutation,
   useMe,
   useSupportThreadMessages,
   useSupportThreadSummaries,
@@ -292,6 +294,7 @@ const Messages = () => {
                 draft={drafts[activeThread.id] ?? ""}
                 onDraftChange={(value) => updateDraft(activeThread.id, value)}
                 onDraftSent={() => updateDraft(activeThread.id, "")}
+                onDeleted={() => setActiveThreadId(null)}
                 thread={activeThread}
               />
             ) : (
@@ -477,6 +480,7 @@ interface SupportChatPanelProps {
   draft: string;
   onDraftChange: (value: string) => void;
   onDraftSent: () => void;
+  onDeleted: () => void;
   thread: MessageThread;
 }
 
@@ -485,6 +489,7 @@ const SupportChatPanel = ({
   draft,
   onDraftChange,
   onDraftSent,
+  onDeleted,
   thread,
 }: SupportChatPanelProps) => {
   const messagesQuery = useSupportThreadMessages({
@@ -493,6 +498,9 @@ const SupportChatPanel = ({
   });
   const addMessageMutation = useAddSupportThreadMessageMutation({
     onSuccess: () => onDraftSent(),
+  });
+  const deleteThreadMutation = useDeleteSupportThreadMutation({
+    onSuccess: () => onDeleted(),
   });
   const messages =
     messagesQuery.data?.items.map((message) =>
@@ -517,7 +525,11 @@ const SupportChatPanel = ({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <ChatHeader thread={thread} />
+      <ChatHeader
+        thread={thread}
+        onDelete={() => deleteThreadMutation.mutate(thread.id)}
+        isDeleting={deleteThreadMutation.isPending}
+      />
       {messagesQuery.isLoading && (
         <PanelStatus>Loading messages...</PanelStatus>
       )}
@@ -541,9 +553,11 @@ const SupportChatPanel = ({
 
 interface ChatHeaderProps {
   thread: MessageThread;
+  onDelete?: () => void;
+  isDeleting?: boolean;
 }
 
-const ChatHeader = ({ thread }: ChatHeaderProps) => {
+const ChatHeader = ({ thread, onDelete, isDeleting }: ChatHeaderProps) => {
   const isSupportThread = thread.participantRole === "Support";
   const Icon = isSupportThread ? Headphones : UserRound;
 
@@ -568,6 +582,17 @@ const ChatHeader = ({ thread }: ChatHeaderProps) => {
           {thread.participantRole} · Last message {thread.updatedAt}
         </p>
       </div>
+      {onDelete && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 shrink-0 rounded-lg p-0 text-muted-foreground hover:text-destructive"
+          disabled={isDeleting}
+          onClick={onDelete}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      )}
     </header>
   );
 };

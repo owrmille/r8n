@@ -85,6 +85,12 @@ export function createMessagingApi(client: HttpClient = httpClient) {
       );
     },
 
+    deleteSupportThread(threadId: Uuid): Promise<void> {
+      return client.delete<void>(`/messaging/support/threads/${threadId}`, {
+        auth: "required",
+      });
+    },
+
     addSupportThreadMessage(
       request: AddSupportThreadMessageRequestDto,
     ): Promise<SupportMessageDto> {
