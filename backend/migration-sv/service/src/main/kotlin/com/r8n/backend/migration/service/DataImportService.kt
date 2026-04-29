@@ -8,8 +8,10 @@ import com.r8n.backend.users.api.dto.UserStatusEnumDto
 import com.r8n.backend.users.integration.api.UsersInternalApi
 import com.r8n.backend.users.integration.api.dto.UserDto
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
+import org.springframework.web.server.ResponseStatusException
 import tools.jackson.databind.json.JsonMapper
 import java.time.Instant
 import java.util.UUID
@@ -57,14 +59,19 @@ class DataImportService(
         val subjectToOpinionId = mutableMapOf<UUID, UUID>()
         data.opinions.items[0].opinionSummaries.forEach { opinionSummary ->
             with(opinionSummary) {
-                val createdOpinion =
-                    opinionsClient.createOpinion(
-                        subjectId = subject,
-                        subjective = opinions[0].subjective,
-                        objective = opinions[0].objective,
-                        mark = ownMark,
-                    )
-                subjectToOpinionId[subject] = createdOpinion.id
+                        val createdOpinion =
+                            try {
+                        opinionsClient.createOpinion(
+                            subjectId = subject,
+                            subjective = opinions[0].subjective,
+                            objective = opinions[0].objective,
+                            mark = ownMark,
+                        )
+                            } catch (e: Exception) {
+                                logger.error("Error restoring opinion {}: {}", subject, e.message)
+                                throw e
+                            }
+                        subjectToOpinionId[subject] = createdOpinion.id
             }
         }
         logger.debug("Opinions restored for user: {}", userId)
@@ -129,7 +136,14 @@ class DataImportService(
         file: MultipartFile,
     ) {
         logger.info("Starting data import for user: {}", userId)
-        val data = objectMapper.readValue(file.inputStream, UserCompleteDataDto::class.java)
+        if (file.isEmpty) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "File cannot be empty")
+        }
+        val data = try {
+            objectMapper.readValue(file.inputStream, UserCompleteDataDto::class.java)
+        } catch (e: Exception) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file format", e)
+        }
         personal(userId, data)
         val subjectToOpinionId = opinions(userId, data)
         opinionLists(userId, subjectToOpinionId, data)

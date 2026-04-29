@@ -59,7 +59,7 @@ class InterserviceController(
         return sessions.toResponse()
     }
 
-    @PreAuthorize(Authority.IS_SERVICE)
+    @PreAuthorize(Authority.IS_USER_OR_SERVICE)
     override fun restoreUser(user: UserDto) {
         userFacade.restoreUser(getCurrentUserId(), user)
     }

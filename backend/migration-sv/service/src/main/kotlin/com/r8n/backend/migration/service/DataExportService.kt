@@ -8,7 +8,6 @@ import com.r8n.backend.migration.api.dto.UserCompleteDataDto
 import com.r8n.backend.opinions.api.access.IncomingAccessRequestApi
 import com.r8n.backend.opinions.api.access.OutgoingAccessRequestApi
 import com.r8n.backend.opinions.integration.api.OpinionListsInternalApi
-import com.r8n.backend.opinions.integration.api.OpinionsInternalApi
 import com.r8n.backend.users.integration.api.UsersInternalApi
 import com.r8n.backend.users.integration.api.dto.PersonalIdentifiableInformationSectionDto
 import org.slf4j.LoggerFactory
@@ -21,7 +20,6 @@ import java.util.concurrent.ConcurrentHashMap
 class DataExportService(
     private val usersClient: UsersInternalApi,
     private val opinionListsClient: OpinionListsInternalApi,
-    private val opinionsClient: OpinionsInternalApi,
     private val incomingAccessRequestClient: IncomingAccessRequestApi,
     private val outgoingAccessRequestClient: OutgoingAccessRequestApi,
     private val messageClient: MessagingApi,

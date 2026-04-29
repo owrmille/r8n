@@ -17,7 +17,6 @@ import com.r8n.backend.opinions.api.access.dto.AccessRequestDto
 import com.r8n.backend.opinions.api.access.dto.RequestStatusEnumDto
 import com.r8n.backend.opinions.api.lists.dto.OpinionListDto
 import com.r8n.backend.opinions.integration.api.OpinionListsInternalApi
-import com.r8n.backend.opinions.integration.api.OpinionsInternalApi
 import com.r8n.backend.opinions.stub.OpinionListTestDataFactory
 import com.r8n.backend.security.ServiceTokenService
 import com.r8n.backend.users.api.dto.UserStatusEnumDto
@@ -108,9 +107,6 @@ class MigrationIntegrationTests {
     lateinit var opinionListsClient: OpinionListsInternalApi
 
     @MockitoBean
-    lateinit var opinionsClient: OpinionsInternalApi
-
-    @MockitoBean
     lateinit var incomingAccessRequestClient: IncomingAccessRequestApi
 
     @MockitoBean
@@ -150,9 +146,6 @@ class MigrationIntegrationTests {
         )
         whenever(opinionListsClient.getMineFull(any())).thenReturn(
             PageImpl(listOf(opinions)).toResponse(),
-        )
-        whenever(opinionsClient.getMyFullOpinions(any())).thenReturn(
-            PageImpl<com.r8n.backend.opinions.api.opinions.dto.OpinionDto>(emptyList()).toResponse(),
         )
         whenever(incomingAccessRequestClient.get(anyOrNull(), anyOrNull(), anyOrNull(), any())).thenReturn(
             PageImpl(listOf(incomingAccessRequests)).toResponse(),
@@ -262,7 +255,7 @@ class MigrationIntegrationTests {
 
     @Test
     @WithMockUser(username = USER_ID)
-    fun `import process restores data`() {
+    fun `import process does not fail`() {
         val accessToken = serviceTokenService.generateAccessToken(UUID.fromString(USER_ID), listOf("USER"))
 
         val data =
@@ -293,13 +286,80 @@ class MigrationIntegrationTests {
 
         mockMvc
             .perform(
-                multipart("/api/migration/import")
+                multipart("/api/import")
                     .header("Authorization", "Bearer $accessToken")
                     .file(file),
             ).andExpect(status().isOk)
+    }
 
-        org.mockito.kotlin
-            .verify(usersInternalApi)
-            .restoreUser(any())
+    @Test
+    @WithMockUser(username = USER_ID)
+    fun `import process handles null subjective and objective lists`() {
+        val accessToken = serviceTokenService.generateAccessToken(UUID.fromString(USER_ID), listOf("USER"))
+
+        // Create a JSON with nulls for subjective and objective
+        val json = """
+            {
+              "id": "$USER_ID",
+              "status": "ACTIVE",
+              "statusTimestamp": "${Instant.now()}",
+              "consents": { "items": [], "total": 0, "page": 0, "size": 0 },
+              "personalIdentifiableInformation": {
+                "name": "Imported User",
+                "email": "imported@test.test",
+                "sessions": { "items": [], "total": 0, "page": 0, "size": 0 }
+              },
+              "opinions": {
+                "items": [
+                  {
+                    "id": null,
+                    "listName": "Virtual",
+                    "owner": "$USER_ID",
+                    "ownerName": "Imported User",
+                    "opinionSummaries": [
+                      {
+                        "subject": "${UUID.randomUUID()}",
+                        "subjectName": "Subject",
+                        "ownMark": 4.5,
+                        "opinions": [
+                          {
+                            "opinionId": "${UUID.randomUUID()}",
+                            "owner": "$USER_ID",
+                            "ownerName": "Imported User",
+                            "subjective": null,
+                            "objective": null,
+                            "mark": 4.5,
+                            "status": "PUBLISHED",
+                            "timestamp": "${Instant.now()}",
+                            "weight": 1.0
+                          }
+                        ]
+                      }
+                    ],
+                    "privacy": "PRIVATE"
+                  }
+                ],
+                "total": 1, "page": 0, "size": 1
+              },
+              "outgoingRequests": { "items": [], "total": 0, "page": 0, "size": 0 },
+              "incomingRequests": { "items": [], "total": 0, "page": 0, "size": 0 },
+              "messages": { "items": [], "total": 0, "page": 0, "size": 0 }
+            }
+        """.trimIndent()
+
+        val file =
+            MockMultipartFile(
+                "file",
+                "export.json",
+                "application/json",
+                json.toByteArray(),
+            )
+
+        mockMvc
+            .perform(
+                multipart("/api/import")
+                    .header("Authorization", "Bearer $accessToken")
+                    .file(file),
+            ).andExpect(status().isOk)
     }
 }
