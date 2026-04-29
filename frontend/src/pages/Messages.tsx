@@ -401,7 +401,6 @@ interface ThreadListItemProps {
 const ThreadListItem = ({ isActive, onSelect, thread }: ThreadListItemProps) => {
   const lastMessage = thread.messages[thread.messages.length - 1];
   const isSupportThread = thread.participantRole === "Support";
-  const Icon = isSupportThread ? Headphones : UserRound;
 
   return (
     <div
@@ -422,9 +421,18 @@ const ThreadListItem = ({ isActive, onSelect, thread }: ThreadListItemProps) => 
           : "hover:bg-muted/60",
       )}
     >
-      <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-        <Icon className="h-4 w-4" />
-      </div>
+      {isSupportThread ? (
+        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+          <Headphones className="h-4 w-4" />
+        </div>
+      ) : (
+        <UserAvatar
+          name={thread.participantName}
+          lastSeenAt={thread.participantLastSeenAt}
+          size="sm"
+          className="mt-0.5 shrink-0"
+        />
+      )}
       <div className="min-w-0 flex-1">
         <div className="mb-1 flex min-w-0 items-center gap-2">
           <p className="truncate text-sm font-semibold text-foreground">
