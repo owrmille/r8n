@@ -23,7 +23,9 @@ import com.r8n.backend.opinions.opinions.service.OpinionService
 import com.r8n.backend.users.integration.api.UsersInternalApi
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -396,6 +398,19 @@ class OpinionListService(
             return Page.empty(pageable)
         }
 
+        val resultIds = performFiltering(requesterId, filters)
+
+        if (resultIds.isEmpty()) {
+            return Page.empty(pageable)
+        }
+
+        return applySortingAndPagination(resultIds, pageable)
+    }
+
+    private fun performFiltering(
+        requesterId: UUID,
+        filters: OpinionListSearchFilters,
+    ): Set<UUID> {
         val authorIdsFromName = getAuthorIdsFromName(filters.authorNameSubstring)
 
         // Base results from primary filters (name and author)
@@ -409,27 +424,116 @@ class OpinionListService(
                     searchablePrivacy = OpinionListPrivacyEnum.SEARCHABLE,
                 ).toMutableSet()
 
-        if (resultIds.isEmpty()) return Page.empty(pageable)
+        if (resultIds.isEmpty()) return emptySet()
 
         // Apply additional filters as intersections
         filterByLocationSubstring(resultIds, filters.locationFilter?.containsLocationSubstring)
-        if (resultIds.isEmpty()) return Page.empty(pageable)
+        if (resultIds.isEmpty()) return emptySet()
 
         filterBySubjectSubstring(resultIds, filters.containsSubjectSubstring)
-        if (resultIds.isEmpty()) return Page.empty(pageable)
+        if (resultIds.isEmpty()) return emptySet()
 
         filterByLocationRadius(resultIds, filters.locationFilter)
-        if (resultIds.isEmpty()) return Page.empty(pageable)
+        if (resultIds.isEmpty()) return emptySet()
 
         filterByYoungerThan(resultIds, filters.someOpinionsYoungerThan)
-        if (resultIds.isEmpty()) return Page.empty(pageable)
+        if (resultIds.isEmpty()) return emptySet()
 
         filterByTextInAny(resultIds, filters.findThisTextInAnyOfTheAbove, requesterId)
-        if (resultIds.isEmpty()) return Page.empty(pageable)
 
-        return opinionListRepository
-            .findAllByIdIn(resultIds, pageable)
-            .map { mapToOpinionListInfo(it) }
+        return resultIds
+    }
+
+    private fun applySortingAndPagination(
+        resultIds: Set<UUID>,
+        pageable: Pageable,
+    ): Page<OpinionListInfo> {
+        // Fetch all matching items to allow correct sorting and pagination in-memory
+        // since some fields (like opinionsCount) are not available for JPA-level sorting
+        val isNativeSort = pageable.sort.isSorted && pageable.sort.all { it.property in listOf("name", "listName") }
+
+        if (isNativeSort) {
+            // Map listName to name for DB sorting if needed
+            val orders =
+                pageable.sort
+                    .map { order ->
+                        val property = if (order.property == "listName") "name" else order.property
+                        Sort.Order(order.direction, property)
+                    }.toList()
+            val dbSort = Sort.by(orders)
+            val dbPageable = PageRequest.of(pageable.pageNumber, pageable.pageSize, dbSort)
+
+            val page = opinionListRepository.findAllByIdIn(resultIds, dbPageable)
+            return page.map { mapToOpinionListInfo(it) }
+        }
+
+        // Fallback to in-memory sorting for non-native fields
+        val allMatchingPersistence = opinionListRepository.findAllById(resultIds)
+
+        val ownerNamesMap =
+            if (pageable.sort.any { it.property == "ownerName" }) {
+                val ownerIds = allMatchingPersistence.map { it.owner }.toSet()
+                ownerIds.associateWith { usersApi.getUserName(it) }
+            } else {
+                emptyMap()
+            }
+
+        val opinionsCountMap =
+            if (pageable.sort.any { it.property == "opinionsCount" }) {
+                allMatchingPersistence.associate { it.id!! to opinionsAssignmentRepository.countByOpinionList(it.id!!) }
+            } else {
+                emptyMap()
+            }
+
+        val sortedPersistence =
+            if (pageable.sort.isSorted) {
+                var comparator: Comparator<OpinionListPersistence>? = null
+                for (order in pageable.sort) {
+                    val propComparator: Comparator<OpinionListPersistence>? =
+                        when (order.property) {
+                            "listName", "name" -> compareBy { it.name.lowercase() }
+                            "ownerName" -> compareBy { ownerNamesMap[it.owner]?.lowercase() ?: "" }
+                            "opinionsCount" -> compareBy { opinionsCountMap[it.id!!] ?: 0L }
+                            else -> null
+                        }
+                    if (propComparator != null) {
+                        val directedComparator =
+                            if (order.direction.isDescending) {
+                                propComparator.reversed()
+                            } else {
+                                propComparator
+                            }
+                        comparator =
+                            if (comparator == null) directedComparator else comparator.thenComparing(directedComparator)
+                    }
+                }
+                if (comparator != null) allMatchingPersistence.sortedWith(comparator) else allMatchingPersistence
+            } else {
+                allMatchingPersistence
+            }
+
+        val total = sortedPersistence.size.toLong()
+        val start = pageable.offset.toInt()
+        val end = (start + pageable.pageSize).coerceAtMost(sortedPersistence.size)
+
+        val contentPersistence =
+            if (start < sortedPersistence.size) {
+                sortedPersistence.subList(start, end)
+            } else {
+                emptyList()
+            }
+
+        return PageImpl(
+            contentPersistence.map {
+                mapToOpinionListInfo(
+                    list = it,
+                    opinionsCount = opinionsCountMap[it.id!!],
+                    ownerName = ownerNamesMap[it.owner],
+                )
+            },
+            pageable,
+            total,
+        )
     }
 
     private fun hasFilters(filters: OpinionListSearchFilters): Boolean =
@@ -552,14 +656,19 @@ class OpinionListService(
             emptySet()
         }
 
-    private fun mapToOpinionListInfo(list: OpinionListPersistence): OpinionListInfo =
+    private fun mapToOpinionListInfo(
+        list: OpinionListPersistence,
+        opinionsCount: Long? = null,
+        ownerName: String? = null,
+    ): OpinionListInfo =
         OpinionListInfo(
             id = list.id!!,
             name = list.name,
             owner = list.owner,
             privacy = list.privacy,
-            opinionsCount = opinionsAssignmentRepository.countByOpinionList(list.id!!),
+            opinionsCount = opinionsCount ?: opinionsAssignmentRepository.countByOpinionList(list.id!!),
             grantedAccessCount = accessService.countAcceptedForList(list.id!!),
+            ownerName = ownerName,
         )
 
     private companion object {

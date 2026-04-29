@@ -67,14 +67,21 @@ class OpinionListFacade(
         requesterId: UUID,
         filters: OpinionListSearchFiltersDto,
         pageable: PageRequestDto,
-    ): PageResponseDto<OpinionListSummaryDto> =
-        opinionListService
-            .search(
+    ): PageResponseDto<OpinionListSummaryDto> {
+        val domainFilters = filters.toDomain()
+
+        val page =
+            opinionListService.search(
                 requesterId = requesterId,
-                filters = filters.toDomain(),
+                filters = domainFilters,
                 pageable = pageable.toPageable(),
-            ).map { opinionListMapper.toSummaryDto(it) }
-            .toResponse()
+            )
+
+        return page
+            .map { info ->
+                opinionListMapper.toSummaryDto(info, info.ownerName)
+            }.toResponse()
+    }
 
     fun getApprovedListsWithNamesAndOwners(
         requesterId: UUID,
