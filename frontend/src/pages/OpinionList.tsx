@@ -41,6 +41,9 @@ import type { OpinionRowDto, OpinionSummaryDto } from "@/lib/api/opinions";
 import type { OpinionListSummaryDto } from "@/lib/api/opinion-lists";
 import type { Uuid } from "@/lib/api/shared";
 
+const shouldAppendReferent = (subjectName: string, referentName?: string | null) =>
+  !!referentName && !subjectName.includes(`@ ${referentName}`);
+
 const OpinionListPage = () => {
   const { id: listId } = useParams<{ id: string }>();
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
@@ -125,7 +128,7 @@ const OpinionListPage = () => {
                 <List className="h-5 w-5 text-primary" />
               </div>
               <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground font-body">
-                {data?.ownerName} · {data?.listName}
+                {!isListOwner && data?.ownerName ? `${data.ownerName} · ` : ""}{data?.listName}
               </h1>
             </div>
             <p className="text-xs text-muted-foreground">
@@ -318,7 +321,7 @@ const ItemRow = ({
       >
         <td className="px-4 py-3 font-medium text-foreground">
           {summary.subjectName}
-          {summary.referentName && (
+          {shouldAppendReferent(summary.subjectName, summary.referentName) && (
             <span className="text-muted-foreground font-normal"> @ {summary.referentName}</span>
           )}
         </td>
@@ -353,7 +356,7 @@ const ItemRow = ({
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-medium text-foreground">
                       {summary.subjectName}
-                      {summary.referentName && (
+                      {shouldAppendReferent(summary.subjectName, summary.referentName) && (
                         <span className="text-muted-foreground font-normal"> @ {summary.referentName}</span>
                       )}
                     </span>
