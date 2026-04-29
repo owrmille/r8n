@@ -161,6 +161,7 @@ class ExportIntegrationTests {
                         createdAt = timestamp,
                         lastMessageAt = timestamp,
                         lastMessageText = "I have issue with post",
+                        unreadCount = 0,
                     ),
                 ),
             ).toResponse(),

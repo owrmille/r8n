@@ -72,6 +72,7 @@ class SupportMessagingFacade(
             createdAt = requireNotNull(messages.minOfOrNull { it.createdAt }),
             lastMessageAt = messages.maxOfOrNull { it.createdAt },
             lastMessageText = messages.maxByOrNull { it.createdAt }?.text,
+            unreadCount = 0,
         )
 
     private fun SupportThreadSummary.toDto(actor: SupportActor): SupportThreadSummaryDto =
@@ -82,6 +83,7 @@ class SupportMessagingFacade(
             createdAt = createdAt,
             lastMessageAt = lastMessageAt,
             lastMessageText = lastMessageText,
+            unreadCount = unreadCount,
         )
 
     private fun SupportMessagePersistence.toDto(authorDisplayName: String): SupportMessageDto =

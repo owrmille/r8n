@@ -18,6 +18,7 @@ export interface DirectConversationSummaryDto {
   createdAt: string;
   lastMessageAt: string | null;
   lastMessageText: string | null;
+  unreadCount: number;
 }
 
 export interface DirectMessageDto {

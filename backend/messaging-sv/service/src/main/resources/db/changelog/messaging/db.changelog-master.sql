@@ -126,3 +126,42 @@ CREATE INDEX IF NOT EXISTS idx_messages_conversation_created_at
     ON messaging.messages(conversation_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_messages_author_user_id
     ON messaging.messages(author_user_id);
+
+--changeset codex:V4_support_team_read_state
+ALTER TABLE messaging.support_messages
+    ADD COLUMN IF NOT EXISTS read_by_support_at TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS read_by_support_user_id UUID;
+
+CREATE INDEX IF NOT EXISTS idx_support_messages_unread_support
+    ON messaging.support_messages(thread_id, created_at)
+    WHERE author_role = 'USER' AND read_by_support_at IS NULL;
+
+UPDATE messaging.support_messages user_message
+SET
+    read_by_support_at = (
+        SELECT support_message.created_at
+        FROM messaging.support_messages support_message
+        WHERE support_message.thread_id = user_message.thread_id
+          AND support_message.author_role = 'SUPPORT'
+          AND support_message.created_at > user_message.created_at
+        ORDER BY support_message.created_at ASC
+        LIMIT 1
+    ),
+    read_by_support_user_id = (
+        SELECT support_message.author_user_id
+        FROM messaging.support_messages support_message
+        WHERE support_message.thread_id = user_message.thread_id
+          AND support_message.author_role = 'SUPPORT'
+          AND support_message.created_at > user_message.created_at
+        ORDER BY support_message.created_at ASC
+        LIMIT 1
+    )
+WHERE user_message.author_role = 'USER'
+  AND user_message.read_by_support_at IS NULL
+  AND EXISTS (
+      SELECT 1
+      FROM messaging.support_messages support_message
+      WHERE support_message.thread_id = user_message.thread_id
+        AND support_message.author_role = 'SUPPORT'
+        AND support_message.created_at > user_message.created_at
+  );

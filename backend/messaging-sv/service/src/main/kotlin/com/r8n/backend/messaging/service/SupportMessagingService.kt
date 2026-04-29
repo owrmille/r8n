@@ -73,6 +73,14 @@ class SupportMessagingService(
             return summaries.map { it.toSummary(lastMessageText = "") }
         }
 
+        val unreadCountsByThreadId =
+            if (actor.role == SupportParticipantRoleEnumPersistence.SUPPORT) {
+                supportMessageRepository
+                    .countUnreadUserMessagesByThreadId(summaries.content.map { it.id })
+                    .associate { it.threadId to it.unreadCount }
+            } else {
+                emptyMap()
+            }
         val messagesByThreadId =
             supportMessageRepository
                 .findAllByThreadIdInOrderByThreadIdAscCreatedAtAsc(summaries.content.map { it.id })
@@ -85,6 +93,7 @@ class SupportMessagingService(
                         ?.maxByOrNull { it.createdAt }
                         ?.text
                         .orEmpty(),
+                unreadCount = unreadCountsByThreadId[summary.id] ?: 0,
             )
         }
     }
@@ -100,35 +109,46 @@ class SupportMessagingService(
 
         val now = Instant.now()
         val thread =
-            supportThreadRepository.save(
-                SupportThreadPersistence(
-                    ownerUserId = actor.userId,
-                ),
-            )
+            supportThreadRepository.findFirstByOwnerUserId(actor.userId)
+                ?: supportThreadRepository.save(
+                    SupportThreadPersistence(
+                        ownerUserId = actor.userId,
+                    ),
+                )
 
-        val message =
-            supportMessageRepository.save(
-                SupportMessagePersistence(
-                    threadId = requireNotNull(thread.id),
-                    authorUserId = actor.userId,
-                    authorRole = SupportParticipantRoleEnumPersistence.USER,
-                    text = initialMessageText,
-                    createdAt = now,
-                ),
-            )
+        supportMessageRepository.save(
+            SupportMessagePersistence(
+                threadId = requireNotNull(thread.id),
+                authorUserId = actor.userId,
+                authorRole = SupportParticipantRoleEnumPersistence.USER,
+                text = initialMessageText,
+                createdAt = now,
+            ),
+        )
 
         return SupportThreadWithMessages(
             thread = thread,
-            messages = listOf(message),
+            messages =
+                supportMessageRepository.findAllByThreadIdInOrderByThreadIdAscCreatedAtAsc(
+                    listOf(requireNotNull(thread.id)),
+                ),
         )
     }
 
+    @Transactional
     fun getThreadMessages(
         actor: SupportActor,
         threadId: UUID,
         pageable: Pageable,
     ): Page<SupportMessagePersistence> {
         val thread = findThreadVisibleForActor(actor, threadId)
+        if (actor.readsAsSupportTeam(thread)) {
+            supportMessageRepository.markUnreadUserMessagesReadBySupport(
+                threadId = requireNotNull(thread.id),
+                readerUserId = actor.userId,
+                readAt = Instant.now(),
+            )
+        }
         return supportMessageRepository.findAllByThreadIdOrderByCreatedAtAsc(requireNotNull(thread.id), pageable)
     }
 
@@ -187,6 +207,9 @@ class SupportMessagingService(
         }
         return thread
     }
+
+    private fun SupportActor.readsAsSupportTeam(thread: SupportThreadPersistence): Boolean =
+        role == SupportParticipantRoleEnumPersistence.SUPPORT && thread.ownerUserId != userId
 }
 
 data class SupportThreadWithMessages(
@@ -200,13 +223,18 @@ data class SupportThreadSummary(
     val createdAt: Instant,
     val lastMessageAt: Instant,
     val lastMessageText: String,
+    val unreadCount: Long = 0,
 )
 
-private fun SupportThreadSummaryProjection.toSummary(lastMessageText: String): SupportThreadSummary =
+private fun SupportThreadSummaryProjection.toSummary(
+    lastMessageText: String,
+    unreadCount: Long = 0,
+): SupportThreadSummary =
     SupportThreadSummary(
         id = id,
         ownerUserId = ownerUserId,
         createdAt = createdAt,
         lastMessageAt = lastMessageAt,
         lastMessageText = lastMessageText,
+        unreadCount = unreadCount,
     )

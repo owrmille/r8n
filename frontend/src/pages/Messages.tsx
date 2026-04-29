@@ -86,7 +86,7 @@ function mapSupportSummaryToThread(summary: SupportThreadSummaryDto): MessageThr
     context: "Support conversation",
     supportViewerRole: summary.viewerRole,
     updatedAt,
-    unreadCount: 0,
+    unreadCount: summary.unreadCount,
     messages: [
       {
         id: `support-preview-${summary.id}`,
@@ -178,6 +178,8 @@ const Messages = () => {
   const me = useMe();
   const supportThreadsQuery = useSupportThreadSummaries({
     pageable: SUPPORT_THREADS_PAGE,
+  }, {
+    refetchInterval: 5000,
   });
   const directConversationsQuery = useDirectConversationSummaries(
     {

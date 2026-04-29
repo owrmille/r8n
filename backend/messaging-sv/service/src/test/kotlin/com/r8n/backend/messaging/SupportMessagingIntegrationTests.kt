@@ -390,7 +390,7 @@ class SupportMessagingIntegrationTests {
     @Test
     fun `thread summaries respect requested page size`() {
         createThread(userAId, "USER", "Thread one")
-        createThread(userAId, "USER", "Thread two")
+        createThread(userBId, "USER", "Thread two")
 
         mockMvc
             .perform(
@@ -407,7 +407,7 @@ class SupportMessagingIntegrationTests {
     @Test
     fun `thread summaries are ordered by latest message date`() {
         val olderThreadId = createThread(userAId, "USER", "Thread one")
-        createThread(userAId, "USER", "Thread two")
+        createThread(userBId, "USER", "Thread two")
         addMessage(userAId, "USER", olderThreadId, "Follow-up makes this thread latest")
 
         mockMvc
@@ -419,6 +419,94 @@ class SupportMessagingIntegrationTests {
             ).andExpect(status().isOk)
             .andExpect(jsonPath("$.items[0].id").value(olderThreadId.toString()))
             .andExpect(jsonPath("$.items[0].lastMessageText").value("Follow-up makes this thread latest"))
+    }
+
+    @Test
+    fun `creating support thread again appends to existing requester support chat`() {
+        val threadId = createThread(userAId, "USER", "First support message")
+
+        mockMvc
+            .perform(
+                post(SUPPORT_THREADS_PATH)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"initialMessage":"Second support message"}""")
+                    .with(user(userAId.toString()).roles("USER"))
+                    .with(csrf()),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.id").value(threadId.toString()))
+            .andExpect(jsonPath("$.lastMessageText").value("Second support message"))
+
+        mockMvc
+            .perform(
+                get(messagesPath(threadId))
+                    .param("page", "0")
+                    .param("size", "20")
+                    .with(user(userAId.toString()).roles("USER")),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.items.length()").value(2))
+    }
+
+    @Test
+    fun `support read by one support user clears unread count for support team`() {
+        val threadId = createThread(userAId, "USER", "Unread for support")
+
+        mockMvc
+            .perform(
+                get(SUPPORT_THREADS_PATH)
+                    .param("page", "0")
+                    .param("size", "20")
+                    .with(user(supportId.toString()).roles("SUPPORT")),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.items[0].id").value(threadId.toString()))
+            .andExpect(jsonPath("$.items[0].unreadCount").value(1))
+
+        mockMvc
+            .perform(
+                get(messagesPath(threadId))
+                    .param("page", "0")
+                    .param("size", "20")
+                    .with(user(supportId.toString()).roles("SUPPORT")),
+            ).andExpect(status().isOk)
+
+        mockMvc
+            .perform(
+                get(SUPPORT_THREADS_PATH)
+                    .param("page", "0")
+                    .param("size", "20")
+                    .with(user(adminId.toString()).roles("ADMIN")),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.items[0].id").value(threadId.toString()))
+            .andExpect(jsonPath("$.items[0].unreadCount").value(0))
+
+        val messages =
+            supportMessageRepository.findAllByThreadIdOrderByCreatedAtAsc(
+                threadId,
+                org.springframework.data.domain.Pageable.unpaged(),
+            )
+        assertEquals(supportId, messages.content.single().readBySupportUserId)
+    }
+
+    @Test
+    fun `requester reading own support chat does not clear support unread count`() {
+        val threadId = createThread(userAId, "USER", "Still unread for support")
+
+        mockMvc
+            .perform(
+                get(messagesPath(threadId))
+                    .param("page", "0")
+                    .param("size", "20")
+                    .with(user(userAId.toString()).roles("USER")),
+            ).andExpect(status().isOk)
+
+        mockMvc
+            .perform(
+                get(SUPPORT_THREADS_PATH)
+                    .param("page", "0")
+                    .param("size", "20")
+                    .with(user(supportId.toString()).roles("SUPPORT")),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.items[0].id").value(threadId.toString()))
+            .andExpect(jsonPath("$.items[0].unreadCount").value(1))
     }
 
     @Test
