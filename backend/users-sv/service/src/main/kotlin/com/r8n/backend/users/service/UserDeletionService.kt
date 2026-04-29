@@ -1,6 +1,6 @@
 package com.r8n.backend.users.service
 
-import com.r8n.backend.messaging.integration.client.MessagingRestClient
+import com.r8n.backend.messaging.api.MessagingApi
 import com.r8n.backend.opinions.integration.api.OpinionListsInternalApi
 import com.r8n.backend.users.provider.database.PIIRepository
 import com.r8n.backend.users.provider.database.UserRepository
@@ -14,7 +14,7 @@ class UserDeletionService(
     private val userRepository: UserRepository,
     private val piiRepository: PIIRepository,
     private val opinionListsClient: OpinionListsInternalApi,
-    private val messagingClient: MessagingRestClient,
+    private val messagingClient: MessagingApi,
 ) {
     private val logger = LoggerFactory.getLogger(UserDeletionService::class.java)
 
