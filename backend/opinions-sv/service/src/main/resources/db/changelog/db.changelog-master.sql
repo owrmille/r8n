@@ -445,7 +445,13 @@ VALUES
     ('a0000000-0000-0000-0000-000000000102', '80000000-0000-0000-0000-000000000002', '80000000-0000-0000-0000-000000000000', 1.0)  -- Anna synced to Smoke List
 ON CONFLICT (id) DO NOTHING;
 
---changeset codex:V15_moderation_decisions
+--changeset inikulin:V14_private_list context:local,test
+INSERT INTO opinions.opinion_lists (id, owner, name, privacy)
+VALUES
+    ('80000000-0000-0000-0000-000000000223', '10101010-1010-1010-1010-101010101010', 'l24', 'PRIVATE')
+ON CONFLICT (id) DO NOTHING;
+
+--changeset iatopchu:V15_moderation_decisions
 CREATE TABLE IF NOT EXISTS opinions.moderation_decisions (
     id UUID PRIMARY KEY,
     opinion UUID NOT NULL,
