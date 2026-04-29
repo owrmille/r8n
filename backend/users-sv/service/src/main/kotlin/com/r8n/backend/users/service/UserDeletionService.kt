@@ -34,7 +34,7 @@ class UserDeletionService(
             logger.debug("Deleting user record: {}", userId)
             userRepository.deleteById(userId)
 
-            logger.info("Successfully deleted user: {}", userId)
+            logger.debug("Successfully deleted user: {}", userId)
         } catch (e: Exception) {
             logger.error("Failed to delete user: {}", userId, e)
             throw e
