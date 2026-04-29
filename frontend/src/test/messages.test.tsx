@@ -56,6 +56,7 @@ vi.mock("@/lib/server-state", () => ({
           id: "support-thread-1",
           lastMessageAt: "2026-04-29T09:35:00Z",
           ownerUserId: "current-user",
+          viewerRole: "REQUESTER",
         },
       ],
       page: 0,
