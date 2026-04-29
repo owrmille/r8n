@@ -43,6 +43,10 @@ class SupportMessagingFacade(
         request: CreateSupportMessageRequestDto,
     ): SupportMessageDto = supportMessagingService.addThreadMessage(actor, threadId, request.text.trim()).toDto()
 
+    fun deleteAllUserDataForUser(userId: UUID) {
+        supportMessagingService.deleteAllUserDataForUser(userId)
+    }
+
     private fun SupportThreadWithMessages.toSummaryDto(): SupportThreadSummaryDto =
         SupportThreadSummaryDto(
             id = requireNotNull(thread.id),

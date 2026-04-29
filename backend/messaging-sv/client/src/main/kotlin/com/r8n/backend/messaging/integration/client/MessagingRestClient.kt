@@ -5,6 +5,7 @@ import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.messaging.api.MessagingApi
 import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREADS_PATH
 import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREAD_MESSAGES_PATH
+import com.r8n.backend.messaging.api.MessagingApi.Companion.USER_PATH
 import com.r8n.backend.messaging.api.dto.messaging.CreateSupportMessageRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.CreateSupportThreadRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportMessageDto
@@ -69,4 +70,12 @@ class MessagingRestClient(
             .body(request)
             .retrieve()
             .body<SupportMessageDto>()!!
+
+    override fun deleteAllUserDataForUser(userId: UUID) {
+        restClient
+            .delete()
+            .uri(USER_PATH, userId)
+            .retrieve()
+            .toBodilessEntity()
+    }
 }

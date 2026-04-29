@@ -33,6 +33,8 @@ services:
     url: http://localhost:8090
   opinions:
     url: http://localhost:8090
+  messaging:
+    url: http://localhost:8090
 r8n:
   security:
     public-paths: /api/auth/**, /v3/api-docs/**, /swagger-ui.html, /swagger-ui/**, /webjars/swagger-ui/**

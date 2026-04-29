@@ -7,6 +7,7 @@ import com.r8n.backend.messaging.api.dto.messaging.CreateSupportThreadRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportMessageDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportThreadSummaryDto
 import jakarta.validation.Valid
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -19,6 +20,7 @@ interface MessagingApi {
         const val SUPPORT_PATH = "$ROOT_PATH/support"
         const val SUPPORT_THREADS_PATH = "$SUPPORT_PATH/threads"
         const val SUPPORT_THREAD_MESSAGES_PATH = "$SUPPORT_THREADS_PATH/{threadId}/messages"
+        const val USER_PATH = "$ROOT_PATH/user/{userId}"
     }
 
     @GetMapping(SUPPORT_THREADS_PATH)
@@ -50,4 +52,9 @@ interface MessagingApi {
         @RequestBody
         request: CreateSupportMessageRequestDto,
     ): SupportMessageDto
+
+    @DeleteMapping(USER_PATH)
+    fun deleteAllUserDataForUser(
+        @PathVariable userId: UUID,
+    )
 }

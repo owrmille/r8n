@@ -10,6 +10,8 @@ import java.time.Instant
 import java.util.UUID
 
 interface SupportThreadRepository : JpaRepository<SupportThreadPersistence, UUID> {
+    fun findAllByOwnerUserId(ownerUserId: UUID): List<SupportThreadPersistence>
+
     @Query(
         """
         SELECT thread

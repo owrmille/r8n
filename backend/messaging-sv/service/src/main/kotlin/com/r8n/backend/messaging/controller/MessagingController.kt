@@ -43,6 +43,10 @@ class MessagingController(
         request: CreateSupportMessageRequestDto,
     ): SupportMessageDto = supportMessagingFacade.addSupportThreadMessage(getSupportActor(), threadId, request)
 
+    override fun deleteAllUserDataForUser(userId: UUID) {
+        supportMessagingFacade.deleteAllUserDataForUser(userId)
+    }
+
     private fun getSupportActor(): SupportActor {
         val isSupport =
             SecurityContextHolder
