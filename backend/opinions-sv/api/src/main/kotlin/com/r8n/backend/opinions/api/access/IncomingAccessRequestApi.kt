@@ -72,7 +72,9 @@ interface IncomingAccessRequestApi {
     @PostMapping(HIDE_PATH)
     @Operation(
         summary = "Hide incoming access request",
-        description = "Hides an incoming access request from the authenticated user's active request list.",
+        description =
+            "Hides an incoming access request from the authenticated user's active request list. " +
+                "It keeps showing up as pending for the requestor. You can unhide, approve, or reject it later.",
     )
     fun hide(
         @Parameter(description = "Access request identifier.")
