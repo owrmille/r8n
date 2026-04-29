@@ -31,6 +31,8 @@ import {
   useMyOpinionLists,
   useDeleteOpinionListMutation,
   useSetOpinionListPrivacyMutation,
+  useMoveOpinionMutation,
+  useRenameOpinionListMutation,
 } from "@/lib/server-state/hooks/opinion-lists";
 import {
   useCreateOpinionMutation,
@@ -42,9 +44,6 @@ import { useMe } from "@/lib/server-state/hooks/users";
 import type { OpinionRowDto, OpinionSummaryDto } from "@/lib/api/opinions";
 import type { OpinionListSummaryDto } from "@/lib/api/opinion-lists";
 import type { Uuid } from "@/lib/api/shared";
-
-const shouldAppendReferent = (subjectName: string, referentName?: string | null) =>
-  !!referentName && !subjectName.includes(`@ ${referentName}`);
 
 const OpinionListPage = () => {
   const { id: listId } = useParams<{ id: string }>();
@@ -66,6 +65,8 @@ const OpinionListPage = () => {
   const deleteOpinion = useDeleteOpinionMutation();
   const deleteList = useDeleteOpinionListMutation();
   const setListPrivacy = useSetOpinionListPrivacyMutation();
+  const moveOpinion = useMoveOpinionMutation();
+  const renameList = useRenameOpinionListMutation();
 
   const me = useMe();
   const currentUserId = me.data?.id ?? null;
@@ -73,6 +74,9 @@ const OpinionListPage = () => {
 
   const [editingOpinion, setEditingOpinion] = useState<OpinionRowDto | null>(null);
   const [movingOpinion, setMovingOpinion] = useState<OpinionRowDto | null>(null);
+  const [deletingOpinionId, setDeletingOpinionId] = useState<Uuid | null>(null);
+  const [deleteListConfirmOpen, setDeleteListConfirmOpen] = useState(false);
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
 
   const summaries = data?.opinionSummaries ?? [];
 
@@ -85,9 +89,8 @@ const OpinionListPage = () => {
   }, [unlinkOpinion, listId]);
 
   const handleDeleteForever = useCallback((opinionId: Uuid) => {
-    if (!confirm("Delete this opinion permanently? This cannot be undone.")) return;
-    deleteOpinion.mutate({ opinionId });
-  }, [deleteOpinion]);
+    setDeletingOpinionId(opinionId);
+  }, []);
 
   const handleAddReview = useCallback(async (
     subjectId: Uuid,
@@ -147,6 +150,10 @@ const OpinionListPage = () => {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-52">
+                    <DropdownMenuItem onClick={() => setRenameDialogOpen(true)}>
+                      <Pencil className="h-3.5 w-3.5 mr-2" />
+                      Rename list
+                    </DropdownMenuItem>
                     {data.privacy === "PRIVATE" ? (
                       <DropdownMenuItem
                         onClick={() => setListPrivacy.mutate({ listId: data.id, privacy: "SEARCHABLE" })}
@@ -168,13 +175,7 @@ const OpinionListPage = () => {
                     <DropdownMenuItem
                       className="text-destructive focus:text-destructive"
                       disabled={deleteList.isPending}
-                      onClick={() => {
-                        if (!confirm(`Delete "${data.listName}" forever? This cannot be undone.`)) return;
-                        deleteList.mutate(
-                          { listId: data.id },
-                          { onSuccess: () => navigate("/lists") },
-                        );
-                      }}
+                      onClick={() => setDeleteListConfirmOpen(true)}
                     >
                       <Trash2 className="h-3.5 w-3.5 mr-2" />
                       Delete list
@@ -260,14 +261,66 @@ const OpinionListPage = () => {
           <MoveOpinionDialog
             row={movingOpinion}
             currentListId={listId!}
-            isPending={linkOpinion.isPending || unlinkOpinion.isPending}
+            isPending={moveOpinion.isPending}
             onClose={() => setMovingOpinion(null)}
-            onSubmit={async (opinionId, targetListId) => {
-              await linkOpinion.mutateAsync({ listId: targetListId, opinionId });
-              await unlinkOpinion.mutateAsync({ listId: listId!, opinionId });
-              setMovingOpinion(null);
+            onSubmit={(opinionId, targetListId) => {
+              moveOpinion.mutate(
+                { fromListId: listId!, toListId: targetListId, opinionId },
+                { onSuccess: () => setMovingOpinion(null) },
+              );
             }}
           />
+          <ConfirmDialog
+            open={deletingOpinionId !== null}
+            title="Delete opinion forever?"
+            description="This cannot be undone. The opinion will be removed from every list and the database."
+            confirmLabel="Delete forever"
+            destructive
+            isPending={deleteOpinion.isPending}
+            onClose={() => setDeletingOpinionId(null)}
+            onConfirm={() => {
+              if (!deletingOpinionId) return;
+              deleteOpinion.mutate(
+                { opinionId: deletingOpinionId },
+                { onSuccess: () => setDeletingOpinionId(null) },
+              );
+            }}
+          />
+          <ConfirmDialog
+            open={deleteListConfirmOpen}
+            title={data ? `Delete "${data.listName}"?` : "Delete list?"}
+            description="This cannot be undone. All links and syncs from this list will be removed too."
+            confirmLabel="Delete list"
+            destructive
+            isPending={deleteList.isPending}
+            onClose={() => setDeleteListConfirmOpen(false)}
+            onConfirm={() => {
+              if (!data) return;
+              deleteList.mutate(
+                { listId: data.id },
+                {
+                  onSuccess: () => {
+                    setDeleteListConfirmOpen(false);
+                    navigate("/lists");
+                  },
+                },
+              );
+            }}
+          />
+          {data && (
+            <RenameListDialog
+              open={renameDialogOpen}
+              currentName={data.listName}
+              isPending={renameList.isPending}
+              onClose={() => setRenameDialogOpen(false)}
+              onSubmit={(name) => {
+                renameList.mutate(
+                  { listId: data.id, name },
+                  { onSuccess: () => setRenameDialogOpen(false) },
+                );
+              }}
+            />
+          )}
 
           <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -378,7 +431,7 @@ const ItemRow = ({
       >
         <td className="px-4 py-3 font-medium text-foreground">
           {summary.subjectName}
-          {shouldAppendReferent(summary.subjectName, summary.referentName) && (
+          {summary.referentName && (
             <span className="text-muted-foreground font-normal"> @ {summary.referentName}</span>
           )}
         </td>
@@ -955,6 +1008,116 @@ const MoveOpinionDialog = ({
         <DialogFooter>
           <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button size="sm" onClick={handleSubmit} disabled={!targetListId || isPending}>Move</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const ConfirmDialog = ({
+  open,
+  title,
+  description,
+  confirmLabel,
+  destructive,
+  isPending,
+  onClose,
+  onConfirm,
+}: {
+  open: boolean;
+  title: string;
+  description?: string;
+  confirmLabel: string;
+  destructive?: boolean;
+  isPending: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}) => (
+  <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+    <DialogContent className="sm:max-w-sm">
+      <DialogHeader>
+        <DialogTitle>{title}</DialogTitle>
+      </DialogHeader>
+      {description && <p className="text-sm text-muted-foreground">{description}</p>}
+      <DialogFooter>
+        <Button variant="ghost" size="sm" onClick={onClose} disabled={isPending}>Cancel</Button>
+        <Button
+          size="sm"
+          variant={destructive ? "destructive" : "default"}
+          onClick={onConfirm}
+          disabled={isPending}
+        >
+          {confirmLabel}
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+);
+
+const RenameListDialog = ({
+  open,
+  currentName,
+  isPending,
+  onClose,
+  onSubmit,
+}: {
+  open: boolean;
+  currentName: string;
+  isPending: boolean;
+  onClose: () => void;
+  onSubmit: (name: string) => void;
+}) => {
+  const [name, setName] = useState(currentName);
+  const [hydratedFor, setHydratedFor] = useState<string | null>(null);
+
+  if (open && hydratedFor !== currentName) {
+    setName(currentName);
+    setHydratedFor(currentName);
+  }
+
+  const handleSubmit = () => {
+    const trimmed = name.trim();
+    if (!trimmed || trimmed === currentName) return;
+    onSubmit(trimmed);
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) {
+          setHydratedFor(null);
+          onClose();
+        }
+      }}
+    >
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Rename list</DialogTitle>
+        </DialogHeader>
+        <div className="py-2">
+          <Input
+            value={name}
+            autoFocus
+            maxLength={255}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !isPending) {
+                e.preventDefault();
+                handleSubmit();
+              }
+            }}
+          />
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+          <Button
+            size="sm"
+            onClick={handleSubmit}
+            disabled={isPending || !name.trim() || name.trim() === currentName}
+          >
+            Save
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

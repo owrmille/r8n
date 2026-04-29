@@ -105,6 +105,13 @@ export interface DeleteOpinionListRequestDto {
   listId: Uuid;
 }
 
+export interface MoveOpinionRequestDto {
+  fromListId: Uuid;
+  toListId: Uuid;
+  opinionId: Uuid;
+  weight?: number;
+}
+
 export function createOpinionListsApi(client: HttpClient = httpClient) {
   return {
     create(request: CreateOpinionListRequestDto): Promise<OpinionListDto> {
@@ -121,6 +128,20 @@ export function createOpinionListsApi(client: HttpClient = httpClient) {
       return client.delete<void>(`/opinion-lists/${request.listId}`, {
         auth: "required",
       });
+    },
+
+    moveOpinion(request: MoveOpinionRequestDto): Promise<OpinionListDto> {
+      return client.post<OpinionListDto>(
+        `/opinion-lists/${request.fromListId}/move-opinion`,
+        {
+          auth: "required",
+          query: {
+            toListId: request.toListId,
+            opinionId: request.opinionId,
+            weight: request.weight,
+          },
+        },
+      );
     },
 
     getMine(

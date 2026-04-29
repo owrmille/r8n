@@ -7,6 +7,7 @@ import type {
   GetOpinionListRequestDto,
   GetOpinionListSummaryRequestDto,
   LinkOpinionToListRequestDto,
+  MoveOpinionRequestDto,
   OpinionListDto,
   OpinionListSummaryDto,
   RenameOpinionListRequestDto,
@@ -126,6 +127,30 @@ export function useDeleteOpinionListMutation(
     ...options,
     meta: {
       errorTitle: "List deletion failed",
+      ...options?.meta,
+    } as ApiErrorMeta,
+    onSuccess: (data, variables, context) => {
+      invalidate(opinionListsKeys.all);
+      options?.onSuccess?.(data, variables, context);
+    },
+  });
+}
+
+export function useMoveOpinionMutation(
+  options?: UseMutationOptions<
+    OpinionListDto,
+    Error,
+    MoveOpinionRequestDto,
+    unknown
+  >,
+) {
+  const invalidate = useApiInvalidation();
+
+  return useAuthorizedMutation({
+    mutationFn: (variables) => opinionListsApi.moveOpinion(variables),
+    ...options,
+    meta: {
+      errorTitle: "Move opinion failed",
       ...options?.meta,
     } as ApiErrorMeta,
     onSuccess: (data, variables, context) => {
