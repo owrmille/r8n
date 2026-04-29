@@ -61,6 +61,7 @@ export interface SupportThreadSummaryDto {
   createdAt: string;
   lastMessageAt: string | null;
   lastMessageText: string | null;
+  unreadCount: number;
 }
 
 export interface SupportMessageDto {
