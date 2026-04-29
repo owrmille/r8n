@@ -94,6 +94,17 @@ spring:
                     limit: 100
                     durationSeconds: 60
                 - RewritePath=/api/public/users/(?<segment>.*), /api/users/$\{segment}
+            - id: public_messaging
+              uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_MESSAGING_HOST}:${SERVICES_MESSAGING_PORT}
+              predicates:
+                - Path=/api/public/messaging/**
+              filters:
+                - ApiKeyAuthenticationFilter
+                - name: RateLimitingFilter
+                  args:
+                    limit: 100
+                    durationSeconds: 60
+                - RewritePath=/api/public/messaging/(?<segment>.*), /api/messaging/$\{segment}
 springdoc:
   api-docs:
     path: /v3/api-docs
