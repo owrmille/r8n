@@ -4,8 +4,8 @@ import com.r8n.backend.opinions.api.lists.OpinionListsApi
 import com.r8n.backend.opinions.api.lists.OpinionListsApi.Companion.CREATE_PATH
 import com.r8n.backend.opinions.api.lists.OpinionListsApi.Companion.DELETE_PATH
 import com.r8n.backend.opinions.api.lists.OpinionListsApi.Companion.GET_PATH
-import com.r8n.backend.opinions.api.lists.OpinionListsApi.Companion.MOVE_OPINION_PATH
 import com.r8n.backend.opinions.api.lists.OpinionListsApi.Companion.LINK_PATH
+import com.r8n.backend.opinions.api.lists.OpinionListsApi.Companion.MOVE_OPINION_PATH
 import com.r8n.backend.opinions.api.lists.OpinionListsApi.Companion.RENAME_PATH
 import com.r8n.backend.opinions.api.lists.OpinionListsApi.Companion.SET_PRIVACY_PATH
 import com.r8n.backend.opinions.api.lists.OpinionListsApi.Companion.SUMMARY_PATH
