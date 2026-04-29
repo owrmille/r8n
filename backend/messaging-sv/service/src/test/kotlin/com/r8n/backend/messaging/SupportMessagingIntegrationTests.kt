@@ -1,8 +1,8 @@
 package com.r8n.backend.messaging
 
 import com.r8n.backend.messaging.api.MessagingApi.Companion.DIRECT_CONVERSATIONS_PATH
-import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREAD_PATH
 import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREADS_PATH
+import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREAD_PATH
 import com.r8n.backend.messaging.api.dto.messaging.SUPPORT_MESSAGE_TEXT_MAX_LENGTH
 import com.r8n.backend.messaging.persistence.ConversationParticipantPersistence
 import com.r8n.backend.messaging.persistence.ConversationParticipantRoleEnumPersistence
@@ -481,7 +481,8 @@ class SupportMessagingIntegrationTests {
         val messages =
             supportMessageRepository.findAllByThreadIdOrderByCreatedAtAsc(
                 threadId,
-                org.springframework.data.domain.Pageable.unpaged(),
+                org.springframework.data.domain.Pageable
+                    .unpaged(),
             )
         assertEquals(supportId, messages.content.single().readBySupportUserId)
     }
@@ -539,7 +540,14 @@ class SupportMessagingIntegrationTests {
             ).andExpect(status().isNoContent)
 
         assert(!supportThreadRepository.existsById(threadId))
-        assert(supportMessageRepository.findAllByThreadIdOrderByCreatedAtAsc(threadId, org.springframework.data.domain.Pageable.unpaged()).isEmpty)
+        assert(
+            supportMessageRepository
+                .findAllByThreadIdOrderByCreatedAtAsc(
+                    threadId,
+                    org.springframework.data.domain.Pageable
+                        .unpaged(),
+                ).isEmpty,
+        )
     }
 
     @Test
@@ -627,7 +635,8 @@ class SupportMessagingIntegrationTests {
         val messages =
             messageRepository.findAllByConversationIdOrderByCreatedAtAsc(
                 conversationId,
-                org.springframework.data.domain.Pageable.unpaged(),
+                org.springframework.data.domain.Pageable
+                    .unpaged(),
             )
         assertEquals(1, messages.totalElements)
         assertEquals("User A", messages.content.single().authorDisplayNameSnapshot)
@@ -638,7 +647,8 @@ class SupportMessagingIntegrationTests {
             conversationRepository
                 .findAllByTypeOrderByLastMessageAtDesc(
                     ConversationTypeEnumPersistence.SUPPORT,
-                    org.springframework.data.domain.Pageable.unpaged(),
+                    org.springframework.data.domain.Pageable
+                        .unpaged(),
                 ).totalElements,
         )
         assertEquals(
@@ -646,7 +656,8 @@ class SupportMessagingIntegrationTests {
             conversationRepository
                 .findAllByTypeOrderByLastMessageAtDesc(
                     ConversationTypeEnumPersistence.DIRECT,
-                    org.springframework.data.domain.Pageable.unpaged(),
+                    org.springframework.data.domain.Pageable
+                        .unpaged(),
                 ).content
                 .single()
                 .id,

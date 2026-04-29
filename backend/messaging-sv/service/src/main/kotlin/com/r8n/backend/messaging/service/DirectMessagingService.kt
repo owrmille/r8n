@@ -62,7 +62,10 @@ class DirectMessagingService(
             val message = addConversationMessage(actor, requireNotNull(existingConversation.id), initialMessageText)
             return DirectConversationWithMessages(
                 conversation = existingConversation,
-                participants = conversationParticipantRepository.findAllByConversationId(requireNotNull(existingConversation.id)),
+                participants =
+                    conversationParticipantRepository.findAllByConversationId(
+                        requireNotNull(existingConversation.id),
+                    ),
                 messages = listOf(message),
             )
         }
@@ -79,23 +82,24 @@ class DirectMessagingService(
             )
         val conversationId = requireNotNull(conversation.id)
         val participants =
-            conversationParticipantRepository.saveAll(
-                listOf(
-                    ConversationParticipantPersistence(
-                        conversationId = conversationId,
-                        userId = actor.userId,
-                        participantRole = ConversationParticipantRoleEnumPersistence.MEMBER,
-                        joinedAt = now,
-                        lastReadAt = now,
+            conversationParticipantRepository
+                .saveAll(
+                    listOf(
+                        ConversationParticipantPersistence(
+                            conversationId = conversationId,
+                            userId = actor.userId,
+                            participantRole = ConversationParticipantRoleEnumPersistence.MEMBER,
+                            joinedAt = now,
+                            lastReadAt = now,
+                        ),
+                        ConversationParticipantPersistence(
+                            conversationId = conversationId,
+                            userId = recipientUserId,
+                            participantRole = ConversationParticipantRoleEnumPersistence.MEMBER,
+                            joinedAt = now,
+                        ),
                     ),
-                    ConversationParticipantPersistence(
-                        conversationId = conversationId,
-                        userId = recipientUserId,
-                        participantRole = ConversationParticipantRoleEnumPersistence.MEMBER,
-                        joinedAt = now,
-                    ),
-                ),
-            ).toList()
+                ).toList()
         val message =
             messageRepository.save(
                 MessagePersistence(

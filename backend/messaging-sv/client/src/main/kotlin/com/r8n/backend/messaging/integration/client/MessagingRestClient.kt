@@ -6,15 +6,15 @@ import com.r8n.backend.messaging.api.MessagingApi
 import com.r8n.backend.messaging.api.MessagingApi.Companion.DIRECT_CONVERSATIONS_PATH
 import com.r8n.backend.messaging.api.MessagingApi.Companion.DIRECT_CONVERSATION_MESSAGES_PATH
 import com.r8n.backend.messaging.api.MessagingApi.Companion.DIRECT_CONVERSATION_READ_PATH
-import com.r8n.backend.messaging.api.dto.messaging.CreateDirectConversationRequestDto
-import com.r8n.backend.messaging.api.dto.messaging.CreateDirectMessageRequestDto
+import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREADS_PATH
 import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREAD_MESSAGES_PATH
 import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREAD_PATH
-import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREADS_PATH
-import com.r8n.backend.messaging.api.dto.messaging.DirectConversationSummaryDto
-import com.r8n.backend.messaging.api.dto.messaging.DirectMessageDto
+import com.r8n.backend.messaging.api.dto.messaging.CreateDirectConversationRequestDto
+import com.r8n.backend.messaging.api.dto.messaging.CreateDirectMessageRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.CreateSupportMessageRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.CreateSupportThreadRequestDto
+import com.r8n.backend.messaging.api.dto.messaging.DirectConversationSummaryDto
+import com.r8n.backend.messaging.api.dto.messaging.DirectMessageDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportMessageDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportThreadSummaryDto
 import org.springframework.web.client.RestClient
@@ -24,7 +24,9 @@ import java.util.UUID
 class MessagingRestClient(
     private val restClient: RestClient,
 ) : MessagingApi {
-    override fun getDirectConversationSummaries(pageable: PageRequestDto): PageResponseDto<DirectConversationSummaryDto> =
+    override fun getDirectConversationSummaries(
+        pageable: PageRequestDto,
+    ): PageResponseDto<DirectConversationSummaryDto> =
         restClient
             .get()
             .uri { uriBuilder ->

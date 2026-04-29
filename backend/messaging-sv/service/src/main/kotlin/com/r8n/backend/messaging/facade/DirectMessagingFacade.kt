@@ -34,9 +34,10 @@ class DirectMessagingFacade(
         val conversationIds = conversations.content.mapNotNull { it.id }
         val allParticipants = conversationParticipantRepository.findAllByConversationIdIn(conversationIds)
         val participantsByConversationId = allParticipants.groupBy { it.conversationId }
-        val actorLastReadAtByConversationId = allParticipants
-            .filter { it.userId == actor.userId }
-            .associateBy({ it.conversationId }, { it.lastReadAt })
+        val actorLastReadAtByConversationId =
+            allParticipants
+                .filter { it.userId == actor.userId }
+                .associateBy({ it.conversationId }, { it.lastReadAt })
         val messagesByConversationId =
             messageRepository
                 .findAllByConversationIdInOrderByConversationIdAscCreatedAtAsc(conversationIds)
@@ -47,10 +48,12 @@ class DirectMessagingFacade(
             val conversationId = requireNotNull(conversation.id)
             val actorLastReadAt = actorLastReadAtByConversationId[conversationId]
             val messages = messagesByConversationId[conversationId].orEmpty()
-            val unreadCount = messages.count { msg ->
-                msg.authorUserId != actor.userId &&
-                    (actorLastReadAt == null || msg.createdAt > actorLastReadAt)
-            }.toLong()
+            val unreadCount =
+                messages
+                    .count { msg ->
+                        msg.authorUserId != actor.userId &&
+                            (actorLastReadAt == null || msg.createdAt > actorLastReadAt)
+                    }.toLong()
             conversation.toSummaryDto(
                 actor = actor,
                 participantUserIds = participantsByConversationId[conversationId].orEmpty().map { it.userId },

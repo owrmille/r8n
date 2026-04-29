@@ -4,7 +4,6 @@ import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.utils.toPageable
 import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.messaging.api.MessagingApi
-import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREAD_PATH
 import com.r8n.backend.messaging.api.dto.messaging.CreateDirectConversationRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.CreateDirectMessageRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.CreateSupportMessageRequestDto
@@ -43,7 +42,12 @@ class MessagingController(
     override fun getDirectConversationMessages(
         conversationId: UUID,
         pageable: PageRequestDto,
-    ) = directMessagingFacade.getDirectConversationMessages(getDirectActor(), conversationId, pageable.toPageable()).toResponse()
+    ) = directMessagingFacade
+        .getDirectConversationMessages(
+            getDirectActor(),
+            conversationId,
+            pageable.toPageable(),
+        ).toResponse()
 
     @PreAuthorize(IS_EXPLICIT_USER_OR_MODERATOR_OR_SUPPORT_OR_ADMIN)
     override fun addDirectConversationMessage(

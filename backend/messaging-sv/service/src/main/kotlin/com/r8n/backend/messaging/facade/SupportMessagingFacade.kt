@@ -27,7 +27,8 @@ class SupportMessagingFacade(
     fun getSupportThreadSummaries(
         actor: SupportActor,
         pageable: Pageable,
-    ): Page<SupportThreadSummaryDto> = supportMessagingService.listThreadSummaries(actor, pageable).map { it.toDto(actor) }
+    ): Page<SupportThreadSummaryDto> =
+        supportMessagingService.listThreadSummaries(actor, pageable).map { it.toDto(actor) }
 
     fun createSupportThread(
         actor: SupportActor,
