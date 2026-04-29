@@ -4,6 +4,7 @@ import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.utils.toPageable
 import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.messaging.api.MessagingApi
+import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREAD_PATH
 import com.r8n.backend.messaging.api.dto.messaging.CreateSupportMessageRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.CreateSupportThreadRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportMessageDto
@@ -36,6 +37,10 @@ class MessagingController(
         threadId: UUID,
         pageable: PageRequestDto,
     ) = supportMessagingFacade.getSupportThreadMessages(getSupportActor(), threadId, pageable.toPageable()).toResponse()
+
+    @PreAuthorize(IS_EXPLICIT_USER_OR_MODERATOR_OR_SUPPORT_OR_ADMIN)
+    override fun deleteSupportThread(threadId: UUID) =
+        supportMessagingFacade.deleteSupportThread(getSupportActor(), threadId)
 
     @PreAuthorize(IS_EXPLICIT_USER_OR_MODERATOR_OR_SUPPORT_OR_ADMIN)
     override fun addSupportThreadMessage(

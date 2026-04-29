@@ -13,4 +13,6 @@ interface SupportMessageRepository : JpaRepository<SupportMessagePersistence, UU
     ): Page<SupportMessagePersistence>
 
     fun findAllByThreadIdInOrderByThreadIdAscCreatedAtAsc(threadIds: Collection<UUID>): List<SupportMessagePersistence>
+
+    fun deleteAllByThreadId(threadId: UUID)
 }

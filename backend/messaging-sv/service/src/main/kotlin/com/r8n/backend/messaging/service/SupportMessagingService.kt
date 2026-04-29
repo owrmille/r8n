@@ -133,6 +133,16 @@ class SupportMessagingService(
     }
 
     @Transactional
+    fun deleteThread(
+        actor: SupportActor,
+        threadId: UUID,
+    ) {
+        val thread = findThreadVisibleForActor(actor, threadId)
+        supportMessageRepository.deleteAllByThreadId(requireNotNull(thread.id))
+        supportThreadRepository.delete(thread)
+    }
+
+    @Transactional
     fun addThreadMessage(
         actor: SupportActor,
         threadId: UUID,

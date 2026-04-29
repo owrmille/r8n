@@ -39,6 +39,11 @@ class SupportMessagingFacade(
         pageable: Pageable,
     ): Page<SupportMessageDto> = supportMessagingService.getThreadMessages(actor, threadId, pageable).map { it.toDto() }
 
+    fun deleteSupportThread(
+        actor: SupportActor,
+        threadId: UUID,
+    ) = supportMessagingService.deleteThread(actor, threadId)
+
     fun addSupportThreadMessage(
         actor: SupportActor,
         threadId: UUID,

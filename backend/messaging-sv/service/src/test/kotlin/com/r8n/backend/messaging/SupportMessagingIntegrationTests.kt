@@ -1,5 +1,6 @@
 package com.r8n.backend.messaging
 
+import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREAD_PATH
 import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREADS_PATH
 import com.r8n.backend.messaging.api.dto.messaging.SUPPORT_MESSAGE_TEXT_MAX_LENGTH
 import com.r8n.backend.messaging.provider.database.SupportMessageRepository
@@ -16,6 +17,7 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -390,6 +392,60 @@ class SupportMessagingIntegrationTests {
             .andExpect(jsonPath("$.size").value(1))
     }
 
+    @Test
+    fun `owner can delete their thread and its messages`() {
+        val threadId = createThread(userAId, "USER", "Please help")
+        addMessage(userAId, "USER", threadId, "More context")
+
+        mockMvc
+            .perform(
+                delete(threadPath(threadId))
+                    .with(user(userAId.toString()).roles("USER"))
+                    .with(csrf()),
+            ).andExpect(status().isNoContent)
+
+        assert(!supportThreadRepository.existsById(threadId))
+        assert(supportMessageRepository.findAllByThreadIdOrderByCreatedAtAsc(threadId, org.springframework.data.domain.Pageable.unpaged()).isEmpty)
+    }
+
+    @Test
+    fun `support can delete any thread`() {
+        val threadId = createThread(userAId, "USER", "Please help")
+
+        mockMvc
+            .perform(
+                delete(threadPath(threadId))
+                    .with(user(supportId.toString()).roles("SUPPORT"))
+                    .with(csrf()),
+            ).andExpect(status().isNoContent)
+
+        assert(!supportThreadRepository.existsById(threadId))
+    }
+
+    @Test
+    fun `user cannot delete another user's thread`() {
+        val threadId = createThread(userAId, "USER", "Please help")
+
+        mockMvc
+            .perform(
+                delete(threadPath(threadId))
+                    .with(user(userBId.toString()).roles("USER"))
+                    .with(csrf()),
+            ).andExpect(status().isForbidden)
+
+        assert(supportThreadRepository.existsById(threadId))
+    }
+
+    @Test
+    fun `deleting non-existent thread returns 404`() {
+        mockMvc
+            .perform(
+                delete(threadPath(UUID.randomUUID()))
+                    .with(user(userAId.toString()).roles("USER"))
+                    .with(csrf()),
+            ).andExpect(status().isNotFound)
+    }
+
     private fun createThread(
         authorId: UUID,
         role: String,
@@ -425,6 +481,8 @@ class SupportMessagingIntegrationTests {
                     .with(csrf()),
             ).andExpect(status().isOk)
     }
+
+    private fun threadPath(threadId: UUID): String = SUPPORT_THREAD_PATH.replace("{threadId}", threadId.toString())
 
     private fun messagesPath(threadId: UUID): String = "/api/messaging/support/threads/$threadId/messages"
 }
