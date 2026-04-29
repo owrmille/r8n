@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useMyOpinionLists, useLinkOpinionToListMutation } from "@/lib/server-state/hooks/opinion-lists";
-import { useCreateOpinionMutation } from "@/lib/server-state/hooks/opinions";
+import { useCreateOpinionMutation, useSubmitOpinionForModerationMutation } from "@/lib/server-state/hooks/opinions";
 
 const RatingRow = ({
   label,
@@ -199,8 +199,9 @@ const CreateReview = () => {
 
   const createOpinion = useCreateOpinionMutation();
   const linkOpinion = useLinkOpinionToListMutation();
+  const submitOpinion = useSubmitOpinionForModerationMutation();
 
-  const isSubmitting = createOpinion.isPending || linkOpinion.isPending;
+  const isSubmitting = createOpinion.isPending || linkOpinion.isPending || submitOpinion.isPending;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -229,6 +230,8 @@ const CreateReview = () => {
       if (selectedList) {
         await linkOpinion.mutateAsync({ listId: selectedList, opinionId: opinion.id });
       }
+
+      await submitOpinion.mutateAsync({ opinionId: opinion.id });
 
       navigate("/");
     } catch {
@@ -381,7 +384,7 @@ const CreateReview = () => {
           {/* Submit */}
           <div className="flex gap-3 pt-2">
             <Button type="submit" className="rounded-xl px-8" disabled={isSubmitting}>
-              {isSubmitting ? "Saving…" : "Publish Review"}
+              {isSubmitting ? "Submitting…" : "Submit for Review"}
             </Button>
             <Button type="button" variant="ghost" onClick={() => navigate("/")} className="rounded-xl" disabled={isSubmitting}>
               Cancel
