@@ -1,18 +1,15 @@
 import { useMemo, useState } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 import { motion } from "framer-motion";
 import {
-  ChevronDown,
-  Clock,
+  Headphones,
+  MessageCircle,
   Plus,
   SendHorizontal,
+  UserRound,
 } from "lucide-react";
 import UserAvatar from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import {
   Dialog,
   DialogContent,
@@ -46,16 +43,10 @@ const FILTERS: Array<{ id: MessageFilter; label: string }> = [
 const SUPPORT_THREADS_PAGE = { page: 0, size: 50 } as const;
 const SUPPORT_MESSAGES_PAGE = { page: 0, size: 100 } as const;
 
-function getDirectionMeta(direction: MessageDirection) {
+function getBubbleClasses(direction: MessageDirection) {
   return direction === "outgoing"
-    ? {
-        bubbleClassName: "border-primary/20 bg-primary/5",
-        layoutClassName: "justify-end",
-      }
-    : {
-        bubbleClassName: "border-border bg-background",
-        layoutClassName: "justify-start",
-      };
+    ? "rounded-br-md bg-primary text-primary-foreground shadow-sm"
+    : "rounded-bl-md border border-border bg-muted/60 text-foreground";
 }
 
 function formatMessageDate(value: string | null): string {
@@ -128,7 +119,7 @@ const Messages = () => {
   const [directThreads, setDirectThreads] = useState<MessageThread[]>(
     () => MOCK_MESSAGE_THREADS.filter((thread) => thread.participantRole !== "Support"),
   );
-  const [openThreads, setOpenThreads] = useState<string[]>([]);
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<MessageFilter>("all");
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [isNewMessageDialogOpen, setIsNewMessageDialogOpen] = useState(false);
@@ -140,7 +131,7 @@ const Messages = () => {
   });
   const createSupportThreadMutation = useCreateSupportThreadMutation({
     onSuccess: (thread) => {
-      setOpenThreads((current) => [thread.id, ...current.filter((id) => id !== thread.id)]);
+      setActiveThreadId(thread.id);
       setActiveFilter("support");
       setNewRecipient("");
       setNewMessage("");
@@ -180,13 +171,7 @@ const Messages = () => {
     [activeFilter, threads],
   );
 
-  const toggleThread = (threadId: string) => {
-    setOpenThreads((current) =>
-      current.includes(threadId)
-        ? current.filter((id) => id !== threadId)
-        : [...current, threadId],
-    );
-  };
+  const activeThread = threads.find((thread) => thread.id === activeThreadId) ?? null;
 
   const updateDraft = (threadId: string, value: string) => {
     setDrafts((current) => ({
@@ -254,13 +239,11 @@ const Messages = () => {
     const threadId = `thread-new-${Date.now()}`;
     const createdThread: MessageThread = {
       id: threadId,
-      subject: isSupportThread
-        ? "New support conversation"
-        : `Conversation with ${recipientName}`,
+      subject: `Conversation with ${recipientName}`,
       participantName: recipientName,
       participantLastSeenAt: null,
-      participantRole: isSupportThread ? "Support" : "User",
-      context: isSupportThread ? "Support conversation" : "Direct message",
+      participantRole: "User",
+      context: "Direct message",
       updatedAt: "Just now",
       unreadCount: 0,
       messages: [
@@ -275,7 +258,7 @@ const Messages = () => {
     };
 
     setDirectThreads((current) => [createdThread, ...current]);
-    setOpenThreads((current) => [threadId, ...current]);
+    setActiveThreadId(threadId);
     setActiveFilter("all");
     setDrafts((current) => ({
       ...current,
@@ -287,178 +270,98 @@ const Messages = () => {
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 md:px-8 md:py-12">
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
+    <div className="flex h-[calc(100vh-3.5rem)] min-h-0 flex-col overflow-hidden bg-background md:h-[calc(100vh-3rem)]">
+      <motion.header
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="mb-10 flex items-start justify-between gap-4"
+        transition={{ duration: 0.3 }}
+        className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-background px-4 md:px-6"
       >
-        <div>
-          <h1 className="mb-1 text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
-            Messages
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Private conversations with other users and R8N support.
-          </p>
-        </div>
+        <h1 className="text-2xl font-semibold tracking-normal text-foreground">
+          Messages
+        </h1>
         <Button
           type="button"
-          variant="outline"
-          className="rounded-xl"
+          className="rounded-lg"
           onClick={() => setIsNewMessageDialogOpen(true)}
         >
           <Plus className="h-4 w-4" />
           New message
         </Button>
-      </motion.div>
+      </motion.header>
 
-      <div className="mb-6 flex flex-wrap gap-2" aria-label="Message filters">
-        {FILTERS.map((filter) => (
-          <button
-            key={filter.id}
-            type="button"
-            onClick={() => setActiveFilter(filter.id)}
-            className={cn(
-              "rounded-xl border px-4 py-2 text-sm font-medium transition-colors",
-              activeFilter === filter.id
-                ? "border-primary/20 bg-primary/5 text-foreground"
-                : "border-border bg-card text-muted-foreground hover:bg-muted/50 hover:text-foreground",
-            )}
-          >
-            {filter.label}
-          </button>
-        ))}
-      </div>
-
-      <motion.section
+      <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.1 }}
-        className="space-y-4"
+        transition={{ duration: 0.3, delay: 0.05 }}
+        className="grid min-h-0 flex-1 grid-cols-1 grid-rows-[220px_minmax(0,1fr)] overflow-hidden md:grid-cols-[280px_minmax(0,1fr)] md:grid-rows-none"
       >
-        {supportThreadsQuery.isLoading && (
-          <div className="rounded-2xl border border-border bg-card px-5 py-4 text-sm text-muted-foreground">
-            Loading support conversations...
-          </div>
-        )}
-        {supportThreadsQuery.isError && (
-          <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm text-destructive">
-            Support conversations could not be loaded.
-          </div>
-        )}
-        {!supportThreadsQuery.isLoading && !supportThreadsQuery.isError && filteredThreads.length === 0 && (
-          <div className="rounded-2xl border border-border bg-card px-5 py-8 text-center text-sm text-muted-foreground">
-            No conversations yet.
-          </div>
-        )}
-        {filteredThreads.map((thread) => {
-          const isOpen = openThreads.includes(thread.id);
-          const isSupportThread = thread.participantRole === "Support";
-          const lastMessage = thread.messages[thread.messages.length - 1];
-          const previewMeta = getDirectionMeta(lastMessage.direction);
-
-          return (
-            <Collapsible
-              key={thread.id}
-              open={isOpen}
-              onOpenChange={() => toggleThread(thread.id)}
-              className="overflow-hidden rounded-2xl border border-border bg-card shadow-card"
-            >
-              <div className="border-b border-border/70 px-5 py-4">
-                <div className="flex items-start gap-4">
-                  <UserAvatar
-                    name={thread.participantName}
-                    lastSeenAt={thread.participantLastSeenAt}
-                    size="md"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-1 flex flex-wrap items-center gap-2">
-                      <h2 className="truncate text-sm font-semibold text-foreground">
-                        {thread.subject}
-                      </h2>
-                      {thread.unreadCount > 0 && (
-                        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-mono font-semibold text-accent-foreground">
-                          {thread.unreadCount}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {thread.participantName} · {thread.participantRole} · {thread.context}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-1.5 text-[10px] text-muted-foreground/70">
-                    <Clock className="h-3 w-3" />
-                    {thread.updatedAt}
-                  </div>
-                </div>
-              </div>
-
-              <CollapsibleTrigger asChild>
+        <aside className="flex min-h-0 flex-col border-b border-border bg-card md:border-b-0 md:border-r">
+          <div className="shrink-0 border-b border-border/70 px-3 py-3">
+            <div className="flex gap-2 overflow-x-auto" aria-label="Message filters">
+              {FILTERS.map((filter) => (
                 <button
+                  key={filter.id}
                   type="button"
-                  className="w-full px-5 py-4 text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  aria-label={`${isOpen ? "Collapse" : "Expand"} thread with ${thread.participantName}`}
+                  onClick={() => setActiveFilter(filter.id)}
+                  className={cn(
+                    "shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                    activeFilter === filter.id
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-background text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                  )}
                 >
-                  <div
-                    className={cn(
-                      "flex items-start gap-3",
-                      previewMeta.layoutClassName,
-                    )}
-                  >
-                    <div
-                      className={cn(
-                        "max-w-[82%] rounded-2xl border px-4 py-3",
-                        previewMeta.bubbleClassName,
-                      )}
-                    >
-                      <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                        <span className="text-sm font-medium text-foreground">
-                          {lastMessage.authorName}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground/70">
-                          {lastMessage.sentAt}
-                        </span>
-                      </div>
-                      {!isOpen && (
-                        <p className="line-clamp-2 text-sm leading-6 text-foreground/85">
-                          {lastMessage.body}
-                        </p>
-                      )}
-                    </div>
-                    <ChevronDown
-                      className={cn(
-                        "mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-transform",
-                        isOpen && "rotate-180",
-                      )}
-                    />
-                  </div>
+                  {filter.label}
                 </button>
-              </CollapsibleTrigger>
+              ))}
+            </div>
+          </div>
 
-              <CollapsibleContent>
-                {isSupportThread ? (
-                  <SupportThreadContent
-                    currentUserId={me.data?.id}
-                    draft={drafts[thread.id] ?? ""}
-                    isOpen={isOpen}
-                    onDraftChange={(value) => updateDraft(thread.id, value)}
-                    onDraftSent={() => updateDraft(thread.id, "")}
-                    thread={thread}
-                  />
-                ) : (
-                  <ThreadContent
-                    draft={drafts[thread.id] ?? ""}
-                    onDraftChange={(value) => updateDraft(thread.id, value)}
-                    onSend={() => sendMessage(thread.id)}
-                    thread={thread}
-                  />
-                )}
-              </CollapsibleContent>
-            </Collapsible>
-          );
-        })}
-      </motion.section>
+          <div className="min-h-0 flex-1 overflow-y-auto py-2">
+            {supportThreadsQuery.isLoading && (
+              <StatusRow>Loading support conversations...</StatusRow>
+            )}
+            {supportThreadsQuery.isError && (
+              <StatusRow variant="error">Support conversations could not be loaded.</StatusRow>
+            )}
+            {!supportThreadsQuery.isLoading && !supportThreadsQuery.isError && filteredThreads.length === 0 && (
+              <StatusRow>No conversations yet.</StatusRow>
+            )}
+            {filteredThreads.map((thread) => (
+              <ThreadListItem
+                key={thread.id}
+                isActive={thread.id === activeThreadId}
+                onSelect={() => setActiveThreadId(thread.id)}
+                thread={thread}
+              />
+            ))}
+          </div>
+        </aside>
+
+        <section className="min-h-0 overflow-hidden bg-background">
+          {activeThread ? (
+            activeThread.participantRole === "Support" ? (
+              <SupportChatPanel
+                currentUserId={me.data?.id}
+                draft={drafts[activeThread.id] ?? ""}
+                onDraftChange={(value) => updateDraft(activeThread.id, value)}
+                onDraftSent={() => updateDraft(activeThread.id, "")}
+                thread={activeThread}
+              />
+            ) : (
+              <ChatPanel
+                draft={drafts[activeThread.id] ?? ""}
+                messages={activeThread.messages}
+                onDraftChange={(value) => updateDraft(activeThread.id, value)}
+                onSend={() => sendMessage(activeThread.id)}
+                thread={activeThread}
+              />
+            )
+          ) : (
+            <EmptyChatState />
+          )}
+        </section>
+      </motion.div>
 
       <Dialog open={isNewMessageDialogOpen} onOpenChange={setIsNewMessageDialogOpen}>
         <DialogContent className="rounded-2xl">
@@ -497,14 +400,14 @@ const Messages = () => {
             <Button
               type="button"
               variant="outline"
-              className="rounded-xl"
+              className="rounded-lg"
               onClick={() => setIsNewMessageDialogOpen(false)}
             >
               Cancel
             </Button>
             <Button
               type="button"
-              className="rounded-xl"
+              className="rounded-lg"
               disabled={
                 !newRecipient.trim() ||
                 !newMessage.trim() ||
@@ -522,21 +425,97 @@ const Messages = () => {
   );
 };
 
-interface ThreadContentProps {
+interface StatusRowProps {
+  children: ReactNode;
+  variant?: "default" | "error";
+}
+
+const StatusRow = ({ children, variant = "default" }: StatusRowProps) => (
+  <div
+    className={cn(
+      "mx-3 rounded-lg border px-3 py-3 text-sm",
+      variant === "error"
+        ? "border-destructive/30 bg-destructive/5 text-destructive"
+        : "border-border bg-background text-muted-foreground",
+    )}
+  >
+    {children}
+  </div>
+);
+
+interface ThreadListItemProps {
+  isActive: boolean;
+  onSelect: () => void;
+  thread: MessageThread;
+}
+
+const ThreadListItem = ({ isActive, onSelect, thread }: ThreadListItemProps) => {
+  const lastMessage = thread.messages[thread.messages.length - 1];
+  const isSupportThread = thread.participantRole === "Support";
+  const Icon = isSupportThread ? Headphones : UserRound;
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={`Select thread with ${thread.participantName}`}
+      onClick={onSelect}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onSelect();
+        }
+      }}
+      className={cn(
+        "relative mx-2 flex cursor-pointer gap-3 rounded-lg px-3 py-3 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+        isActive
+          ? "bg-primary/10 text-foreground before:absolute before:inset-y-2 before:left-0 before:w-1 before:rounded-full before:bg-primary"
+          : "hover:bg-muted/60",
+      )}
+    >
+      <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="mb-1 flex min-w-0 items-center gap-2">
+          <p className="truncate text-sm font-semibold text-foreground">
+            {thread.participantName}
+          </p>
+          {thread.unreadCount > 0 && (
+            <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold text-accent-foreground">
+              {thread.unreadCount}
+            </span>
+          )}
+        </div>
+        <p className="truncate text-xs text-muted-foreground">
+          {lastMessage.body}
+        </p>
+      </div>
+      <span className="shrink-0 pt-0.5 text-[11px] text-muted-foreground/75">
+        {thread.updatedAt}
+      </span>
+    </div>
+  );
+};
+
+interface ChatPanelProps {
   draft: string;
+  messages: ThreadMessage[];
   onDraftChange: (value: string) => void;
   onSend: () => void;
   thread: MessageThread;
 }
 
-const ThreadContent = ({
+const ChatPanel = ({
   draft,
+  messages,
   onDraftChange,
   onSend,
   thread,
-}: ThreadContentProps) => (
-  <div className="border-t border-border/70 px-5 py-4">
-    <MessageList messages={thread.messages} />
+}: ChatPanelProps) => (
+  <div className="flex h-full min-h-0 flex-col">
+    <ChatHeader thread={thread} />
+    <MessageList messages={messages} />
     <MessageComposer
       draft={draft}
       isSending={false}
@@ -547,30 +526,25 @@ const ThreadContent = ({
   </div>
 );
 
-interface SupportThreadContentProps {
+interface SupportChatPanelProps {
   currentUserId: string | undefined;
   draft: string;
-  isOpen: boolean;
   onDraftChange: (value: string) => void;
   onDraftSent: () => void;
   thread: MessageThread;
 }
 
-const SupportThreadContent = ({
+const SupportChatPanel = ({
   currentUserId,
   draft,
-  isOpen,
   onDraftChange,
   onDraftSent,
   thread,
-}: SupportThreadContentProps) => {
-  const messagesQuery = useSupportThreadMessages(
-    {
-      pageable: SUPPORT_MESSAGES_PAGE,
-      threadId: thread.id,
-    },
-    { enabled: isOpen },
-  );
+}: SupportChatPanelProps) => {
+  const messagesQuery = useSupportThreadMessages({
+    pageable: SUPPORT_MESSAGES_PAGE,
+    threadId: thread.id,
+  });
   const addMessageMutation = useAddSupportThreadMessageMutation({
     onSuccess: () => onDraftSent(),
   });
@@ -596,21 +570,16 @@ const SupportThreadContent = ({
   };
 
   return (
-    <div className="border-t border-border/70 px-5 py-4">
+    <div className="flex h-full min-h-0 flex-col">
+      <ChatHeader thread={thread} />
       {messagesQuery.isLoading && (
-        <div className="rounded-2xl border border-border bg-background px-4 py-3 text-sm text-muted-foreground">
-          Loading messages...
-        </div>
+        <PanelStatus>Loading messages...</PanelStatus>
       )}
       {messagesQuery.isError && (
-        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-          Messages could not be loaded.
-        </div>
+        <PanelStatus variant="error">Messages could not be loaded.</PanelStatus>
       )}
       {!messagesQuery.isLoading && !messagesQuery.isError && messages.length === 0 && (
-        <div className="rounded-2xl border border-border bg-background px-4 py-3 text-sm text-muted-foreground">
-          No messages in this support conversation yet.
-        </div>
+        <PanelStatus>No messages in this support conversation yet.</PanelStatus>
       )}
       {messages.length > 0 && <MessageList messages={messages} />}
       <MessageComposer
@@ -624,44 +593,100 @@ const SupportThreadContent = ({
   );
 };
 
+interface ChatHeaderProps {
+  thread: MessageThread;
+}
+
+const ChatHeader = ({ thread }: ChatHeaderProps) => {
+  const isSupportThread = thread.participantRole === "Support";
+  const Icon = isSupportThread ? Headphones : UserRound;
+
+  return (
+    <header className="flex h-16 shrink-0 items-center gap-3 border-b border-border bg-card px-4 md:px-6">
+      {isSupportThread ? (
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
+          <Icon className="h-5 w-5" />
+        </div>
+      ) : (
+        <UserAvatar
+          name={thread.participantName}
+          lastSeenAt={thread.participantLastSeenAt}
+          size="md"
+        />
+      )}
+      <div className="min-w-0 flex-1">
+        <h2 className="truncate text-sm font-semibold text-foreground">
+          {thread.participantName}
+        </h2>
+        <p className="truncate text-xs text-muted-foreground">
+          {thread.participantRole} · Last message {thread.updatedAt}
+        </p>
+      </div>
+    </header>
+  );
+};
+
 interface MessageListProps {
   messages: ThreadMessage[];
 }
 
 const MessageList = ({ messages }: MessageListProps) => (
-  <div className="space-y-4">
-    {messages.map((message) => {
-      const messageMeta = getDirectionMeta(message.direction);
-
-      return (
-        <article
-          key={message.id}
+  <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-5 md:px-6">
+    {messages.map((message) => (
+      <article
+        key={message.id}
+        className={cn(
+          "flex",
+          message.direction === "outgoing" ? "justify-end" : "justify-start",
+        )}
+      >
+        <div
           className={cn(
-            "flex gap-3",
-            message.direction === "outgoing" && "flex-row-reverse",
+            "max-w-[82%] rounded-2xl px-4 py-3",
+            getBubbleClasses(message.direction),
           )}
         >
-          <div
-            className={cn(
-              "max-w-[82%] rounded-2xl border px-4 py-3",
-              messageMeta.bubbleClassName,
-            )}
-          >
-            <div className="mb-1.5 flex flex-wrap items-center gap-2">
-              <span className="text-sm font-medium text-foreground">
-                {message.authorName}
-              </span>
-              <span className="text-[10px] text-muted-foreground/70">
-                {message.sentAt}
-              </span>
-            </div>
-            <p className="text-sm leading-6 text-foreground/85">
-              {message.body}
-            </p>
+          <div className="mb-1.5 flex flex-wrap items-center gap-2">
+            <span className="text-sm font-medium">
+              {message.authorName}
+            </span>
+            <span
+              className={cn(
+                "text-[10px]",
+                message.direction === "outgoing"
+                  ? "text-primary-foreground/70"
+                  : "text-muted-foreground/70",
+              )}
+            >
+              {message.sentAt}
+            </span>
           </div>
-        </article>
-      );
-    })}
+          <p className="text-sm leading-6">
+            {message.body}
+          </p>
+        </div>
+      </article>
+    ))}
+  </div>
+);
+
+interface PanelStatusProps {
+  children: ReactNode;
+  variant?: "default" | "error";
+}
+
+const PanelStatus = ({ children, variant = "default" }: PanelStatusProps) => (
+  <div className="min-h-0 flex-1 p-4 md:p-6">
+    <div
+      className={cn(
+        "rounded-lg border px-4 py-3 text-sm",
+        variant === "error"
+          ? "border-destructive/30 bg-destructive/5 text-destructive"
+          : "border-border bg-card text-muted-foreground",
+      )}
+    >
+      {children}
+    </div>
   </div>
 );
 
@@ -679,27 +704,53 @@ const MessageComposer = ({
   onDraftChange,
   onSend,
   participantName,
-}: MessageComposerProps) => (
-  <div className="mt-5 border-t border-border/70 pt-4">
-    <div className="rounded-2xl border border-border bg-background p-3">
-      <Textarea
-        value={draft}
-        onChange={(event) => onDraftChange(event.target.value)}
-        placeholder={`Message ${participantName}...`}
-        className="min-h-[96px] resize-none border-0 px-0 py-0 shadow-none focus-visible:ring-0"
-      />
-      <div className="mt-3 flex justify-end">
-        <Button
-          type="button"
-          size="sm"
-          className="rounded-xl"
-          disabled={!draft.trim() || isSending}
-          onClick={onSend}
-        >
-          <SendHorizontal className="h-4 w-4" />
-          Send
-        </Button>
+}: MessageComposerProps) => {
+  const sendOnShortcut = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+      event.preventDefault();
+      onSend();
+    }
+  };
+
+  return (
+    <div className="shrink-0 border-t border-border bg-background px-4 py-4 md:px-6">
+      <div className="rounded-xl border border-border bg-card p-3 shadow-premium">
+        <Textarea
+          value={draft}
+          onChange={(event) => onDraftChange(event.target.value)}
+          onKeyDown={sendOnShortcut}
+          placeholder={`Message ${participantName}...`}
+          className="min-h-[92px] resize-none border-0 px-0 py-0 shadow-none focus-visible:ring-0"
+        />
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground">
+            ⌘+Enter to send
+          </p>
+          <Button
+            type="button"
+            size="sm"
+            className="rounded-lg"
+            disabled={!draft.trim() || isSending}
+            onClick={onSend}
+          >
+            <SendHorizontal className="h-4 w-4" />
+            Send
+          </Button>
+        </div>
       </div>
+    </div>
+  );
+};
+
+const EmptyChatState = () => (
+  <div className="flex h-full min-h-0 items-center justify-center px-6">
+    <div className="text-center">
+      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted text-muted-foreground">
+        <MessageCircle className="h-6 w-6" />
+      </div>
+      <p className="text-sm text-muted-foreground">
+        выбери тред или начни новый
+      </p>
     </div>
   </div>
 );

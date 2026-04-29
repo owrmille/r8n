@@ -74,7 +74,7 @@ describe("Messages page", () => {
     mocks.createSupportThread.mockClear();
   });
 
-  it("shows the latest message in a collapsed thread and expands on click", () => {
+  it("shows the latest message in the thread list and opens the selected chat", () => {
     render(<Messages />);
 
     expect(
@@ -84,7 +84,7 @@ describe("Messages page", () => {
       screen.queryByText("I requested an export of my account data this morning. Can you confirm when it will be ready?"),
     ).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Expand thread with R8N Support" }));
+    fireEvent.click(screen.getByRole("button", { name: "Select thread with R8N Support" }));
 
     expect(
       screen.getByText("I requested an export of my account data this morning. Can you confirm when it will be ready?"),
@@ -101,6 +101,8 @@ describe("Messages page", () => {
   it("shows last seen information when hovering a thread participant avatar", async () => {
     render(<Messages />);
 
+    fireEvent.click(screen.getByRole("button", { name: "Select thread with Marta Keller" }));
+
     const trigger = screen.getByRole("button", { name: "Marta Keller presence" });
     fireEvent.pointerEnter(trigger, { pointerType: "mouse" });
     fireEvent.mouseEnter(trigger);
@@ -113,15 +115,15 @@ describe("Messages page", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Support" }));
 
-    expect(screen.getByText("Support conversation")).toBeInTheDocument();
-    expect(screen.queryByText("Question about your coffee grinder review")).not.toBeInTheDocument();
-    expect(screen.queryByText("Supplier recommendation follow-up")).not.toBeInTheDocument();
+    expect(screen.getByText("R8N Support")).toBeInTheDocument();
+    expect(screen.queryByText("Marta Keller")).not.toBeInTheDocument();
+    expect(screen.queryByText("Elena Rossi")).not.toBeInTheDocument();
   });
 
   it("sends a new message in an expanded thread", () => {
     render(<Messages />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Expand thread with R8N Support" }));
+    fireEvent.click(screen.getByRole("button", { name: "Select thread with R8N Support" }));
     fireEvent.change(
       screen.getByPlaceholderText("Message R8N Support..."),
       { target: { value: "Thanks, please send it here once it is ready." } },
@@ -164,10 +166,10 @@ describe("Messages page", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Start thread" }));
 
-    expect(screen.getByText("Conversation with Lina Hartmann")).toBeInTheDocument();
+    expect(screen.getAllByText("Lina Hartmann")).toHaveLength(2);
     expect(
-      screen.getByText("Hi, I wanted to ask about your supplier shortlist."),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Collapse thread with Lina Hartmann" })).toBeInTheDocument();
+      screen.getAllByText("Hi, I wanted to ask about your supplier shortlist."),
+    ).toHaveLength(2);
+    expect(screen.getByPlaceholderText("Message Lina Hartmann...")).toBeInTheDocument();
   });
 });
