@@ -101,6 +101,10 @@ export interface CreateOpinionListRequestDto {
   privacy: OpinionListPrivacyEnumDto;
 }
 
+export interface DeleteOpinionListRequestDto {
+  listId: Uuid;
+}
+
 export function createOpinionListsApi(client: HttpClient = httpClient) {
   return {
     create(request: CreateOpinionListRequestDto): Promise<OpinionListDto> {
@@ -110,6 +114,12 @@ export function createOpinionListsApi(client: HttpClient = httpClient) {
           name: request.name,
           privacy: request.privacy,
         },
+      });
+    },
+
+    delete(request: DeleteOpinionListRequestDto): Promise<void> {
+      return client.delete<void>(`/opinion-lists/${request.listId}`, {
+        auth: "required",
       });
     },
 

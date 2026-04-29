@@ -2,6 +2,7 @@ import type { QueryKey, UseMutationOptions, UseQueryOptions } from "@tanstack/re
 import { opinionListsApi, opinionsApi } from "@/lib/api";
 import type {
   CreateOpinionListRequestDto,
+  DeleteOpinionListRequestDto,
   GetMyOpinionListsRequestDto,
   GetOpinionListRequestDto,
   GetOpinionListSummaryRequestDto,
@@ -101,6 +102,30 @@ export function useCreateOpinionListMutation(
     ...options,
     meta: {
       errorTitle: "List creation failed",
+      ...options?.meta,
+    } as ApiErrorMeta,
+    onSuccess: (data, variables, context) => {
+      invalidate(opinionListsKeys.all);
+      options?.onSuccess?.(data, variables, context);
+    },
+  });
+}
+
+export function useDeleteOpinionListMutation(
+  options?: UseMutationOptions<
+    void,
+    Error,
+    DeleteOpinionListRequestDto,
+    unknown
+  >,
+) {
+  const invalidate = useApiInvalidation();
+
+  return useAuthorizedMutation({
+    mutationFn: (variables) => opinionListsApi.delete(variables),
+    ...options,
+    meta: {
+      errorTitle: "List deletion failed",
       ...options?.meta,
     } as ApiErrorMeta,
     onSuccess: (data, variables, context) => {

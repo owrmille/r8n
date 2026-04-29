@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, List, ChevronDown, Plus, Link2, GitMerge, Search, MoreHorizontal, Pencil, FolderInput, X, Trash2 } from "lucide-react";
+import { ArrowLeft, List, ChevronDown, Plus, Link2, GitMerge, Search, MoreHorizontal, Pencil, FolderInput, X, Trash2, Settings, Globe, Lock } from "lucide-react";
 import UserAvatar from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,8 @@ import {
   useSearchOpinionLists,
   useUnlinkOpinionFromListMutation,
   useMyOpinionLists,
+  useDeleteOpinionListMutation,
+  useSetOpinionListPrivacyMutation,
 } from "@/lib/server-state/hooks/opinion-lists";
 import {
   useCreateOpinionMutation,
@@ -46,6 +48,7 @@ const shouldAppendReferent = (subjectName: string, referentName?: string | null)
 
 const OpinionListPage = () => {
   const { id: listId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [syncDialogOpen, setSyncDialogOpen] = useState(false);
@@ -61,6 +64,8 @@ const OpinionListPage = () => {
   const unlinkOpinion = useUnlinkOpinionFromListMutation();
   const updateOpinion = useUpdateOpinionMutation();
   const deleteOpinion = useDeleteOpinionMutation();
+  const deleteList = useDeleteOpinionListMutation();
+  const setListPrivacy = useSetOpinionListPrivacyMutation();
 
   const me = useMe();
   const currentUserId = me.data?.id ?? null;
@@ -127,12 +132,64 @@ const OpinionListPage = () => {
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/8">
                 <List className="h-5 w-5 text-primary" />
               </div>
-              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground font-body">
+              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground font-body flex-1">
                 {!isListOwner && data?.ownerName ? `${data.ownerName} · ` : ""}{data?.listName}
               </h1>
+              {isListOwner && data && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className="rounded-md p-2 text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
+                      aria-label="List settings"
+                    >
+                      <Settings className="h-4 w-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-52">
+                    {data.privacy === "PRIVATE" ? (
+                      <DropdownMenuItem
+                        onClick={() => setListPrivacy.mutate({ listId: data.id, privacy: "SEARCHABLE" })}
+                        disabled={setListPrivacy.isPending}
+                      >
+                        <Globe className="h-3.5 w-3.5 mr-2" />
+                        Make searchable
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem
+                        onClick={() => setListPrivacy.mutate({ listId: data.id, privacy: "PRIVATE" })}
+                        disabled={setListPrivacy.isPending}
+                      >
+                        <Lock className="h-3.5 w-3.5 mr-2" />
+                        Make private
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive"
+                      disabled={deleteList.isPending}
+                      onClick={() => {
+                        if (!confirm(`Delete "${data.listName}" forever? This cannot be undone.`)) return;
+                        deleteList.mutate(
+                          { listId: data.id },
+                          { onSuccess: () => navigate("/lists") },
+                        );
+                      }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 mr-2" />
+                      Delete list
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
             <p className="text-xs text-muted-foreground">
               {summaries.length} {summaries.length === 1 ? "subject" : "subjects"}
+              {isListOwner && data && (
+                <span className="ml-2 text-[10px] uppercase tracking-widest text-muted-foreground/60">
+                  · {data.privacy === "PRIVATE" ? "Private" : "Searchable"}
+                </span>
+              )}
             </p>
           </motion.div>
 
