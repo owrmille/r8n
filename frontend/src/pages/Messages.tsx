@@ -473,6 +473,7 @@ const ThreadListItem = ({ isActive, onSelect, thread }: ThreadListItemProps) => 
           lastSeenAt={thread.participantLastSeenAt}
           size="sm"
           className="mt-0.5 shrink-0"
+          interactive={false}
         />
       )}
       <div className="min-w-0 flex-1">
@@ -537,6 +538,7 @@ const RecipientSearchResults = ({
           name={recipient.name}
           lastSeenAt={recipient.lastSeenAt}
           size="sm"
+          interactive={false}
         />
         <span className="min-w-0 flex-1 truncate">{recipient.name}</span>
       </button>
