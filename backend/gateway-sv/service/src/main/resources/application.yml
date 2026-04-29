@@ -58,6 +58,12 @@ spring:
               uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_EXPORT_HOST}:${SERVICES_EXPORT_PORT}
               predicates:
                 - Path=/api/export/**
+            - id: messaging_v3_api_docs
+              uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_MESSAGING_HOST}:${SERVICES_MESSAGING_PORT}
+              predicates:
+                - Path=/api/messaging/v3/api-docs/**
+              filters:
+                - RewritePath=/api/messaging/v3/api-docs(?<segment>.*), /v3/api-docs$\{segment}
             - id: messaging
               uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_MESSAGING_HOST}:${SERVICES_MESSAGING_PORT}
               predicates:
@@ -88,6 +94,17 @@ spring:
                     limit: 100
                     durationSeconds: 60
                 - RewritePath=/api/public/users/(?<segment>.*), /api/users/$\{segment}
+            - id: public_messaging
+              uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_MESSAGING_HOST}:${SERVICES_MESSAGING_PORT}
+              predicates:
+                - Path=/api/public/messaging/**
+              filters:
+                - ApiKeyAuthenticationFilter
+                - name: RateLimitingFilter
+                  args:
+                    limit: 100
+                    durationSeconds: 60
+                - RewritePath=/api/public/messaging/(?<segment>.*), /api/messaging/$\{segment}
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -100,9 +117,11 @@ springdoc:
         url: /api/users/v3/api-docs
       - name: Export Service
         url: /api/export/v3/api-docs
+      - name: Messaging Service
+        url: /api/messaging/v3/api-docs
 r8n:
   security:
-    public-paths: /api/auth/**, /swagger-ui.html, /swagger-ui/**, /v3/api-docs/**, /api/*/v3/api-docs/**, /webjars/swagger-ui/**, /api/opinions/v3/api-docs/**, /api/users/v3/api-docs/**, /api/export/v3/api-docs/**
+    public-paths: /api/auth/**, /swagger-ui.html, /swagger-ui/**, /v3/api-docs/**, /api/*/v3/api-docs/**, /webjars/swagger-ui/**, /api/opinions/v3/api-docs/**, /api/users/v3/api-docs/**, /api/export/v3/api-docs/**, /api/messaging/v3/api-docs/**
     jwt:
       private-key: ${JWT_PRIVATE_KEY}
       public-key: ${JWT_PUBLIC_KEY}

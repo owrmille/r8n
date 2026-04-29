@@ -26,7 +26,10 @@ spring:
   sql:
     init:
       mode: never
+springdoc:
+  packages-to-scan: com.r8n.backend.messaging.controller, com.r8n.backend.messaging.api
 r8n:
   security:
+    public-paths: /v3/api-docs/**, /swagger-ui.html, /swagger-ui/**, /webjars/swagger-ui/**
     jwt:
       public-key: ${JWT_PUBLIC_KEY}
