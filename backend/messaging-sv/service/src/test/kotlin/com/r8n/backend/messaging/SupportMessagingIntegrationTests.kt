@@ -115,6 +115,46 @@ class SupportMessagingIntegrationTests {
     }
 
     @Test
+    fun `support creates own support thread as requester`() {
+        val threadId = createThread(supportId, "SUPPORT", "Support user needs private support")
+
+        mockMvc
+            .perform(
+                get(SUPPORT_THREADS_PATH)
+                    .param("page", "0")
+                    .param("size", "20")
+                    .with(user(supportId.toString()).roles("SUPPORT")),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.items[0].id").value(threadId.toString()))
+            .andExpect(jsonPath("$.items[0].viewerRole").value("REQUESTER"))
+
+        mockMvc
+            .perform(
+                get(messagesPath(threadId))
+                    .param("page", "0")
+                    .param("size", "20")
+                    .with(user(supportId.toString()).roles("SUPPORT")),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.items[0].authorRole").value("USER"))
+    }
+
+    @Test
+    fun `support writes to own support thread as requester`() {
+        val threadId = createThread(supportId, "SUPPORT", "Support user needs private support")
+
+        mockMvc
+            .perform(
+                post(messagesPath(threadId))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"text":"Requester follow-up"}""")
+                    .with(user(supportId.toString()).roles("SUPPORT"))
+                    .with(csrf()),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.authorUserId").value(supportId.toString()))
+            .andExpect(jsonPath("$.authorRole").value("USER"))
+    }
+
+    @Test
     fun `admin can read and respond to another user thread as support`() {
         val threadId = createThread(userAId, "USER", "Need admin support")
 
@@ -138,6 +178,30 @@ class SupportMessagingIntegrationTests {
             ).andExpect(status().isOk)
             .andExpect(jsonPath("$.items.length()").value(2))
             .andExpect(jsonPath("$.items[1].authorRole").value("SUPPORT"))
+    }
+
+    @Test
+    fun `admin creates own support thread as requester`() {
+        val threadId = createThread(adminId, "ADMIN", "Admin needs private support")
+
+        mockMvc
+            .perform(
+                get(SUPPORT_THREADS_PATH)
+                    .param("page", "0")
+                    .param("size", "20")
+                    .with(user(adminId.toString()).roles("ADMIN")),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.items[0].id").value(threadId.toString()))
+            .andExpect(jsonPath("$.items[0].viewerRole").value("REQUESTER"))
+
+        mockMvc
+            .perform(
+                get(messagesPath(threadId))
+                    .param("page", "0")
+                    .param("size", "20")
+                    .with(user(adminId.toString()).roles("ADMIN")),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.items[0].authorRole").value("USER"))
     }
 
     @Test
@@ -246,6 +310,7 @@ class SupportMessagingIntegrationTests {
                     .with(user(userAId.toString()).roles("USER")),
             ).andExpect(status().isOk)
             .andExpect(jsonPath("$.items.length()").value(1))
+            .andExpect(jsonPath("$.items[0].viewerRole").value("REQUESTER"))
 
         mockMvc
             .perform(
@@ -255,6 +320,8 @@ class SupportMessagingIntegrationTests {
                     .with(user(supportId.toString()).roles("SUPPORT")),
             ).andExpect(status().isOk)
             .andExpect(jsonPath("$.items.length()").value(2))
+            .andExpect(jsonPath("$.items[0].viewerRole").value("SUPPORT"))
+            .andExpect(jsonPath("$.items[1].viewerRole").value("SUPPORT"))
     }
 
     @Test

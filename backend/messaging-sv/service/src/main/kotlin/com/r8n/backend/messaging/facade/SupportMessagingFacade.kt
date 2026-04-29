@@ -5,8 +5,10 @@ import com.r8n.backend.messaging.api.dto.messaging.CreateSupportThreadRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportMessageDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportParticipantRoleEnumDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportThreadSummaryDto
+import com.r8n.backend.messaging.api.dto.messaging.SupportThreadViewerRoleEnumDto
 import com.r8n.backend.messaging.persistence.SupportMessagePersistence
 import com.r8n.backend.messaging.persistence.SupportParticipantRoleEnumPersistence
+import com.r8n.backend.messaging.persistence.SupportThreadPersistence
 import com.r8n.backend.messaging.service.SupportActor
 import com.r8n.backend.messaging.service.SupportMessagingService
 import com.r8n.backend.messaging.service.SupportThreadSummary
@@ -23,13 +25,13 @@ class SupportMessagingFacade(
     fun getSupportThreadSummaries(
         actor: SupportActor,
         pageable: Pageable,
-    ): Page<SupportThreadSummaryDto> = supportMessagingService.listThreadSummaries(actor, pageable).map { it.toDto() }
+    ): Page<SupportThreadSummaryDto> = supportMessagingService.listThreadSummaries(actor, pageable).map { it.toDto(actor) }
 
     fun createSupportThread(
         actor: SupportActor,
         request: CreateSupportThreadRequestDto,
     ): SupportThreadSummaryDto =
-        supportMessagingService.createThread(actor, request.initialMessage.trim()).toSummaryDto()
+        supportMessagingService.createThread(actor, request.initialMessage.trim()).toSummaryDto(actor)
 
     fun getSupportThreadMessages(
         actor: SupportActor,
@@ -43,18 +45,20 @@ class SupportMessagingFacade(
         request: CreateSupportMessageRequestDto,
     ): SupportMessageDto = supportMessagingService.addThreadMessage(actor, threadId, request.text.trim()).toDto()
 
-    private fun SupportThreadWithMessages.toSummaryDto(): SupportThreadSummaryDto =
+    private fun SupportThreadWithMessages.toSummaryDto(actor: SupportActor): SupportThreadSummaryDto =
         SupportThreadSummaryDto(
             id = requireNotNull(thread.id),
             ownerUserId = thread.ownerUserId,
+            viewerRole = thread.viewerRoleFor(actor),
             createdAt = requireNotNull(messages.minOfOrNull { it.createdAt }),
             lastMessageAt = messages.maxOfOrNull { it.createdAt },
         )
 
-    private fun SupportThreadSummary.toDto(): SupportThreadSummaryDto =
+    private fun SupportThreadSummary.toDto(actor: SupportActor): SupportThreadSummaryDto =
         SupportThreadSummaryDto(
             id = id,
             ownerUserId = ownerUserId,
+            viewerRole = viewerRoleFor(actor),
             createdAt = createdAt,
             lastMessageAt = lastMessageAt,
         )
@@ -73,5 +77,18 @@ class SupportMessagingFacade(
         when (this) {
             SupportParticipantRoleEnumPersistence.USER -> SupportParticipantRoleEnumDto.USER
             SupportParticipantRoleEnumPersistence.SUPPORT -> SupportParticipantRoleEnumDto.SUPPORT
+        }
+
+    private fun SupportThreadPersistence.viewerRoleFor(actor: SupportActor): SupportThreadViewerRoleEnumDto =
+        ownerUserId.viewerRoleFor(actor)
+
+    private fun SupportThreadSummary.viewerRoleFor(actor: SupportActor): SupportThreadViewerRoleEnumDto =
+        ownerUserId.viewerRoleFor(actor)
+
+    private fun UUID.viewerRoleFor(actor: SupportActor): SupportThreadViewerRoleEnumDto =
+        if (this == actor.userId) {
+            SupportThreadViewerRoleEnumDto.REQUESTER
+        } else {
+            SupportThreadViewerRoleEnumDto.SUPPORT
         }
 }

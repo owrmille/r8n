@@ -91,7 +91,7 @@ class SupportMessagingService(
                 SupportMessagePersistence(
                     threadId = requireNotNull(thread.id),
                     authorUserId = actor.userId,
-                    authorRole = actor.role,
+                    authorRole = SupportParticipantRoleEnumPersistence.USER,
                     text = initialMessageText,
                     createdAt = now,
                 ),
@@ -123,13 +123,19 @@ class SupportMessagingService(
         }
 
         val thread = findThreadVisibleForActor(actor, threadId)
+        val authorRole =
+            if (thread.ownerUserId == actor.userId) {
+                SupportParticipantRoleEnumPersistence.USER
+            } else {
+                actor.role
+            }
         val now = Instant.now()
         val message =
             supportMessageRepository.save(
                 SupportMessagePersistence(
                     threadId = requireNotNull(thread.id),
                     authorUserId = actor.userId,
-                    authorRole = actor.role,
+                    authorRole = authorRole,
                     text = text,
                     createdAt = now,
                 ),

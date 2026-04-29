@@ -8,10 +8,12 @@ import {
 } from "@/lib/api/shared";
 
 export type SupportParticipantRoleEnumDto = "USER" | "SUPPORT";
+export type SupportThreadViewerRoleEnumDto = "REQUESTER" | "SUPPORT";
 
 export interface SupportThreadSummaryDto {
   id: Uuid;
   ownerUserId: Uuid;
+  viewerRole: SupportThreadViewerRoleEnumDto;
   createdAt: string;
   lastMessageAt: string | null;
 }

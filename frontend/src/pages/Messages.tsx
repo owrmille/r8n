@@ -86,6 +86,7 @@ function mapSupportSummaryToThread(summary: SupportThreadSummaryDto): MessageThr
     participantLastSeenAt: null,
     participantRole: "Support",
     context: "Support conversation",
+    supportViewerRole: summary.viewerRole,
     updatedAt,
     unreadCount: 0,
     messages: [
@@ -102,9 +103,13 @@ function mapSupportSummaryToThread(summary: SupportThreadSummaryDto): MessageThr
 
 function mapSupportMessageToThreadMessage(
   message: SupportMessageDto,
+  threadViewerRole: SupportThreadSummaryDto["viewerRole"],
   currentUserId: string | undefined,
 ): ThreadMessage {
-  const isCurrentUser = message.authorUserId === currentUserId;
+  const isCurrentUser =
+    threadViewerRole === "REQUESTER"
+      ? message.authorUserId === currentUserId
+      : message.authorRole === "SUPPORT";
 
   return {
     id: message.id,
@@ -571,7 +576,11 @@ const SupportThreadContent = ({
   });
   const messages =
     messagesQuery.data?.items.map((message) =>
-      mapSupportMessageToThreadMessage(message, currentUserId),
+      mapSupportMessageToThreadMessage(
+        message,
+        thread.supportViewerRole ?? "REQUESTER",
+        currentUserId,
+      ),
     ) ?? [];
 
   const sendSupportMessage = () => {

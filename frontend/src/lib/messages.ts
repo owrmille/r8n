@@ -15,6 +15,7 @@ export interface MessageThread {
   participantLastSeenAt: string | null;
   participantRole: string;
   context: string;
+  supportViewerRole?: "REQUESTER" | "SUPPORT";
   updatedAt: string;
   unreadCount: number;
   messages: ThreadMessage[];
