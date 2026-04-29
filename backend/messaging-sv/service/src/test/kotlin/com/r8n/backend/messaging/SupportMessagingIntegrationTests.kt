@@ -3,9 +3,20 @@ package com.r8n.backend.messaging
 import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREAD_PATH
 import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREADS_PATH
 import com.r8n.backend.messaging.api.dto.messaging.SUPPORT_MESSAGE_TEXT_MAX_LENGTH
+import com.r8n.backend.messaging.persistence.ConversationParticipantPersistence
+import com.r8n.backend.messaging.persistence.ConversationParticipantRoleEnumPersistence
+import com.r8n.backend.messaging.persistence.ConversationPersistence
+import com.r8n.backend.messaging.persistence.ConversationTypeEnumPersistence
+import com.r8n.backend.messaging.persistence.MessageAuthorRoleEnumPersistence
+import com.r8n.backend.messaging.persistence.MessagePersistence
+import com.r8n.backend.messaging.provider.database.ConversationParticipantRepository
+import com.r8n.backend.messaging.provider.database.ConversationRepository
+import com.r8n.backend.messaging.provider.database.MessageRepository
 import com.r8n.backend.messaging.provider.database.SupportMessageRepository
 import com.r8n.backend.messaging.provider.database.SupportThreadRepository
 import com.r8n.backend.users.integration.api.UsersInternalApi
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.eq
@@ -31,6 +42,7 @@ import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.postgresql.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 import tools.jackson.databind.ObjectMapper
+import java.time.Instant
 import java.util.UUID
 
 @ActiveProfiles("test")
@@ -68,11 +80,23 @@ class SupportMessagingIntegrationTests {
     @Autowired
     lateinit var supportMessageRepository: SupportMessageRepository
 
+    @Autowired
+    lateinit var conversationRepository: ConversationRepository
+
+    @Autowired
+    lateinit var conversationParticipantRepository: ConversationParticipantRepository
+
+    @Autowired
+    lateinit var messageRepository: MessageRepository
+
     @MockitoBean
     lateinit var usersInternalApi: UsersInternalApi
 
     @BeforeEach
     fun setUp() {
+        messageRepository.deleteAll()
+        conversationParticipantRepository.deleteAll()
+        conversationRepository.deleteAll()
         supportMessageRepository.deleteAll()
         supportThreadRepository.deleteAll()
         whenever(usersInternalApi.getUserName(eq(userAId))).thenReturn("User A")
@@ -448,6 +472,89 @@ class SupportMessagingIntegrationTests {
             ).andExpect(status().isForbidden)
 
         assert(supportThreadRepository.existsById(threadId))
+    }
+
+    @Test
+    fun `shared messaging model persists direct conversation participants and messages`() {
+        val now = Instant.parse("2026-04-29T12:00:00Z")
+        conversationRepository.save(
+            ConversationPersistence(
+                type = ConversationTypeEnumPersistence.SUPPORT,
+                createdByUserId = supportId,
+                createdAt = now.minusSeconds(60),
+                lastMessageAt = now.minusSeconds(60),
+            ),
+        )
+        val conversation =
+            conversationRepository.save(
+                ConversationPersistence(
+                    type = ConversationTypeEnumPersistence.DIRECT,
+                    createdByUserId = userAId,
+                    createdAt = now,
+                    lastMessageAt = now,
+                ),
+            )
+        val conversationId = requireNotNull(conversation.id)
+
+        conversationParticipantRepository.saveAll(
+            listOf(
+                ConversationParticipantPersistence(
+                    conversationId = conversationId,
+                    userId = userAId,
+                    participantRole = ConversationParticipantRoleEnumPersistence.MEMBER,
+                    joinedAt = now,
+                    lastReadAt = now,
+                ),
+                ConversationParticipantPersistence(
+                    conversationId = conversationId,
+                    userId = userBId,
+                    participantRole = ConversationParticipantRoleEnumPersistence.MEMBER,
+                    joinedAt = now,
+                ),
+            ),
+        )
+        messageRepository.save(
+            MessagePersistence(
+                conversationId = conversationId,
+                authorUserId = userAId,
+                authorDisplayNameSnapshot = "User A",
+                authorRoleSnapshot = MessageAuthorRoleEnumPersistence.USER,
+                text = "Hello from direct messaging.",
+                createdAt = now,
+            ),
+        )
+
+        assertTrue(conversationParticipantRepository.existsByConversationIdAndUserId(conversationId, userAId))
+        assertTrue(conversationParticipantRepository.existsByConversationIdAndUserId(conversationId, userBId))
+        assertEquals(2, conversationParticipantRepository.findAllByConversationId(conversationId).size)
+
+        val messages =
+            messageRepository.findAllByConversationIdOrderByCreatedAtAsc(
+                conversationId,
+                org.springframework.data.domain.Pageable.unpaged(),
+            )
+        assertEquals(1, messages.totalElements)
+        assertEquals("User A", messages.content.single().authorDisplayNameSnapshot)
+        assertEquals(MessageAuthorRoleEnumPersistence.USER, messages.content.single().authorRoleSnapshot)
+
+        assertEquals(
+            1,
+            conversationRepository
+                .findAllByTypeOrderByLastMessageAtDesc(
+                    ConversationTypeEnumPersistence.SUPPORT,
+                    org.springframework.data.domain.Pageable.unpaged(),
+                ).totalElements,
+        )
+        assertEquals(
+            conversationId,
+            conversationRepository
+                .findAllByTypeOrderByLastMessageAtDesc(
+                    ConversationTypeEnumPersistence.DIRECT,
+                    org.springframework.data.domain.Pageable.unpaged(),
+                ).content
+                .single()
+                .id,
+        )
     }
 
     @Test

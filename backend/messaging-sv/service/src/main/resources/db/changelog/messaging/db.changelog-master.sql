@@ -69,3 +69,60 @@ VALUES
         '2024-02-01T10:00:00Z'
     )
 ON CONFLICT (id) DO NOTHING;
+
+--changeset iatopchu:V3_create_common_messaging_tables
+CREATE TABLE IF NOT EXISTS messaging.conversations (
+    id UUID PRIMARY KEY,
+    type VARCHAR(32) NOT NULL,
+    created_by_user_id UUID NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL,
+    last_message_at TIMESTAMPTZ,
+    CONSTRAINT chk_conversations_type
+        CHECK (type IN ('SUPPORT', 'DIRECT'))
+);
+CREATE INDEX IF NOT EXISTS idx_conversations_type_last_message_at
+    ON messaging.conversations(type, last_message_at DESC NULLS LAST);
+CREATE INDEX IF NOT EXISTS idx_conversations_created_by_user_id
+    ON messaging.conversations(created_by_user_id);
+
+CREATE TABLE IF NOT EXISTS messaging.conversation_participants (
+    id UUID PRIMARY KEY,
+    conversation_id UUID NOT NULL,
+    user_id UUID NOT NULL,
+    participant_role VARCHAR(32) NOT NULL,
+    joined_at TIMESTAMPTZ NOT NULL,
+    archived_at TIMESTAMPTZ,
+    last_read_at TIMESTAMPTZ,
+    CONSTRAINT fk_conversation_participants_conversation
+        FOREIGN KEY (conversation_id)
+        REFERENCES messaging.conversations(id)
+        ON DELETE CASCADE,
+    CONSTRAINT uq_conversation_participants_conversation_user
+        UNIQUE (conversation_id, user_id),
+    CONSTRAINT chk_conversation_participants_role
+        CHECK (participant_role IN ('MEMBER', 'SUPPORT_AGENT'))
+);
+CREATE INDEX IF NOT EXISTS idx_conversation_participants_user_id
+    ON messaging.conversation_participants(user_id);
+CREATE INDEX IF NOT EXISTS idx_conversation_participants_conversation_id
+    ON messaging.conversation_participants(conversation_id);
+
+CREATE TABLE IF NOT EXISTS messaging.messages (
+    id UUID PRIMARY KEY,
+    conversation_id UUID NOT NULL,
+    author_user_id UUID NOT NULL,
+    author_display_name_snapshot VARCHAR(255) NOT NULL,
+    author_role_snapshot VARCHAR(32) NOT NULL,
+    text TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL,
+    CONSTRAINT fk_messages_conversation
+        FOREIGN KEY (conversation_id)
+        REFERENCES messaging.conversations(id)
+        ON DELETE CASCADE,
+    CONSTRAINT chk_messages_author_role_snapshot
+        CHECK (author_role_snapshot IN ('USER', 'MODERATOR', 'SUPPORT', 'ADMIN'))
+);
+CREATE INDEX IF NOT EXISTS idx_messages_conversation_created_at
+    ON messaging.messages(conversation_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_messages_author_user_id
+    ON messaging.messages(author_user_id);
