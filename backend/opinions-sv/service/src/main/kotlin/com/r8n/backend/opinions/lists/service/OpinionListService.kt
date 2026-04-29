@@ -175,6 +175,41 @@ class OpinionListService(
         return getList(listId, userId)
     }
 
+    @Transactional
+    fun deleteList(
+        userId: UUID,
+        listId: UUID,
+    ) {
+        if (!accessService.ownsOpinionList(userId, listId)) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't own this list")
+        }
+        if (!opinionListRepository.existsById(listId)) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND)
+        }
+        // FK cascades on opinions_to_lists and opinion_lists_syncs handle link / sync cleanup.
+        opinionListRepository.deleteById(listId)
+    }
+
+    @Transactional
+    fun changePrivacy(
+        userId: UUID,
+        listId: UUID,
+        privacy: OpinionListPrivacyEnum,
+    ): OpinionList {
+        if (!accessService.ownsOpinionList(userId, listId)) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't own this list")
+        }
+        val list =
+            opinionListRepository
+                .findById(listId)
+                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
+        if (list.privacy != privacy) {
+            list.privacy = privacy
+            opinionListRepository.save(list)
+        }
+        return getList(listId, userId)
+    }
+
     fun getList(
         listId: UUID,
         requesterId: UUID,

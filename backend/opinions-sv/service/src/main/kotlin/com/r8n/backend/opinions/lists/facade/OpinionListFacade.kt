@@ -129,6 +129,19 @@ class OpinionListFacade(
         opinionId: UUID,
     ): OpinionListDto = opinionListMapper.toDto(opinionListService.unlinkOpinion(userId, listId, opinionId))
 
+    fun deleteList(
+        userId: UUID,
+        listId: UUID,
+    ) {
+        opinionListService.deleteList(userId, listId)
+    }
+
+    fun changePrivacy(
+        userId: UUID,
+        listId: UUID,
+        privacy: OpinionListPrivacyEnumDto,
+    ): OpinionListDto = opinionListMapper.toDto(opinionListService.changePrivacy(userId, listId, privacy.toDomain()))
+
     private companion object {
         fun OpinionListPrivacyEnumDto.toDomain() =
             when (this) {

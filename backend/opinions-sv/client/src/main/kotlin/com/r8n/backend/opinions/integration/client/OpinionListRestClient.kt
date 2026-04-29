@@ -2,6 +2,7 @@ package com.r8n.backend.opinions.integration.client
 
 import com.r8n.backend.opinions.api.lists.OpinionListsApi
 import com.r8n.backend.opinions.api.lists.OpinionListsApi.Companion.CREATE_PATH
+import com.r8n.backend.opinions.api.lists.OpinionListsApi.Companion.DELETE_PATH
 import com.r8n.backend.opinions.api.lists.OpinionListsApi.Companion.GET_PATH
 import com.r8n.backend.opinions.api.lists.OpinionListsApi.Companion.LINK_PATH
 import com.r8n.backend.opinions.api.lists.OpinionListsApi.Companion.RENAME_PATH
@@ -78,6 +79,14 @@ class OpinionListRestClient(
                 uriBuilder.path(SET_PRIVACY_PATH).queryParam("privacy", privacy).build(listId)
             }.retrieve()
             .body<OpinionListDto>()!!
+
+    override fun deleteList(listId: UUID) {
+        restClient
+            .delete()
+            .uri(DELETE_PATH, listId)
+            .retrieve()
+            .toBodilessEntity()
+    }
 
     override fun linkOpinion(
         listId: UUID,

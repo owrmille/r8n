@@ -49,7 +49,12 @@ class StubOpinionListController(
     override fun changePrivacy(
         listId: UUID,
         privacy: OpinionListPrivacyEnumDto,
-    ) = OpinionListTestDataFactory.getList(listId)
+    ) = opinionListFacade.changePrivacy(getCurrentUserId(), listId, privacy)
+
+    @PreAuthorize(IS_USER)
+    override fun deleteList(listId: UUID) {
+        opinionListFacade.deleteList(getCurrentUserId(), listId)
+    }
 
     @PreAuthorize(IS_USER)
     override fun linkOpinion(

@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 import org.springframework.validation.annotation.Validated
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -28,6 +29,7 @@ interface OpinionListsApi {
         const val UNLINK_PATH = "$ROOT_PATH/{listId}/unlink"
         const val SYNC_PATH = "$ROOT_PATH/{existingListId}/sync"
         const val UNSYNC_PATH = "$ROOT_PATH/{existingListId}/unsync"
+        const val DELETE_PATH = "$ROOT_PATH/{listId}"
     }
 
     @GetMapping(SUMMARY_PATH)
@@ -68,6 +70,12 @@ interface OpinionListsApi {
         @RequestParam(required = true)
         privacy: OpinionListPrivacyEnumDto,
     ): OpinionListDto
+
+    @DeleteMapping(DELETE_PATH)
+    fun deleteList(
+        @PathVariable
+        listId: UUID,
+    )
 
     @PostMapping(LINK_PATH)
     fun linkOpinion(
