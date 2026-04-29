@@ -11,12 +11,14 @@ import com.r8n.backend.opinions.lists.facade.OpinionListFacade
 import com.r8n.backend.opinions.stub.OpinionListTestDataFactory
 import com.r8n.backend.security.Authority.IS_USER
 import com.r8n.backend.security.CurrentUserIdentifier.getCurrentUserId
+import io.swagger.v3.oas.annotations.Hidden
 import org.springframework.data.domain.PageImpl
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
 @RestController
+@Hidden
 class StubOpinionListController(
     private val opinionListFacade: OpinionListFacade,
     private val accessRequestRepository: AccessRequestRepository,
