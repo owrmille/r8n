@@ -3,6 +3,7 @@ package com.r8n.backend.opinions.api.access
 import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.opinions.api.access.dto.AccessRequestDto
+import com.r8n.backend.opinions.api.access.dto.AccessRequestIntentDto
 import com.r8n.backend.opinions.api.access.dto.RequestStatusEnumDto
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.GetMapping
@@ -35,6 +36,10 @@ interface OutgoingAccessRequestApi {
     @PostMapping(CREATE_PATH)
     fun create(
         @PathVariable listId: UUID,
+        @RequestParam(defaultValue = "NONE")
+        intent: AccessRequestIntentDto,
+        @RequestParam(required = false)
+        targetListId: UUID?,
     ): AccessRequestDto
 
     @PostMapping(CANCEL_PATH)

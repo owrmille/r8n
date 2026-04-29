@@ -2,6 +2,7 @@ package com.r8n.backend.opinions.access.service
 
 import com.r8n.backend.opinions.access.database.AccessRequestRepository
 import com.r8n.backend.opinions.access.domain.AccessRequest
+import com.r8n.backend.opinions.access.domain.AccessRequestIntent
 import com.r8n.backend.opinions.access.domain.RequestStatusEnum
 import com.r8n.backend.opinions.access.persistence.AccessRequestPersistence
 import org.springframework.data.domain.Page
@@ -48,15 +49,30 @@ class AccessRequestService(
             createdAt = createdAt,
             updatedAt = updatedAt,
             ownerId = accessService.getListOwner(list),
+            intent = intent,
+            targetListId = targetListId,
         )
 
     @Transactional
     fun createRequest(
         listId: UUID,
         requesterId: UUID,
+        intent: AccessRequestIntent = AccessRequestIntent.NONE,
+        targetListId: UUID? = null,
     ): AccessRequest {
         if (accessService.getListOwner(listId) == requesterId) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Owner cannot request access to their own list")
+        }
+
+        if (intent == AccessRequestIntent.MERGE) {
+            if (targetListId == null) {
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "MERGE intent requires targetListId")
+            }
+            if (!accessService.ownsOpinionList(requesterId, targetListId)) {
+                throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't own the target list")
+            }
+        } else if (targetListId != null) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "targetListId is only valid for MERGE intent")
         }
 
         // Idempotent: an existing SENT request is returned as-is. Terminal states
@@ -75,6 +91,8 @@ class AccessRequestService(
                 status = RequestStatusEnum.SENT,
                 createdAt = now,
                 updatedAt = now,
+                intent = intent,
+                targetListId = targetListId,
             )
         return repository.save(request).toDomain()
     }

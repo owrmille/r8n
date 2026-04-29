@@ -4,6 +4,7 @@ import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.opinions.TestObjectMapperConfiguration
 import com.r8n.backend.opinions.access.database.AccessRequestRepository
 import com.r8n.backend.opinions.api.access.dto.AccessRequestDto
+import com.r8n.backend.opinions.api.access.dto.AccessRequestIntentDto
 import com.r8n.backend.opinions.api.access.dto.RequestStatusEnumDto
 import com.r8n.backend.opinions.lists.database.OpinionListRepository
 import com.r8n.backend.opinions.lists.database.OpinionsToOpinionListsRepository
@@ -23,6 +24,8 @@ import com.r8n.backend.opinions.opinions.persistence.ReferentPersistence
 import com.r8n.backend.security.ServiceTokenService
 import com.r8n.backend.users.integration.api.UsersInternalApi
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
@@ -293,5 +296,188 @@ class AccessRequestIntegrationTest {
                     .header("Authorization", "Bearer $requesterToken")
                     .with(csrf()),
             ).andExpect(status().isForbidden)
+    }
+
+    @Test
+    @WithMockUser
+    fun `create with intent COPY persists COPY and no targetListId`() {
+        val result =
+            mockMvc
+                .perform(
+                    post("/api/access-requests/outgoing/create/$listId")
+                        .header("Authorization", "Bearer $requesterToken")
+                        .param("intent", "COPY")
+                        .with(csrf()),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val dto: AccessRequestDto = objectMapper.readValue(result.response.contentAsString)
+        assertEquals(AccessRequestIntentDto.COPY, dto.intent)
+        assertNull(dto.targetListId)
+    }
+
+    @Test
+    @WithMockUser
+    fun `create with intent MERGE and valid owned target persists both fields`() {
+        val targetList =
+            opinionListRepository.save(
+                OpinionListPersistence(
+                    owner = REQUESTER_ID,
+                    name = "Requester's Own List",
+                    privacy = OpinionListPrivacyEnum.PRIVATE,
+                ),
+            )
+
+        val result =
+            mockMvc
+                .perform(
+                    post("/api/access-requests/outgoing/create/$listId")
+                        .header("Authorization", "Bearer $requesterToken")
+                        .param("intent", "MERGE")
+                        .param("targetListId", targetList.id.toString())
+                        .with(csrf()),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val dto: AccessRequestDto = objectMapper.readValue(result.response.contentAsString)
+        assertEquals(AccessRequestIntentDto.MERGE, dto.intent)
+        assertEquals(targetList.id, dto.targetListId)
+        assertNotNull(dto.targetListId)
+    }
+
+    @Test
+    @WithMockUser
+    fun `create with intent MERGE without targetListId returns 400`() {
+        mockMvc
+            .perform(
+                post("/api/access-requests/outgoing/create/$listId")
+                    .header("Authorization", "Bearer $requesterToken")
+                    .param("intent", "MERGE")
+                    .with(csrf()),
+            ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    @WithMockUser
+    fun `create with intent MERGE targeting a list owned by someone else returns 403`() {
+        val foreignTargetList =
+            opinionListRepository.save(
+                OpinionListPersistence(
+                    owner = OWNER_ID,
+                    name = "Owner's other list",
+                    privacy = OpinionListPrivacyEnum.PRIVATE,
+                ),
+            )
+
+        mockMvc
+            .perform(
+                post("/api/access-requests/outgoing/create/$listId")
+                    .header("Authorization", "Bearer $requesterToken")
+                    .param("intent", "MERGE")
+                    .param("targetListId", foreignTargetList.id.toString())
+                    .with(csrf()),
+            ).andExpect(status().isForbidden)
+    }
+
+    @Test
+    @WithMockUser
+    fun `create with intent COPY but targetListId set returns 400`() {
+        val targetList =
+            opinionListRepository.save(
+                OpinionListPersistence(
+                    owner = REQUESTER_ID,
+                    name = "Stray target",
+                    privacy = OpinionListPrivacyEnum.PRIVATE,
+                ),
+            )
+
+        mockMvc
+            .perform(
+                post("/api/access-requests/outgoing/create/$listId")
+                    .header("Authorization", "Bearer $requesterToken")
+                    .param("intent", "COPY")
+                    .param("targetListId", targetList.id.toString())
+                    .with(csrf()),
+            ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    @WithMockUser
+    fun `MERGE auto-execute end-to-end - request, accept, sync from a SEARCHABLE source`() {
+        // Owner has a SEARCHABLE list — the kind that surfaces in Discover today.
+        val sourceList =
+            opinionListRepository.save(
+                OpinionListPersistence(
+                    owner = OWNER_ID,
+                    name = "Owner's searchable list",
+                    privacy = OpinionListPrivacyEnum.SEARCHABLE,
+                ),
+            )
+
+        // Requester owns the merge destination.
+        val requesterDestList =
+            opinionListRepository.save(
+                OpinionListPersistence(
+                    owner = REQUESTER_ID,
+                    name = "Requester's destination",
+                    privacy = OpinionListPrivacyEnum.PRIVATE,
+                ),
+            )
+
+        // Sanity: SEARCHABLE source without access → 403 (existence is public).
+        mockMvc
+            .perform(
+                post("/api/opinion-lists/${requesterDestList.id}/sync")
+                    .header("Authorization", "Bearer $requesterToken")
+                    .param("addedListId", sourceList.id.toString())
+                    .with(csrf()),
+            ).andExpect(status().isForbidden)
+
+        // Requester creates an access request with intent=MERGE.
+        val createResult =
+            mockMvc
+                .perform(
+                    post("/api/access-requests/outgoing/create/${sourceList.id}")
+                        .header("Authorization", "Bearer $requesterToken")
+                        .param("intent", "MERGE")
+                        .param("targetListId", requesterDestList.id.toString())
+                        .with(csrf()),
+                ).andExpect(status().isOk)
+                .andReturn()
+        val requestId = objectMapper.readValue<AccessRequestDto>(createResult.response.contentAsString).id
+
+        // Owner accepts.
+        mockMvc
+            .perform(
+                post("/api/access-requests/incoming/$requestId/accept")
+                    .header("Authorization", "Bearer $ownerToken")
+                    .with(csrf()),
+            ).andExpect(status().isOk)
+
+        // The frontend auto-execute will now POST this sync — it must succeed.
+        mockMvc
+            .perform(
+                post("/api/opinion-lists/${requesterDestList.id}/sync")
+                    .header("Authorization", "Bearer $requesterToken")
+                    .param("addedListId", sourceList.id.toString())
+                    .with(csrf()),
+            ).andExpect(status().isOk)
+    }
+
+    @Test
+    @WithMockUser
+    fun `create with default intent (no param) defaults to NONE`() {
+        val result =
+            mockMvc
+                .perform(
+                    post("/api/access-requests/outgoing/create/$listId")
+                        .header("Authorization", "Bearer $requesterToken")
+                        .with(csrf()),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val dto: AccessRequestDto = objectMapper.readValue(result.response.contentAsString)
+        assertEquals(AccessRequestIntentDto.NONE, dto.intent)
+        assertNull(dto.targetListId)
     }
 }
