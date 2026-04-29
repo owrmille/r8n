@@ -19,7 +19,7 @@ class OpinionListInternalController(
     override fun getMineFull(pageable: PageRequestDto): PageResponseDto<OpinionListDto> =
         opinionListFacade.getListsFull(CurrentUserIdentifier.getCurrentUserId(), pageable)
 
-    @PreAuthorize(Authority.IS_USER_OR_SERVICE)
+    @PreAuthorize(Authority.IS_SERVICE)
     override fun deleteAllUserDataForUser(userId: UUID) {
         opinionListFacade.deleteAllUserDataForUser(userId)
     }
