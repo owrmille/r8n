@@ -30,6 +30,7 @@ interface OpinionListsApi {
         const val SYNC_PATH = "$ROOT_PATH/{existingListId}/sync"
         const val UNSYNC_PATH = "$ROOT_PATH/{existingListId}/unsync"
         const val DELETE_PATH = "$ROOT_PATH/{listId}"
+        const val MOVE_OPINION_PATH = "$ROOT_PATH/{fromListId}/move-opinion"
     }
 
     @GetMapping(SUMMARY_PATH)
@@ -76,6 +77,20 @@ interface OpinionListsApi {
         @PathVariable
         listId: UUID,
     )
+
+    @PostMapping(MOVE_OPINION_PATH)
+    fun moveOpinion(
+        @PathVariable
+        fromListId: UUID,
+        @RequestParam(required = true)
+        toListId: UUID,
+        @RequestParam(required = true)
+        opinionId: UUID,
+        @RequestParam(defaultValue = "1.0")
+        @Min(0)
+        @Max(1)
+        weight: Double,
+    ): OpinionListDto
 
     @PostMapping(LINK_PATH)
     fun linkOpinion(

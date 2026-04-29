@@ -210,6 +210,71 @@ class OpinionListService(
         return getList(listId, userId)
     }
 
+    @Transactional
+    fun renameList(
+        userId: UUID,
+        listId: UUID,
+        name: String,
+    ): OpinionList {
+        if (!accessService.ownsOpinionList(userId, listId)) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't own this list")
+        }
+        val list =
+            opinionListRepository
+                .findById(listId)
+                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
+        val trimmed = name.trim()
+        if (trimmed.isEmpty()) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "name must not be blank")
+        }
+        if (list.name != trimmed) {
+            list.name = trimmed
+            opinionListRepository.save(list)
+        }
+        return getList(listId, userId)
+    }
+
+    @Transactional
+    fun moveOpinion(
+        userId: UUID,
+        fromListId: UUID,
+        toListId: UUID,
+        opinionId: UUID,
+        weight: Double = 1.0,
+    ): OpinionList {
+        if (fromListId == toListId) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "fromListId and toListId must differ")
+        }
+        if (!accessService.ownsOpinionList(userId, fromListId)) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't own the source list")
+        }
+        if (!accessService.ownsOpinionList(userId, toListId)) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't own the destination list")
+        }
+        // check opinion access
+        opinionService.getOpinion(opinionId, userId)
+
+        // Upsert into destination
+        val existingDest = opinionsAssignmentRepository.findAllByOpinionList(toListId).find { it.opinion == opinionId }
+        if (existingDest != null) {
+            existingDest.weight = weight
+            opinionsAssignmentRepository.save(existingDest)
+        } else {
+            opinionsAssignmentRepository.save(
+                OpinionsToOpinionListsPersistence(
+                    opinionList = toListId,
+                    opinion = opinionId,
+                    weight = weight,
+                ),
+            )
+        }
+        // Remove from source
+        val sourceAssignments = opinionsAssignmentRepository.findAllByOpinionList(fromListId)
+        opinionsAssignmentRepository.deleteAll(sourceAssignments.filter { it.opinion == opinionId })
+
+        return getList(toListId, userId)
+    }
+
     fun getList(
         listId: UUID,
         requesterId: UUID,

@@ -142,6 +142,21 @@ class OpinionListFacade(
         privacy: OpinionListPrivacyEnumDto,
     ): OpinionListDto = opinionListMapper.toDto(opinionListService.changePrivacy(userId, listId, privacy.toDomain()))
 
+    fun renameList(
+        userId: UUID,
+        listId: UUID,
+        name: String,
+    ): OpinionListDto = opinionListMapper.toDto(opinionListService.renameList(userId, listId, name))
+
+    fun moveOpinion(
+        userId: UUID,
+        fromListId: UUID,
+        toListId: UUID,
+        opinionId: UUID,
+        weight: Double,
+    ): OpinionListDto =
+        opinionListMapper.toDto(opinionListService.moveOpinion(userId, fromListId, toListId, opinionId, weight))
+
     private companion object {
         fun OpinionListPrivacyEnumDto.toDomain() =
             when (this) {

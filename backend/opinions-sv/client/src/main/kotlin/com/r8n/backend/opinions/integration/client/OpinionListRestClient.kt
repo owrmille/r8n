@@ -4,6 +4,7 @@ import com.r8n.backend.opinions.api.lists.OpinionListsApi
 import com.r8n.backend.opinions.api.lists.OpinionListsApi.Companion.CREATE_PATH
 import com.r8n.backend.opinions.api.lists.OpinionListsApi.Companion.DELETE_PATH
 import com.r8n.backend.opinions.api.lists.OpinionListsApi.Companion.GET_PATH
+import com.r8n.backend.opinions.api.lists.OpinionListsApi.Companion.MOVE_OPINION_PATH
 import com.r8n.backend.opinions.api.lists.OpinionListsApi.Companion.LINK_PATH
 import com.r8n.backend.opinions.api.lists.OpinionListsApi.Companion.RENAME_PATH
 import com.r8n.backend.opinions.api.lists.OpinionListsApi.Companion.SET_PRIVACY_PATH
@@ -87,6 +88,24 @@ class OpinionListRestClient(
             .retrieve()
             .toBodilessEntity()
     }
+
+    override fun moveOpinion(
+        fromListId: UUID,
+        toListId: UUID,
+        opinionId: UUID,
+        weight: Double,
+    ): OpinionListDto =
+        restClient
+            .post()
+            .uri { uriBuilder ->
+                uriBuilder
+                    .path(MOVE_OPINION_PATH)
+                    .queryParam("toListId", toListId)
+                    .queryParam("opinionId", opinionId)
+                    .queryParam("weight", weight)
+                    .build(fromListId)
+            }.retrieve()
+            .body<OpinionListDto>()!!
 
     override fun linkOpinion(
         listId: UUID,
