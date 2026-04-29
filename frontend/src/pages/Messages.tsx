@@ -23,7 +23,15 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import type { SupportMessageDto, SupportThreadSummaryDto } from "@/lib/api/messaging";
 import { MOCK_MESSAGE_THREADS, type MessageDirection, type MessageThread, type ThreadMessage } from "@/lib/messages";
+import {
+  useAddSupportThreadMessageMutation,
+  useCreateSupportThreadMutation,
+  useMe,
+  useSupportThreadMessages,
+  useSupportThreadSummaries,
+} from "@/lib/server-state";
 import { cn } from "@/lib/utils";
 
 type MessageFilter = "all" | "inbox" | "outbox" | "support";
@@ -34,6 +42,9 @@ const FILTERS: Array<{ id: MessageFilter; label: string }> = [
   { id: "outbox", label: "Outbox" },
   { id: "support", label: "Support" },
 ];
+
+const SUPPORT_THREADS_PAGE = { page: 0, size: 50 } as const;
+const SUPPORT_MESSAGES_PAGE = { page: 0, size: 100 } as const;
 
 function getDirectionMeta(direction: MessageDirection) {
   return direction === "outgoing"
@@ -47,14 +58,100 @@ function getDirectionMeta(direction: MessageDirection) {
       };
 }
 
+function formatMessageDate(value: string | null): string {
+  if (!value) {
+    return "Just now";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    month: "short",
+  }).format(date);
+}
+
+function mapSupportSummaryToThread(summary: SupportThreadSummaryDto): MessageThread {
+  const updatedAt = formatMessageDate(summary.lastMessageAt ?? summary.createdAt);
+
+  return {
+    id: summary.id,
+    subject: "Support conversation",
+    participantName: "R8N Support",
+    participantLastSeenAt: null,
+    participantRole: "Support",
+    context: "Support conversation",
+    updatedAt,
+    unreadCount: 0,
+    messages: [
+      {
+        id: `support-preview-${summary.id}`,
+        direction: "incoming",
+        authorName: "R8N Support",
+        body: "Open this support conversation to view messages.",
+        sentAt: updatedAt,
+      },
+    ],
+  };
+}
+
+function mapSupportMessageToThreadMessage(
+  message: SupportMessageDto,
+  currentUserId: string | undefined,
+): ThreadMessage {
+  const isCurrentUser = message.authorUserId === currentUserId;
+
+  return {
+    id: message.id,
+    direction: isCurrentUser ? "outgoing" : "incoming",
+    authorName: isCurrentUser
+      ? "You"
+      : message.authorRole === "SUPPORT"
+        ? "R8N Support"
+        : "User",
+    body: message.text,
+    sentAt: formatMessageDate(message.createdAt),
+  };
+}
+
 const Messages = () => {
-  const [threads, setThreads] = useState<MessageThread[]>(MOCK_MESSAGE_THREADS);
+  const [directThreads, setDirectThreads] = useState<MessageThread[]>(
+    () => MOCK_MESSAGE_THREADS.filter((thread) => thread.participantRole !== "Support"),
+  );
   const [openThreads, setOpenThreads] = useState<string[]>([]);
   const [activeFilter, setActiveFilter] = useState<MessageFilter>("all");
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [isNewMessageDialogOpen, setIsNewMessageDialogOpen] = useState(false);
   const [newRecipient, setNewRecipient] = useState("");
   const [newMessage, setNewMessage] = useState("");
+  const me = useMe();
+  const supportThreadsQuery = useSupportThreadSummaries({
+    pageable: SUPPORT_THREADS_PAGE,
+  });
+  const createSupportThreadMutation = useCreateSupportThreadMutation({
+    onSuccess: (thread) => {
+      setOpenThreads((current) => [thread.id, ...current.filter((id) => id !== thread.id)]);
+      setActiveFilter("support");
+      setNewRecipient("");
+      setNewMessage("");
+      setIsNewMessageDialogOpen(false);
+    },
+  });
+
+  const supportThreads = useMemo(
+    () => supportThreadsQuery.data?.items.map(mapSupportSummaryToThread) ?? [],
+    [supportThreadsQuery.data?.items],
+  );
+
+  const threads = useMemo(
+    () => [...supportThreads, ...directThreads],
+    [directThreads, supportThreads],
+  );
 
   const filteredThreads = useMemo(
     () =>
@@ -100,7 +197,7 @@ const Messages = () => {
       return;
     }
 
-    setThreads((current) => {
+    setDirectThreads((current) => {
       const thread = current.find((item) => item.id === threadId);
       if (!thread) {
         return current;
@@ -143,6 +240,12 @@ const Messages = () => {
 
     const normalizedRecipient = recipientName.toLowerCase();
     const isSupportThread = normalizedRecipient.includes("support");
+
+    if (isSupportThread) {
+      createSupportThreadMutation.mutate({ initialMessage: messageBody });
+      return;
+    }
+
     const threadId = `thread-new-${Date.now()}`;
     const createdThread: MessageThread = {
       id: threadId,
@@ -166,7 +269,7 @@ const Messages = () => {
       ],
     };
 
-    setThreads((current) => [createdThread, ...current]);
+    setDirectThreads((current) => [createdThread, ...current]);
     setOpenThreads((current) => [threadId, ...current]);
     setActiveFilter("all");
     setDrafts((current) => ({
@@ -229,8 +332,24 @@ const Messages = () => {
         transition={{ duration: 0.3, delay: 0.1 }}
         className="space-y-4"
       >
+        {supportThreadsQuery.isLoading && (
+          <div className="rounded-2xl border border-border bg-card px-5 py-4 text-sm text-muted-foreground">
+            Loading support conversations...
+          </div>
+        )}
+        {supportThreadsQuery.isError && (
+          <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm text-destructive">
+            Support conversations could not be loaded.
+          </div>
+        )}
+        {!supportThreadsQuery.isLoading && !supportThreadsQuery.isError && filteredThreads.length === 0 && (
+          <div className="rounded-2xl border border-border bg-card px-5 py-8 text-center text-sm text-muted-foreground">
+            No conversations yet.
+          </div>
+        )}
         {filteredThreads.map((thread) => {
           const isOpen = openThreads.includes(thread.id);
+          const isSupportThread = thread.participantRole === "Support";
           const lastMessage = thread.messages[thread.messages.length - 1];
           const previewMeta = getDirectionMeta(lastMessage.direction);
 
@@ -313,64 +432,23 @@ const Messages = () => {
               </CollapsibleTrigger>
 
               <CollapsibleContent>
-                <div className="border-t border-border/70 px-5 py-4">
-                  <div className="space-y-4">
-                    {thread.messages.map((message) => {
-                      const messageMeta = getDirectionMeta(message.direction);
-
-                      return (
-                        <article
-                          key={message.id}
-                          className={cn(
-                            "flex gap-3",
-                            message.direction === "outgoing" && "flex-row-reverse",
-                          )}
-                        >
-                          <div
-                            className={cn(
-                              "max-w-[82%] rounded-2xl border px-4 py-3",
-                              messageMeta.bubbleClassName,
-                            )}
-                          >
-                            <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                              <span className="text-sm font-medium text-foreground">
-                                {message.authorName}
-                              </span>
-                              <span className="text-[10px] text-muted-foreground/70">
-                                {message.sentAt}
-                              </span>
-                            </div>
-                            <p className="text-sm leading-6 text-foreground/85">
-                              {message.body}
-                            </p>
-                          </div>
-                        </article>
-                      );
-                    })}
-                  </div>
-                  <div className="mt-5 border-t border-border/70 pt-4">
-                    <div className="rounded-2xl border border-border bg-background p-3">
-                      <Textarea
-                        value={drafts[thread.id] ?? ""}
-                        onChange={(event) => updateDraft(thread.id, event.target.value)}
-                        placeholder={`Message ${thread.participantName}...`}
-                        className="min-h-[96px] resize-none border-0 px-0 py-0 shadow-none focus-visible:ring-0"
-                      />
-                      <div className="mt-3 flex justify-end">
-                        <Button
-                          type="button"
-                          size="sm"
-                          className="rounded-xl"
-                          disabled={!drafts[thread.id]?.trim()}
-                          onClick={() => sendMessage(thread.id)}
-                        >
-                          <SendHorizontal className="h-4 w-4" />
-                          Send
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                {isSupportThread ? (
+                  <SupportThreadContent
+                    currentUserId={me.data?.id}
+                    draft={drafts[thread.id] ?? ""}
+                    isOpen={isOpen}
+                    onDraftChange={(value) => updateDraft(thread.id, value)}
+                    onDraftSent={() => updateDraft(thread.id, "")}
+                    thread={thread}
+                  />
+                ) : (
+                  <ThreadContent
+                    draft={drafts[thread.id] ?? ""}
+                    onDraftChange={(value) => updateDraft(thread.id, value)}
+                    onSend={() => sendMessage(thread.id)}
+                    thread={thread}
+                  />
+                )}
               </CollapsibleContent>
             </Collapsible>
           );
@@ -422,7 +500,11 @@ const Messages = () => {
             <Button
               type="button"
               className="rounded-xl"
-              disabled={!newRecipient.trim() || !newMessage.trim()}
+              disabled={
+                !newRecipient.trim() ||
+                !newMessage.trim() ||
+                createSupportThreadMutation.isPending
+              }
               onClick={createThread}
             >
               <SendHorizontal className="h-4 w-4" />
@@ -434,5 +516,183 @@ const Messages = () => {
     </div>
   );
 };
+
+interface ThreadContentProps {
+  draft: string;
+  onDraftChange: (value: string) => void;
+  onSend: () => void;
+  thread: MessageThread;
+}
+
+const ThreadContent = ({
+  draft,
+  onDraftChange,
+  onSend,
+  thread,
+}: ThreadContentProps) => (
+  <div className="border-t border-border/70 px-5 py-4">
+    <MessageList messages={thread.messages} />
+    <MessageComposer
+      draft={draft}
+      isSending={false}
+      onDraftChange={onDraftChange}
+      onSend={onSend}
+      participantName={thread.participantName}
+    />
+  </div>
+);
+
+interface SupportThreadContentProps {
+  currentUserId: string | undefined;
+  draft: string;
+  isOpen: boolean;
+  onDraftChange: (value: string) => void;
+  onDraftSent: () => void;
+  thread: MessageThread;
+}
+
+const SupportThreadContent = ({
+  currentUserId,
+  draft,
+  isOpen,
+  onDraftChange,
+  onDraftSent,
+  thread,
+}: SupportThreadContentProps) => {
+  const messagesQuery = useSupportThreadMessages(
+    {
+      pageable: SUPPORT_MESSAGES_PAGE,
+      threadId: thread.id,
+    },
+    { enabled: isOpen },
+  );
+  const addMessageMutation = useAddSupportThreadMessageMutation({
+    onSuccess: () => onDraftSent(),
+  });
+  const messages =
+    messagesQuery.data?.items.map((message) =>
+      mapSupportMessageToThreadMessage(message, currentUserId),
+    ) ?? [];
+
+  const sendSupportMessage = () => {
+    const text = draft.trim();
+    if (!text) {
+      return;
+    }
+
+    addMessageMutation.mutate({
+      request: { text },
+      threadId: thread.id,
+    });
+  };
+
+  return (
+    <div className="border-t border-border/70 px-5 py-4">
+      {messagesQuery.isLoading && (
+        <div className="rounded-2xl border border-border bg-background px-4 py-3 text-sm text-muted-foreground">
+          Loading messages...
+        </div>
+      )}
+      {messagesQuery.isError && (
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          Messages could not be loaded.
+        </div>
+      )}
+      {!messagesQuery.isLoading && !messagesQuery.isError && messages.length === 0 && (
+        <div className="rounded-2xl border border-border bg-background px-4 py-3 text-sm text-muted-foreground">
+          No messages in this support conversation yet.
+        </div>
+      )}
+      {messages.length > 0 && <MessageList messages={messages} />}
+      <MessageComposer
+        draft={draft}
+        isSending={addMessageMutation.isPending}
+        onDraftChange={onDraftChange}
+        onSend={sendSupportMessage}
+        participantName={thread.participantName}
+      />
+    </div>
+  );
+};
+
+interface MessageListProps {
+  messages: ThreadMessage[];
+}
+
+const MessageList = ({ messages }: MessageListProps) => (
+  <div className="space-y-4">
+    {messages.map((message) => {
+      const messageMeta = getDirectionMeta(message.direction);
+
+      return (
+        <article
+          key={message.id}
+          className={cn(
+            "flex gap-3",
+            message.direction === "outgoing" && "flex-row-reverse",
+          )}
+        >
+          <div
+            className={cn(
+              "max-w-[82%] rounded-2xl border px-4 py-3",
+              messageMeta.bubbleClassName,
+            )}
+          >
+            <div className="mb-1.5 flex flex-wrap items-center gap-2">
+              <span className="text-sm font-medium text-foreground">
+                {message.authorName}
+              </span>
+              <span className="text-[10px] text-muted-foreground/70">
+                {message.sentAt}
+              </span>
+            </div>
+            <p className="text-sm leading-6 text-foreground/85">
+              {message.body}
+            </p>
+          </div>
+        </article>
+      );
+    })}
+  </div>
+);
+
+interface MessageComposerProps {
+  draft: string;
+  isSending: boolean;
+  onDraftChange: (value: string) => void;
+  onSend: () => void;
+  participantName: string;
+}
+
+const MessageComposer = ({
+  draft,
+  isSending,
+  onDraftChange,
+  onSend,
+  participantName,
+}: MessageComposerProps) => (
+  <div className="mt-5 border-t border-border/70 pt-4">
+    <div className="rounded-2xl border border-border bg-background p-3">
+      <Textarea
+        value={draft}
+        onChange={(event) => onDraftChange(event.target.value)}
+        placeholder={`Message ${participantName}...`}
+        className="min-h-[96px] resize-none border-0 px-0 py-0 shadow-none focus-visible:ring-0"
+      />
+      <div className="mt-3 flex justify-end">
+        <Button
+          type="button"
+          size="sm"
+          className="rounded-xl"
+          disabled={!draft.trim() || isSending}
+          onClick={onSend}
+        >
+          <SendHorizontal className="h-4 w-4" />
+          Send
+        </Button>
+      </div>
+    </div>
+  </div>
+);
 
 export default Messages;
