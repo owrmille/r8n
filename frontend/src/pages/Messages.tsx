@@ -31,15 +31,6 @@ import {
 } from "@/lib/server-state";
 import { cn } from "@/lib/utils";
 
-type MessageFilter = "all" | "inbox" | "outbox" | "support";
-
-const FILTERS: Array<{ id: MessageFilter; label: string }> = [
-  { id: "all", label: "All" },
-  { id: "inbox", label: "Inbox" },
-  { id: "outbox", label: "Outbox" },
-  { id: "support", label: "Support" },
-];
-
 const SUPPORT_THREADS_PAGE = { page: 0, size: 50 } as const;
 const SUPPORT_MESSAGES_PAGE = { page: 0, size: 100 } as const;
 
@@ -85,7 +76,7 @@ function mapSupportSummaryToThread(summary: SupportThreadSummaryDto): MessageThr
         id: `support-preview-${summary.id}`,
         direction: "incoming",
         authorName: "R8N Support",
-        body: "Open this support conversation to view messages.",
+        body: summary.lastMessageText ?? "No messages yet.",
         sentAt: updatedAt,
       },
     ],
@@ -120,7 +111,6 @@ const Messages = () => {
     () => MOCK_MESSAGE_THREADS.filter((thread) => thread.participantRole !== "Support"),
   );
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
-  const [activeFilter, setActiveFilter] = useState<MessageFilter>("all");
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [isNewMessageDialogOpen, setIsNewMessageDialogOpen] = useState(false);
   const [newRecipient, setNewRecipient] = useState("");
@@ -132,7 +122,6 @@ const Messages = () => {
   const createSupportThreadMutation = useCreateSupportThreadMutation({
     onSuccess: (thread) => {
       setActiveThreadId(thread.id);
-      setActiveFilter("support");
       setNewRecipient("");
       setNewMessage("");
       setIsNewMessageDialogOpen(false);
@@ -147,28 +136,6 @@ const Messages = () => {
   const threads = useMemo(
     () => [...supportThreads, ...directThreads],
     [directThreads, supportThreads],
-  );
-
-  const filteredThreads = useMemo(
-    () =>
-      threads.filter((thread) => {
-        const lastDirection = thread.messages[thread.messages.length - 1]?.direction;
-
-        if (activeFilter === "inbox") {
-          return lastDirection === "incoming";
-        }
-
-        if (activeFilter === "outbox") {
-          return lastDirection === "outgoing";
-        }
-
-        if (activeFilter === "support") {
-          return thread.participantRole === "Support";
-        }
-
-        return true;
-      }),
-    [activeFilter, threads],
   );
 
   const activeThread = threads.find((thread) => thread.id === activeThreadId) ?? null;
@@ -259,7 +226,6 @@ const Messages = () => {
 
     setDirectThreads((current) => [createdThread, ...current]);
     setActiveThreadId(threadId);
-    setActiveFilter("all");
     setDrafts((current) => ({
       ...current,
       [threadId]: "",
@@ -297,37 +263,17 @@ const Messages = () => {
         className="grid min-h-0 flex-1 grid-cols-1 grid-rows-[220px_minmax(0,1fr)] overflow-hidden md:grid-cols-[280px_minmax(0,1fr)] md:grid-rows-none"
       >
         <aside className="flex min-h-0 flex-col border-b border-border bg-card md:border-b-0 md:border-r">
-          <div className="shrink-0 border-b border-border/70 px-3 py-3">
-            <div className="flex gap-2 overflow-x-auto" aria-label="Message filters">
-              {FILTERS.map((filter) => (
-                <button
-                  key={filter.id}
-                  type="button"
-                  onClick={() => setActiveFilter(filter.id)}
-                  className={cn(
-                    "shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-                    activeFilter === filter.id
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-background text-muted-foreground hover:bg-muted/60 hover:text-foreground",
-                  )}
-                >
-                  {filter.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="min-h-0 flex-1 overflow-y-auto py-2">
+          <div className="min-h-0 flex-1 overflow-y-auto py-3">
             {supportThreadsQuery.isLoading && (
               <StatusRow>Loading support conversations...</StatusRow>
             )}
             {supportThreadsQuery.isError && (
               <StatusRow variant="error">Support conversations could not be loaded.</StatusRow>
             )}
-            {!supportThreadsQuery.isLoading && !supportThreadsQuery.isError && filteredThreads.length === 0 && (
+            {!supportThreadsQuery.isLoading && !supportThreadsQuery.isError && threads.length === 0 && (
               <StatusRow>No conversations yet.</StatusRow>
             )}
-            {filteredThreads.map((thread) => (
+            {threads.map((thread) => (
               <ThreadListItem
                 key={thread.id}
                 isActive={thread.id === activeThreadId}

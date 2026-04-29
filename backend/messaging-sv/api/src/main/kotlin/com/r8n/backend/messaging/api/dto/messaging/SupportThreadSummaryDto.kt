@@ -9,4 +9,5 @@ data class SupportThreadSummaryDto(
     val viewerRole: SupportThreadViewerRoleEnumDto,
     val createdAt: Instant,
     val lastMessageAt: Instant?,
+    val lastMessageText: String?,
 )

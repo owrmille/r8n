@@ -52,6 +52,7 @@ class SupportMessagingFacade(
             viewerRole = thread.viewerRoleFor(actor),
             createdAt = requireNotNull(messages.minOfOrNull { it.createdAt }),
             lastMessageAt = messages.maxOfOrNull { it.createdAt },
+            lastMessageText = messages.maxByOrNull { it.createdAt }?.text,
         )
 
     private fun SupportThreadSummary.toDto(actor: SupportActor): SupportThreadSummaryDto =
@@ -61,6 +62,7 @@ class SupportMessagingFacade(
             viewerRole = viewerRoleFor(actor),
             createdAt = createdAt,
             lastMessageAt = lastMessageAt,
+            lastMessageText = lastMessageText,
         )
 
     private fun SupportMessagePersistence.toDto(): SupportMessageDto =

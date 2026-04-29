@@ -160,6 +160,7 @@ class ExportIntegrationTests {
                         viewerRole = SupportThreadViewerRoleEnumDto.REQUESTER,
                         createdAt = timestamp,
                         lastMessageAt = timestamp,
+                        lastMessageText = "I have issue with post",
                     ),
                 ),
             ).toResponse(),

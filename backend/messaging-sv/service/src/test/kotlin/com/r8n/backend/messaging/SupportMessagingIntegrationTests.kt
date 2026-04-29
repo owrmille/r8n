@@ -370,6 +370,7 @@ class SupportMessagingIntegrationTests {
                     .with(user(supportId.toString()).roles("SUPPORT")),
             ).andExpect(status().isOk)
             .andExpect(jsonPath("$.items[0].id").value(olderThreadId.toString()))
+            .andExpect(jsonPath("$.items[0].lastMessageText").value("Follow-up makes this thread latest"))
     }
 
     @Test

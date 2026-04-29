@@ -16,6 +16,7 @@ export interface SupportThreadSummaryDto {
   viewerRole: SupportThreadViewerRoleEnumDto;
   createdAt: string;
   lastMessageAt: string | null;
+  lastMessageText: string | null;
 }
 
 export interface SupportMessageDto {

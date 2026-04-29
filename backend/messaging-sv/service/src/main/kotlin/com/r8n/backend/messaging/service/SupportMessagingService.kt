@@ -59,15 +59,35 @@ class SupportMessagingService(
     fun listThreadSummaries(
         actor: SupportActor,
         pageable: Pageable,
-    ): Page<SupportThreadSummary> =
-        supportThreadRepository
-            .findVisibleSummariesOrderByLastMessageAtDesc(
-                ownerUserId =
-                    actor.userId.takeUnless {
-                        actor.role == SupportParticipantRoleEnumPersistence.SUPPORT
-                    },
-                pageable = pageable,
-            ).map { it.toSummary() }
+    ): Page<SupportThreadSummary> {
+        val summaries =
+            supportThreadRepository
+                .findVisibleSummariesOrderByLastMessageAtDesc(
+                    ownerUserId =
+                        actor.userId.takeUnless {
+                            actor.role == SupportParticipantRoleEnumPersistence.SUPPORT
+                        },
+                    pageable = pageable,
+                )
+        if (summaries.isEmpty) {
+            return summaries.map { it.toSummary(lastMessageText = "") }
+        }
+
+        val messagesByThreadId =
+            supportMessageRepository
+                .findAllByThreadIdInOrderByThreadIdAscCreatedAtAsc(summaries.content.map { it.id })
+                .groupBy { it.threadId }
+
+        return summaries.map { summary ->
+            summary.toSummary(
+                lastMessageText =
+                    messagesByThreadId[summary.id]
+                        ?.maxByOrNull { it.createdAt }
+                        ?.text
+                        .orEmpty(),
+            )
+        }
+    }
 
     @Transactional
     fun createThread(
@@ -169,12 +189,14 @@ data class SupportThreadSummary(
     val ownerUserId: UUID,
     val createdAt: Instant,
     val lastMessageAt: Instant,
+    val lastMessageText: String,
 )
 
-private fun SupportThreadSummaryProjection.toSummary(): SupportThreadSummary =
+private fun SupportThreadSummaryProjection.toSummary(lastMessageText: String): SupportThreadSummary =
     SupportThreadSummary(
         id = id,
         ownerUserId = ownerUserId,
         createdAt = createdAt,
         lastMessageAt = lastMessageAt,
+        lastMessageText = lastMessageText,
     )

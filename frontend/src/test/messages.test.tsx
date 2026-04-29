@@ -55,6 +55,7 @@ vi.mock("@/lib/server-state", () => ({
           createdAt: "2026-04-29T09:30:00Z",
           id: "support-thread-1",
           lastMessageAt: "2026-04-29T09:35:00Z",
+          lastMessageText: "Your export is being prepared. We will notify you here when the archive is ready to download.",
           ownerUserId: "current-user",
           viewerRole: "REQUESTER",
         },
@@ -78,7 +79,7 @@ describe("Messages page", () => {
     render(<Messages />);
 
     expect(
-      screen.getByText("Open this support conversation to view messages."),
+      screen.getByText("Your export is being prepared. We will notify you here when the archive is ready to download."),
     ).toBeInTheDocument();
     expect(
       screen.queryByText("I requested an export of my account data this morning. Can you confirm when it will be ready?"),
@@ -110,14 +111,14 @@ describe("Messages page", () => {
     expect(await screen.findByText("Last seen 18 minutes ago")).toBeInTheDocument();
   });
 
-  it("filters support conversations", () => {
+  it("does not show inbox outbox and support filter buttons", () => {
     render(<Messages />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Support" }));
-
-    expect(screen.getByText("R8N Support")).toBeInTheDocument();
-    expect(screen.queryByText("Marta Keller")).not.toBeInTheDocument();
-    expect(screen.queryByText("Elena Rossi")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Inbox" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Outbox" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Support" })).not.toBeInTheDocument();
+    expect(screen.getByText("Marta Keller")).toBeInTheDocument();
+    expect(screen.getByText("Elena Rossi")).toBeInTheDocument();
   });
 
   it("sends a new message in an expanded thread", () => {
