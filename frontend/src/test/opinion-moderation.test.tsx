@@ -106,9 +106,6 @@ describe("OpinionModeration", () => {
     render(<OpinionModeration />);
 
     expect(mockUseModerationOpinions).toHaveBeenCalledWith({
-      filters: {
-        status: "PENDING_PREMODERATION",
-      },
       pageable: {
         page: 0,
         size: 50,

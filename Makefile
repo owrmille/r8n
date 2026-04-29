@@ -370,7 +370,7 @@ routed-request-moderation-approve-flow: ## Temporary full moderation approve smo
 	echo "$$submit_json"; \
 	printf "%s" "$$submit_json" | grep -q '"status":"PENDING_PREMODERATION"'; \
 	echo "Checking moderator queue contains the opinion..."; \
-	queue_json=$$(curl $$curl_args "$$api/api/opinions/moderation?page=0&size=20&status=PENDING_PREMODERATION" -H "Authorization: Bearer $$moderator_token"); \
+	queue_json=$$(curl $$curl_args "$$api/api/opinions/moderation?page=0&size=20" -H "Authorization: Bearer $$moderator_token"); \
 	echo "$$queue_json"; \
 	printf "%s" "$$queue_json" | grep -q "$$opinion_id"; \
 	echo "Approving opinion..."; \

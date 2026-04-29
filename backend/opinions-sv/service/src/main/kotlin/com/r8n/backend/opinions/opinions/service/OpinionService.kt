@@ -135,17 +135,8 @@ class OpinionService(
     }
 
     @Transactional(readOnly = true)
-    fun getModerationOpinions(
-        status: OpinionStatusEnum?,
-        pageable: Pageable,
-    ): Page<Opinion> {
-        val requestedStatus = status ?: OpinionStatusEnum.PENDING_PREMODERATION
-        if (requestedStatus != OpinionStatusEnum.PENDING_PREMODERATION) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Moderation queue only supports pending opinions")
-        }
-
-        return opinionRepository.findAllByStatus(requestedStatus, pageable).map { it.toDomain() }
-    }
+    fun getModerationOpinions(pageable: Pageable): Page<Opinion> =
+        opinionRepository.findAllByStatus(OpinionStatusEnum.PENDING_PREMODERATION, pageable).map { it.toDomain() }
 
     @Transactional
     fun approveOpinion(

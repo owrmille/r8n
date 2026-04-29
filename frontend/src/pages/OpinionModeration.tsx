@@ -31,9 +31,6 @@ import {
 import { cn } from "@/lib/utils";
 
 const MODERATION_QUEUE_REQUEST = {
-  filters: {
-    status: "PENDING_PREMODERATION",
-  },
   pageable: {
     page: 0,
     size: 50,

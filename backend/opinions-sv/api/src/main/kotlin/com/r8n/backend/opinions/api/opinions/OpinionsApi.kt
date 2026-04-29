@@ -4,7 +4,6 @@ import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.opinions.api.opinions.dto.ModerationDecisionDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionDto
-import com.r8n.backend.opinions.api.opinions.dto.OpinionStatusEnumDto
 import com.r8n.backend.opinions.api.opinions.dto.RejectOpinionRequestDto
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -79,8 +78,6 @@ interface OpinionsApi {
 
     @GetMapping(MODERATION_PATH)
     fun getModerationOpinions(
-        @RequestParam(required = false)
-        status: OpinionStatusEnumDto?,
         @Valid
         pageable: PageRequestDto,
     ): PageResponseDto<OpinionDto>

@@ -18,11 +18,9 @@ import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.UNLINK_PATH
 import com.r8n.backend.opinions.api.opinions.OpinionsApi.Companion.UPDATE_PATH
 import com.r8n.backend.opinions.api.opinions.dto.ModerationDecisionDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionDto
-import com.r8n.backend.opinions.api.opinions.dto.OpinionStatusEnumDto
 import com.r8n.backend.opinions.api.opinions.dto.RejectOpinionRequestDto
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.body
-import java.util.Optional
 import java.util.UUID
 
 class OpinionsRestClient(
@@ -96,16 +94,12 @@ class OpinionsRestClient(
             .retrieve()
             .body<OpinionDto>()!!
 
-    override fun getModerationOpinions(
-        status: OpinionStatusEnumDto?,
-        pageable: PageRequestDto,
-    ): PageResponseDto<OpinionDto> =
+    override fun getModerationOpinions(pageable: PageRequestDto): PageResponseDto<OpinionDto> =
         restClient
             .get()
             .uri { uriBuilder ->
                 uriBuilder
                     .path(MODERATION_PATH)
-                    .queryParamIfPresent("status", Optional.ofNullable(status))
                     .queryParam("page", pageable.page)
                     .queryParam("size", pageable.size)
                     .apply {

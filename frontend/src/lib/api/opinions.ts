@@ -88,12 +88,7 @@ export interface SubmitOpinionForModerationRequestDto {
   opinionId: Uuid;
 }
 
-export interface GetModerationOpinionsFiltersDto {
-  status?: OpinionStatusEnumDto;
-}
-
 export interface GetModerationOpinionsRequestDto {
-  filters?: GetModerationOpinionsFiltersDto;
   pageable: PageRequestDto;
 }
 
@@ -186,10 +181,7 @@ export function createOpinionsApi(client: HttpClient = httpClient) {
     ): Promise<PageResponseDto<OpinionDto>> {
       return client.get<PageResponseDto<OpinionDto>>("/opinions/moderation", {
         auth: "required",
-        query: {
-          ...createPageQuery(request.pageable),
-          status: request.filters?.status,
-        },
+        query: createPageQuery(request.pageable),
       });
     },
 
