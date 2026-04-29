@@ -165,3 +165,24 @@ WHERE user_message.author_role = 'USER'
         AND support_message.author_role = 'SUPPORT'
         AND support_message.created_at > user_message.created_at
   );
+
+--changeset codex:V5_support_requester_read_state
+ALTER TABLE messaging.support_threads
+    ADD COLUMN IF NOT EXISTS requester_last_read_at TIMESTAMPTZ;
+
+UPDATE messaging.support_threads thread
+SET requester_last_read_at = latest_message.created_at
+FROM (
+    SELECT thread_id, MAX(created_at) AS created_at
+    FROM messaging.support_messages
+    GROUP BY thread_id
+) latest_message
+WHERE thread.id = latest_message.thread_id
+  AND thread.requester_last_read_at IS NULL;
+
+CREATE INDEX IF NOT EXISTS idx_support_threads_owner_requester_read
+    ON messaging.support_threads(owner_user_id, requester_last_read_at);
+
+CREATE INDEX IF NOT EXISTS idx_support_messages_unread_requester
+    ON messaging.support_messages(thread_id, created_at)
+    WHERE author_role = 'SUPPORT';

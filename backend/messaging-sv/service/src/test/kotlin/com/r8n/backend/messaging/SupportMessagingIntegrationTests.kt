@@ -516,6 +516,54 @@ class SupportMessagingIntegrationTests {
     }
 
     @Test
+    fun `support replies are unread for requester until requester reads thread`() {
+        val threadId = createThread(userAId, "USER", "Need a requester-visible reply")
+        addMessage(supportId, "SUPPORT", threadId, "Support reply for requester")
+
+        mockMvc
+            .perform(
+                get(SUPPORT_THREADS_PATH)
+                    .param("page", "0")
+                    .param("size", "20")
+                    .with(user(userAId.toString()).roles("USER")),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.items[0].id").value(threadId.toString()))
+            .andExpect(jsonPath("$.items[0].unreadCount").value(1))
+
+        mockMvc
+            .perform(
+                get(UNREAD_COUNT_PATH)
+                    .with(user(userAId.toString()).roles("USER")),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.count").value(1))
+
+        mockMvc
+            .perform(
+                get(messagesPath(threadId))
+                    .param("page", "0")
+                    .param("size", "20")
+                    .with(user(userAId.toString()).roles("USER")),
+            ).andExpect(status().isOk)
+
+        mockMvc
+            .perform(
+                get(SUPPORT_THREADS_PATH)
+                    .param("page", "0")
+                    .param("size", "20")
+                    .with(user(userAId.toString()).roles("USER")),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.items[0].id").value(threadId.toString()))
+            .andExpect(jsonPath("$.items[0].unreadCount").value(0))
+
+        mockMvc
+            .perform(
+                get(UNREAD_COUNT_PATH)
+                    .with(user(userAId.toString()).roles("USER")),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.count").value(0))
+    }
+
+    @Test
     fun `unread count endpoint returns aggregate count across messaging surfaces`() {
         createThread(userAId, "USER", "Unread support request")
         createDirectConversation(userAId, supportId, "Unread direct message")

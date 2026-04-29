@@ -37,6 +37,22 @@ interface SupportMessageRepository : JpaRepository<SupportMessagePersistence, UU
 
     @Query(
         """
+        SELECT message.threadId AS threadId, COUNT(message) AS unreadCount
+        FROM SupportMessagePersistence message
+        JOIN SupportThreadPersistence thread ON thread.id = message.threadId
+        WHERE message.threadId IN :threadIds
+          AND message.authorRole = com.r8n.backend.messaging.persistence.SupportParticipantRoleEnumPersistence.SUPPORT
+          AND (thread.requesterLastReadAt IS NULL OR message.createdAt > thread.requesterLastReadAt)
+        GROUP BY message.threadId
+        """,
+    )
+    fun countUnreadSupportMessagesByThreadId(
+        @Param("threadIds")
+        threadIds: Collection<UUID>,
+    ): List<SupportThreadUnreadCountProjection>
+
+    @Query(
+        """
         SELECT COUNT(message)
         FROM SupportMessagePersistence message
         WHERE message.authorRole = com.r8n.backend.messaging.persistence.SupportParticipantRoleEnumPersistence.USER
@@ -44,6 +60,21 @@ interface SupportMessageRepository : JpaRepository<SupportMessagePersistence, UU
         """,
     )
     fun countUnreadUserMessages(): Long
+
+    @Query(
+        """
+        SELECT COUNT(message)
+        FROM SupportMessagePersistence message
+        JOIN SupportThreadPersistence thread ON thread.id = message.threadId
+        WHERE thread.ownerUserId = :ownerUserId
+          AND message.authorRole = com.r8n.backend.messaging.persistence.SupportParticipantRoleEnumPersistence.SUPPORT
+          AND (thread.requesterLastReadAt IS NULL OR message.createdAt > thread.requesterLastReadAt)
+        """,
+    )
+    fun countUnreadSupportMessagesForOwner(
+        @Param("ownerUserId")
+        ownerUserId: UUID,
+    ): Long
 
     @Modifying
     @Query(

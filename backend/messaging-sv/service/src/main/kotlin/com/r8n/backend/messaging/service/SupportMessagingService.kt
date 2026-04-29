@@ -73,36 +73,44 @@ class SupportMessagingService(
             return summaries.map { it.toSummary(lastMessageText = "") }
         }
 
-        val unreadCountsByThreadId =
-            if (actor.role == SupportParticipantRoleEnumPersistence.SUPPORT) {
-                supportMessageRepository
-                    .countUnreadUserMessagesByThreadId(summaries.content.map { it.id })
-                    .associate { it.threadId to it.unreadCount }
-            } else {
-                emptyMap()
-            }
+        val threadIds = summaries.content.map { it.id }
+        val supportUnreadCountsByThreadId =
+            supportMessageRepository
+                .countUnreadUserMessagesByThreadId(threadIds)
+                .associate { it.threadId to it.unreadCount }
+        val requesterUnreadCountsByThreadId =
+            supportMessageRepository
+                .countUnreadSupportMessagesByThreadId(threadIds)
+                .associate { it.threadId to it.unreadCount }
         val messagesByThreadId =
             supportMessageRepository
-                .findAllByThreadIdInOrderByThreadIdAscCreatedAtAsc(summaries.content.map { it.id })
+                .findAllByThreadIdInOrderByThreadIdAscCreatedAtAsc(threadIds)
                 .groupBy { it.threadId }
 
         return summaries.map { summary ->
+            val unreadCount =
+                if (actor.readsAsSupportTeam(summary.ownerUserId)) {
+                    supportUnreadCountsByThreadId[summary.id] ?: 0
+                } else {
+                    requesterUnreadCountsByThreadId[summary.id] ?: 0
+                }
             summary.toSummary(
                 lastMessageText =
                     messagesByThreadId[summary.id]
                         ?.maxByOrNull { it.createdAt }
                         ?.text
                         .orEmpty(),
-                unreadCount = unreadCountsByThreadId[summary.id] ?: 0,
+                unreadCount = unreadCount,
             )
         }
     }
 
     fun countUnreadMessages(actor: SupportActor): Long =
         if (actor.role == SupportParticipantRoleEnumPersistence.SUPPORT) {
-            supportMessageRepository.countUnreadUserMessages()
+            supportMessageRepository.countUnreadUserMessages() +
+                supportMessageRepository.countUnreadSupportMessagesForOwner(actor.userId)
         } else {
-            0
+            supportMessageRepository.countUnreadSupportMessagesForOwner(actor.userId)
         }
 
     @Transactional
@@ -120,8 +128,11 @@ class SupportMessagingService(
                 ?: supportThreadRepository.save(
                     SupportThreadPersistence(
                         ownerUserId = actor.userId,
+                        requesterLastReadAt = now,
                     ),
                 )
+        thread.requesterLastReadAt = now
+        supportThreadRepository.save(thread)
 
         supportMessageRepository.save(
             SupportMessagePersistence(
@@ -155,6 +166,9 @@ class SupportMessagingService(
                 readerUserId = actor.userId,
                 readAt = Instant.now(),
             )
+        } else if (thread.ownerUserId == actor.userId) {
+            thread.requesterLastReadAt = Instant.now()
+            supportThreadRepository.save(thread)
         }
         return supportMessageRepository.findAllByThreadIdOrderByCreatedAtAsc(requireNotNull(thread.id), pageable)
     }
@@ -187,6 +201,10 @@ class SupportMessagingService(
                 actor.role
             }
         val now = Instant.now()
+        if (authorRole == SupportParticipantRoleEnumPersistence.USER) {
+            thread.requesterLastReadAt = now
+            supportThreadRepository.save(thread)
+        }
         val message =
             supportMessageRepository.save(
                 SupportMessagePersistence(
@@ -216,7 +234,10 @@ class SupportMessagingService(
     }
 
     private fun SupportActor.readsAsSupportTeam(thread: SupportThreadPersistence): Boolean =
-        role == SupportParticipantRoleEnumPersistence.SUPPORT && thread.ownerUserId != userId
+        readsAsSupportTeam(thread.ownerUserId)
+
+    private fun SupportActor.readsAsSupportTeam(ownerUserId: UUID): Boolean =
+        role == SupportParticipantRoleEnumPersistence.SUPPORT && ownerUserId != userId
 }
 
 data class SupportThreadWithMessages(
