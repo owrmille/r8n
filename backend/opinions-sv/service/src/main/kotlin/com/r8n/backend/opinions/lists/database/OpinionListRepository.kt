@@ -20,22 +20,43 @@ interface OpinionListRepository : JpaRepository<OpinionListPersistence, UUID> {
         pageable: Pageable,
     ): Page<OpinionListPersistence>
 
-    fun findByNameContainingIgnoreCase(
-        name: String,
+    @Query(
+        """
+        SELECT ol FROM OpinionListPersistence ol
+        WHERE (:nameSubstring IS NULL OR LOWER(ol.name) LIKE LOWER(CONCAT('%', CAST(:nameSubstring AS string), '%')))
+        AND (:authorId IS NULL OR ol.owner = :authorId)
+        AND (:authorIds IS NULL OR ol.owner IN :authorIds)
+        AND (ol.owner = :requesterId OR ol.privacy = :searchablePrivacy)
+        """,
+    )
+    fun search(
+        @Param("nameSubstring") nameSubstring: String?,
+        @Param("authorId") authorId: UUID?,
+        @Param("authorIds") authorIds: Collection<UUID>?,
+        @Param("requesterId") requesterId: UUID,
+        @Param("searchablePrivacy") searchablePrivacy: OpinionListPrivacyEnum,
         pageable: Pageable,
     ): Page<OpinionListPersistence>
 
     @Query(
         """
-        SELECT ol FROM OpinionListPersistence ol
-        WHERE LOWER(ol.name) LIKE LOWER(CONCAT('%', :nameSubstring, '%'))
+        SELECT ol.id FROM OpinionListPersistence ol
+        WHERE (:nameSubstring IS NULL OR LOWER(ol.name) LIKE LOWER(CONCAT('%', CAST(:nameSubstring AS string), '%')))
+        AND (:authorId IS NULL OR ol.owner = :authorId)
+        AND (:authorIds IS NULL OR ol.owner IN :authorIds)
         AND (ol.owner = :requesterId OR ol.privacy = :searchablePrivacy)
         """,
     )
-    fun findByNameContainingIgnoreCaseAndPrivacyFilter(
-        @Param("nameSubstring") nameSubstring: String,
+    fun searchIds(
+        @Param("nameSubstring") nameSubstring: String?,
+        @Param("authorId") authorId: UUID?,
+        @Param("authorIds") authorIds: Collection<UUID>?,
         @Param("requesterId") requesterId: UUID,
         @Param("searchablePrivacy") searchablePrivacy: OpinionListPrivacyEnum,
+    ): List<UUID>
+
+    fun findAllByIdIn(
+        ids: Collection<UUID>,
         pageable: Pageable,
     ): Page<OpinionListPersistence>
 }

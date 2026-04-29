@@ -246,4 +246,9 @@ class UserService(
         }
         return normalizedValue
     }
+
+    fun findUsersByNameSubstring(nameSubstring: String): List<User> =
+        piiRepository.findAllByNameContainingIgnoreCase(nameSubstring).map { pii ->
+            getUser(pii.userId)
+        }
 }

@@ -24,6 +24,8 @@ import type {
   GetSelectorsForSubjectRequestDto,
   GetSelectorsForUrlRequestDto,
 } from "@/lib/api/selectors";
+import type { FindSubjectsRequestDto } from "@/lib/api/subjects";
+import type { FindReferentsRequestDto } from "@/lib/api/referents";
 
 export const opinionsKeys = {
   all: ["opinions"] as const,
@@ -57,6 +59,7 @@ export const opinionListsKeys = {
     "opinion-lists",
     "detail",
     request.listId,
+    request.publishedAfter ?? null,
   ] as const,
   search: (request: SearchOpinionListsRequestDto) => [
     "opinion-lists",
@@ -139,11 +142,34 @@ export const usersKeys = {
   withRoles: () => ["users", "with-roles"] as const,
 };
 
+export const subjectsKeys = {
+  all: ["subjects"] as const,
+  find: (request: FindSubjectsRequestDto) => [
+    "subjects",
+    "find",
+    request.query ?? null,
+    request.referentId ?? null,
+    request.pageable,
+  ] as const,
+};
+
+export const referentsKeys = {
+  all: ["referents"] as const,
+  find: (request: FindReferentsRequestDto) => [
+    "referents",
+    "find",
+    request.query,
+    request.pageable,
+  ] as const,
+};
+
 export const queryKeys = {
   opinions: opinionsKeys,
   opinionLists: opinionListsKeys,
   accessRequests: accessRequestsKeys,
   messaging: messagingKeys,
   selectors: selectorsKeys,
+  referents: referentsKeys,
+  subjects: subjectsKeys,
   users: usersKeys,
 };
