@@ -14,4 +14,8 @@ interface OpinionRepository : JpaRepository<OpinionPersistence, UUID> {
         id: UUID,
         owner: UUID,
     ): Boolean
+
+    fun findAllByOwner(owner: UUID): List<OpinionPersistence>
+
+    fun deleteAllByOwner(owner: UUID)
 }

@@ -307,8 +307,14 @@ class OpinionListService(
             .map { getList(it.id!!, ownerId) }
 
     fun deleteAllUserDataForUser(userId: UUID) {
+        // Delete all opinions owned by the user
+        opinionService.deleteAllOpinionsForUser(userId)
+
+        // Delete all access requests where the user is the requester
+        accessRequestRepository.deleteAllByRequester(userId)
+
         // Delete all opinion lists owned by the user
-        // This will cascade to delete opinions-to-lists relationships
+        // This will cascade to delete opinions-to-lists relationships and syncs
         val userLists = opinionListRepository.findAllByOwner(userId)
         opinionListRepository.deleteAll(userLists)
     }

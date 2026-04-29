@@ -106,6 +106,11 @@ class OpinionService(
     }
 
     @Transactional
+    fun deleteAllOpinionsForUser(userId: UUID) {
+        opinionRepository.deleteAllByOwner(userId)
+    }
+
+    @Transactional
     fun linkComponent(
         parentOpinionId: UUID,
         childOpinionId: UUID,
