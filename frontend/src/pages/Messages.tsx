@@ -876,7 +876,7 @@ const EmptyChatState = () => (
         <MessageCircle className="h-6 w-6" />
       </div>
       <p className="text-sm text-muted-foreground">
-        выбери тред или начни новый
+        Select a conversation or start a new one
       </p>
     </div>
   </div>
