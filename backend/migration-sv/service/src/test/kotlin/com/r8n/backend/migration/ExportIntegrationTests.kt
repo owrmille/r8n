@@ -15,7 +15,6 @@ import com.r8n.backend.opinions.api.access.IncomingAccessRequestApi
 import com.r8n.backend.opinions.api.access.OutgoingAccessRequestApi
 import com.r8n.backend.opinions.api.access.dto.AccessRequestDto
 import com.r8n.backend.opinions.api.access.dto.RequestStatusEnumDto
-import com.r8n.backend.opinions.api.lists.dto.OpinionListDto
 import com.r8n.backend.opinions.integration.api.OpinionListsInternalApi
 import com.r8n.backend.opinions.stub.OpinionListTestDataFactory
 import com.r8n.backend.security.ServiceTokenService
@@ -38,13 +37,11 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
 import org.springframework.data.domain.PageImpl
-import org.springframework.mock.web.MockMultipartFile
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import tools.jackson.databind.ObjectMapper

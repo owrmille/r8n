@@ -95,7 +95,10 @@ class OpinionMapper(
             status = opinion.status.toDto(),
             timestamp = opinion.timestamp,
             weight = opinion.weight ?: 1.0,
-            components = opinion.componentSection.components.map { toDto(it) }.toList(),
+            components =
+                opinion.componentSection.components
+                    .map { toDto(it) }
+                    .toList(),
         )
 
     fun fromDto(opRef: WeightedOpinionReferenceDto) =

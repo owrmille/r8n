@@ -4,8 +4,6 @@ import com.r8n.backend.core.utils.TestObjectMapperConfiguration
 import com.r8n.backend.messaging.api.MessagingApi
 import com.r8n.backend.opinions.api.access.IncomingAccessRequestApi
 import com.r8n.backend.opinions.api.access.OutgoingAccessRequestApi
-import com.r8n.backend.opinions.api.access.dto.AccessRequestDto
-import com.r8n.backend.opinions.api.access.dto.RequestStatusEnumDto
 import com.r8n.backend.opinions.api.lists.OpinionListsApi
 import com.r8n.backend.opinions.api.lists.dto.OpinionListDto
 import com.r8n.backend.opinions.api.lists.dto.OpinionListPrivacyEnumDto
@@ -15,14 +13,19 @@ import com.r8n.backend.opinions.api.opinions.dto.OpinionStatusEnumDto
 import com.r8n.backend.opinions.integration.api.OpinionListsInternalApi
 import com.r8n.backend.security.ServiceTokenService
 import com.r8n.backend.users.integration.api.UsersInternalApi
-import com.r8n.backend.users.integration.api.dto.UserDto
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.*
+import org.mockito.Mockito.atLeastOnce
+import org.mockito.Mockito.never
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.AutoConfigureJsonTesters
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
 import org.springframework.mock.web.MockMultipartFile
@@ -42,7 +45,6 @@ import java.util.UUID
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(TestObjectMapperConfiguration::class)
 class ImportIntegrationTests {
-
     private companion object {
         const val USER_A_ID = "10000000-0000-0000-0000-000000000000"
         const val USER_B_ID = "20000000-0000-0000-0000-000000000000"
@@ -89,13 +91,13 @@ class ImportIntegrationTests {
     @BeforeEach
     fun setUp() {
         whenever(usersInternalApi.getUserName(any())).thenReturn("Some User")
-        
+
         // Mock successful opinion creation with any arguments to avoid matching issues
         whenever(opinionsApi.createOpinion(any(), any(), any(), anyOrNull())).thenAnswer {
             val subjectId = it.getArgument<UUID>(0)
             createOpinionDto(UUID.randomUUID(), USER_A_ID, subjectId)
         }
-        
+
         // Mock list creation
         whenever(opinionListsApi.createList(any(), any())).thenAnswer {
             createOpinionListDto(UUID.randomUUID(), USER_A_ID, it.getArgument(0))
@@ -107,26 +109,29 @@ class ImportIntegrationTests {
     fun `complex import restores own data and links but handles external correctly`() {
         val accessToken = serviceTokenService.generateAccessToken(UUID.fromString(USER_A_ID), listOf("USER"))
 
-        val json = this::class.java.getResource("/com/r8n/backend/migration/complex_import.json")?.readText()
-            ?: throw IllegalStateException("Resource not found")
+        val json =
+            this::class.java.getResource("/com/r8n/backend/migration/complex_import.json")?.readText()
+                ?: throw IllegalStateException("Resource not found")
 
-        val file = MockMultipartFile(
-            "file",
-            "export.json",
-            "application/json",
-            json.toByteArray()
-        )
+        val file =
+            MockMultipartFile(
+                "file",
+                "export.json",
+                "application/json",
+                json.toByteArray(),
+            )
 
-        mockMvc.perform(
-            multipart("/api/import")
-                .header("Authorization", "Bearer $accessToken")
-                .file(file)
-        ).andExpect(status().isOk)
+        mockMvc
+            .perform(
+                multipart("/api/import")
+                    .header("Authorization", "Bearer $accessToken")
+                    .file(file),
+            ).andExpect(status().isOk)
 
         // Verify restoration of OWN opinions
         verify(opinionsApi, times(1)).createOpinion(eq(SUBJECT_1_ID), any(), any(), eq(4.0))
         verify(opinionsApi, times(1)).createOpinion(eq(SUBJECT_2_ID), any(), eq(emptyList()), eq(5.0))
-        
+
         // Verify restoration of OWN links
         verify(opinionsApi, times(1)).linkComponent(any(), any(), eq(0.5))
 
@@ -137,12 +142,16 @@ class ImportIntegrationTests {
         verify(opinionListsApi, times(1)).createList(eq("My List A"), eq(OpinionListPrivacyEnumDto.PRIVATE))
         verify(opinionListsApi, atLeastOnce()).linkOpinion(any(), any(), eq(1.0))
         // We expect linkOpinion for A1, but NOT for B1 because it wasn't restored
-        
+
         // Verify outgoing request is re-created as PENDING (implicitly by calling create)
         verify(outgoingAccessRequestApi, times(1)).create(eq(LIST_B_ID))
     }
 
-    private fun createOpinionDto(id: UUID, owner: String, subject: UUID) = OpinionDto(
+    private fun createOpinionDto(
+        id: UUID,
+        owner: String,
+        subject: UUID,
+    ) = OpinionDto(
         id = id,
         owner = UUID.fromString(owner),
         ownerName = "User",
@@ -154,15 +163,19 @@ class ImportIntegrationTests {
         componentMark = null,
         components = emptyList(),
         status = OpinionStatusEnumDto.PUBLISHED,
-        timestamp = Instant.now()
+        timestamp = Instant.now(),
     )
 
-    private fun createOpinionListDto(id: UUID, owner: String, name: String) = OpinionListDto(
+    private fun createOpinionListDto(
+        id: UUID,
+        owner: String,
+        name: String,
+    ) = OpinionListDto(
         id = id,
         listName = name,
         owner = UUID.fromString(owner),
         ownerName = "User",
         opinionSummaries = emptyList(),
-        privacy = OpinionListPrivacyEnumDto.PRIVATE
+        privacy = OpinionListPrivacyEnumDto.PRIVATE,
     )
 }

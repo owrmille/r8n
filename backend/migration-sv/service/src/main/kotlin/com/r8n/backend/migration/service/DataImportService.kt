@@ -168,11 +168,12 @@ class DataImportService(
         if (file.isEmpty) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "File cannot be empty")
         }
-        val data = try {
-            objectMapper.readValue(file.inputStream, UserCompleteDataDto::class.java)
-        } catch (e: Exception) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file format", e)
-        }
+        val data =
+            try {
+                objectMapper.readValue(file.inputStream, UserCompleteDataDto::class.java)
+            } catch (e: Exception) {
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file format", e)
+            }
         personal(userId, data)
         val subjectToOpinionId = opinions(userId, data)
         opinionLists(userId, subjectToOpinionId, data)
