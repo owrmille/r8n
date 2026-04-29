@@ -10,6 +10,7 @@ import com.r8n.backend.messaging.api.dto.messaging.DirectConversationSummaryDto
 import com.r8n.backend.messaging.api.dto.messaging.DirectMessageDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportMessageDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportThreadSummaryDto
+import com.r8n.backend.messaging.api.dto.messaging.UnreadMessagesCountDto
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -27,6 +28,7 @@ import java.util.UUID
 interface MessagingApi {
     companion object {
         private const val ROOT_PATH = "/api/messaging"
+        const val UNREAD_COUNT_PATH = "$ROOT_PATH/unread-count"
         const val SUPPORT_PATH = "$ROOT_PATH/support"
         const val SUPPORT_THREADS_PATH = "$SUPPORT_PATH/threads"
         const val SUPPORT_THREAD_PATH = "$SUPPORT_THREADS_PATH/{threadId}"
@@ -37,6 +39,13 @@ interface MessagingApi {
         const val DIRECT_CONVERSATION_MESSAGES_PATH = "$DIRECT_CONVERSATION_PATH/messages"
         const val DIRECT_CONVERSATION_READ_PATH = "$DIRECT_CONVERSATION_PATH/read"
     }
+
+    @GetMapping(UNREAD_COUNT_PATH)
+    @Operation(
+        summary = "Get unread message count",
+        description = "Returns the authenticated actor's aggregate unread message count across messaging surfaces.",
+    )
+    fun getUnreadMessagesCount(): UnreadMessagesCountDto
 
     @GetMapping(DIRECT_CONVERSATIONS_PATH)
     fun getDirectConversationSummaries(

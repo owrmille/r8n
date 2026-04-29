@@ -35,6 +35,16 @@ interface SupportMessageRepository : JpaRepository<SupportMessagePersistence, UU
         threadIds: Collection<UUID>,
     ): List<SupportThreadUnreadCountProjection>
 
+    @Query(
+        """
+        SELECT COUNT(message)
+        FROM SupportMessagePersistence message
+        WHERE message.authorRole = com.r8n.backend.messaging.persistence.SupportParticipantRoleEnumPersistence.USER
+          AND message.readBySupportAt IS NULL
+        """,
+    )
+    fun countUnreadUserMessages(): Long
+
     @Modifying
     @Query(
         """

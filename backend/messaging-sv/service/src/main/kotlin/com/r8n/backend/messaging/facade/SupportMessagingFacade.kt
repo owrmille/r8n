@@ -65,6 +65,9 @@ class SupportMessagingFacade(
         return message.toDto(usersInternalApi.getUserName(message.authorUserId))
     }
 
+    fun countUnreadMessages(actor: SupportActor): Long =
+        supportMessagingService.countUnreadMessages(actor)
+
     private fun SupportThreadWithMessages.toSummaryDto(actor: SupportActor): SupportThreadSummaryDto =
         SupportThreadSummaryDto(
             id = requireNotNull(thread.id),

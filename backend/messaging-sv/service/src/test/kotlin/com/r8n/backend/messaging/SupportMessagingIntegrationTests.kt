@@ -3,6 +3,7 @@ package com.r8n.backend.messaging
 import com.r8n.backend.messaging.api.MessagingApi.Companion.DIRECT_CONVERSATIONS_PATH
 import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREADS_PATH
 import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREAD_PATH
+import com.r8n.backend.messaging.api.MessagingApi.Companion.UNREAD_COUNT_PATH
 import com.r8n.backend.messaging.api.dto.messaging.SUPPORT_MESSAGE_TEXT_MAX_LENGTH
 import com.r8n.backend.messaging.persistence.ConversationParticipantPersistence
 import com.r8n.backend.messaging.persistence.ConversationParticipantRoleEnumPersistence
@@ -508,6 +509,19 @@ class SupportMessagingIntegrationTests {
             ).andExpect(status().isOk)
             .andExpect(jsonPath("$.items[0].id").value(threadId.toString()))
             .andExpect(jsonPath("$.items[0].unreadCount").value(1))
+    }
+
+    @Test
+    fun `unread count endpoint returns aggregate count across messaging surfaces`() {
+        createThread(userAId, "USER", "Unread support request")
+        createDirectConversation(userAId, supportId, "Unread direct message")
+
+        mockMvc
+            .perform(
+                get(UNREAD_COUNT_PATH)
+                    .with(user(supportId.toString()).roles("SUPPORT")),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.count").value(2))
     }
 
     @Test

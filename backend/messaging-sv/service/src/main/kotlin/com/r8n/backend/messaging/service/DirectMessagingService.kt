@@ -38,6 +38,9 @@ class DirectMessagingService(
             pageable = pageable,
         )
 
+    fun countUnreadMessages(actor: DirectActor): Long =
+        messageRepository.countUnreadMessagesForParticipant(actor.userId)
+
     @Transactional
     fun createConversation(
         actor: DirectActor,

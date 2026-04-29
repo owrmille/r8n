@@ -11,6 +11,7 @@ import com.r8n.backend.messaging.api.dto.messaging.CreateSupportThreadRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.DirectMessageDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportMessageDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportThreadSummaryDto
+import com.r8n.backend.messaging.api.dto.messaging.UnreadMessagesCountDto
 import com.r8n.backend.messaging.facade.DirectMessagingFacade
 import com.r8n.backend.messaging.facade.SupportMessagingFacade
 import com.r8n.backend.messaging.persistence.MessageAuthorRoleEnumPersistence
@@ -30,6 +31,16 @@ class MessagingController(
     private val directMessagingFacade: DirectMessagingFacade,
     private val supportMessagingFacade: SupportMessagingFacade,
 ) : MessagingApi {
+    @PreAuthorize(IS_EXPLICIT_USER_OR_MODERATOR_OR_SUPPORT_OR_ADMIN)
+    override fun getUnreadMessagesCount(): UnreadMessagesCountDto {
+        val directActor = getDirectActor()
+        return UnreadMessagesCountDto(
+            count =
+                directMessagingFacade.countUnreadMessages(directActor) +
+                    supportMessagingFacade.countUnreadMessages(getSupportActor()),
+        )
+    }
+
     @PreAuthorize(IS_EXPLICIT_USER_OR_MODERATOR_OR_SUPPORT_OR_ADMIN)
     override fun getDirectConversationSummaries(pageable: PageRequestDto) =
         directMessagingFacade.getDirectConversationSummaries(getDirectActor(), pageable.toPageable()).toResponse()

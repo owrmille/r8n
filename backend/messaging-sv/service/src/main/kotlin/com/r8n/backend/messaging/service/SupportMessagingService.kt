@@ -98,6 +98,13 @@ class SupportMessagingService(
         }
     }
 
+    fun countUnreadMessages(actor: SupportActor): Long =
+        if (actor.role == SupportParticipantRoleEnumPersistence.SUPPORT) {
+            supportMessageRepository.countUnreadUserMessages()
+        } else {
+            0
+        }
+
     @Transactional
     fun createThread(
         actor: SupportActor,

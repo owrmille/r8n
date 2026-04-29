@@ -103,6 +103,7 @@ export const selectorsKeys = {
 
 export const messagingKeys = {
   all: ["messaging"] as const,
+  unreadCount: () => ["messaging", "unread-count"] as const,
   directConversations: (request: GetDirectConversationSummariesRequestDto) => [
     "messaging",
     "direct",

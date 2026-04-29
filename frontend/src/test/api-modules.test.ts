@@ -820,6 +820,7 @@ describe("API modules", () => {
     });
     const messagingApi = createMessagingApi(client);
 
+    await messagingApi.getUnreadMessagesCount();
     await messagingApi.getSupportThreadSummaries({
       pageable: { page: 0, size: 10 },
     });
@@ -850,10 +851,11 @@ describe("API modules", () => {
       threadId: "11111111-1111-1111-1111-111111111111",
     });
 
-    expect(fetchMock.mock.calls[0][0]).toBe("/api/messaging/support/threads?page=0&size=10");
-    expect(fetchMock.mock.calls[1][0]).toBe("/api/messaging/direct/conversations?page=0&size=10");
-    expect(fetchMock.mock.calls[2][0]).toBe("/api/messaging/direct/conversations");
-    expect(fetchMock.mock.calls[2][1]).toEqual(
+    expect(fetchMock.mock.calls[0][0]).toBe("/api/messaging/unread-count");
+    expect(fetchMock.mock.calls[1][0]).toBe("/api/messaging/support/threads?page=0&size=10");
+    expect(fetchMock.mock.calls[2][0]).toBe("/api/messaging/direct/conversations?page=0&size=10");
+    expect(fetchMock.mock.calls[3][0]).toBe("/api/messaging/direct/conversations");
+    expect(fetchMock.mock.calls[3][1]).toEqual(
       expect.objectContaining({
         body: JSON.stringify({
           initialMessage: "Hello Jane.",
@@ -862,32 +864,32 @@ describe("API modules", () => {
         method: "POST",
       }),
     );
-    expect(fetchMock.mock.calls[3][0]).toBe(
+    expect(fetchMock.mock.calls[4][0]).toBe(
       "/api/messaging/direct/conversations/33333333-3333-3333-3333-333333333333/messages?page=1&size=20",
     );
-    expect(fetchMock.mock.calls[4][0]).toBe(
+    expect(fetchMock.mock.calls[5][0]).toBe(
       "/api/messaging/direct/conversations/33333333-3333-3333-3333-333333333333/messages",
     );
-    expect(fetchMock.mock.calls[4][1]).toEqual(
+    expect(fetchMock.mock.calls[5][1]).toEqual(
       expect.objectContaining({
         body: JSON.stringify({ text: "Additional context." }),
         method: "POST",
       }),
     );
-    expect(fetchMock.mock.calls[5][0]).toBe("/api/messaging/support/threads");
-    expect(fetchMock.mock.calls[5][1]).toEqual(
+    expect(fetchMock.mock.calls[6][0]).toBe("/api/messaging/support/threads");
+    expect(fetchMock.mock.calls[6][1]).toEqual(
       expect.objectContaining({
         body: JSON.stringify({ initialMessage: "Selector is outdated" }),
         method: "POST",
       }),
     );
-    expect(fetchMock.mock.calls[6][0]).toBe(
+    expect(fetchMock.mock.calls[7][0]).toBe(
       "/api/messaging/support/threads/11111111-1111-1111-1111-111111111111/messages?page=1&size=20",
     );
-    expect(fetchMock.mock.calls[7][0]).toBe(
+    expect(fetchMock.mock.calls[8][0]).toBe(
       "/api/messaging/support/threads/11111111-1111-1111-1111-111111111111/messages",
     );
-    expect(fetchMock.mock.calls[7][1]).toEqual(
+    expect(fetchMock.mock.calls[8][1]).toEqual(
       expect.objectContaining({
         body: JSON.stringify({ text: "Additional context." }),
         method: "POST",

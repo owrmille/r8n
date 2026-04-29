@@ -13,6 +13,7 @@ import type {
   GetSupportThreadSummariesRequestDto,
   SupportMessageDto,
   SupportThreadSummaryDto,
+  UnreadMessagesCountDto,
 } from "@/lib/api/messaging";
 import type { PageResponseDto, Uuid } from "@/lib/api/shared";
 import type { ApiErrorMeta } from "@/lib/server-state/query-client";
@@ -173,22 +174,18 @@ export function useCreateSupportThreadMutation(
   });
 }
 
-const UNREAD_COUNT_PAGE = { page: 0, size: 50, sort: [] } as const;
-
 export function useUnreadMessagesCount(options?: { refetchInterval?: number }) {
-  const supportQuery = useSupportThreadSummaries(
-    { pageable: UNREAD_COUNT_PAGE },
-    { refetchInterval: options?.refetchInterval },
-  );
-  const directQuery = useDirectConversationSummaries(
-    { pageable: UNREAD_COUNT_PAGE },
-    { refetchInterval: options?.refetchInterval },
-  );
+  const query = useAuthorizedQuery<
+    UnreadMessagesCountDto,
+    Error,
+    ReturnType<typeof messagingKeys.unreadCount>
+  >({
+    queryKey: messagingKeys.unreadCount(),
+    queryFn: () => messagingApi.getUnreadMessagesCount(),
+    refetchInterval: options?.refetchInterval,
+  });
 
-  const supportUnread = supportQuery.data?.items.reduce((sum, t) => sum + t.unreadCount, 0) ?? 0;
-  const directUnread = directQuery.data?.items.reduce((sum, t) => sum + t.unreadCount, 0) ?? 0;
-
-  return supportUnread + directUnread;
+  return query.data?.count ?? 0;
 }
 
 export function useMarkDirectConversationAsReadMutation(

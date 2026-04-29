@@ -96,8 +96,18 @@ export interface AddSupportThreadMessageRequestDto {
   threadId: Uuid;
 }
 
+export interface UnreadMessagesCountDto {
+  count: number;
+}
+
 export function createMessagingApi(client: HttpClient = httpClient) {
   return {
+    getUnreadMessagesCount(): Promise<UnreadMessagesCountDto> {
+      return client.get<UnreadMessagesCountDto>("/messaging/unread-count", {
+        auth: "required",
+      });
+    },
+
     getDirectConversationSummaries(
       request: GetDirectConversationSummariesRequestDto,
     ): Promise<PageResponseDto<DirectConversationSummaryDto>> {
