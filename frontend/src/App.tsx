@@ -1,12 +1,13 @@
 import { Suspense, lazy } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import RequireAuth from "@/components/auth/RequireAuth";
 import RequireRole from "@/components/auth/RequireRole";
 import AppLayout from "@/components/layout/AppLayout";
+import { seedE2eQueryData } from "@/lib/e2e/bootstrap";
 import { createQueryClient } from "@/lib/server-state";
 
 const Index = lazy(() => import("./pages/Index"));
@@ -30,6 +31,12 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = createQueryClient();
+const isE2eAuthBypassEnabled =
+  import.meta.env.DEV && import.meta.env.VITE_E2E_BYPASS_AUTH === "true";
+
+if (isE2eAuthBypassEnabled) {
+  seedE2eQueryData(queryClient);
+}
 
 const routeLoadingFallback = (
   <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
@@ -51,7 +58,7 @@ const App = () => (
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route element={<RequireAuth />}>
               <Route element={<AppLayout />}>
-                <Route index element={<Index />} />
+                <Route index element={<Navigate to="/lists" replace />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/profile/:id" element={<Profile />} />
                 <Route path="/supplier/:id" element={<Supplier />} />

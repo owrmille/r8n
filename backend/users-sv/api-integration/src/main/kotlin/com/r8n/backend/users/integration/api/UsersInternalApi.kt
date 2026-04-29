@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestParam
 import java.util.UUID
 
 interface UsersInternalApi {
@@ -21,8 +22,14 @@ interface UsersInternalApi {
         const val IS_HUMAN_MODERATOR_PATH = "$ID_PATH/is-human-moderator"
         const val IS_AI_MODERATOR_PATH = "$ID_PATH/is-ai-moderator"
         const val IS_ADMIN_PATH = "$ID_PATH/is-admin"
+        const val SEARCH_PATH = "$USERS_PATH/search"
         const val RESTORE_PATH = "$USERS_PATH/import"
     }
+
+    @GetMapping(SEARCH_PATH)
+    fun findUsersByNameSubstring(
+        @RequestParam nameSubstring: String,
+    ): List<UserDto>
 
     @GetMapping(NAME_PATH)
     fun getUserName(

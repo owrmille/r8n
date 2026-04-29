@@ -100,6 +100,18 @@ class UserFacade(
             )
         }
 
+    fun findUsersByNameSubstring(nameSubstring: String): List<UserDto> =
+        userService.findUsersByNameSubstring(nameSubstring).map { user ->
+            UserDto(
+                id = user.id,
+                name = user.name,
+                email = user.email,
+                status = user.status.toDto(),
+                statusTimestamp = user.statusTimestamp,
+                consents = user.consents.map { it.toDto() },
+            )
+        }
+
     fun restoreUser(id: UUID, userDto: UserDto) {userService.restoreUser(id, userDto) }
 
     private fun UserProfile.toDto() =

@@ -1,10 +1,21 @@
 package com.r8n.backend.opinions.opinions.database
 
+import com.r8n.backend.opinions.opinions.domain.OpinionStatusEnum
 import com.r8n.backend.opinions.opinions.persistence.OpinionPersistence
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
+import java.time.Instant
 import java.util.UUID
 
 interface OpinionRepository : JpaRepository<OpinionPersistence, UUID> {
+    fun findAllByStatus(
+        status: OpinionStatusEnum,
+        pageable: Pageable,
+    ): Page<OpinionPersistence>
+
     fun findFirstBySubjectAndOwnerOrderByTimestampDesc(
         subject: UUID,
         owner: UUID,
@@ -15,8 +26,18 @@ interface OpinionRepository : JpaRepository<OpinionPersistence, UUID> {
         owner: UUID,
     ): Boolean
 
+    @Query("SELECT o.id FROM OpinionPersistence o WHERE o.subject IN :subjectIds")
+    fun findIdsBySubjectIn(
+        @Param("subjectIds") subjectIds: Collection<UUID>,
+    ): Set<UUID>
+
+    @Query("SELECT o.id FROM OpinionPersistence o WHERE o.timestamp >= :since")
+    fun findIdsByTimestampAfter(
+        @Param("since") since: Instant,
+    ): Set<UUID>
+
     fun findAllByOwnerOrderByTimestampDesc(
         owner: UUID,
-        pageable: org.springframework.data.domain.Pageable,
-    ): org.springframework.data.domain.Page<OpinionPersistence>
+        pageable: Pageable,
+    ): Page<OpinionPersistence>
 }

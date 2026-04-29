@@ -24,22 +24,24 @@ class SubjectService(
 
     @Transactional(readOnly = true)
     fun findSubjects(
-        query: String,
+        query: String?,
+        referentId: UUID?,
         pageable: Pageable,
     ): Page<SubjectDetails> {
-        val trimmedQuery = query.trim()
-        if (trimmedQuery.isEmpty()) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "query must not be blank")
+        val trimmedQuery = query?.trim()?.takeIf { it.isNotEmpty() }
+        if (trimmedQuery == null && referentId == null) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "query or referentId must be provided")
         }
 
         return opinionSubjectRepository
-            .findByNameContainingIgnoreCaseOrderByNameAsc(trimmedQuery, pageable)
+            .findByOptionalFilters(trimmedQuery, referentId, pageable)
             .map { it.toModel() }
     }
 
     @Transactional
     fun createSubject(
         name: String,
+        primaryReferentId: UUID?,
         referentName: String?,
         address: String?,
         latitude: Double?,
@@ -50,21 +52,30 @@ class SubjectService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "name must not be blank")
         }
 
-        val savedReferent =
-            referentRepository.save(
-                ReferentPersistence(
-                    name = referentName.trimToNull() ?: trimmedName,
-                    address = address.trimToNull(),
-                    latitude = latitude,
-                    longitude = longitude,
-                    referentGroup = UUID.randomUUID(),
-                ),
-            )
+        val referentId =
+            if (primaryReferentId != null) {
+                if (!referentRepository.existsById(primaryReferentId)) {
+                    throw ResponseStatusException(HttpStatus.NOT_FOUND, "referent not found")
+                }
+                primaryReferentId
+            } else {
+                val savedReferent =
+                    referentRepository.save(
+                        ReferentPersistence(
+                            name = referentName.trimToNull() ?: trimmedName,
+                            address = address.trimToNull(),
+                            latitude = latitude,
+                            longitude = longitude,
+                            referentGroup = UUID.randomUUID(),
+                        ),
+                    )
+                savedReferent.id!!
+            }
         val savedSubject =
             opinionSubjectRepository.save(
                 OpinionSubjectPersistence(
                     name = trimmedName,
-                    referent = savedReferent.id!!,
+                    referent = referentId,
                 ),
             )
 
@@ -74,6 +85,25 @@ class SubjectService(
     @Transactional(readOnly = true)
     fun getSubject(id: UUID): SubjectDetails? {
         val subject = opinionSubjectRepository.findById(id).orElse(null) ?: return null
+        return subject.toModel()
+    }
+
+    @Transactional
+    fun setPrimaryReferent(
+        subjectId: UUID,
+        referentId: UUID,
+    ): SubjectDetails {
+        val subject =
+            opinionSubjectRepository
+                .findById(subjectId)
+                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "subject not found") }
+        if (!referentRepository.existsById(referentId)) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "referent not found")
+        }
+
+        subject.referent = referentId
+        opinionSubjectRepository.save(subject)
+
         return subject.toModel()
     }
 

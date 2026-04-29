@@ -4,6 +4,7 @@ import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.core.utils.toPageable
 import com.r8n.backend.core.utils.toResponse
+import com.r8n.backend.opinions.api.opinions.dto.ModerationDecisionDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionDto
 import com.r8n.backend.opinions.opinions.service.OpinionService
 import org.springframework.stereotype.Component
@@ -55,6 +56,34 @@ class OpinionFacade(
     ) {
         opinionService.deleteOpinion(opinionId, ownerId)
     }
+
+    fun submitOpinionForModeration(
+        opinionId: UUID,
+        ownerId: UUID,
+    ): OpinionDto = opinionMapper.toDto(opinionService.submitOpinionForModeration(opinionId, ownerId))
+
+    fun getModerationOpinions(pageable: PageRequestDto): PageResponseDto<OpinionDto> =
+        opinionService
+            .getModerationOpinions(pageable.toPageable())
+            .map { opinionMapper.toDto(it) }
+            .toResponse()
+
+    fun getModerationDecisions(pageable: PageRequestDto): PageResponseDto<ModerationDecisionDto> =
+        opinionService
+            .getModerationDecisions(pageable.toPageable())
+            .map { opinionMapper.toDto(it) }
+            .toResponse()
+
+    fun approveOpinion(
+        opinionId: UUID,
+        moderatorId: UUID,
+    ): OpinionDto = opinionMapper.toDto(opinionService.approveOpinion(opinionId, moderatorId))
+
+    fun rejectOpinion(
+        opinionId: UUID,
+        moderatorId: UUID,
+        reason: String,
+    ): OpinionDto = opinionMapper.toDto(opinionService.rejectOpinion(opinionId, moderatorId, reason))
 
     fun linkComponent(
         parentOpinionId: UUID,
