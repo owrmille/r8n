@@ -1,13 +1,83 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import Messages from "@/pages/Messages";
 
+const mocks = vi.hoisted(() => ({
+  addSupportThreadMessage: vi.fn(),
+  createSupportThread: vi.fn(),
+}));
+
+vi.mock("@/lib/server-state", () => ({
+  useAddSupportThreadMessageMutation: (options?: { onSuccess?: () => void }) => ({
+    isPending: false,
+    mutate: mocks.addSupportThreadMessage.mockImplementation(() => options?.onSuccess?.()),
+  }),
+  useCreateSupportThreadMutation: (options?: { onSuccess?: (thread: { id: string }) => void }) => ({
+    isPending: false,
+    mutate: mocks.createSupportThread.mockImplementation(() =>
+      options?.onSuccess?.({ id: "support-thread-new" }),
+    ),
+  }),
+  useMe: () => ({
+    data: { id: "current-user", name: "You", roles: ["USER"] },
+  }),
+  useSupportThreadMessages: () => ({
+    data: {
+      items: [
+        {
+          authorRole: "USER",
+          authorUserId: "current-user",
+          createdAt: "2026-04-29T09:30:00Z",
+          id: "support-message-1",
+          text: "I requested an export of my account data this morning. Can you confirm when it will be ready?",
+          threadId: "support-thread-1",
+        },
+        {
+          authorRole: "SUPPORT",
+          authorUserId: "support-user",
+          createdAt: "2026-04-29T09:35:00Z",
+          id: "support-message-2",
+          text: "Your export is being prepared. We will notify you here when the archive is ready to download.",
+          threadId: "support-thread-1",
+        },
+      ],
+      page: 0,
+      size: 100,
+      total: 2,
+    },
+    isError: false,
+    isLoading: false,
+  }),
+  useSupportThreadSummaries: () => ({
+    data: {
+      items: [
+        {
+          createdAt: "2026-04-29T09:30:00Z",
+          id: "support-thread-1",
+          lastMessageAt: "2026-04-29T09:35:00Z",
+          ownerUserId: "current-user",
+        },
+      ],
+      page: 0,
+      size: 50,
+      total: 1,
+    },
+    isError: false,
+    isLoading: false,
+  }),
+}));
+
 describe("Messages page", () => {
+  beforeEach(() => {
+    mocks.addSupportThreadMessage.mockClear();
+    mocks.createSupportThread.mockClear();
+  });
+
   it("shows the latest message in a collapsed thread and expands on click", () => {
     render(<Messages />);
 
     expect(
-      screen.getByText("Your export is being prepared. We will notify you here when the archive is ready to download."),
+      screen.getByText("Open this support conversation to view messages."),
     ).toBeInTheDocument();
     expect(
       screen.queryByText("I requested an export of my account data this morning. Can you confirm when it will be ready?"),
@@ -42,7 +112,7 @@ describe("Messages page", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Support" }));
 
-    expect(screen.getByText("Export archive request")).toBeInTheDocument();
+    expect(screen.getByText("Support conversation")).toBeInTheDocument();
     expect(screen.queryByText("Question about your coffee grinder review")).not.toBeInTheDocument();
     expect(screen.queryByText("Supplier recommendation follow-up")).not.toBeInTheDocument();
   });
@@ -57,10 +127,28 @@ describe("Messages page", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "Send" }));
 
-    expect(
-      screen.getByText("Thanks, please send it here once it is ready."),
-    ).toBeInTheDocument();
+    expect(mocks.addSupportThreadMessage).toHaveBeenCalledWith({
+      request: { text: "Thanks, please send it here once it is ready." },
+      threadId: "support-thread-1",
+    });
     expect(screen.getByPlaceholderText("Message R8N Support...")).toHaveValue("");
+  });
+
+  it("creates a support thread through the backend mutation", () => {
+    render(<Messages />);
+
+    fireEvent.click(screen.getByRole("button", { name: "New message" }));
+    fireEvent.change(screen.getByLabelText("Recipient"), {
+      target: { value: "R8N Support" },
+    });
+    fireEvent.change(screen.getByLabelText("Message"), {
+      target: { value: "Need help with a review." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Start thread" }));
+
+    expect(mocks.createSupportThread).toHaveBeenCalledWith({
+      initialMessage: "Need help with a review.",
+    });
   });
 
   it("creates a new thread from the new message dialog", () => {
