@@ -23,24 +23,32 @@ import java.util.UUID
 class OpinionListRestClient(
     private val restClient: RestClient,
 ) : OpinionListsApi {
-    override fun getListSummary(listId: UUID): OpinionListSummaryDto =
+    override fun getListSummary(listId: UUID?): OpinionListSummaryDto =
         restClient
             .get()
-            .uri(SUMMARY_PATH, listId)
-            .retrieve()
+            .uri { uriBuilder ->
+                if (listId != null) {
+                    uriBuilder.path(SUMMARY_PATH).build(listId)
+                } else {
+                    uriBuilder.path(SUMMARY_PATH).build()
+                }
+            }.retrieve()
             .body<OpinionListSummaryDto>()!!
 
     override fun getList(
-        listId: UUID,
+        listId: UUID?,
         publishedAfter: java.time.Instant?,
     ): OpinionListDto =
         restClient
             .get()
             .uri { uriBuilder ->
-                uriBuilder
-                    .path(GET_PATH)
+                val builder = uriBuilder.path(GET_PATH)
                     .queryParamIfPresent("publishedAfter", Optional.ofNullable(publishedAfter))
-                    .build(listId)
+                if (listId != null) {
+                    builder.build(listId)
+                } else {
+                    builder.build()
+                }
             }.retrieve()
             .body<OpinionListDto>()!!
 

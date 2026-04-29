@@ -26,15 +26,25 @@ class OpinionListFacade(
     private val opinionListMapper: OpinionListMapper,
 ) {
     fun getListSummary(
-        listId: UUID,
+        listId: UUID?,
         requesterId: UUID,
-    ): OpinionListSummaryDto = opinionListMapper.toSummaryDto(opinionListService.getListInfo(listId, requesterId))
+    ): OpinionListSummaryDto =
+        if (listId == null) {
+            opinionListMapper.toDto(opinionListService.getMyVirtualListInfo(requesterId))
+        } else {
+            opinionListMapper.toSummaryDto(opinionListService.getListInfo(listId, requesterId))
+        }
 
     fun getList(
-        listId: UUID,
+        listId: UUID?,
         requesterId: UUID,
         publishedAfter: java.time.Instant? = null,
-    ): OpinionListDto = opinionListMapper.toDto(opinionListService.getList(listId, requesterId, publishedAfter))
+    ): OpinionListDto =
+        if (listId == null) {
+            opinionListMapper.toDto(opinionListService.getMyVirtualList(requesterId))
+        } else {
+            opinionListMapper.toDto(opinionListService.getList(listId, requesterId, publishedAfter))
+        }
 
     fun createList(
         ownerId: UUID,

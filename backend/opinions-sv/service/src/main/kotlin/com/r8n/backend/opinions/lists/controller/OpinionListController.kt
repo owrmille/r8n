@@ -23,12 +23,12 @@ class OpinionListController(
 ) : OpinionListsApi,
     OpinionListsSearchApi {
     @PreAuthorize(IS_USER)
-    override fun getListSummary(listId: UUID): OpinionListSummaryDto =
+    override fun getListSummary(listId: UUID?): OpinionListSummaryDto =
         opinionListFacade.getListSummary(listId, getCurrentUserId())
 
     @PreAuthorize(IS_USER)
     override fun getList(
-        listId: UUID,
+        listId: UUID?,
         publishedAfter: Instant?,
     ) = opinionListFacade.getList(listId, getCurrentUserId(), publishedAfter)
 

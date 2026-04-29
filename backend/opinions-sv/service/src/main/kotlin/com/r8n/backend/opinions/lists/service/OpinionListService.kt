@@ -11,6 +11,7 @@ import com.r8n.backend.opinions.lists.domain.OpinionListPrivacyEnum
 import com.r8n.backend.opinions.lists.domain.OpinionSummary
 import com.r8n.backend.opinions.lists.persistence.OpinionListPersistence
 import com.r8n.backend.opinions.lists.persistence.OpinionsToOpinionListsPersistence
+import com.r8n.backend.opinions.opinions.database.OpinionRepository
 import com.r8n.backend.opinions.opinions.domain.Opinion
 import com.r8n.backend.opinions.opinions.service.OpinionService
 import org.springframework.data.domain.Pageable
@@ -27,6 +28,7 @@ class OpinionListService(
     private val opinionsAssignmentRepository: OpinionsToOpinionListsRepository,
     private val accessService: AccessService,
     private val syncRepository: OpinionListSyncRepository,
+    private val opinionRepository: OpinionRepository,
 ) {
     @Transactional
     fun createList(
@@ -160,6 +162,16 @@ class OpinionListService(
             privacy = OpinionListPrivacyEnum.PRIVATE,
         )
     }
+
+    fun getMyVirtualListInfo(ownerId: UUID): OpinionListInfo =
+        OpinionListInfo(
+            id = null,
+            name = "[ALL]",
+            owner = ownerId,
+            privacy = OpinionListPrivacyEnum.PRIVATE,
+            opinionsCount = opinionRepository.countByOwner(ownerId),
+            grantedAccessCount = 0,
+        )
 
     private fun validateAccess(
         list: OpinionListPersistence,

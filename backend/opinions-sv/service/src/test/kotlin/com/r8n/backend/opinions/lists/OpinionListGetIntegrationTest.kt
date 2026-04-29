@@ -135,6 +135,38 @@ class OpinionListGetIntegrationTest {
     }
 
     @Test
+    fun `getList with null listId returns virtual list`() {
+        val result =
+            mockMvc
+                .perform(
+                    get("/api/opinion-lists")
+                        .header("Authorization", annaToken),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val list = objectMapper.readValue<OpinionListDto>(result.response.contentAsString)
+        assertThat(list.listName).isEqualTo("[ALL]")
+        assertThat(list.id).isNull()
+        assertThat(list.owner).isEqualTo(ANNA_ID)
+    }
+
+    @Test
+    fun `getListSummary with null listId returns virtual list summary`() {
+        val result =
+            mockMvc
+                .perform(
+                    get("/api/opinion-lists/summary")
+                        .header("Authorization", annaToken),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val summary = objectMapper.readValue<OpinionListSummaryDto>(result.response.contentAsString)
+        assertThat(summary.listName).isEqualTo("[ALL]")
+        assertThat(summary.listId).isNull()
+        assertThat(summary.owner).isEqualTo(ANNA_ID)
+    }
+
+    @Test
     fun `getListsFull returns all lists with full details including virtual list`() {
         val result =
             mockMvc
