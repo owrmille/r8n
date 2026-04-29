@@ -417,7 +417,6 @@ class OpinionsIntegrationTests {
                 .perform(
                     get("/api/opinions/moderation")
                         .with(csrf())
-                        .queryParam("status", "PENDING_PREMODERATION")
                         .queryParam("page", "0")
                         .queryParam("size", "20")
                         .header("Authorization", "Bearer $moderatorToken"),

@@ -30,7 +30,6 @@ export const opinionsKeys = {
   moderation: (request: GetModerationOpinionsRequestDto) => [
     "opinions",
     "moderation",
-    request.filters ?? null,
     request.pageable,
   ] as const,
   moderationDecisions: (request: GetModerationDecisionsRequestDto) => [

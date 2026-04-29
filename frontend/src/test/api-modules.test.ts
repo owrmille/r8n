@@ -512,7 +512,6 @@ describe("API modules", () => {
     const opinionsApi = createOpinionsApi(client);
 
     await opinionsApi.getModerationQueue({
-      filters: { status: "PENDING_PREMODERATION" },
       pageable: {
         page: 0,
         size: 20,
@@ -535,7 +534,7 @@ describe("API modules", () => {
     });
 
     expect(fetchMock.mock.calls[0][0]).toBe(
-      "/api/opinions/moderation?page=0&size=20&status=PENDING_PREMODERATION",
+      "/api/opinions/moderation?page=0&size=20",
     );
     expect(fetchMock.mock.calls[1][0]).toBe(
       "/api/opinions/moderation/decisions?page=0&size=20",

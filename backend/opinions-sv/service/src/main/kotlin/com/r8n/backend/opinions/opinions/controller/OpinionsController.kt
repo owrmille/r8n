@@ -4,7 +4,6 @@ import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.opinions.api.opinions.OpinionsApi
 import com.r8n.backend.opinions.api.opinions.dto.OpinionDto
-import com.r8n.backend.opinions.api.opinions.dto.OpinionStatusEnumDto
 import com.r8n.backend.opinions.api.opinions.dto.RejectOpinionRequestDto
 import com.r8n.backend.opinions.opinions.facade.OpinionFacade
 import com.r8n.backend.security.Authority.IS_MODERATOR
@@ -51,10 +50,8 @@ class OpinionsController(
         opinionFacade.submitOpinionForModeration(opinionId, getCurrentUserId())
 
     @PreAuthorize(IS_MODERATOR)
-    override fun getModerationOpinions(
-        status: OpinionStatusEnumDto?,
-        pageable: PageRequestDto,
-    ): PageResponseDto<OpinionDto> = opinionFacade.getModerationOpinions(status, pageable)
+    override fun getModerationOpinions(pageable: PageRequestDto): PageResponseDto<OpinionDto> =
+        opinionFacade.getModerationOpinions(pageable)
 
     @PreAuthorize(IS_MODERATOR)
     override fun getModerationDecisions(pageable: PageRequestDto) = opinionFacade.getModerationDecisions(pageable)

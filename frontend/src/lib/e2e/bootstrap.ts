@@ -6,9 +6,6 @@ import { setSession } from "@/lib/auth/session";
 import { opinionsKeys, usersKeys } from "@/lib/server-state/query-keys";
 
 const E2E_MODERATION_REQUEST = {
-  filters: {
-    status: "PENDING_PREMODERATION" as const,
-  },
   pageable: {
     page: 0,
     size: 50,

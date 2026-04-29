@@ -6,7 +6,6 @@ import com.r8n.backend.core.utils.toPageable
 import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.opinions.api.opinions.dto.ModerationDecisionDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionDto
-import com.r8n.backend.opinions.api.opinions.dto.OpinionStatusEnumDto
 import com.r8n.backend.opinions.opinions.service.OpinionService
 import org.springframework.stereotype.Component
 import java.util.UUID
@@ -54,15 +53,10 @@ class OpinionFacade(
         ownerId: UUID,
     ): OpinionDto = opinionMapper.toDto(opinionService.submitOpinionForModeration(opinionId, ownerId))
 
-    fun getModerationOpinions(
-        status: OpinionStatusEnumDto?,
-        pageable: PageRequestDto,
-    ): PageResponseDto<OpinionDto> =
+    fun getModerationOpinions(pageable: PageRequestDto): PageResponseDto<OpinionDto> =
         opinionService
-            .getModerationOpinions(
-                status?.let { with(opinionMapper) { it.fromDto() } },
-                pageable.toPageable(),
-            ).map { opinionMapper.toDto(it) }
+            .getModerationOpinions(pageable.toPageable())
+            .map { opinionMapper.toDto(it) }
             .toResponse()
 
     fun getModerationDecisions(pageable: PageRequestDto): PageResponseDto<ModerationDecisionDto> =
