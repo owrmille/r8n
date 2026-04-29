@@ -8,16 +8,14 @@ import com.r8n.backend.users.domain.UserWithRoles
 import com.r8n.backend.users.domain.Username
 import com.r8n.backend.users.integration.api.dto.UserDto
 import com.r8n.backend.users.persistence.ConsentPersistence
-import com.r8n.backend.users.persistence.PIIPersistence
 import com.r8n.backend.users.persistence.RoleEnumPersistence
-import com.r8n.backend.users.persistence.UserPersistence
 import com.r8n.backend.users.persistence.UserRoleAssignmentPersistence
 import com.r8n.backend.users.persistence.UserSessionPersistence
 import com.r8n.backend.users.provider.database.PIIRepository
 import com.r8n.backend.users.provider.database.UserRepository
 import com.r8n.backend.users.provider.database.UserRoleAssignmentRepository
-import org.springframework.dao.CannotSerializeTransactionException
 import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.dao.PessimisticLockingFailureException
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -151,7 +149,7 @@ class UserService(
                 }
             }
             userRoleAssignmentRepository.deleteByUserAndRole(userId, role)
-        } catch (_: CannotSerializeTransactionException) {
+        } catch (_: PessimisticLockingFailureException) {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Cannot remove the last admin")
         }
     }
@@ -203,7 +201,10 @@ class UserService(
     }
 
     @Transactional
-    fun restoreUser(userId: UUID, userDto: UserDto) {
+    fun restoreUser(
+        userId: UUID,
+        userDto: UserDto,
+    ) {
         userRepository.findByIdOrNull(userId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
 
         userDto.consents.forEach { consentDto ->

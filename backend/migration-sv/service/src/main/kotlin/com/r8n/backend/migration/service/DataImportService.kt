@@ -2,6 +2,8 @@ package com.r8n.backend.migration.service
 
 import com.r8n.backend.migration.api.dto.UserCompleteDataDto
 import com.r8n.backend.opinions.api.access.OutgoingAccessRequestApi
+import com.r8n.backend.opinions.api.lists.OpinionListsApi
+import com.r8n.backend.opinions.api.opinions.OpinionsApi
 import com.r8n.backend.opinions.integration.api.OpinionListsInternalApi
 import com.r8n.backend.opinions.integration.api.OpinionsInternalApi
 import com.r8n.backend.users.api.dto.UserStatusEnumDto
@@ -17,8 +19,8 @@ import java.util.UUID
 @Service
 class DataImportService(
     private val usersClient: UsersInternalApi,
-    private val opinionListsClient: OpinionListsInternalApi,
-    private val opinionsClient: OpinionsInternalApi,
+    private val opinionListsClient: OpinionListsApi,
+    private val opinionsClient: OpinionsApi,
     private val outgoingAccessRequestClient: OutgoingAccessRequestApi,
     private val objectMapper: JsonMapper,
 ) {
@@ -47,9 +49,14 @@ class DataImportService(
         }
         logger.debug("User restored: {}", userId)
 
-        data.myFullOpinions.forEach { opinion ->
-            opinion.owner = userId
-            opinionsClient.restoreOpinion(opinion)
+        data.opinions.items.forEach { opinionList ->
+            with (opinionList) {
+            opinionsClient.createOpinion(
+                subjectId = subject,
+                subjective = subjective,
+                objective = objective,
+                mark = mark,
+            )
         }
         logger.debug("Opinions restored for user: {}", userId)
 

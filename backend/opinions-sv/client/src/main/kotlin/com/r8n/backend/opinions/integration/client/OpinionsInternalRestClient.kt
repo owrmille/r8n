@@ -25,13 +25,4 @@ class OpinionsInternalRestClient(
                     }.build()
             }.retrieve()
             .body<PageResponseDto<OpinionDto>>()!!
-
-    override fun restoreOpinion(opinion: OpinionDto) {
-        restClient
-            .post()
-            .uri(OpinionsInternalApi.RESTORE_PATH)
-            .body(opinion)
-            .retrieve()
-            .toBodilessEntity()
-    }
 }

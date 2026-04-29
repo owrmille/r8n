@@ -9,8 +9,8 @@ import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.IS_AI_MO
 import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.IS_ANY_MODERATOR_PATH
 import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.IS_HUMAN_MODERATOR_PATH
 import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.NAME_PATH
-import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.SEARCH_PATH
 import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.RESTORE_PATH
+import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.SEARCH_PATH
 import com.r8n.backend.users.integration.api.UsersInternalApi.Companion.SESSIONS_PATH
 import com.r8n.backend.users.integration.api.dto.UserDto
 import com.r8n.backend.users.integration.api.dto.UserSessionDto

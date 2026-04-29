@@ -17,7 +17,6 @@ data class UserCompleteDataDto(
     val statusTimestamp: Instant,
     val consents: PageResponseDto<ConsentDto>,
     val personalIdentifiableInformation: PersonalIdentifiableInformationSectionDto,
-    val myFullOpinions: List<OpinionDto>,
     val opinions: PageResponseDto<OpinionListDto>,
     val outgoingRequests: PageResponseDto<AccessRequestDto>,
     val incomingRequests: PageResponseDto<AccessRequestDto>,

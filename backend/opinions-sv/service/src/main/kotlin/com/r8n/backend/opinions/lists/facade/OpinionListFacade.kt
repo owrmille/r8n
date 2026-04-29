@@ -12,6 +12,7 @@ import com.r8n.backend.opinions.api.lists.dto.OpinionListSearchFiltersDto
 import com.r8n.backend.opinions.api.lists.dto.OpinionListSummaryDto
 import com.r8n.backend.opinions.lists.domain.OpinionListPrivacyEnum
 import com.r8n.backend.opinions.lists.domain.OpinionListSearchFilters
+import com.r8n.backend.opinions.lists.service.OpinionListSearchService
 import com.r8n.backend.opinions.lists.service.OpinionListService
 import org.springframework.stereotype.Component
 import java.util.UUID
@@ -19,6 +20,7 @@ import java.util.UUID
 @Component
 class OpinionListFacade(
     private val opinionListService: OpinionListService,
+    private val opinionListSearchService: OpinionListSearchService,
     private val opinionListMapper: OpinionListMapper,
 ) {
     fun getListSummary(
@@ -49,7 +51,7 @@ class OpinionListFacade(
         ownerId: UUID,
         pageable: PageRequestDto,
     ): PageResponseDto<OpinionListSummaryDto> =
-        opinionListService
+        opinionListSearchService
             .getMine(ownerId, pageable.toPageable())
             .map { opinionListMapper.toSummaryDto(it) }
             .toResponse()
@@ -58,7 +60,7 @@ class OpinionListFacade(
         ownerId: UUID,
         pageable: PageRequestDto,
     ): PageResponseDto<OpinionListDto> =
-        opinionListService
+        opinionListSearchService
             .getListsFull(ownerId, pageable.toPageable())
             .map { opinionListMapper.toDto(it) }
             .toResponse()
@@ -71,7 +73,7 @@ class OpinionListFacade(
         val domainFilters = filters.toDomain()
 
         val page =
-            opinionListService.search(
+            opinionListSearchService.search(
                 requesterId = requesterId,
                 filters = domainFilters,
                 pageable = pageable.toPageable(),
@@ -87,7 +89,7 @@ class OpinionListFacade(
         requesterId: UUID,
         pageable: PageRequestDto,
     ): PageResponseDto<OpinionListNameAndOwnerDto> =
-        opinionListService
+        opinionListSearchService
             .getApprovedListsWithNamesAndOwners(requesterId, pageable.toPageable())
             .map { info -> opinionListMapper.toNameAndOwnerDto(info) }
             .toResponse()
@@ -96,7 +98,7 @@ class OpinionListFacade(
         ownerId: UUID,
         pageable: PageRequestDto,
     ): PageResponseDto<OpinionListNameDto> =
-        opinionListService
+        opinionListSearchService
             .getMine(ownerId, pageable.toPageable())
             .map { info -> opinionListMapper.toNameDto(info) }
             .toResponse()
@@ -182,9 +184,5 @@ class OpinionListFacade(
                     },
                 findThisTextInAnyOfTheAbove = findThisTextInAnyOfTheAbove,
             )
-    }
-
-    fun restoreOpinionList(dto: OpinionListDto) {
-        opinionListService.restoreOpinionList(dto)
     }
 }

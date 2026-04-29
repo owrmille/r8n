@@ -2,7 +2,6 @@ package com.r8n.backend.opinions.lists.controller
 
 import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
-import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.opinions.api.lists.OpinionListsApi
 import com.r8n.backend.opinions.api.lists.OpinionListsSearchApi
 import com.r8n.backend.opinions.api.lists.dto.OpinionListNameAndOwnerDto
@@ -19,7 +18,7 @@ import java.time.Instant
 import java.util.UUID
 
 @RestController
-class StubOpinionListController(
+class OpinionListController(
     private val opinionListFacade: OpinionListFacade,
 ) : OpinionListsApi,
     OpinionListsSearchApi {

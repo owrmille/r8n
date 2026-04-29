@@ -5,8 +5,6 @@ import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.opinions.api.lists.dto.OpinionListDto
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
 
 interface OpinionListsInternalApi {
     companion object {
