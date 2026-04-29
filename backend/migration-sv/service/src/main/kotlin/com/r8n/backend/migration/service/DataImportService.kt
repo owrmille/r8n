@@ -39,17 +39,22 @@ class DataImportService(
                 statusTimestamp = Instant.now(),
                 consents = data.consents.items,
             )
-        val id = usersClient.restoreUser(userDto)
+        var id: UUID? = null
+        try {
+            id = usersClient.restoreUser(userDto)
+        } catch (e: Exception) {
+            logger.error("Error restoring user: {}", e.message)
+        }
         logger.debug("User restored: {}", data.id)
 
         data.myFullOpinions.forEach { opinion ->
-            opinion.owner = id
+            opinion.owner = id!!
             opinionsClient.restoreOpinion(opinion)
         }
         logger.debug("Opinions restored for user: {}", data.id)
 
         data.opinions.items.forEach { list ->
-            list.owner = id
+            list.owner = id!!
             opinionListsClient.restoreOpinionList(list)
         }
         logger.debug("Opinion lists restored for user: {}", data.id)
@@ -57,7 +62,7 @@ class DataImportService(
         // Re-create Outgoing Access Requests as PENDING
         data.outgoingRequests.items.forEach { request ->
             try {
-                request.requester = id
+                request.requester = id!!
                 outgoingAccessRequestClient.create(request.opinionListId)
             } catch (e: Exception) {
                 logger.warn(

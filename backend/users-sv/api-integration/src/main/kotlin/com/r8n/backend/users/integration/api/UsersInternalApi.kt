@@ -21,7 +21,7 @@ interface UsersInternalApi {
         const val IS_HUMAN_MODERATOR_PATH = "$ID_PATH/is-human-moderator"
         const val IS_AI_MODERATOR_PATH = "$ID_PATH/is-ai-moderator"
         const val IS_ADMIN_PATH = "$ID_PATH/is-admin"
-        const val RESTORE_PATH = "$ID_PATH/restore"
+        const val RESTORE_PATH = "$USERS_PATH/import"
     }
 
     @GetMapping(NAME_PATH)
