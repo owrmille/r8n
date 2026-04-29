@@ -47,6 +47,7 @@ class SupportMessagingIntegrationTests {
         val userBId: UUID = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")
         val supportId: UUID = UUID.fromString("cccccccc-cccc-cccc-cccc-cccccccccccc")
         val adminId: UUID = UUID.fromString("dddddddd-dddd-dddd-dddd-dddddddddddd")
+        val moderatorId: UUID = UUID.fromString("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee")
     }
 
     @Autowired
@@ -137,6 +138,45 @@ class SupportMessagingIntegrationTests {
             ).andExpect(status().isOk)
             .andExpect(jsonPath("$.items.length()").value(2))
             .andExpect(jsonPath("$.items[1].authorRole").value("SUPPORT"))
+    }
+
+    @Test
+    fun `moderator can use own support threads as regular user`() {
+        val threadId = createThread(moderatorId, "MODERATOR", "Moderator needs user-side support")
+
+        mockMvc
+            .perform(
+                post(messagesPath(threadId))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"text":"Moderator follow-up"}""")
+                    .with(user(moderatorId.toString()).roles("MODERATOR"))
+                    .with(csrf()),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.authorUserId").value(moderatorId.toString()))
+            .andExpect(jsonPath("$.authorRole").value("USER"))
+
+        mockMvc
+            .perform(
+                get(messagesPath(threadId))
+                    .param("page", "0")
+                    .param("size", "20")
+                    .with(user(moderatorId.toString()).roles("MODERATOR")),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.items.length()").value(2))
+            .andExpect(jsonPath("$.items[1].authorRole").value("USER"))
+    }
+
+    @Test
+    fun `moderator cannot access another user support thread`() {
+        val threadId = createThread(userAId, "USER", "Private support thread")
+
+        mockMvc
+            .perform(
+                get(messagesPath(threadId))
+                    .param("page", "0")
+                    .param("size", "20")
+                    .with(user(moderatorId.toString()).roles("MODERATOR")),
+            ).andExpect(status().isForbidden)
     }
 
     @Test
