@@ -113,7 +113,7 @@ class OpinionListGetIntegrationTest {
     }
 
     @Test
-    fun `getMine returns all lists owned by the authenticated user`() {
+    fun `getMine returns all lists owned by the authenticated user including virtual list`() {
         val result =
             mockMvc
                 .perform(
@@ -125,9 +125,36 @@ class OpinionListGetIntegrationTest {
                 .andReturn()
 
         val page = objectMapper.readValue<PageResponseDto<OpinionListSummaryDto>>(result.response.contentAsString)
-        // Anna owns l11, l12, l13 plus two lists from other seed changesets
-        assertThat(page.total).isEqualTo(5)
-        assertThat(page.items.map { it.listName }).contains("l11", "l12", "l13")
+        // Anna owns 5 lists in seed data + 1 virtual list
+        assertThat(page.total).isEqualTo(6)
+        assertThat(page.items.map { it.listName }).contains("All my opinions", "l11", "l12", "l13")
+        val virtualList = page.items.find { it.listName == "All my opinions" }
+        assertThat(virtualList).isNotNull
+        assertThat(virtualList?.listId).isNull()
+        // Anna has multiple opinions in seed data (r11, r12, r21, r22, r31, etc.)
+        assertThat(virtualList?.opinionsCount).isGreaterThan(0)
+    }
+
+    @Test
+    fun `getListsFull returns all lists with full details including virtual list`() {
+        val result =
+            mockMvc
+                .perform(
+                    get("/api/internal/opinion-lists/mine/full")
+                        .header("Authorization", annaToken)
+                        .param("page", "0")
+                        .param("size", "20"),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val page = objectMapper.readValue<PageResponseDto<OpinionListDto>>(result.response.contentAsString)
+        // Anna owns 5 lists in seed data + 1 virtual list
+        assertThat(page.total).isEqualTo(6)
+        assertThat(page.items.map { it.listName }).contains("All my opinions", "l11", "l12", "l13")
+        val virtualList = page.items.find { it.listName == "All my opinions" }
+        assertThat(virtualList).isNotNull
+        assertThat(virtualList?.id).isNull()
+        assertThat(virtualList?.opinionSummaries).isNotEmpty
     }
 
     @Test

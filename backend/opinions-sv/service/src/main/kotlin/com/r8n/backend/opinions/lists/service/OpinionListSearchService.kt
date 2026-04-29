@@ -40,25 +40,59 @@ class OpinionListSearchService(
     fun getMine(
         ownerId: UUID,
         pageable: Pageable,
-    ): Page<OpinionListInfo> =
-        opinionListRepository.findByOwner(ownerId, pageable).map { list ->
-            OpinionListInfo(
-                id = list.id!!,
-                name = list.name,
-                owner = list.owner,
-                privacy = list.privacy,
-                opinionsCount = opinionsAssignmentRepository.countByOpinionList(list.id!!),
-                grantedAccessCount = accessService.countAcceptedForList(list.id!!),
-            )
+    ): Page<OpinionListInfo> {
+        val lists = opinionListRepository.findByOwner(ownerId, pageable)
+        val infoList =
+            lists.content
+                .map { list ->
+                    OpinionListInfo(
+                        id = list.id!!,
+                        name = list.name,
+                        owner = list.owner,
+                        privacy = list.privacy,
+                        opinionsCount = opinionsAssignmentRepository.countByOpinionList(list.id!!),
+                        grantedAccessCount = accessService.countAcceptedForList(list.id!!),
+                    )
+                }.toMutableList()
+
+        if (pageable.pageNumber == 0) {
+            val allMyOpinions =
+                OpinionListInfo(
+                    id = null,
+                    name = "All my opinions",
+                    owner = ownerId,
+                    privacy = OpinionListPrivacyEnum.PRIVATE,
+                    opinionsCount = opinionRepository.countByOwner(ownerId),
+                    grantedAccessCount = 0,
+                )
+            infoList.add(0, allMyOpinions)
         }
+
+        return PageImpl(
+            infoList,
+            pageable,
+            lists.totalElements + (if (pageable.pageNumber == 0 || lists.totalElements > 0) 1 else 0),
+        )
+    }
 
     fun getListsFull(
         ownerId: UUID,
         pageable: Pageable,
-    ): Page<OpinionList> =
-        opinionListRepository
-            .findByOwner(ownerId, pageable)
-            .map { opinionListService.getList(it.id!!, ownerId) }
+    ): Page<OpinionList> {
+        val lists = opinionListRepository.findByOwner(ownerId, pageable)
+        val fullLists = lists.content.map { opinionListService.getList(it.id!!, ownerId) }.toMutableList()
+
+        if (pageable.pageNumber == 0) {
+            val allMyOpinions = opinionListService.getMyVirtualList(ownerId)
+            fullLists.add(0, allMyOpinions)
+        }
+
+        return PageImpl(
+            fullLists,
+            pageable,
+            lists.totalElements + (if (pageable.pageNumber == 0 || lists.totalElements > 0) 1 else 0),
+        )
+    }
 
     fun getApprovedListsWithNamesAndOwners(
         requesterId: UUID,

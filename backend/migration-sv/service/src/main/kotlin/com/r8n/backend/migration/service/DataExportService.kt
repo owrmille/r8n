@@ -88,7 +88,6 @@ class DataExportService(
                     email = user.email,
                     sessions = sessions,
                 ),
-            myFullOpinions = opinionsClient.getMyFullOpinions(PageRequestDto(0, Int.MAX_VALUE)).items,
             opinions = opinionListsClient.getMineFull(PageRequestDto(0, Int.MAX_VALUE)),
             outgoingRequests = outgoingAccessRequestClient.get(null, null, null, PageRequestDto(0, Int.MAX_VALUE)),
             incomingRequests = incomingAccessRequestClient.get(null, null, null, PageRequestDto(0, Int.MAX_VALUE)),

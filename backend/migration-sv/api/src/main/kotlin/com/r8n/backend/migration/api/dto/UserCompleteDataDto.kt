@@ -4,7 +4,6 @@ import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.messaging.api.dto.SupportThreadDto
 import com.r8n.backend.opinions.api.access.dto.AccessRequestDto
 import com.r8n.backend.opinions.api.lists.dto.OpinionListDto
-import com.r8n.backend.opinions.api.opinions.dto.OpinionDto
 import com.r8n.backend.users.api.dto.UserStatusEnumDto
 import com.r8n.backend.users.integration.api.dto.ConsentDto
 import com.r8n.backend.users.integration.api.dto.PersonalIdentifiableInformationSectionDto

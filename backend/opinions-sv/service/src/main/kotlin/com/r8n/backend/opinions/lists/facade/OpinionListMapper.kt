@@ -38,7 +38,7 @@ class OpinionListMapper(
         ownerName: String? = null,
     ): OpinionListSummaryDto =
         OpinionListSummaryDto(
-            listId = info.id,
+            listId = info.id!!,
             listName = info.name,
             owner = info.owner,
             ownerName = ownerName ?: usersClient.getUserName(info.owner),

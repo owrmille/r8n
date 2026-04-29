@@ -10,10 +10,10 @@ import com.r8n.backend.opinions.lists.domain.OpinionListInfo
 import com.r8n.backend.opinions.lists.domain.OpinionListPrivacyEnum
 import com.r8n.backend.opinions.lists.domain.OpinionSummary
 import com.r8n.backend.opinions.lists.persistence.OpinionListPersistence
-import com.r8n.backend.opinions.lists.persistence.OpinionListSyncPersistence
 import com.r8n.backend.opinions.lists.persistence.OpinionsToOpinionListsPersistence
 import com.r8n.backend.opinions.opinions.domain.Opinion
 import com.r8n.backend.opinions.opinions.service.OpinionService
+import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -45,58 +45,6 @@ class OpinionListService(
         return getList(saved.id!!, ownerId)
     }
 
-    fun syncWithOpinionList(
-        userId: UUID,
-        existingListId: UUID,
-        addedListId: UUID,
-        weight: Double = 1.0,
-    ): OpinionList {
-        if (!accessService.ownsOpinionList(userId, existingListId)) {
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't own the destination list")
-        }
-        val addedList =
-            opinionListRepository.findById(addedListId).orElseThrow {
-                ResponseStatusException(HttpStatus.NOT_FOUND)
-            }
-        if (addedList.privacy == OpinionListPrivacyEnum.PRIVATE) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND)
-        }
-        if (!accessService.canAccessOpinionList(userId, addedListId, OpinionListPermissionEnum.VIEW)) {
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't have access to the source list")
-        }
-
-        val existingSync = syncRepository.findByDestinationListAndSourceList(existingListId, addedListId)
-        if (existingSync != null) {
-            if (existingSync.weight != weight) {
-                existingSync.weight = weight
-                syncRepository.save(existingSync)
-            }
-        } else {
-            syncRepository.save(
-                OpinionListSyncPersistence(
-                    destinationList = existingListId,
-                    sourceList = addedListId,
-                    weight = weight,
-                ),
-            )
-        }
-        return getList(existingListId, userId)
-    }
-
-    @Transactional
-    fun unsyncWithOpinionList(
-        userId: UUID,
-        existingListId: UUID,
-        removedListId: UUID,
-    ): OpinionList {
-        if (!accessService.ownsOpinionList(userId, existingListId)) {
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't own the destination list")
-        }
-
-        syncRepository.deleteByDestinationListAndSourceList(existingListId, removedListId)
-        return getList(existingListId, userId)
-    }
-
     fun getListName(
         listId: UUID,
         userId: UUID,
@@ -112,50 +60,6 @@ class OpinionListService(
             throw ResponseStatusException(HttpStatus.NOT_FOUND)
         }
         return list.name
-    }
-
-    @Transactional
-    fun linkOpinion(
-        userId: UUID,
-        listId: UUID,
-        opinionId: UUID,
-        weight: Double,
-    ): OpinionList {
-        if (!accessService.ownsOpinionList(userId, listId)) {
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't own this list")
-        }
-        // check opinion access
-        opinionService.getOpinion(opinionId, userId)
-
-        val existing = opinionsAssignmentRepository.findAllByOpinionList(listId).find { it.opinion == opinionId }
-        if (existing != null) {
-            existing.weight = weight
-            opinionsAssignmentRepository.save(existing)
-        } else {
-            opinionsAssignmentRepository.save(
-                OpinionsToOpinionListsPersistence(
-                    opinionList = listId,
-                    opinion = opinionId,
-                    weight = weight,
-                ),
-            )
-        }
-        return getList(listId, userId)
-    }
-
-    @Transactional
-    fun unlinkOpinion(
-        userId: UUID,
-        listId: UUID,
-        opinionId: UUID,
-    ): OpinionList {
-        if (!accessService.ownsOpinionList(userId, listId)) {
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't own this list")
-        }
-        val assignments = opinionsAssignmentRepository.findAllByOpinionList(listId)
-        val toRemove = assignments.filter { it.opinion == opinionId }
-        opinionsAssignmentRepository.deleteAll(toRemove)
-        return getList(listId, userId)
     }
 
     @Transactional
@@ -217,22 +121,6 @@ class OpinionListService(
         return getList(listId, userId)
     }
 
-    @Transactional
-    fun moveOpinion(
-        userId: UUID,
-        fromListId: UUID,
-        toListId: UUID,
-        opinionId: UUID,
-        weight: Double = 1.0,
-    ): OpinionList {
-        if (fromListId == toListId) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "fromListId and toListId must differ")
-        }
-        val ret = linkOpinion(userId, toListId, opinionId, weight)
-        unlinkOpinion(userId, fromListId, opinionId)
-        return ret
-    }
-
     fun getList(
         listId: UUID,
         requesterId: UUID,
@@ -250,6 +138,27 @@ class OpinionListService(
         val summaries = calculateSummaries(list, opinions, requesterId)
 
         return toDomain(list, summaries)
+    }
+
+    fun getMyVirtualList(ownerId: UUID): OpinionList {
+        val opinions =
+            opinionService
+                .getMyFullOpinions(ownerId, Pageable.unpaged())
+                .content
+                .map { it.copy(weight = 1.0) }
+
+        val summaries =
+            opinions.groupBy { it.subject }.map { (subject, ops) ->
+                calculateOwnSummary(subject, ops, ownerId)
+            }
+
+        return OpinionList(
+            id = null,
+            name = "[ALL]",
+            owner = ownerId,
+            opinionSummaries = summaries,
+            privacy = OpinionListPrivacyEnum.PRIVATE,
+        )
     }
 
     private fun validateAccess(

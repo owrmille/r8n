@@ -40,4 +40,6 @@ interface OpinionRepository : JpaRepository<OpinionPersistence, UUID> {
         owner: UUID,
         pageable: Pageable,
     ): Page<OpinionPersistence>
+
+    fun countByOwner(owner: UUID): Long
 }

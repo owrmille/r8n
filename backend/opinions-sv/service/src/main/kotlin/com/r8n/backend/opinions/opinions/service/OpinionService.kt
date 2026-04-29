@@ -100,9 +100,8 @@ class OpinionService(
 
     fun getMyFullOpinions(
         ownerId: UUID,
-        pageable: org.springframework.data.domain.Pageable,
-    ): org.springframework.data.domain.Page<Opinion> =
-        opinionRepository.findAllByOwnerOrderByTimestampDesc(ownerId, pageable).map { it.toDomain() }
+        pageable: Pageable,
+    ): Page<Opinion> = opinionRepository.findAllByOwnerOrderByTimestampDesc(ownerId, pageable).map { it.toDomain() }
 
     @Transactional
     fun deleteOpinion(
