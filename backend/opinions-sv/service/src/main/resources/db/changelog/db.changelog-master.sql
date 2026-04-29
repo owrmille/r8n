@@ -450,3 +450,36 @@ INSERT INTO opinions.opinion_lists (id, owner, name, privacy)
 VALUES
     ('80000000-0000-0000-0000-000000000223', '10101010-1010-1010-1010-101010101010', 'l24', 'PRIVATE')
 ON CONFLICT (id) DO NOTHING;
+
+--changeset iatopchu:V15_moderation_decisions
+CREATE TABLE IF NOT EXISTS opinions.moderation_decisions (
+    id UUID PRIMARY KEY,
+    opinion UUID NOT NULL,
+    moderator UUID NOT NULL,
+    action VARCHAR(32) NOT NULL,
+    previous_status VARCHAR(32) NOT NULL,
+    new_status VARCHAR(32) NOT NULL,
+    reason TEXT,
+    created_at TIMESTAMPTZ NOT NULL,
+    CONSTRAINT fk_moderation_decisions_opinion FOREIGN KEY (opinion) REFERENCES opinions.opinions(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_moderation_decisions_opinion ON opinions.moderation_decisions(opinion);
+CREATE INDEX IF NOT EXISTS idx_moderation_decisions_moderator ON opinions.moderation_decisions(moderator);
+CREATE INDEX IF NOT EXISTS idx_moderation_decisions_created_at ON opinions.moderation_decisions(created_at);
+
+--changeset ditabisko:V16_fix_seed_names context:local,test
+
+UPDATE opinions.referents SET name = 'The Barn'
+  WHERE id = '16161616-1616-1616-1616-161616161616' AND name = 'espresso @ The Barn';
+UPDATE opinions.referents SET name = 'Five Elephant'
+  WHERE id = '17171717-1717-1717-1717-171717171717' AND name = 'flat white @ Five Elephant';
+UPDATE opinions.referents SET name = 'Father Carpenter'
+  WHERE id = '18181818-1818-1818-1818-181818181818' AND name = 'latte @ Father Carpenter';
+
+UPDATE opinions.subjects SET name = 'espresso'
+  WHERE id = '1a1a1a1a-1a1a-1a1a-1a1a-1a1a1a1a1a1a' AND name = 'espresso @ The Barn';
+UPDATE opinions.subjects SET name = 'flat white'
+  WHERE id = '1b1b1b1b-1b1b-1b1b-1b1b-1b1b1b1b1b1b' AND name = 'flat white @ Five Elephant';
+UPDATE opinions.subjects SET name = 'latte'
+  WHERE id = '1c1c1c1c-1c1c-1c1c-1c1c-1c1c1c1c1c1c' AND name = 'latte @ Father Carpenter';
