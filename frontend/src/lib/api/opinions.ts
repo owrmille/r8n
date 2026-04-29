@@ -21,10 +21,26 @@ export interface WeightedOpinionReferenceDto {
   weight: number;
 }
 
+export interface OpinionRowDto {
+  objective: string[];
+  opinionId: Uuid;
+  owner: Uuid;
+  ownerName: string;
+  mark: number | null;
+  status: OpinionStatusEnumDto;
+  subjective: string[];
+  timestamp: string;
+  weight: number;
+}
+
 export interface OpinionSummaryDto {
+  address?: string | null;
   componentMark: number | null;
-  opinions: WeightedOpinionReferenceDto[];
+  latitude?: number | null;
+  longitude?: number | null;
+  opinions: OpinionRowDto[];
   ownMark: number | null;
+  referentName?: string | null;
   subject: Uuid;
   subjectName: string;
 }

@@ -1,16 +1,14 @@
 package com.r8n.backend.opinions.api.lists
 
-import com.r8n.backend.core.api.PageRequestDto
-import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.opinions.api.lists.dto.OpinionListDto
 import com.r8n.backend.opinions.api.lists.dto.OpinionListPrivacyEnumDto
 import com.r8n.backend.opinions.api.lists.dto.OpinionListSummaryDto
-import jakarta.validation.Valid
 import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 import org.springframework.validation.annotation.Validated
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -24,14 +22,15 @@ interface OpinionListsApi {
         private const val ROOT_PATH = "/api/opinion-lists"
         const val SUMMARY_PATH = "$ROOT_PATH/{listId}/summary"
         const val GET_PATH = "$ROOT_PATH/{listId}"
+        const val CREATE_PATH = ROOT_PATH
         const val RENAME_PATH = "$ROOT_PATH/{listId}/rename"
         const val SET_PRIVACY_PATH = "$ROOT_PATH/{listId}/set-privacy"
         const val LINK_PATH = "$ROOT_PATH/{listId}/link"
         const val UNLINK_PATH = "$ROOT_PATH/{listId}/unlink"
-        const val SEARCH_PATH = "$ROOT_PATH/search"
         const val SYNC_PATH = "$ROOT_PATH/{existingListId}/sync"
         const val UNSYNC_PATH = "$ROOT_PATH/{existingListId}/unsync"
-        const val MINE_PATH = "$ROOT_PATH/mine"
+        const val DELETE_PATH = "$ROOT_PATH/{listId}"
+        const val MOVE_OPINION_PATH = "$ROOT_PATH/{fromListId}/move-opinion"
     }
 
     @GetMapping(SUMMARY_PATH)
@@ -42,6 +41,17 @@ interface OpinionListsApi {
     @GetMapping(GET_PATH)
     fun getList(
         @PathVariable listId: UUID,
+        @RequestParam(required = false) publishedAfter: java.time.Instant?,
+    ): OpinionListDto
+
+    @PostMapping(CREATE_PATH)
+    fun createList(
+        @RequestParam(required = true)
+        @NotBlank
+        @Size(min = 1, max = 255)
+        name: String,
+        @RequestParam(required = true)
+        privacy: OpinionListPrivacyEnumDto,
     ): OpinionListDto
 
     @PatchMapping(RENAME_PATH)
@@ -60,6 +70,26 @@ interface OpinionListsApi {
         listId: UUID,
         @RequestParam(required = true)
         privacy: OpinionListPrivacyEnumDto,
+    ): OpinionListDto
+
+    @DeleteMapping(DELETE_PATH)
+    fun deleteList(
+        @PathVariable
+        listId: UUID,
+    )
+
+    @PostMapping(MOVE_OPINION_PATH)
+    fun moveOpinion(
+        @PathVariable
+        fromListId: UUID,
+        @RequestParam(required = true)
+        toListId: UUID,
+        @RequestParam(required = true)
+        opinionId: UUID,
+        @RequestParam(defaultValue = "1.0")
+        @Min(0)
+        @Max(1)
+        weight: Double,
     ): OpinionListDto
 
     @PostMapping(LINK_PATH)
@@ -82,18 +112,6 @@ interface OpinionListsApi {
         opinionId: UUID,
     ): OpinionListDto
 
-    @GetMapping(SEARCH_PATH)
-    fun search(
-        @RequestParam(required = false)
-        nameSubstring: String?,
-        @RequestParam(required = false)
-        authorId: UUID?,
-        @RequestParam(required = false)
-        authorNameSubstring: String?,
-        @Valid
-        pageable: PageRequestDto,
-    ): PageResponseDto<OpinionListSummaryDto>
-
     @PostMapping(SYNC_PATH)
     fun syncWithOpinionList(
         @PathVariable
@@ -113,10 +131,4 @@ interface OpinionListsApi {
         @RequestParam(required = true)
         removedListId: UUID,
     ): OpinionListDto
-
-    @GetMapping(MINE_PATH)
-    fun getMine(
-        @Valid
-        pageable: PageRequestDto,
-    ): PageResponseDto<OpinionListSummaryDto>
 }

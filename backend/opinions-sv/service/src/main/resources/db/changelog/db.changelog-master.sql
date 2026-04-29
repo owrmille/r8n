@@ -467,3 +467,19 @@ CREATE TABLE IF NOT EXISTS opinions.moderation_decisions (
 CREATE INDEX IF NOT EXISTS idx_moderation_decisions_opinion ON opinions.moderation_decisions(opinion);
 CREATE INDEX IF NOT EXISTS idx_moderation_decisions_moderator ON opinions.moderation_decisions(moderator);
 CREATE INDEX IF NOT EXISTS idx_moderation_decisions_created_at ON opinions.moderation_decisions(created_at);
+
+--changeset ditabisko:V16_fix_seed_names context:local,test
+
+UPDATE opinions.referents SET name = 'The Barn'
+  WHERE id = '16161616-1616-1616-1616-161616161616' AND name = 'espresso @ The Barn';
+UPDATE opinions.referents SET name = 'Five Elephant'
+  WHERE id = '17171717-1717-1717-1717-171717171717' AND name = 'flat white @ Five Elephant';
+UPDATE opinions.referents SET name = 'Father Carpenter'
+  WHERE id = '18181818-1818-1818-1818-181818181818' AND name = 'latte @ Father Carpenter';
+
+UPDATE opinions.subjects SET name = 'espresso'
+  WHERE id = '1a1a1a1a-1a1a-1a1a-1a1a-1a1a1a1a1a1a' AND name = 'espresso @ The Barn';
+UPDATE opinions.subjects SET name = 'flat white'
+  WHERE id = '1b1b1b1b-1b1b-1b1b-1b1b-1b1b1b1b1b1b' AND name = 'flat white @ Five Elephant';
+UPDATE opinions.subjects SET name = 'latte'
+  WHERE id = '1c1c1c1c-1c1c-1c1c-1c1c-1c1c1c1c1c1c' AND name = 'latte @ Father Carpenter';

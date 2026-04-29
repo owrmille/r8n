@@ -6,6 +6,7 @@ import { createAuthApi } from "@/lib/api/auth";
 import { createMessagingApi } from "@/lib/api/messaging";
 import { createOpinionListsApi } from "@/lib/api/opinion-lists";
 import { createOpinionsApi } from "@/lib/api/opinions";
+import { createReferentsApi } from "@/lib/api/referents";
 import { createSelectorsApi } from "@/lib/api/selectors";
 import { createUsersApi } from "@/lib/api/users";
 
@@ -271,6 +272,38 @@ describe("API modules", () => {
     expect(headers.get("Authorization")).toBe("Bearer stub-access-token-123");
   });
 
+  it("encodes pageable sort fields as nested query parameters", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      createJsonResponse({
+        items: [],
+        page: 0,
+        size: 10,
+        total: 0,
+      }),
+    );
+    const client = createHttpClient({
+      baseUrl: "/api",
+      fetchFn: fetchMock,
+    });
+    const referentsApi = createReferentsApi(client);
+
+    await referentsApi.find({
+      query: "cafe",
+      pageable: {
+        page: 0,
+        size: 10,
+        sort: [{ property: "name", direction: "ASC" }],
+      },
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/referents/find?page=0&size=10&sort%5B0%5D.property=name&sort%5B0%5D.direction=ASC&query=cafe",
+      expect.objectContaining({
+        method: "GET",
+      }),
+    );
+  });
+
   it("uses backend avatar routes with blob and multipart bodies", async () => {
     setCookie("XSRF-TOKEN", "xsrf-token");
     const fetchMock = vi
@@ -492,6 +525,35 @@ describe("API modules", () => {
     );
     expect(new Headers(fetchMock.mock.calls[0][1].headers).get("Authorization")).toBe(
       "Bearer stub-access-token-123",
+    );
+  });
+
+  it("passes publishedAfter as a query param when set on getById", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(createJsonResponse({}));
+    const client = createHttpClient({ baseUrl: "/api", fetchFn: fetchMock });
+    const opinionListsApi = createOpinionListsApi(client);
+
+    await opinionListsApi.getById({
+      listId: "11111111-1111-1111-1111-111111111111",
+      publishedAfter: "2024-06-01T00:00:00.000Z",
+    });
+
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      "/api/opinion-lists/11111111-1111-1111-1111-111111111111?publishedAfter=2024-06-01T00%3A00%3A00.000Z",
+    );
+  });
+
+  it("omits publishedAfter query param when not set on getById", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(createJsonResponse({}));
+    const client = createHttpClient({ baseUrl: "/api", fetchFn: fetchMock });
+    const opinionListsApi = createOpinionListsApi(client);
+
+    await opinionListsApi.getById({
+      listId: "22222222-2222-2222-2222-222222222222",
+    });
+
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      "/api/opinion-lists/22222222-2222-2222-2222-222222222222",
     );
   });
 

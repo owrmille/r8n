@@ -3,6 +3,7 @@ package com.r8n.backend.opinions.opinions.facade
 import com.r8n.backend.opinions.api.opinions.dto.ModerationDecisionActionDto
 import com.r8n.backend.opinions.api.opinions.dto.ModerationDecisionDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionDto
+import com.r8n.backend.opinions.api.opinions.dto.OpinionRowDto
 import com.r8n.backend.opinions.api.opinions.dto.OpinionStatusEnumDto
 import com.r8n.backend.opinions.api.opinions.dto.WeightedOpinionReferenceDto
 import com.r8n.backend.opinions.opinions.domain.ModerationDecision
@@ -82,6 +83,19 @@ class OpinionMapper(
                 weight,
             )
         }
+
+    fun toRowDto(opinion: Opinion): OpinionRowDto =
+        OpinionRowDto(
+            opinionId = opinion.id,
+            owner = opinion.owner,
+            ownerName = usersInternalApi.getUserName(opinion.owner),
+            subjective = opinion.subjective,
+            objective = opinion.objective,
+            mark = opinion.mark,
+            status = opinion.status.toDto(),
+            timestamp = opinion.timestamp,
+            weight = opinion.weight ?: 1.0,
+        )
 
     fun fromDto(opRef: WeightedOpinionReferenceDto) =
         with(opRef) {
