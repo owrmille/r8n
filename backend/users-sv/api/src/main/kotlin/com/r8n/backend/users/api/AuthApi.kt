@@ -54,7 +54,9 @@ interface AuthApi {
     @PostMapping(LOGOUT_PATH)
     @Operation(
         summary = "Log out",
-        description = "Invalidates the refresh token when present and clears the refresh token cookie.",
+        description =
+            "Ends the user's session. " +
+                "Invalidates the refresh token when present and clears the refresh token cookie.",
     )
     fun logout(
         @Parameter(description = "Refresh token cookie issued by login or refresh.")
