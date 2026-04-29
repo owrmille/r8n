@@ -21,20 +21,34 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import type { SupportMessageDto, SupportThreadSummaryDto } from "@/lib/api/messaging";
-import { MOCK_MESSAGE_THREADS, type MessageDirection, type MessageThread, type ThreadMessage } from "@/lib/messages";
+import type {
+  DirectConversationSummaryDto,
+  DirectMessageDto,
+  MessageAuthorRoleEnumDto,
+  SupportMessageDto,
+  SupportThreadSummaryDto,
+} from "@/lib/api/messaging";
+import type { UserSearchResultDto } from "@/lib/api/users";
+import type { MessageDirection, MessageThread, ThreadMessage } from "@/lib/messages";
 import {
+  useAddDirectConversationMessageMutation,
   useAddSupportThreadMessageMutation,
+  useCreateDirectConversationMutation,
   useCreateSupportThreadMutation,
   useDeleteSupportThreadMutation,
+  useDirectConversationMessages,
+  useDirectConversationSummaries,
   useMe,
   useSupportThreadMessages,
   useSupportThreadSummaries,
+  useUserSearch,
 } from "@/lib/server-state";
 import { cn } from "@/lib/utils";
 
 const SUPPORT_THREADS_PAGE = { page: 0, size: 50 } as const;
 const SUPPORT_MESSAGES_PAGE = { page: 0, size: 100 } as const;
+const DIRECT_CONVERSATIONS_PAGE = { page: 0, size: 50 } as const;
+const DIRECT_MESSAGES_PAGE = { page: 0, size: 100 } as const;
 
 function getBubbleClasses(direction: MessageDirection) {
   return direction === "outgoing"
@@ -85,6 +99,43 @@ function mapSupportSummaryToThread(summary: SupportThreadSummaryDto): MessageThr
   };
 }
 
+function mapDirectSummaryToThread(summary: DirectConversationSummaryDto): MessageThread {
+  const updatedAt = formatMessageDate(summary.lastMessageAt ?? summary.createdAt);
+
+  return {
+    id: summary.id,
+    subject: `Conversation with ${summary.participantDisplayName}`,
+    participantName: summary.participantDisplayName,
+    participantLastSeenAt: null,
+    participantRole: "User",
+    context: "Direct message",
+    updatedAt,
+    unreadCount: 0,
+    messages: [
+      {
+        id: `direct-preview-${summary.id}`,
+        direction: "incoming",
+        authorName: summary.participantDisplayName,
+        body: summary.lastMessageText ?? "No messages yet.",
+        sentAt: updatedAt,
+      },
+    ],
+  };
+}
+
+function formatRoleLabel(role: MessageAuthorRoleEnumDto): string | undefined {
+  switch (role) {
+    case "ADMIN":
+      return "Admin";
+    case "MODERATOR":
+      return "Moderator";
+    case "SUPPORT":
+      return "Support";
+    case "USER":
+      return undefined;
+  }
+}
+
 function mapSupportMessageToThreadMessage(
   message: SupportMessageDto,
   currentUserId: string | undefined,
@@ -101,23 +152,59 @@ function mapSupportMessageToThreadMessage(
   };
 }
 
+function mapDirectMessageToThreadMessage(
+  message: DirectMessageDto,
+  currentUserId: string | undefined,
+): ThreadMessage {
+  const isCurrentUser = message.authorUserId === currentUserId;
+
+  return {
+    id: message.id,
+    direction: isCurrentUser ? "outgoing" : "incoming",
+    authorName: message.authorDisplayName,
+    authorRoleLabel: formatRoleLabel(message.authorRole),
+    body: message.text,
+    sentAt: formatMessageDate(message.createdAt),
+  };
+}
+
 const Messages = () => {
-  const [directThreads, setDirectThreads] = useState<MessageThread[]>(
-    () => MOCK_MESSAGE_THREADS.filter((thread) => thread.participantRole !== "Support"),
-  );
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [isNewMessageDialogOpen, setIsNewMessageDialogOpen] = useState(false);
   const [newRecipient, setNewRecipient] = useState("");
+  const [selectedRecipient, setSelectedRecipient] = useState<UserSearchResultDto | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const me = useMe();
   const supportThreadsQuery = useSupportThreadSummaries({
     pageable: SUPPORT_THREADS_PAGE,
   });
+  const directConversationsQuery = useDirectConversationSummaries(
+    {
+      pageable: DIRECT_CONVERSATIONS_PAGE,
+    },
+    {
+      refetchInterval: 5000,
+    },
+  );
+  const isSupportRecipient = newRecipient.trim().toLowerCase().includes("support");
+  const userSearchQuery = useUserSearch(newRecipient, {
+    enabled: newRecipient.trim().length >= 2 && !isSupportRecipient,
+  });
   const createSupportThreadMutation = useCreateSupportThreadMutation({
     onSuccess: (thread) => {
       setActiveThreadId(thread.id);
       setNewRecipient("");
+      setSelectedRecipient(null);
+      setNewMessage("");
+      setIsNewMessageDialogOpen(false);
+    },
+  });
+  const createDirectConversationMutation = useCreateDirectConversationMutation({
+    onSuccess: (conversation) => {
+      setActiveThreadId(conversation.id);
+      setNewRecipient("");
+      setSelectedRecipient(null);
       setNewMessage("");
       setIsNewMessageDialogOpen(false);
     },
@@ -127,6 +214,10 @@ const Messages = () => {
     () => supportThreadsQuery.data?.items.map(mapSupportSummaryToThread) ?? [],
     [supportThreadsQuery.data?.items],
   );
+  const directThreads = useMemo(
+    () => directConversationsQuery.data?.items.map(mapDirectSummaryToThread) ?? [],
+    [directConversationsQuery.data?.items],
+  );
 
   const threads = useMemo(
     () => [...supportThreads, ...directThreads],
@@ -134,51 +225,15 @@ const Messages = () => {
   );
 
   const activeThread = threads.find((thread) => thread.id === activeThreadId) ?? null;
+  const isConversationListLoading = supportThreadsQuery.isLoading || directConversationsQuery.isLoading;
+  const isConversationListError = supportThreadsQuery.isError || directConversationsQuery.isError;
+  const isCreatingThread =
+    createSupportThreadMutation.isPending || createDirectConversationMutation.isPending;
 
   const updateDraft = (threadId: string, value: string) => {
     setDrafts((current) => ({
       ...current,
       [threadId]: value,
-    }));
-  };
-
-  const sendMessage = (threadId: string) => {
-    const draft = drafts[threadId]?.trim();
-
-    if (!draft) {
-      return;
-    }
-
-    setDirectThreads((current) => {
-      const thread = current.find((item) => item.id === threadId);
-      if (!thread) {
-        return current;
-      }
-
-      const nextMessage: ThreadMessage = {
-        id: `msg-${threadId}-${Date.now()}`,
-        direction: "outgoing",
-        authorName: "You",
-        body: draft,
-        sentAt: "Just now",
-      };
-
-      const updatedThread: MessageThread = {
-        ...thread,
-        updatedAt: "Just now",
-        unreadCount: 0,
-        messages: [...thread.messages, nextMessage],
-      };
-
-      return [
-        updatedThread,
-        ...current.filter((item) => item.id !== threadId),
-      ];
-    });
-
-    setDrafts((current) => ({
-      ...current,
-      [threadId]: "",
     }));
   };
 
@@ -190,44 +245,19 @@ const Messages = () => {
       return;
     }
 
-    const normalizedRecipient = recipientName.toLowerCase();
-    const isSupportThread = normalizedRecipient.includes("support");
-
-    if (isSupportThread) {
+    if (isSupportRecipient) {
       createSupportThreadMutation.mutate({ initialMessage: messageBody });
       return;
     }
 
-    const threadId = `thread-new-${Date.now()}`;
-    const createdThread: MessageThread = {
-      id: threadId,
-      subject: `Conversation with ${recipientName}`,
-      participantName: recipientName,
-      participantLastSeenAt: null,
-      participantRole: "User",
-      context: "Direct message",
-      updatedAt: "Just now",
-      unreadCount: 0,
-      messages: [
-        {
-          id: `msg-${threadId}-1`,
-          direction: "outgoing",
-          authorName: "You",
-          body: messageBody,
-          sentAt: "Just now",
-        },
-      ],
-    };
+    if (!selectedRecipient) {
+      return;
+    }
 
-    setDirectThreads((current) => [createdThread, ...current]);
-    setActiveThreadId(threadId);
-    setDrafts((current) => ({
-      ...current,
-      [threadId]: "",
-    }));
-    setNewRecipient("");
-    setNewMessage("");
-    setIsNewMessageDialogOpen(false);
+    createDirectConversationMutation.mutate({
+      initialMessage: messageBody,
+      recipientUserId: selectedRecipient.id,
+    });
   };
 
   return (
@@ -259,13 +289,13 @@ const Messages = () => {
       >
         <aside className="flex min-h-0 flex-col border-b border-border bg-card md:border-b-0 md:border-r">
           <div className="min-h-0 flex-1 overflow-y-auto py-3">
-            {supportThreadsQuery.isLoading && (
-              <StatusRow>Loading support conversations...</StatusRow>
+            {isConversationListLoading && (
+              <StatusRow>Loading conversations...</StatusRow>
             )}
-            {supportThreadsQuery.isError && (
-              <StatusRow variant="error">Support conversations could not be loaded.</StatusRow>
+            {isConversationListError && (
+              <StatusRow variant="error">Conversations could not be loaded.</StatusRow>
             )}
-            {!supportThreadsQuery.isLoading && !supportThreadsQuery.isError && threads.length === 0 && (
+            {!isConversationListLoading && !isConversationListError && threads.length === 0 && (
               <StatusRow>No conversations yet.</StatusRow>
             )}
             {threads.map((thread) => (
@@ -291,11 +321,11 @@ const Messages = () => {
                 thread={activeThread}
               />
             ) : (
-              <ChatPanel
+              <DirectChatPanel
+                currentUserId={me.data?.id}
                 draft={drafts[activeThread.id] ?? ""}
-                messages={activeThread.messages}
                 onDraftChange={(value) => updateDraft(activeThread.id, value)}
-                onSend={() => sendMessage(activeThread.id)}
+                onDraftSent={() => updateDraft(activeThread.id, "")}
                 thread={activeThread}
               />
             )
@@ -321,9 +351,24 @@ const Messages = () => {
               <Input
                 id="new-message-recipient"
                 value={newRecipient}
-                onChange={(event) => setNewRecipient(event.target.value)}
-                placeholder="Enter a name or R8N Support"
+                onChange={(event) => {
+                  setNewRecipient(event.target.value);
+                  setSelectedRecipient(null);
+                }}
+                placeholder="Search active users or enter R8N Support"
               />
+              {!isSupportRecipient && newRecipient.trim().length >= 2 && (
+                <RecipientSearchResults
+                  isError={userSearchQuery.isError}
+                  isLoading={userSearchQuery.isLoading}
+                  onSelect={(recipient) => {
+                    setSelectedRecipient(recipient);
+                    setNewRecipient(recipient.name);
+                  }}
+                  results={userSearchQuery.data ?? []}
+                  selectedRecipient={selectedRecipient}
+                />
+              )}
             </div>
             <div className="space-y-2">
               <label htmlFor="new-message-body" className="text-sm font-medium text-foreground">
@@ -353,7 +398,8 @@ const Messages = () => {
               disabled={
                 !newRecipient.trim() ||
                 !newMessage.trim() ||
-                createSupportThreadMutation.isPending
+                isCreatingThread ||
+                (!isSupportRecipient && !selectedRecipient)
               }
               onClick={createThread}
             >
@@ -448,33 +494,120 @@ const ThreadListItem = ({ isActive, onSelect, thread }: ThreadListItemProps) => 
   );
 };
 
-interface ChatPanelProps {
+interface RecipientSearchResultsProps {
+  isError: boolean;
+  isLoading: boolean;
+  onSelect: (recipient: UserSearchResultDto) => void;
+  results: UserSearchResultDto[];
+  selectedRecipient: UserSearchResultDto | null;
+}
+
+const RecipientSearchResults = ({
+  isError,
+  isLoading,
+  onSelect,
+  results,
+  selectedRecipient,
+}: RecipientSearchResultsProps) => (
+  <div className="rounded-lg border border-border bg-card">
+    {isLoading && (
+      <div className="px-3 py-2 text-xs text-muted-foreground">Searching active users...</div>
+    )}
+    {isError && (
+      <div className="px-3 py-2 text-xs text-destructive">User search failed.</div>
+    )}
+    {!isLoading && !isError && results.length === 0 && (
+      <div className="px-3 py-2 text-xs text-muted-foreground">No active users found.</div>
+    )}
+    {!isLoading && !isError && results.map((recipient) => (
+      <button
+        key={recipient.id}
+        type="button"
+        className={cn(
+          "flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-muted",
+          selectedRecipient?.id === recipient.id && "bg-primary/10",
+        )}
+        onClick={() => onSelect(recipient)}
+      >
+        <UserAvatar
+          userId={recipient.id}
+          name={recipient.name}
+          lastSeenAt={recipient.lastSeenAt}
+          size="sm"
+        />
+        <span className="min-w-0 flex-1 truncate">{recipient.name}</span>
+      </button>
+    ))}
+  </div>
+);
+
+interface DirectChatPanelProps {
+  currentUserId: string | undefined;
   draft: string;
-  messages: ThreadMessage[];
   onDraftChange: (value: string) => void;
-  onSend: () => void;
+  onDraftSent: () => void;
   thread: MessageThread;
 }
 
-const ChatPanel = ({
+const DirectChatPanel = ({
+  currentUserId,
   draft,
-  messages,
   onDraftChange,
-  onSend,
+  onDraftSent,
   thread,
-}: ChatPanelProps) => (
-  <div className="flex h-full min-h-0 flex-col">
-    <ChatHeader thread={thread} />
-    <MessageList messages={messages} />
-    <MessageComposer
-      draft={draft}
-      isSending={false}
-      onDraftChange={onDraftChange}
-      onSend={onSend}
-      participantName={thread.participantName}
-    />
-  </div>
-);
+}: DirectChatPanelProps) => {
+  const messagesQuery = useDirectConversationMessages(
+    {
+      conversationId: thread.id,
+      pageable: DIRECT_MESSAGES_PAGE,
+    },
+    {
+      refetchInterval: 5000,
+    },
+  );
+  const addMessageMutation = useAddDirectConversationMessageMutation({
+    onSuccess: () => onDraftSent(),
+  });
+  const messages =
+    messagesQuery.data?.items.map((message) =>
+      mapDirectMessageToThreadMessage(message, currentUserId),
+    ) ?? [];
+
+  const sendDirectMessage = () => {
+    const text = draft.trim();
+    if (!text) {
+      return;
+    }
+
+    addMessageMutation.mutate({
+      conversationId: thread.id,
+      request: { text },
+    });
+  };
+
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      <ChatHeader thread={thread} />
+      {messagesQuery.isLoading && (
+        <PanelStatus>Loading messages...</PanelStatus>
+      )}
+      {messagesQuery.isError && (
+        <PanelStatus variant="error">Messages could not be loaded.</PanelStatus>
+      )}
+      {!messagesQuery.isLoading && !messagesQuery.isError && messages.length === 0 && (
+        <PanelStatus>No messages in this conversation yet.</PanelStatus>
+      )}
+      {messages.length > 0 && <MessageList messages={messages} />}
+      <MessageComposer
+        draft={draft}
+        isSending={addMessageMutation.isPending}
+        onDraftChange={onDraftChange}
+        onSend={sendDirectMessage}
+        participantName={thread.participantName}
+      />
+    </div>
+  );
+};
 
 interface SupportChatPanelProps {
   currentUserId: string | undefined;

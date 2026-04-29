@@ -1,5 +1,6 @@
 package com.r8n.backend.messaging
 
+import com.r8n.backend.messaging.api.MessagingApi.Companion.DIRECT_CONVERSATIONS_PATH
 import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREAD_PATH
 import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREADS_PATH
 import com.r8n.backend.messaging.api.dto.messaging.SUPPORT_MESSAGE_TEXT_MAX_LENGTH
@@ -14,7 +15,9 @@ import com.r8n.backend.messaging.provider.database.ConversationRepository
 import com.r8n.backend.messaging.provider.database.MessageRepository
 import com.r8n.backend.messaging.provider.database.SupportMessageRepository
 import com.r8n.backend.messaging.provider.database.SupportThreadRepository
+import com.r8n.backend.users.api.dto.UserStatusEnumDto
 import com.r8n.backend.users.integration.api.UsersInternalApi
+import com.r8n.backend.users.integration.api.dto.UserDto
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -104,6 +107,11 @@ class SupportMessagingIntegrationTests {
         whenever(usersInternalApi.getUserName(eq(supportId))).thenReturn("Support Agent")
         whenever(usersInternalApi.getUserName(eq(adminId))).thenReturn("Admin Agent")
         whenever(usersInternalApi.getUserName(eq(moderatorId))).thenReturn("Moderator User")
+        whenever(usersInternalApi.getUser(eq(userAId))).thenReturn(userDto(userAId, "User A"))
+        whenever(usersInternalApi.getUser(eq(userBId))).thenReturn(userDto(userBId, "User B"))
+        whenever(usersInternalApi.getUser(eq(supportId))).thenReturn(userDto(supportId, "Support Agent"))
+        whenever(usersInternalApi.getUser(eq(adminId))).thenReturn(userDto(adminId, "Admin Agent"))
+        whenever(usersInternalApi.getUser(eq(moderatorId))).thenReturn(userDto(moderatorId, "Moderator User"))
     }
 
     @Test
@@ -558,6 +566,175 @@ class SupportMessagingIntegrationTests {
     }
 
     @Test
+    fun `active user can create direct conversation with another active user`() {
+        val result =
+            mockMvc
+                .perform(
+                    post(DIRECT_CONVERSATIONS_PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                            objectMapper.writeValueAsString(
+                                mapOf(
+                                    "recipientUserId" to userBId.toString(),
+                                    "initialMessage" to "Hello User B",
+                                ),
+                            ),
+                        ).with(user(userAId.toString()).roles("USER"))
+                        .with(csrf()),
+                ).andExpect(status().isOk)
+                .andExpect(jsonPath("$.participantUserId").value(userBId.toString()))
+                .andExpect(jsonPath("$.participantDisplayName").value("User B"))
+                .andExpect(jsonPath("$.lastMessageText").value("Hello User B"))
+                .andReturn()
+
+        val conversationId = UUID.fromString(objectMapper.readTree(result.response.contentAsString)["id"].asString())
+
+        mockMvc
+            .perform(
+                get(directMessagesPath(conversationId))
+                    .param("page", "0")
+                    .param("size", "20")
+                    .with(user(userAId.toString()).roles("USER")),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.items.length()").value(1))
+            .andExpect(jsonPath("$.items[0].authorUserId").value(userAId.toString()))
+            .andExpect(jsonPath("$.items[0].authorDisplayName").value("User A"))
+            .andExpect(jsonPath("$.items[0].authorRole").value("USER"))
+            .andExpect(jsonPath("$.items[0].text").value("Hello User B"))
+
+        mockMvc
+            .perform(
+                get(DIRECT_CONVERSATIONS_PATH)
+                    .param("page", "0")
+                    .param("size", "20")
+                    .with(user(userBId.toString()).roles("USER")),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.items.length()").value(1))
+            .andExpect(jsonPath("$.items[0].id").value(conversationId.toString()))
+            .andExpect(jsonPath("$.items[0].participantUserId").value(userAId.toString()))
+            .andExpect(jsonPath("$.items[0].participantDisplayName").value("User A"))
+    }
+
+    @Test
+    fun `direct conversation participant can respond`() {
+        val conversationId = createDirectConversation(userAId, userBId, "Hello User B")
+
+        mockMvc
+            .perform(
+                post(directMessagesPath(conversationId))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"text":"Hello User A"}""")
+                    .with(user(userBId.toString()).roles("USER"))
+                    .with(csrf()),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.authorUserId").value(userBId.toString()))
+            .andExpect(jsonPath("$.authorDisplayName").value("User B"))
+            .andExpect(jsonPath("$.text").value("Hello User A"))
+
+        mockMvc
+            .perform(
+                get(directMessagesPath(conversationId))
+                    .param("page", "0")
+                    .param("size", "20")
+                    .with(user(userAId.toString()).roles("USER")),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.items.length()").value(2))
+            .andExpect(jsonPath("$.items[1].text").value("Hello User A"))
+    }
+
+    @Test
+    fun `creating duplicate direct conversation appends message to existing conversation`() {
+        val conversationId = createDirectConversation(userAId, userBId, "First")
+
+        mockMvc
+            .perform(
+                post(DIRECT_CONVERSATIONS_PATH)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        objectMapper.writeValueAsString(
+                            mapOf(
+                                "recipientUserId" to userBId.toString(),
+                                "initialMessage" to "Second",
+                            ),
+                        ),
+                    ).with(user(userAId.toString()).roles("USER"))
+                    .with(csrf()),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.id").value(conversationId.toString()))
+            .andExpect(jsonPath("$.lastMessageText").value("Second"))
+
+        mockMvc
+            .perform(
+                get(directMessagesPath(conversationId))
+                    .param("page", "0")
+                    .param("size", "20")
+                    .with(user(userAId.toString()).roles("USER")),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.items.length()").value(2))
+    }
+
+    @Test
+    fun `user cannot create direct conversation with self`() {
+        mockMvc
+            .perform(
+                post(DIRECT_CONVERSATIONS_PATH)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        objectMapper.writeValueAsString(
+                            mapOf(
+                                "recipientUserId" to userAId.toString(),
+                                "initialMessage" to "Hello myself",
+                            ),
+                        ),
+                    ).with(user(userAId.toString()).roles("USER"))
+                    .with(csrf()),
+            ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `user cannot create direct conversation with inactive user`() {
+        whenever(usersInternalApi.getUser(eq(userBId)))
+            .thenReturn(userDto(userBId, "User B", UserStatusEnumDto.SUSPENDED))
+
+        mockMvc
+            .perform(
+                post(DIRECT_CONVERSATIONS_PATH)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        objectMapper.writeValueAsString(
+                            mapOf(
+                                "recipientUserId" to userBId.toString(),
+                                "initialMessage" to "Hello User B",
+                            ),
+                        ),
+                    ).with(user(userAId.toString()).roles("USER"))
+                    .with(csrf()),
+            ).andExpect(status().`is`(422))
+    }
+
+    @Test
+    fun `non participant cannot read or send direct messages`() {
+        val conversationId = createDirectConversation(userAId, userBId, "Hello User B")
+
+        mockMvc
+            .perform(
+                get(directMessagesPath(conversationId))
+                    .param("page", "0")
+                    .param("size", "20")
+                    .with(user(moderatorId.toString()).roles("MODERATOR")),
+            ).andExpect(status().isNotFound)
+
+        mockMvc
+            .perform(
+                post(directMessagesPath(conversationId))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"text":"I should not be here"}""")
+                    .with(user(moderatorId.toString()).roles("MODERATOR"))
+                    .with(csrf()),
+            ).andExpect(status().isNotFound)
+    }
+
+    @Test
     fun `deleting non-existent thread returns 404`() {
         mockMvc
             .perform(
@@ -603,7 +780,47 @@ class SupportMessagingIntegrationTests {
             ).andExpect(status().isOk)
     }
 
+    private fun createDirectConversation(
+        senderId: UUID,
+        recipientId: UUID,
+        initialMessage: String,
+    ): UUID {
+        val result =
+            mockMvc
+                .perform(
+                    post(DIRECT_CONVERSATIONS_PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                            objectMapper.writeValueAsString(
+                                mapOf(
+                                    "recipientUserId" to recipientId.toString(),
+                                    "initialMessage" to initialMessage,
+                                ),
+                            ),
+                        ).with(user(senderId.toString()).roles("USER"))
+                        .with(csrf()),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        return UUID.fromString(objectMapper.readTree(result.response.contentAsString)["id"].asString())
+    }
+
+    private fun userDto(
+        id: UUID,
+        name: String,
+        status: UserStatusEnumDto = UserStatusEnumDto.ACTIVE,
+    ) = UserDto(
+        id = id,
+        name = name,
+        email = "$id@r8n.test",
+        status = status,
+        statusTimestamp = Instant.parse("2024-01-01T12:00:00Z"),
+        consents = emptyList(),
+    )
+
     private fun threadPath(threadId: UUID): String = SUPPORT_THREAD_PATH.replace("{threadId}", threadId.toString())
 
     private fun messagesPath(threadId: UUID): String = "/api/messaging/support/threads/$threadId/messages"
+
+    private fun directMessagesPath(conversationId: UUID): String = "$DIRECT_CONVERSATIONS_PATH/$conversationId/messages"
 }

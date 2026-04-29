@@ -9,6 +9,49 @@ import {
 
 export type SupportParticipantRoleEnumDto = "USER" | "SUPPORT";
 export type SupportThreadViewerRoleEnumDto = "REQUESTER" | "SUPPORT";
+export type MessageAuthorRoleEnumDto = "USER" | "MODERATOR" | "SUPPORT" | "ADMIN";
+
+export interface DirectConversationSummaryDto {
+  id: Uuid;
+  participantUserId: Uuid;
+  participantDisplayName: string;
+  createdAt: string;
+  lastMessageAt: string | null;
+  lastMessageText: string | null;
+}
+
+export interface DirectMessageDto {
+  id: Uuid;
+  conversationId: Uuid;
+  authorUserId: Uuid;
+  authorDisplayName: string;
+  authorRole: MessageAuthorRoleEnumDto;
+  text: string;
+  createdAt: string;
+}
+
+export interface CreateDirectConversationRequestDto {
+  recipientUserId: Uuid;
+  initialMessage: string;
+}
+
+export interface CreateDirectMessageRequestDto {
+  text: string;
+}
+
+export interface GetDirectConversationSummariesRequestDto {
+  pageable: PageRequestDto;
+}
+
+export interface GetDirectConversationMessagesRequestDto {
+  conversationId: Uuid;
+  pageable: PageRequestDto;
+}
+
+export interface AddDirectConversationMessageRequestDto {
+  conversationId: Uuid;
+  request: CreateDirectMessageRequestDto;
+}
 
 export interface SupportThreadSummaryDto {
   id: Uuid;
@@ -53,6 +96,54 @@ export interface AddSupportThreadMessageRequestDto {
 
 export function createMessagingApi(client: HttpClient = httpClient) {
   return {
+    getDirectConversationSummaries(
+      request: GetDirectConversationSummariesRequestDto,
+    ): Promise<PageResponseDto<DirectConversationSummaryDto>> {
+      return client.get<PageResponseDto<DirectConversationSummaryDto>>(
+        "/messaging/direct/conversations",
+        {
+          auth: "required",
+          query: createPageQuery(request.pageable),
+        },
+      );
+    },
+
+    createDirectConversation(
+      request: CreateDirectConversationRequestDto,
+    ): Promise<DirectConversationSummaryDto> {
+      return client.post<DirectConversationSummaryDto>(
+        "/messaging/direct/conversations",
+        {
+          auth: "required",
+          body: request,
+        },
+      );
+    },
+
+    getDirectConversationMessages(
+      request: GetDirectConversationMessagesRequestDto,
+    ): Promise<PageResponseDto<DirectMessageDto>> {
+      return client.get<PageResponseDto<DirectMessageDto>>(
+        `/messaging/direct/conversations/${request.conversationId}/messages`,
+        {
+          auth: "required",
+          query: createPageQuery(request.pageable),
+        },
+      );
+    },
+
+    addDirectConversationMessage(
+      request: AddDirectConversationMessageRequestDto,
+    ): Promise<DirectMessageDto> {
+      return client.post<DirectMessageDto, CreateDirectMessageRequestDto>(
+        `/messaging/direct/conversations/${request.conversationId}/messages`,
+        {
+          auth: "required",
+          body: request.request,
+        },
+      );
+    },
+
     getSupportThreadSummaries(
       request: GetSupportThreadSummariesRequestDto,
     ): Promise<PageResponseDto<SupportThreadSummaryDto>> {

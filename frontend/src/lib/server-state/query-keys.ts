@@ -3,6 +3,8 @@ import type {
   GetOutgoingAccessRequestsRequestDto,
 } from "@/lib/api/access-requests";
 import type {
+  GetDirectConversationMessagesRequestDto,
+  GetDirectConversationSummariesRequestDto,
   GetSupportThreadMessagesRequestDto,
   GetSupportThreadSummariesRequestDto,
 } from "@/lib/api/messaging";
@@ -98,6 +100,20 @@ export const selectorsKeys = {
 
 export const messagingKeys = {
   all: ["messaging"] as const,
+  directConversations: (request: GetDirectConversationSummariesRequestDto) => [
+    "messaging",
+    "direct",
+    "conversations",
+    request.pageable,
+  ] as const,
+  directConversationMessages: (request: GetDirectConversationMessagesRequestDto) => [
+    "messaging",
+    "direct",
+    "conversations",
+    request.conversationId,
+    "messages",
+    request.pageable,
+  ] as const,
   supportThreads: (request: GetSupportThreadSummariesRequestDto) => [
     "messaging",
     "support",
@@ -118,6 +134,7 @@ export const usersKeys = {
   all: ["users"] as const,
   me: () => ["users", "me"] as const,
   detail: (id: string) => ["users", "detail", id] as const,
+  search: (query: string) => ["users", "search", query] as const,
   avatar: (id: string) => ["users", "avatar", id] as const,
   withRoles: () => ["users", "with-roles"] as const,
 };

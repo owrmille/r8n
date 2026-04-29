@@ -11,4 +11,6 @@ interface MessageRepository : JpaRepository<MessagePersistence, UUID> {
         conversationId: UUID,
         pageable: Pageable,
     ): Page<MessagePersistence>
+
+    fun findAllByConversationIdInOrderByConversationIdAscCreatedAtAsc(conversationIds: Collection<UUID>): List<MessagePersistence>
 }

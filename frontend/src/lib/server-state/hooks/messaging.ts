@@ -1,8 +1,14 @@
 import type { QueryKey, UseMutationOptions, UseQueryOptions } from "@tanstack/react-query";
 import { messagingApi } from "@/lib/api";
 import type {
+  AddDirectConversationMessageRequestDto,
   AddSupportThreadMessageRequestDto,
+  CreateDirectConversationRequestDto,
   CreateSupportThreadRequestDto,
+  DirectConversationSummaryDto,
+  DirectMessageDto,
+  GetDirectConversationMessagesRequestDto,
+  GetDirectConversationSummariesRequestDto,
   GetSupportThreadMessagesRequestDto,
   GetSupportThreadSummariesRequestDto,
   SupportMessageDto,
@@ -33,6 +39,93 @@ export function useSupportThreadSummaries(
     queryKey: messagingKeys.supportThreads(request),
     queryFn: () => messagingApi.getSupportThreadSummaries(request),
     ...options,
+  });
+}
+
+export function useDirectConversationSummaries(
+  request: GetDirectConversationSummariesRequestDto,
+  options?: Omit<
+    UseQueryOptions<
+      PageResponseDto<DirectConversationSummaryDto>,
+      Error,
+      PageResponseDto<DirectConversationSummaryDto>,
+      QueryKey
+    >,
+    "queryKey" | "queryFn"
+  >,
+) {
+  return useAuthorizedQuery({
+    queryKey: messagingKeys.directConversations(request),
+    queryFn: () => messagingApi.getDirectConversationSummaries(request),
+    ...options,
+  });
+}
+
+export function useDirectConversationMessages(
+  request: GetDirectConversationMessagesRequestDto,
+  options?: Omit<
+    UseQueryOptions<
+      PageResponseDto<DirectMessageDto>,
+      Error,
+      PageResponseDto<DirectMessageDto>,
+      QueryKey
+    >,
+    "queryKey" | "queryFn"
+  >,
+) {
+  return useAuthorizedQuery({
+    queryKey: messagingKeys.directConversationMessages(request),
+    queryFn: () => messagingApi.getDirectConversationMessages(request),
+    enabled: Boolean(request.conversationId),
+    ...options,
+  });
+}
+
+export function useCreateDirectConversationMutation(
+  options?: UseMutationOptions<
+    DirectConversationSummaryDto,
+    Error,
+    CreateDirectConversationRequestDto,
+    unknown
+  >,
+) {
+  const invalidate = useApiInvalidation();
+
+  return useAuthorizedMutation({
+    mutationFn: (variables) => messagingApi.createDirectConversation(variables),
+    ...options,
+    meta: {
+      errorTitle: "Direct conversation creation failed",
+      ...options?.meta,
+    } as ApiErrorMeta,
+    onSuccess: (data, variables, context) => {
+      invalidate(messagingKeys.all);
+      options?.onSuccess?.(data, variables, context);
+    },
+  });
+}
+
+export function useAddDirectConversationMessageMutation(
+  options?: UseMutationOptions<
+    DirectMessageDto,
+    Error,
+    AddDirectConversationMessageRequestDto,
+    unknown
+  >,
+) {
+  const invalidate = useApiInvalidation();
+
+  return useAuthorizedMutation({
+    mutationFn: (variables) => messagingApi.addDirectConversationMessage(variables),
+    ...options,
+    meta: {
+      errorTitle: "Direct message send failed",
+      ...options?.meta,
+    } as ApiErrorMeta,
+    onSuccess: (data, variables, context) => {
+      invalidate(messagingKeys.all);
+      options?.onSuccess?.(data, variables, context);
+    },
   });
 }
 
