@@ -4,6 +4,7 @@ import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.security.Authority
+import com.r8n.backend.security.CurrentUserIdentifier.getCurrentUserId
 import com.r8n.backend.users.facade.UserFacade
 import com.r8n.backend.users.integration.api.KeyValidationApi
 import com.r8n.backend.users.integration.api.UsersInternalApi
@@ -55,5 +56,5 @@ class InterserviceController(
     }
 
     @PreAuthorize(Authority.IS_SERVICE)
-    override fun restoreUser(user: UserDto): UUID = userFacade.restoreUser(user)
+    override fun restoreUser(user: UserDto) { userFacade.restoreUser(getCurrentUserId(), user) }
 }

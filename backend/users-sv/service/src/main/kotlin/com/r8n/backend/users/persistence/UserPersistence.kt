@@ -16,7 +16,6 @@ import java.util.UUID
 @Table(schema = "users", name = "users")
 class UserPersistence(
     @Id
-    @GeneratedValue
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
     var id: UUID,
 //

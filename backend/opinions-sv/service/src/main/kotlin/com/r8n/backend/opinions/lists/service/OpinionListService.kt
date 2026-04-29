@@ -350,38 +350,4 @@ class OpinionListService(
             )
         }
     }
-
-    @Transactional
-    fun restoreOpinion(dto: OpinionDto) {
-        opinionService.restoreOpinion(dto)
-    }
-
-    @Transactional
-    fun restoreOpinionList(dto: OpinionListDto) {
-        val list =
-            opinionListRepository.save(
-                OpinionListPersistence(
-                    id = dto.id,
-                    owner = dto.owner,
-                    name = dto.listName,
-                    privacy =
-                        when (dto.privacy) {
-                            OpinionListPrivacyEnumDto.SEARCHABLE -> OpinionListPrivacyEnum.SEARCHABLE
-                            OpinionListPrivacyEnumDto.PRIVATE -> OpinionListPrivacyEnum.PRIVATE
-                        },
-                ),
-            )
-
-        dto.opinionSummaries.forEach { summary ->
-            summary.opinions.forEach { opRef ->
-                opinionsAssignmentRepository.save(
-                    OpinionsToOpinionListsPersistence(
-                        opinionList = list.id!!,
-                        opinion = opRef.opinion,
-                        weight = opRef.weight,
-                    ),
-                )
-            }
-        }
-    }
 }

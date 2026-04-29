@@ -1,6 +1,7 @@
 package com.r8n.backend.opinions.lists.controller
 
 import com.r8n.backend.core.api.PageRequestDto
+import com.r8n.backend.core.api.PageResponseDto
 import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.opinions.access.database.AccessRequestRepository
 import com.r8n.backend.opinions.access.domain.RequestStatusEnum
@@ -58,9 +59,9 @@ class StubOpinionListController(
         authorId: UUID?,
         authorNameSubstring: String?,
         pageable: PageRequestDto,
-    ): com.r8n.backend.core.api.PageResponseDto<OpinionListSummaryDto> {
+    ): PageResponseDto<OpinionListSummaryDto> {
         // Only implement search by name substring as per scope
-        if (nameSubstring != null && nameSubstring.isNotBlank()) {
+        if (!nameSubstring.isNullOrBlank()) {
             return opinionListFacade.searchOpinionListsByName(nameSubstring, pageable)
         }
         // Return empty page if no search criteria provided

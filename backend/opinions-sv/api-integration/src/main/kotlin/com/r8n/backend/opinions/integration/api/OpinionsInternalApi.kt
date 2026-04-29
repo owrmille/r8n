@@ -19,9 +19,4 @@ interface OpinionsInternalApi {
         @Valid
         pageable: PageRequestDto,
     ): PageResponseDto<OpinionDto>
-
-    @PostMapping(RESTORE_PATH)
-    fun restoreOpinion(
-        @RequestBody opinion: OpinionDto,
-    )
 }

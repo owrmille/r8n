@@ -15,7 +15,6 @@ import java.util.UUID
 @Table(schema = "users", name = "users_role_assignments")
 class UserRoleAssignmentPersistence(
     @Id
-    @GeneratedValue
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
     var id: UUID? = null,
 //

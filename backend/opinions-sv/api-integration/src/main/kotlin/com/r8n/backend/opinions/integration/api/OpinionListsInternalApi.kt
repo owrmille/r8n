@@ -18,9 +18,4 @@ interface OpinionListsInternalApi {
         @Valid
         pageable: PageRequestDto,
     ): PageResponseDto<OpinionListDto>
-
-    @PostMapping("/api/internal/opinion-lists/restore")
-    fun restoreOpinionList(
-        @RequestBody list: OpinionListDto,
-    )
 }
