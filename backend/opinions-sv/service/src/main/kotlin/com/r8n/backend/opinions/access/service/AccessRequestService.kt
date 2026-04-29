@@ -59,9 +59,12 @@ class AccessRequestService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Owner cannot request access to their own list")
         }
 
-        val existing = getRequests(listId, requesterId, null, null, null, Pageable.unpaged()).firstOrNull()
-        if (existing != null) {
-            return existing
+        // Idempotent: an existing SENT request is returned as-is. Terminal states
+        // (CANCELLED, REJECTED) and ACCEPTED do not block creating a new SENT row.
+        val existingSent =
+            getRequests(listId, requesterId, null, null, RequestStatusEnum.SENT, Pageable.unpaged()).firstOrNull()
+        if (existingSent != null) {
+            return existingSent
         }
 
         val now = Instant.now()
