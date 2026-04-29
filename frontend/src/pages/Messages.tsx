@@ -87,22 +87,15 @@ function mapSupportSummaryToThread(summary: SupportThreadSummaryDto): MessageThr
 
 function mapSupportMessageToThreadMessage(
   message: SupportMessageDto,
-  threadViewerRole: SupportThreadSummaryDto["viewerRole"],
   currentUserId: string | undefined,
 ): ThreadMessage {
-  const isCurrentUser =
-    threadViewerRole === "REQUESTER"
-      ? message.authorUserId === currentUserId
-      : message.authorRole === "SUPPORT";
+  const isCurrentUser = message.authorUserId === currentUserId;
 
   return {
     id: message.id,
     direction: isCurrentUser ? "outgoing" : "incoming",
-    authorName: isCurrentUser
-      ? "You"
-      : message.authorRole === "SUPPORT"
-        ? "R8N Support"
-        : "User",
+    authorName: message.authorDisplayName,
+    authorRoleLabel: message.authorRole === "SUPPORT" ? "Support" : undefined,
     body: message.text,
     sentAt: formatMessageDate(message.createdAt),
   };
@@ -514,7 +507,6 @@ const SupportChatPanel = ({
     messagesQuery.data?.items.map((message) =>
       mapSupportMessageToThreadMessage(
         message,
-        thread.supportViewerRole ?? "REQUESTER",
         currentUserId,
       ),
     ) ?? [];
@@ -629,6 +621,18 @@ const MessageList = ({ messages }: MessageListProps) => (
             <span className="text-sm font-medium">
               {message.authorName}
             </span>
+            {message.authorRoleLabel && (
+              <span
+                className={cn(
+                  "rounded-full px-2 py-0.5 text-[10px] font-medium",
+                  message.direction === "outgoing"
+                    ? "bg-primary-foreground/15 text-primary-foreground/80"
+                    : "bg-background text-muted-foreground",
+                )}
+              >
+                {message.authorRoleLabel}
+              </span>
+            )}
             <span
               className={cn(
                 "text-[10px]",

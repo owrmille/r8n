@@ -4,6 +4,7 @@ export interface ThreadMessage {
   id: string;
   direction: MessageDirection;
   authorName: string;
+  authorRoleLabel?: string;
   body: string;
   sentAt: string;
 }

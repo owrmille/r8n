@@ -5,8 +5,11 @@ import com.r8n.backend.messaging.api.MessagingApi.Companion.SUPPORT_THREADS_PATH
 import com.r8n.backend.messaging.api.dto.messaging.SUPPORT_MESSAGE_TEXT_MAX_LENGTH
 import com.r8n.backend.messaging.provider.database.SupportMessageRepository
 import com.r8n.backend.messaging.provider.database.SupportThreadRepository
+import com.r8n.backend.users.integration.api.UsersInternalApi
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment
@@ -16,6 +19,7 @@ import org.springframework.http.MediaType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
@@ -64,10 +68,18 @@ class SupportMessagingIntegrationTests {
     @Autowired
     lateinit var supportMessageRepository: SupportMessageRepository
 
+    @MockitoBean
+    lateinit var usersInternalApi: UsersInternalApi
+
     @BeforeEach
     fun setUp() {
         supportMessageRepository.deleteAll()
         supportThreadRepository.deleteAll()
+        whenever(usersInternalApi.getUserName(eq(userAId))).thenReturn("User A")
+        whenever(usersInternalApi.getUserName(eq(userBId))).thenReturn("User B")
+        whenever(usersInternalApi.getUserName(eq(supportId))).thenReturn("Support Agent")
+        whenever(usersInternalApi.getUserName(eq(adminId))).thenReturn("Admin Agent")
+        whenever(usersInternalApi.getUserName(eq(moderatorId))).thenReturn("Moderator User")
     }
 
     @Test
@@ -84,6 +96,7 @@ class SupportMessagingIntegrationTests {
             .andExpect(jsonPath("$.items.length()").value(1))
             .andExpect(jsonPath("$.items[0].threadId").value(threadId.toString()))
             .andExpect(jsonPath("$.items[0].authorUserId").value(userAId.toString()))
+            .andExpect(jsonPath("$.items[0].authorDisplayName").value("User A"))
             .andExpect(jsonPath("$.items[0].authorRole").value("USER"))
     }
 
@@ -113,6 +126,7 @@ class SupportMessagingIntegrationTests {
                     .with(user(supportId.toString()).roles("SUPPORT")),
             ).andExpect(status().isOk)
             .andExpect(jsonPath("$.items.length()").value(2))
+            .andExpect(jsonPath("$.items[1].authorDisplayName").value("Support Agent"))
             .andExpect(jsonPath("$.items[1].authorRole").value("SUPPORT"))
     }
 

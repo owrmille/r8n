@@ -23,6 +23,7 @@ export interface SupportMessageDto {
   id: Uuid;
   threadId: Uuid;
   authorUserId: Uuid;
+  authorDisplayName: string;
   authorRole: SupportParticipantRoleEnumDto;
   text: string;
   createdAt: string;

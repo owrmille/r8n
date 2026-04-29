@@ -172,6 +172,7 @@ class ExportIntegrationTests {
                         id = UUID.fromString("00000000-0000-0000-0000-000000000002"),
                         threadId = supportThreadId,
                         authorUserId = UUID.fromString(USER_ID),
+                        authorDisplayName = "Test User",
                         authorRole = SupportParticipantRoleEnumDto.USER,
                         text = "I have issue with post",
                         createdAt = timestamp,

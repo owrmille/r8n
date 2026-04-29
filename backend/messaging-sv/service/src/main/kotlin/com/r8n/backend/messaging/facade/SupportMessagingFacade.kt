@@ -13,6 +13,7 @@ import com.r8n.backend.messaging.service.SupportActor
 import com.r8n.backend.messaging.service.SupportMessagingService
 import com.r8n.backend.messaging.service.SupportThreadSummary
 import com.r8n.backend.messaging.service.SupportThreadWithMessages
+import com.r8n.backend.users.integration.api.UsersInternalApi
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -21,6 +22,7 @@ import java.util.UUID
 @Service
 class SupportMessagingFacade(
     private val supportMessagingService: SupportMessagingService,
+    private val usersInternalApi: UsersInternalApi,
 ) {
     fun getSupportThreadSummaries(
         actor: SupportActor,
@@ -37,7 +39,16 @@ class SupportMessagingFacade(
         actor: SupportActor,
         threadId: UUID,
         pageable: Pageable,
-    ): Page<SupportMessageDto> = supportMessagingService.getThreadMessages(actor, threadId, pageable).map { it.toDto() }
+    ): Page<SupportMessageDto> {
+        val authorNames = mutableMapOf<UUID, String>()
+        return supportMessagingService.getThreadMessages(actor, threadId, pageable).map {
+            val authorDisplayName =
+                authorNames.getOrPut(it.authorUserId) {
+                    usersInternalApi.getUserName(it.authorUserId)
+                }
+            it.toDto(authorDisplayName)
+        }
+    }
 
     fun deleteSupportThread(
         actor: SupportActor,
@@ -48,7 +59,10 @@ class SupportMessagingFacade(
         actor: SupportActor,
         threadId: UUID,
         request: CreateSupportMessageRequestDto,
-    ): SupportMessageDto = supportMessagingService.addThreadMessage(actor, threadId, request.text.trim()).toDto()
+    ): SupportMessageDto {
+        val message = supportMessagingService.addThreadMessage(actor, threadId, request.text.trim())
+        return message.toDto(usersInternalApi.getUserName(message.authorUserId))
+    }
 
     private fun SupportThreadWithMessages.toSummaryDto(actor: SupportActor): SupportThreadSummaryDto =
         SupportThreadSummaryDto(
@@ -70,11 +84,12 @@ class SupportMessagingFacade(
             lastMessageText = lastMessageText,
         )
 
-    private fun SupportMessagePersistence.toDto(): SupportMessageDto =
+    private fun SupportMessagePersistence.toDto(authorDisplayName: String): SupportMessageDto =
         SupportMessageDto(
             id = requireNotNull(id),
             threadId = threadId,
             authorUserId = authorUserId,
+            authorDisplayName = authorDisplayName,
             authorRole = authorRole.toDto(),
             text = text,
             createdAt = createdAt,
