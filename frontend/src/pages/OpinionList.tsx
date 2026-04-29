@@ -353,14 +353,8 @@ const ItemRow = ({
                 className="overflow-hidden"
               >
                 <div className="border-t border-border bg-muted/10 px-4 py-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-medium text-foreground">
-                      {summary.subjectName}
-                      {shouldAppendReferent(summary.subjectName, summary.referentName) && (
-                        <span className="text-muted-foreground font-normal"> @ {summary.referentName}</span>
-                      )}
-                    </span>
-                    {!hasMyReview && (
+                  {!hasMyReview && (
+                    <div className="flex justify-end mb-3">
                       <Button
                         variant="outline"
                         size="sm"
@@ -369,8 +363,8 @@ const ItemRow = ({
                       >
                         <Plus className="mr-1 h-3 w-3" /> Add my review
                       </Button>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
                   {summary.opinions.length > 0 && (
                     <div className="rounded-xl border border-border overflow-hidden bg-card">
