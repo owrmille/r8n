@@ -120,6 +120,9 @@ const SupplierSearch = ({
   const [addressDraft, setAddressDraft] = useState("");
   const [addressLat, setAddressLat] = useState<number | null>(null);
   const [addressLng, setAddressLng] = useState<number | null>(null);
+  // Tracks the formatted address of the last Photon suggestion the user picked,
+  // so we only invalidate lat/lng when the typed address actually diverges from it.
+  const [selectedFormatted, setSelectedFormatted] = useState<string | null>(null);
   const [photonSuggestions, setPhotonSuggestions] = useState<PhotonFeature[]>([]);
   const [showPhotonDropdown, setShowPhotonDropdown] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -139,6 +142,7 @@ const SupplierSearch = ({
         setAddressDraft("");
         setAddressLat(null);
         setAddressLng(null);
+        setSelectedFormatted(null);
         setPhotonSuggestions([]);
         setShowPhotonDropdown(false);
       }
@@ -156,6 +160,11 @@ const SupplierSearch = ({
     const ctrl = new AbortController();
     const timer = setTimeout(async () => {
       try {
+        // Photon's free public instance: komoot's TOS asks for a meaningful
+        // User-Agent. Browsers force their own UA on `fetch` and silently drop
+        // any custom value, so we can't set one here. If volume grows enough
+        // to hit komoot's fair-use limits we should proxy through the backend
+        // and set a real UA there.
         // lat/lon bias toward Berlin so local results rank first; results elsewhere still appear.
         const res = await fetch(
           `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=10&lang=en&lat=52.52&lon=13.405`,
@@ -194,6 +203,7 @@ const SupplierSearch = ({
       setAddressDraft("");
       setAddressLat(null);
       setAddressLng(null);
+      setSelectedFormatted(null);
       setPhotonSuggestions([]);
       setShowPhotonDropdown(false);
       setOpen(false);
@@ -234,6 +244,9 @@ const SupplierSearch = ({
             setOpen(true);
             setShowCreateForm(false);
             setAddressDraft("");
+            setAddressLat(null);
+            setAddressLng(null);
+            setSelectedFormatted(null);
           }}
           onFocus={() => setOpen(true)}
           placeholder="Search restaurant, brand, shop..."
@@ -316,9 +329,15 @@ const SupplierSearch = ({
                   value={addressDraft}
                   autoFocus={showCreateForm}
                   onChange={(e) => {
-                    setAddressDraft(e.target.value);
-                    setAddressLat(null);
-                    setAddressLng(null);
+                    const next = e.target.value;
+                    setAddressDraft(next);
+                    // Only invalidate captured coords if the typed address has
+                    // actually diverged from the picked Photon suggestion.
+                    if (selectedFormatted !== null && next !== selectedFormatted) {
+                      setAddressLat(null);
+                      setAddressLng(null);
+                      setSelectedFormatted(null);
+                    }
                     setShowPhotonDropdown(true);
                   }}
                   onFocus={() => setShowPhotonDropdown(true)}
@@ -342,6 +361,7 @@ const SupplierSearch = ({
                           type="button"
                           onClick={() => {
                             setAddressDraft(formatted);
+                            setSelectedFormatted(formatted);
                             const [lng, lat] = f.geometry.coordinates;
                             setAddressLat(lat);
                             setAddressLng(lng);
