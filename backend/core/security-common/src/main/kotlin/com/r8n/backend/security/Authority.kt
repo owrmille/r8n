@@ -12,6 +12,7 @@ object Authority {
     const val SUPPORT = "ROLE_SUPPORT"
     const val IS_SUPPORT = "hasRole('$SUPPORT')"
     const val IS_USER_OR_SUPPORT = "hasRole('$USER') or hasRole('$SUPPORT')"
+    const val IS_USER_OR_SUPPORT_OR_ADMIN = "hasRole('$USER') or hasRole('$SUPPORT') or hasRole('$ADMIN')"
     const val SERVICE = "ROLE_SERVICE"
     const val IS_SERVICE = "hasRole('$SERVICE')"
     const val IS_USER_OR_SERVICE = "hasRole('$USER') or hasRole('$SERVICE')"

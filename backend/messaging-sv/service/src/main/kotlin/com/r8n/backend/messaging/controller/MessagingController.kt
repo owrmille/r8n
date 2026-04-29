@@ -12,7 +12,7 @@ import com.r8n.backend.messaging.facade.SupportMessagingFacade
 import com.r8n.backend.messaging.persistence.SupportParticipantRoleEnumPersistence
 import com.r8n.backend.messaging.service.SupportActor
 import com.r8n.backend.security.Authority
-import com.r8n.backend.security.Authority.IS_USER_OR_SUPPORT
+import com.r8n.backend.security.Authority.IS_USER_OR_SUPPORT_OR_ADMIN
 import com.r8n.backend.security.CurrentUserIdentifier.getCurrentUserId
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.context.SecurityContextHolder
@@ -23,21 +23,21 @@ import java.util.UUID
 class MessagingController(
     private val supportMessagingFacade: SupportMessagingFacade,
 ) : MessagingApi {
-    @PreAuthorize(IS_USER_OR_SUPPORT)
+    @PreAuthorize(IS_USER_OR_SUPPORT_OR_ADMIN)
     override fun getSupportThreadSummaries(pageable: PageRequestDto) =
         supportMessagingFacade.getSupportThreadSummaries(getSupportActor(), pageable.toPageable()).toResponse()
 
-    @PreAuthorize(IS_USER_OR_SUPPORT)
+    @PreAuthorize(IS_USER_OR_SUPPORT_OR_ADMIN)
     override fun createSupportThread(request: CreateSupportThreadRequestDto): SupportThreadSummaryDto =
         supportMessagingFacade.createSupportThread(getSupportActor(), request)
 
-    @PreAuthorize(IS_USER_OR_SUPPORT)
+    @PreAuthorize(IS_USER_OR_SUPPORT_OR_ADMIN)
     override fun getSupportThreadMessages(
         threadId: UUID,
         pageable: PageRequestDto,
     ) = supportMessagingFacade.getSupportThreadMessages(getSupportActor(), threadId, pageable.toPageable()).toResponse()
 
-    @PreAuthorize(IS_USER_OR_SUPPORT)
+    @PreAuthorize(IS_USER_OR_SUPPORT_OR_ADMIN)
     override fun addSupportThreadMessage(
         threadId: UUID,
         request: CreateSupportMessageRequestDto,
@@ -50,7 +50,7 @@ class MessagingController(
                 .authentication
                 ?.authorities
                 .orEmpty()
-                .any { it.authority == Authority.SUPPORT }
+                .any { it.authority == Authority.SUPPORT || it.authority == Authority.ADMIN }
 
         return SupportActor(
             userId = getCurrentUserId(),
