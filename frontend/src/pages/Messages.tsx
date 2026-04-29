@@ -822,7 +822,7 @@ const MessageComposer = ({
   participantName,
 }: MessageComposerProps) => {
   const sendOnShortcut = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+    if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       onSend();
     }
@@ -838,10 +838,7 @@ const MessageComposer = ({
           placeholder={`Message ${participantName}...`}
           className="min-h-[92px] resize-none border-0 px-0 py-0 shadow-none focus-visible:ring-0"
         />
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <p className="text-xs text-muted-foreground">
-            ⌘+Enter to send
-          </p>
+        <div className="mt-3 flex justify-end">
           <Button
             type="button"
             size="sm"
