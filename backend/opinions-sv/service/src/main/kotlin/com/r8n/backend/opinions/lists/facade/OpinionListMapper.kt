@@ -64,6 +64,7 @@ class OpinionListMapper(
             OpinionSummaryDto(
                 subject = subject,
                 subjectName = subjectDetails?.name ?: "UNNAMED",
+                referentName = subjectDetails?.primaryReferent?.name,
                 address = subjectDetails?.primaryReferent?.address,
                 latitude = subjectDetails?.primaryReferent?.latitude,
                 longitude = subjectDetails?.primaryReferent?.longitude,
