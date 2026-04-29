@@ -6,6 +6,7 @@ import com.r8n.backend.users.api.dto.LoginRequestDto
 import com.r8n.backend.users.api.dto.RegisterRequestDto
 import com.r8n.backend.users.security.RefreshTokenCookieFactory
 import com.r8n.backend.users.service.AuthService
+import com.r8n.backend.users.service.LoginAuditContext
 import com.r8n.backend.users.service.RegistrationAuditContext
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseCookie
@@ -27,7 +28,15 @@ class AuthController(
     }
 
     override fun login(request: LoginRequestDto): AuthenticationTokenDto {
-        val tokens = authService.login(request)
+        val tokens =
+            authService.login(
+                request = request,
+                auditContext =
+                    LoginAuditContext(
+                        ip = currentClientIp(),
+                        userAgent = currentRequest().getHeader(HttpHeaders.USER_AGENT) ?: "Unknown",
+                    ),
+            )
         addRefreshTokenCookie(tokens.refreshToken)
         return AuthenticationTokenDto(
             accessToken = tokens.accessToken,

@@ -41,6 +41,14 @@ import java.sql.Timestamp
 import java.time.Instant
 import java.util.UUID
 
+private data class LoginSessionAudit(
+    val created: Instant,
+    val expires: Instant,
+    val ip: String,
+    val userAgent: String,
+    val os: String,
+)
+
 @ActiveProfiles("test")
 @Testcontainers
 @AutoConfigureMockMvc
@@ -141,12 +149,20 @@ class AuthIntegrationTest {
 
         val loginRequest = LoginRequestDto(EMAIL, PASSWORD)
         val beforeLogin = Instant.now()
+        val sessionsBefore =
+            jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM users.sessions WHERE user_id = ?",
+                Long::class.java,
+                userId,
+            )!!
 
         val response =
             mockMvc
                 .perform(
                     post(LOGIN_PATH)
                         .with(csrf())
+                        .header("X-Forwarded-For", "198.51.100.42, 198.51.100.43")
+                        .header(HttpHeaders.USER_AGENT, "Login Test Agent")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)),
                 ).andExpect(status().isOk)
@@ -168,6 +184,40 @@ class AuthIntegrationTest {
             )
         assertTrue(lastSeenAt != null, "last_seen_at should be set after login")
         assertTrue(!lastSeenAt!!.isBefore(beforeLogin), "last_seen_at should be updated after login")
+
+        val sessionsAfter =
+            jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM users.sessions WHERE user_id = ?",
+                Long::class.java,
+                userId,
+            )!!
+        assertEquals(sessionsBefore + 1, sessionsAfter)
+
+        val session =
+            jdbcTemplate.queryForObject(
+                """
+                SELECT created, expires, ip, user_agent, os
+                FROM users.sessions
+                WHERE user_id = ?
+                ORDER BY created DESC
+                LIMIT 1
+                """.trimIndent(),
+                { rs, _ ->
+                    LoginSessionAudit(
+                        created = rs.getTimestamp("created").toInstant(),
+                        expires = rs.getTimestamp("expires").toInstant(),
+                        ip = rs.getString("ip"),
+                        userAgent = rs.getString("user_agent"),
+                        os = rs.getString("os"),
+                    )
+                },
+                userId,
+            )!!
+        assertTrue(!session.created.isBefore(beforeLogin), "session should be created during login")
+        assertTrue(session.expires.isAfter(session.created), "session expiry should be after creation")
+        assertEquals("198.51.100.42", session.ip)
+        assertEquals("Login Test Agent", session.userAgent)
+        assertEquals("Unknown", session.os)
     }
 
     @Test
