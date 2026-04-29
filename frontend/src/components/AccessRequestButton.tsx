@@ -1,31 +1,39 @@
 import { Lock, Clock, Check, XCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import AccessRequestDialog from "@/components/AccessRequestDialog";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useCreateOutgoingAccessRequestMutation } from "@/lib/server-state/hooks/access-requests";
+import type { Uuid } from "@/lib/api/shared";
 
 interface AccessRequestButtonProps {
+  listId: Uuid;
   status?: "none" | "pending" | "approved" | "declined";
   listTitle?: string;
-  onRequest?: (choice: { type: "link"; targetListId: string } | { type: "copy" }) => void;
   className?: string;
 }
 
-const existingLists = [
-  { id: "best-espresso", title: "Best espresso in Berlin" },
-  { id: "date-night", title: "Date night restaurants" },
-  { id: "cheap-lunch", title: "Cheap lunch under €10" },
-  { id: "best-cocktails", title: "Best cocktail bars" },
-];
-
-const AccessRequestButton = ({ status = "none", listTitle = "this list", onRequest, className }: AccessRequestButtonProps) => {
+const AccessRequestButton = ({
+  listId,
+  status = "none",
+  listTitle = "this list",
+  className,
+}: AccessRequestButtonProps) => {
   const [currentStatus, setCurrentStatus] = useState(status);
-  const [dialogOpen, setDialogOpen] = useState(false);
-
-  const handleSubmit = (choice: { type: "link"; targetListId: string } | { type: "copy" }) => {
-    setCurrentStatus("pending");
-    onRequest?.(choice);
-  };
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const createRequest = useCreateOutgoingAccessRequestMutation({
+    onSuccess: () => {
+      setCurrentStatus("pending");
+      setConfirmOpen(false);
+    },
+  });
 
   if (currentStatus === "approved") {
     return (
@@ -66,20 +74,43 @@ const AccessRequestButton = ({ status = "none", listTitle = "this list", onReque
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            setDialogOpen(true);
+            setConfirmOpen(true);
           }}
         >
           <Lock className="mr-1.5 h-3 w-3" />
           Request Access
         </Button>
       </motion.div>
-      <AccessRequestDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        listTitle={listTitle}
-        existingLists={existingLists}
-        onSubmit={handleSubmit}
-      />
+      <Dialog open={confirmOpen} onOpenChange={(v) => { if (!v) setConfirmOpen(false); }}>
+        <DialogContent
+          className="sm:max-w-sm"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <DialogHeader>
+            <DialogTitle>Request access?</DialogTitle>
+            <DialogDescription>
+              The owner of <span className="font-medium text-foreground">{listTitle}</span> will be asked to accept or decline. You'll see the result on your Requests page.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => { e.stopPropagation(); setConfirmOpen(false); }}
+              disabled={createRequest.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={(e) => { e.stopPropagation(); createRequest.mutate({ listId }); }}
+              disabled={createRequest.isPending}
+            >
+              Send request
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
