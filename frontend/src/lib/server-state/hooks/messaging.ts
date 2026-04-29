@@ -173,6 +173,24 @@ export function useCreateSupportThreadMutation(
   });
 }
 
+const UNREAD_COUNT_PAGE = { page: 0, size: 50, sort: [] } as const;
+
+export function useUnreadMessagesCount(options?: { refetchInterval?: number }) {
+  const supportQuery = useSupportThreadSummaries(
+    { pageable: UNREAD_COUNT_PAGE },
+    { refetchInterval: options?.refetchInterval },
+  );
+  const directQuery = useDirectConversationSummaries(
+    { pageable: UNREAD_COUNT_PAGE },
+    { refetchInterval: options?.refetchInterval },
+  );
+
+  const supportUnread = supportQuery.data?.items.reduce((sum, t) => sum + t.unreadCount, 0) ?? 0;
+  const directUnread = directQuery.data?.items.reduce((sum, t) => sum + t.unreadCount, 0) ?? 0;
+
+  return supportUnread + directUnread;
+}
+
 export function useDeleteSupportThreadMutation(
   options?: UseMutationOptions<void, Error, Uuid, unknown>,
 ) {
