@@ -46,6 +46,7 @@ class SupportMessagingIntegrationTests {
         val userAId: UUID = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")
         val userBId: UUID = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")
         val supportId: UUID = UUID.fromString("cccccccc-cccc-cccc-cccc-cccccccccccc")
+        val adminId: UUID = UUID.fromString("dddddddd-dddd-dddd-dddd-dddddddddddd")
     }
 
     @Autowired
@@ -107,6 +108,32 @@ class SupportMessagingIntegrationTests {
                     .param("page", "0")
                     .param("size", "20")
                     .with(user(supportId.toString()).roles("SUPPORT")),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.items.length()").value(2))
+            .andExpect(jsonPath("$.items[1].authorRole").value("SUPPORT"))
+    }
+
+    @Test
+    fun `admin can read and respond to another user thread as support`() {
+        val threadId = createThread(userAId, "USER", "Need admin support")
+
+        mockMvc
+            .perform(
+                post(messagesPath(threadId))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"text":"Admin support response"}""")
+                    .with(user(adminId.toString()).roles("ADMIN"))
+                    .with(csrf()),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.authorUserId").value(adminId.toString()))
+            .andExpect(jsonPath("$.authorRole").value("SUPPORT"))
+
+        mockMvc
+            .perform(
+                get(messagesPath(threadId))
+                    .param("page", "0")
+                    .param("size", "20")
+                    .with(user(adminId.toString()).roles("ADMIN")),
             ).andExpect(status().isOk)
             .andExpect(jsonPath("$.items.length()").value(2))
             .andExpect(jsonPath("$.items[1].authorRole").value("SUPPORT"))
@@ -186,6 +213,21 @@ class SupportMessagingIntegrationTests {
                     .param("page", "0")
                     .param("size", "20")
                     .with(user(supportId.toString()).roles("SUPPORT")),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.items.length()").value(2))
+    }
+
+    @Test
+    fun `admin sees all support threads in list`() {
+        createThread(userAId, "USER", "Thread from user A")
+        createThread(userBId, "USER", "Thread from user B")
+
+        mockMvc
+            .perform(
+                get(SUPPORT_THREADS_PATH)
+                    .param("page", "0")
+                    .param("size", "20")
+                    .with(user(adminId.toString()).roles("ADMIN")),
             ).andExpect(status().isOk)
             .andExpect(jsonPath("$.items.length()").value(2))
     }
