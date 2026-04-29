@@ -51,8 +51,14 @@ interface SubjectsApi {
     ): OpinionSubjectDto
 
     @PatchMapping(SET_PRIMARY_REFERENT_PATH)
+    @Operation(
+        summary = "Set primary referent",
+        description = "Sets the primary referent used to identify or disambiguate a subject.",
+    )
     fun setPrimaryReferent(
+        @Parameter(description = "Subject identifier.")
         @PathVariable subjectId: UUID,
+        @Parameter(description = "Referent identifier to make primary.")
         @RequestParam(required = true) referentId: UUID,
     ): OpinionSubjectDto
 }
