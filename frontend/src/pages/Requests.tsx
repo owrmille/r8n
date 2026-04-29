@@ -241,6 +241,16 @@ const Requests = () => {
                     <Check className="h-3 w-3" />
                     Approved
                   </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 rounded-lg text-xs text-destructive hover:text-destructive"
+                    disabled={decline.isPending}
+                    onClick={() => decline.mutate({ requestId: req.id })}
+                  >
+                    <XCircle className="mr-1 h-3 w-3" />
+                    Revoke
+                  </Button>
                 </div>
               ))}
             </div>
