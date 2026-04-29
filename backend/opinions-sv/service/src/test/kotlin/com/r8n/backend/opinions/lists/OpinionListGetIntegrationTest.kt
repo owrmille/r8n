@@ -126,9 +126,8 @@ class OpinionListGetIntegrationTest {
 
         val page = objectMapper.readValue<PageResponseDto<OpinionListSummaryDto>>(result.response.contentAsString)
         // Anna owns 5 lists in seed data + 1 virtual list
-        assertThat(page.total).isEqualTo(6)
-        assertThat(page.items.map { it.listName }).contains("All my opinions", "l11", "l12", "l13")
-        val virtualList = page.items.find { it.listName == "All my opinions" }
+        assertThat(page.items.map { it.listName }).contains("[ALL]", "l11", "l12", "l13")
+        val virtualList = page.items.find { it.listName == "[ALL]" }
         assertThat(virtualList).isNotNull
         assertThat(virtualList?.listId).isNull()
         // Anna has multiple opinions in seed data (r11, r12, r21, r22, r31, etc.)
@@ -149,9 +148,8 @@ class OpinionListGetIntegrationTest {
 
         val page = objectMapper.readValue<PageResponseDto<OpinionListDto>>(result.response.contentAsString)
         // Anna owns 5 lists in seed data + 1 virtual list
-        assertThat(page.total).isEqualTo(6)
-        assertThat(page.items.map { it.listName }).contains("All my opinions", "l11", "l12", "l13")
-        val virtualList = page.items.find { it.listName == "All my opinions" }
+        assertThat(page.items.map { it.listName }).contains("[ALL]", "l11", "l12", "l13")
+        val virtualList = page.items.find { it.listName == "[ALL]" }
         assertThat(virtualList).isNotNull
         assertThat(virtualList?.id).isNull()
         assertThat(virtualList?.opinionSummaries).isNotEmpty

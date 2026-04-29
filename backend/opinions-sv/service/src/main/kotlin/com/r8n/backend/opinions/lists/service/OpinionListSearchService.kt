@@ -59,7 +59,7 @@ class OpinionListSearchService(
             val allMyOpinions =
                 OpinionListInfo(
                     id = null,
-                    name = "All my opinions",
+                    name = "[ALL]",
                     owner = ownerId,
                     privacy = OpinionListPrivacyEnum.PRIVATE,
                     opinionsCount = opinionRepository.countByOwner(ownerId),
