@@ -26,11 +26,15 @@ spring:
             - id: opinions
               uri: http://localhost:8081
               predicates:
-                - Path=/api/access-requests/**,/api/opinion-lists/**,/api/opinions/**
+                - Path=/api/access-requests/**,/api/opinion-lists/**,/api/opinions/**,/api/subjects/**
             - id: users
               uri: http://localhost:8082
               predicates:
                 - Path=/api/users/**
+            - id: messaging
+              uri: http://localhost:8083
+              predicates:
+                - Path=/api/messaging/**
             - id: mock
               uri: http://localhost:8090
               predicates:

@@ -63,11 +63,16 @@ class OpinionListRestClient(
     override fun linkOpinion(
         listId: UUID,
         opinionId: UUID,
+        weight: Double,
     ): OpinionListDto =
         restClient
             .post()
             .uri { uriBuilder ->
-                uriBuilder.path(LINK_PATH).queryParam("opinionId", opinionId).build(listId)
+                uriBuilder
+                    .path(LINK_PATH)
+                    .queryParam("opinionId", opinionId)
+                    .queryParam("weight", weight)
+                    .build(listId)
             }.retrieve()
             .body<OpinionListDto>()!!
 
@@ -109,11 +114,17 @@ class OpinionListRestClient(
     override fun syncWithOpinionList(
         existingListId: UUID,
         addedListId: UUID,
+        weight: Double,
     ): OpinionListDto =
         restClient
             .post()
             .uri { uriBuilder ->
-                uriBuilder.path(SYNC_PATH).queryParam("addedListId", addedListId).build(existingListId)
+                uriBuilder
+                    .path(
+                        SYNC_PATH,
+                    ).queryParam("addedListId", addedListId)
+                    .queryParam("weight", weight)
+                    .build(existingListId)
             }.retrieve()
             .body<OpinionListDto>()!!
 

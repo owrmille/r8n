@@ -1,5 +1,6 @@
 package com.r8n.backend.users
 
+import com.r8n.backend.core.web.WebCoreConfiguration
 import com.r8n.backend.mock.integration.configuration.MockRestClientConfiguration
 import com.r8n.backend.opinions.integration.configuration.OpinionListsRestClientConfiguration
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -9,7 +10,11 @@ import org.springframework.scheduling.annotation.EnableScheduling
 
 @SpringBootApplication
 @EnableScheduling
-@Import(MockRestClientConfiguration::class, OpinionListsRestClientConfiguration::class)
+@Import(
+    WebCoreConfiguration::class,
+    MockRestClientConfiguration::class,
+    OpinionListsRestClientConfiguration::class,
+)
 class UserApplication
 
 fun main(args: Array<String>) {

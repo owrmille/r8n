@@ -2,10 +2,13 @@ import type { HttpClient } from "@/lib/http-client";
 import { httpClient } from "@/lib/http-client";
 import type { Uuid } from "@/lib/api/shared";
 
+export type RoleDto = "USER" | "MODERATOR" | "SUPPORT" | "ADMIN";
+
 export interface UsernameDto {
   id: Uuid;
   name: string;
   email: string;
+  roles: RoleDto[];
 }
 
 export type UserStatusEnumDto =
@@ -35,6 +38,16 @@ export interface UpdateMyPublicProfileRequestDto {
   about: string | null;
   location: string | null;
   name: string;
+}
+
+export interface UserWithRolesDto {
+  id: Uuid;
+  name: string;
+  email: string;
+  status: UserStatusEnumDto;
+  isModerator: boolean;
+  isSupport: boolean;
+  isAdmin: boolean;
 }
 
 export function createUsersApi(client: HttpClient = httpClient) {
@@ -84,6 +97,43 @@ export function createUsersApi(client: HttpClient = httpClient) {
         auth: "required",
         body: request,
       });
+    },
+
+    listUsersWithRoles(): Promise<UserWithRolesDto[]> {
+      return client.get<UserWithRolesDto[]>("/admin/users", { auth: "required" });
+    },
+
+    assignModerator(userId: Uuid): Promise<void> {
+      return client.post<void, { role: string }>(`/admin/users/${userId}/roles`, {
+        auth: "required",
+        body: { role: "MODERATOR" },
+      });
+    },
+
+    revokeModerator(userId: Uuid): Promise<void> {
+      return client.delete<void>(`/admin/users/${userId}/roles/MODERATOR`, { auth: "required" });
+    },
+
+    assignSupport(userId: Uuid): Promise<void> {
+      return client.post<void, { role: string }>(`/admin/users/${userId}/roles`, {
+        auth: "required",
+        body: { role: "SUPPORT" },
+      });
+    },
+
+    revokeSupport(userId: Uuid): Promise<void> {
+      return client.delete<void>(`/admin/users/${userId}/roles/SUPPORT`, { auth: "required" });
+    },
+
+    assignAdmin(userId: Uuid): Promise<void> {
+      return client.post<void, { role: string }>(`/admin/users/${userId}/roles`, {
+        auth: "required",
+        body: { role: "ADMIN" },
+      });
+    },
+
+    revokeAdmin(userId: Uuid): Promise<void> {
+      return client.delete<void>(`/admin/users/${userId}/roles/ADMIN`, { auth: "required" });
     },
   };
 }

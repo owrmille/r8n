@@ -28,7 +28,6 @@ spring:
 logging:
   level:
     root: ERROR
-
 services:
   mock:
     url: http://localhost:8090

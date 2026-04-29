@@ -3,6 +3,7 @@ import { clearSession, setSession } from "@/lib/auth/session";
 import { createHttpClient } from "@/lib/http-client";
 import { createAccessRequestsApi } from "@/lib/api/access-requests";
 import { createAuthApi } from "@/lib/api/auth";
+import { createMessagingApi } from "@/lib/api/messaging";
 import { createOpinionListsApi } from "@/lib/api/opinion-lists";
 import { createOpinionsApi } from "@/lib/api/opinions";
 import { createSelectorsApi } from "@/lib/api/selectors";
@@ -115,6 +116,50 @@ describe("API modules", () => {
     const [, requestInit] = fetchMock.mock.calls[0];
     const headers = new Headers(requestInit.headers);
     expect(headers.get("X-XSRF-TOKEN")).toBe("existing-xsrf-token");
+  });
+
+  it("bootstraps csrf before registering a new account", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(createEmptyResponse())
+      .mockResolvedValueOnce(createEmptyResponse());
+    const client = createHttpClient({
+      baseUrl: "/api",
+      fetchFn: fetchMock,
+    });
+    const authApi = createAuthApi(client);
+
+    await authApi.register({
+      name: "New Reviewer",
+      email: "new-user@test.test",
+      password: "long-enough-password",
+      privacyPolicyAccepted: true,
+      termsOfServiceAccepted: true,
+    });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "/api/auth/csrf",
+      expect.objectContaining({
+        credentials: "include",
+        method: "GET",
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/api/auth/register",
+      expect.objectContaining({
+        body: JSON.stringify({
+          name: "New Reviewer",
+          email: "new-user@test.test",
+          password: "long-enough-password",
+          privacyPolicyAccepted: true,
+          termsOfServiceAccepted: true,
+        }),
+        credentials: "include",
+        method: "POST",
+      }),
+    );
   });
 
   it("bootstraps csrf before refresh and does not send a refresh token from JavaScript", async () => {
@@ -470,6 +515,7 @@ describe("API modules", () => {
     await opinionListsApi.sync({
       addedListId: "77777777-7777-7777-7777-777777777777",
       existingListId: "88888888-8888-8888-8888-888888888888",
+      weight: 0.75,
     });
     await opinionListsApi.unlinkOpinion({
       listId: "99999999-9999-9999-9999-999999999999",
@@ -496,7 +542,7 @@ describe("API modules", () => {
       "/api/opinion-lists/66666666-6666-6666-6666-666666666666/set-privacy?privacy=PRIVATE",
     );
     expect(fetchMock.mock.calls[5][0]).toBe(
-      "/api/opinion-lists/88888888-8888-8888-8888-888888888888/sync?addedListId=77777777-7777-7777-7777-777777777777",
+      "/api/opinion-lists/88888888-8888-8888-8888-888888888888/sync?addedListId=77777777-7777-7777-7777-777777777777&weight=0.75",
     );
     expect(fetchMock.mock.calls[6][0]).toBe(
       "/api/opinion-lists/99999999-9999-9999-9999-999999999999/unlink?opinionId=aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
@@ -582,10 +628,6 @@ describe("API modules", () => {
       selector: ".review-card",
       subjectId: "22222222-2222-2222-2222-222222222222",
     });
-    await selectorsApi.disagree({
-      comment: "Selector is outdated",
-      selectorId: "33333333-3333-3333-3333-333333333333",
-    });
 
     expect(fetchMock.mock.calls[0][0]).toBe(
       "/api/selectors/for-url?page=0&size=20&url=https%3A%2F%2Fexample.com%2Fcafe",
@@ -596,11 +638,26 @@ describe("API modules", () => {
     expect(fetchMock.mock.calls[2][0]).toBe(
       "/api/selectors/for-subject/22222222-2222-2222-2222-222222222222?selector=.review-card",
     );
-    expect(fetchMock.mock.calls[3][0]).toBe(
-      "/api/selectors/33333333-3333-3333-3333-333333333333/disagree?comment=Selector+is+outdated",
-    );
-    expect(fetchMock.mock.calls[3][1]).toEqual(
-      expect.objectContaining({ method: "POST" }),
+  });
+
+  it("matches backend messaging support thread route", async () => {
+    const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(createJsonResponse({})));
+    const client = createHttpClient({
+      baseUrl: "/api",
+      fetchFn: fetchMock,
+    });
+    const messagingApi = createMessagingApi(client);
+
+    await messagingApi.createSupportThread({
+      initialMessage: "Selector is outdated",
+    });
+
+    expect(fetchMock.mock.calls[0][0]).toBe("/api/messaging/support/threads");
+    expect(fetchMock.mock.calls[0][1]).toEqual(
+      expect.objectContaining({
+        body: JSON.stringify({ initialMessage: "Selector is outdated" }),
+        method: "POST",
+      }),
     );
   });
 });

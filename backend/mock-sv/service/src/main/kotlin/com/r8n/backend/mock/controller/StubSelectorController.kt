@@ -4,7 +4,6 @@ import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.mock.api.SelectorApi
 import com.r8n.backend.mock.api.dto.about.SelectorDto
-import com.r8n.backend.mock.stub.MiscTestFactory
 import com.r8n.backend.mock.stub.SelectorTestDataFactory
 import com.r8n.backend.security.Authority.IS_USER
 import org.springframework.data.domain.PageImpl
@@ -31,10 +30,4 @@ class StubSelectorController : SelectorApi {
         subjectId: UUID,
         selector: String,
     ): SelectorDto = SelectorTestDataFactory.getSelector()
-
-    @PreAuthorize(IS_USER)
-    override fun disagree(
-        selectorId: UUID,
-        comment: String?,
-    ) = MiscTestFactory.getSupportMessage()
 }

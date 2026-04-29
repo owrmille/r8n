@@ -1,9 +1,12 @@
 package com.r8n.backend.users.controller
 
+import com.r8n.backend.security.Authority.IS_ADMIN
 import com.r8n.backend.security.Authority.IS_USER
 import com.r8n.backend.security.CurrentUserIdentifier.getCurrentUserId
 import com.r8n.backend.users.api.UsersApi
 import com.r8n.backend.users.api.dto.AccountDeletionRequestDto
+import com.r8n.backend.users.api.dto.AssignRoleRequestDto
+import com.r8n.backend.users.api.dto.RoleEnumDto
 import com.r8n.backend.users.api.dto.UpdateMyPublicProfileRequestDto
 import com.r8n.backend.users.api.dto.UsernameDto
 import com.r8n.backend.users.facade.UserFacade
@@ -16,6 +19,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
+import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 
 @RestController
@@ -68,6 +72,31 @@ class UserController(
         // Delete user data
         userDeletionService.deleteUser(userId)
 
+        return ResponseEntity.noContent().build()
+    }
+
+    @PreAuthorize(IS_ADMIN)
+    override fun listUsersWithRoles() = userFacade.listUsersWithRoles()
+
+    @PreAuthorize(IS_ADMIN)
+    override fun assignRole(
+        userId: UUID,
+        request: AssignRoleRequestDto,
+    ): ResponseEntity<Void> {
+        userFacade.assignRole(getCurrentUserId(), request, userId)
+        return ResponseEntity.noContent().build()
+    }
+
+    @PreAuthorize(IS_ADMIN)
+    override fun revokeRole(
+        userId: UUID,
+        role: String,
+    ): ResponseEntity<Void> {
+        val roleEnum =
+            runCatching { RoleEnumDto.valueOf(role) }.getOrElse {
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown role: $role")
+            }
+        userFacade.revokeRole(getCurrentUserId(), userId, roleEnum)
         return ResponseEntity.noContent().build()
     }
 }

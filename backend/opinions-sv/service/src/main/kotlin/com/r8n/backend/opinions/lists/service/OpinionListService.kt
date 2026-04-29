@@ -1,21 +1,34 @@
 package com.r8n.backend.opinions.lists.service
 
+import com.r8n.backend.opinions.access.database.AccessRequestRepository
 import com.r8n.backend.opinions.access.domain.OpinionListPermissionEnum
+import com.r8n.backend.opinions.access.domain.RequestStatusEnum
 import com.r8n.backend.opinions.access.service.AccessService
 import com.r8n.backend.opinions.lists.database.OpinionListRepository
+import com.r8n.backend.opinions.lists.database.OpinionListSyncRepository
 import com.r8n.backend.opinions.lists.database.OpinionsToOpinionListsRepository
 import com.r8n.backend.opinions.lists.domain.OpinionList
 import com.r8n.backend.opinions.lists.domain.OpinionListPrivacyEnum
 import com.r8n.backend.opinions.lists.domain.OpinionSummary
 import com.r8n.backend.opinions.lists.persistence.OpinionListPersistence
+import com.r8n.backend.opinions.lists.persistence.OpinionListSyncPersistence
+import com.r8n.backend.opinions.lists.persistence.OpinionsToOpinionListsPersistence
+import com.r8n.backend.opinions.opinions.domain.Opinion
 import com.r8n.backend.opinions.opinions.domain.WeightedOpinionReference
 import com.r8n.backend.opinions.opinions.service.OpinionService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
+
+data class OpinionListSearchResult(
+    val persistence: OpinionListPersistence,
+    val opinionsCount: Long,
+    val grantedAccessCount: Long,
+)
 
 @Service
 class OpinionListService(
@@ -23,7 +36,61 @@ class OpinionListService(
     private val opinionService: OpinionService,
     private val opinionsAssignmentRepository: OpinionsToOpinionListsRepository,
     private val accessService: AccessService,
+    private val syncRepository: OpinionListSyncRepository,
+    private val accessRequestRepository: AccessRequestRepository,
 ) {
+    fun syncWithOpinionList(
+        userId: UUID,
+        existingListId: UUID,
+        addedListId: UUID,
+        weight: Double = 1.0,
+    ): OpinionList {
+        if (!accessService.ownsOpinionList(userId, existingListId)) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't own the destination list")
+        }
+        val addedList =
+            opinionListRepository.findById(addedListId).orElseThrow {
+                ResponseStatusException(HttpStatus.NOT_FOUND)
+            }
+        if (addedList.privacy == OpinionListPrivacyEnum.PRIVATE) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND)
+        }
+        if (!accessService.canAccessOpinionList(userId, addedListId, OpinionListPermissionEnum.VIEW)) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't have access to the source list")
+        }
+
+        val existingSync = syncRepository.findByDestinationListAndSourceList(existingListId, addedListId)
+        if (existingSync != null) {
+            if (existingSync.weight != weight) {
+                existingSync.weight = weight
+                syncRepository.save(existingSync)
+            }
+        } else {
+            syncRepository.save(
+                OpinionListSyncPersistence(
+                    destinationList = existingListId,
+                    sourceList = addedListId,
+                    weight = weight,
+                ),
+            )
+        }
+        return getList(existingListId, userId)
+    }
+
+    @Transactional
+    fun unsyncWithOpinionList(
+        userId: UUID,
+        existingListId: UUID,
+        removedListId: UUID,
+    ): OpinionList {
+        if (!accessService.ownsOpinionList(userId, existingListId)) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't own the destination list")
+        }
+
+        syncRepository.deleteByDestinationListAndSourceList(existingListId, removedListId)
+        return getList(existingListId, userId)
+    }
+
     fun getListName(
         listId: UUID,
         userId: UUID,
@@ -41,6 +108,50 @@ class OpinionListService(
         return list.name
     }
 
+    @Transactional
+    fun linkOpinion(
+        userId: UUID,
+        listId: UUID,
+        opinionId: UUID,
+        weight: Double,
+    ): OpinionList {
+        if (!accessService.ownsOpinionList(userId, listId)) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't own this list")
+        }
+        // check opinion access
+        opinionService.getOpinion(opinionId, userId)
+
+        val existing = opinionsAssignmentRepository.findAllByOpinionList(listId).find { it.opinion == opinionId }
+        if (existing != null) {
+            existing.weight = weight
+            opinionsAssignmentRepository.save(existing)
+        } else {
+            opinionsAssignmentRepository.save(
+                OpinionsToOpinionListsPersistence(
+                    opinionList = listId,
+                    opinion = opinionId,
+                    weight = weight,
+                ),
+            )
+        }
+        return getList(listId, userId)
+    }
+
+    @Transactional
+    fun unlinkOpinion(
+        userId: UUID,
+        listId: UUID,
+        opinionId: UUID,
+    ): OpinionList {
+        if (!accessService.ownsOpinionList(userId, listId)) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't own this list")
+        }
+        val assignments = opinionsAssignmentRepository.findAllByOpinionList(listId)
+        val toRemove = assignments.filter { it.opinion == opinionId }
+        opinionsAssignmentRepository.deleteAll(toRemove)
+        return getList(listId, userId)
+    }
+
     fun getList(
         listId: UUID,
         requesterId: UUID,
@@ -49,63 +160,143 @@ class OpinionListService(
             opinionListRepository
                 .findById(listId)
                 .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND) }
+
+        validateAccess(list, requesterId)
+
+        val assignments = resolveAllAssignments(listId)
+        val opinions = fetchAndEnrichOpinions(assignments, requesterId)
+        val summaries = calculateSummaries(list, opinions, requesterId)
+
+        return toDomain(list, summaries)
+    }
+
+    private fun validateAccess(
+        list: OpinionListPersistence,
+        requesterId: UUID,
+    ) {
+        val listId = list.id!!
         if (!accessService.canAccessOpinionList(requesterId, listId, OpinionListPermissionEnum.VIEW)) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN)
         }
         if (!accessService.ownsOpinionList(requesterId, listId) && list.privacy == OpinionListPrivacyEnum.PRIVATE) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND)
         }
+    }
 
+    private fun resolveAllAssignments(listId: UUID): List<OpinionsToOpinionListsPersistence> {
         val assignments = opinionsAssignmentRepository.findAllByOpinionList(listId)
-        val opinions =
-            assignments.map { asmt ->
-                opinionService.getOpinion(asmt.opinion, requesterId).copy(weight = asmt.weight)
-            }
-        val opinionsBySubject = opinions.groupBy { it.subject }
+        val syncs = syncRepository.findAllByDestinationList(listId)
 
-        val summaries =
-            if (accessService.ownsOpinionList(requesterId, listId)) {
-                opinionsBySubject.map { (subject, ops) ->
-                    val own = ops.firstOrNull { it.owner == requesterId }
-                    val weightedMarks = ops.mapNotNull { it.mark?.let { mark -> it.weight!! * mark } }
-                    val componentMark = weightedMarks.takeIf { it.isNotEmpty() && it.size == ops.size }?.sum()
+        val directOpinionWeights = assignments.associate { it.opinion to it.weight }
 
-                    OpinionSummary(
-                        subject = subject,
-                        ownMark = own?.mark,
-                        componentMark = componentMark,
-                        opinions =
-                            ops.map {
-                                WeightedOpinionReference(
-                                    id = it.id,
-                                    opinion = it.id,
-                                    weight = it.weight!!,
-                                )
-                            },
-                    )
-                }
-            } else {
-                // for another user I cannot see what his components are, I can see only his own opinion
-                opinionsBySubject.mapNotNull { (subject, ops) ->
-                    val own = ops.firstOrNull { it.owner == list.owner }
-                    if (own == null) {
+        val syncedAssignments =
+            syncs.flatMap { sync ->
+                opinionsAssignmentRepository.findAllByOpinionList(sync.sourceList).mapNotNull { asmt ->
+                    if (directOpinionWeights.containsKey(asmt.opinion)) {
+                        // ignore synced versions if directly linked
                         null
                     } else {
-                        OpinionSummary(
-                            subject = subject,
-                            ownMark = own.mark,
-                            componentMark = null,
-                            opinions =
-                                listOf(
-                                    WeightedOpinionReference(id = own.id, opinion = own.id, weight = own.weight!!),
-                                ),
-                        )
+                        asmt.copy(weight = asmt.weight * sync.weight)
                     }
                 }
             }
 
-        return toDomain(list, summaries)
+        // If an opinion is synced from multiple sources, pick the one with max weight
+        val dedupedSyncedAssignments =
+            syncedAssignments
+                .groupBy { it.opinion }
+                .map { (_, asmts) -> asmts.maxBy { it.weight } }
+
+        return assignments + dedupedSyncedAssignments
     }
+
+    private fun fetchAndEnrichOpinions(
+        assignments: List<OpinionsToOpinionListsPersistence>,
+        requesterId: UUID,
+    ): List<Opinion> =
+        assignments.mapNotNull { asmt ->
+            try {
+                val opinion = opinionService.getOpinion(asmt.opinion, requesterId)
+                val weight = if (opinion.owner == requesterId) 1.0 else asmt.weight
+                opinion.copy(weight = weight)
+            } catch (e: ResponseStatusException) {
+                if (e.statusCode == HttpStatus.FORBIDDEN || e.statusCode == HttpStatus.NOT_FOUND) {
+                    null
+                } else {
+                    throw e
+                }
+            }
+        }
+
+    private fun calculateSummaries(
+        list: OpinionListPersistence,
+        opinions: List<Opinion>,
+        requesterId: UUID,
+    ): List<OpinionSummary> {
+        val listId = list.id!!
+        val opinionsBySubject = opinions.groupBy { it.subject }
+
+        return if (accessService.ownsOpinionList(requesterId, listId)) {
+            opinionsBySubject.map { (subject, ops) ->
+                calculateOwnSummary(subject, ops, requesterId)
+            }
+        } else {
+            // for another user I cannot see what his components are, I can see only his own opinion
+            opinionsBySubject.mapNotNull { (subject, ops) ->
+                val own = ops.firstOrNull { it.owner == list.owner }
+                own?.let { createSimpleSummary(subject, it) }
+            }
+        }
+    }
+
+    private fun calculateOwnSummary(
+        subject: UUID,
+        ops: List<Opinion>,
+        requesterId: UUID,
+    ): OpinionSummary {
+        val own = ops.firstOrNull { it.owner == requesterId }
+        val weightedMarks = ops.mapNotNull { it.mark?.let { mark -> it.weight!! * mark } }
+        val totalWeight = ops.mapNotNull { if (it.mark != null) it.weight else null }.sum()
+
+        val componentMark =
+            if (totalWeight > 0) {
+                weightedMarks.sum() / totalWeight
+            } else {
+                null
+            }
+
+        return OpinionSummary(
+            subject = subject,
+            ownMark = own?.mark,
+            componentMark = componentMark,
+            opinions =
+                ops.map {
+                    WeightedOpinionReference(
+                        id = it.id,
+                        opinion = it.id,
+                        weight = it.weight!!,
+                    )
+                },
+        )
+    }
+
+    private fun createSimpleSummary(
+        subject: UUID,
+        ownOpinion: Opinion,
+    ): OpinionSummary =
+        OpinionSummary(
+            subject = subject,
+            ownMark = ownOpinion.mark,
+            componentMark = null,
+            opinions =
+                listOf(
+                    WeightedOpinionReference(
+                        id = ownOpinion.id,
+                        opinion = ownOpinion.id,
+                        weight = ownOpinion.weight!!,
+                    ),
+                ),
+        )
 
     fun getListsFull(
         ownerId: UUID,
@@ -120,6 +311,40 @@ class OpinionListService(
         // This will cascade to delete opinions-to-lists relationships
         val userLists = opinionListRepository.findAllByOwner(userId)
         opinionListRepository.deleteAll(userLists)
+    }
+
+    fun searchOpinionListsByName(
+        nameSubstring: String,
+        requesterId: UUID,
+        pageable: Pageable,
+    ): Page<OpinionListSearchResult> {
+        // Privacy filtering is now done in the database query
+        val results =
+            opinionListRepository.findByNameContainingIgnoreCaseAndPrivacyFilter(
+                nameSubstring,
+                requesterId,
+                OpinionListPrivacyEnum.SEARCHABLE,
+                pageable,
+            )
+
+        // Calculate counts for each result
+        val searchResults =
+            results.content.map { persistence ->
+                val listId = persistence.id!!
+                val opinionsCount = opinionsAssignmentRepository.countByOpinionList(listId)
+                val grantedAccessCount =
+                    accessRequestRepository.countByListAndStatus(
+                        listId,
+                        RequestStatusEnum.ACCEPTED,
+                    )
+                OpinionListSearchResult(persistence, opinionsCount, grantedAccessCount)
+            }
+
+        return org.springframework.data.domain.PageImpl(
+            searchResults,
+            pageable,
+            results.totalElements,
+        )
     }
 
     private companion object {
