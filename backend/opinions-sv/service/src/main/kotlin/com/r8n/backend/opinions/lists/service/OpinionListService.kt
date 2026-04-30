@@ -7,10 +7,10 @@ import com.r8n.backend.opinions.access.service.AccessService
 import com.r8n.backend.opinions.lists.database.OpinionListRepository
 import com.r8n.backend.opinions.lists.database.OpinionListSyncRepository
 import com.r8n.backend.opinions.lists.database.OpinionsToOpinionListsRepository
+import com.r8n.backend.opinions.lists.domain.LocationFilter
 import com.r8n.backend.opinions.lists.domain.OpinionList
 import com.r8n.backend.opinions.lists.domain.OpinionListInfo
 import com.r8n.backend.opinions.lists.domain.OpinionListPrivacyEnum
-import com.r8n.backend.opinions.lists.domain.LocationFilter
 import com.r8n.backend.opinions.lists.domain.OpinionListSearchFilters
 import com.r8n.backend.opinions.lists.domain.OpinionSummary
 import com.r8n.backend.opinions.lists.persistence.OpinionListPersistence
