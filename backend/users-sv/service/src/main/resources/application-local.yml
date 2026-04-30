@@ -29,7 +29,7 @@ springdoc:
   packages-to-scan: com.r8n.backend.users.controller
 services:
   messaging:
-    url: http://localhost:8084
+    url: ${INTERSERVICE_PROTOCOL}://${SERVICES_MESSAGING_HOST}:${SERVICES_MESSAGING_PORT}
 r8n:
   security:
     public-paths: /api/auth/**, /v3/api-docs/**, /swagger-ui.html, /swagger-ui/**, /webjars/swagger-ui/**
