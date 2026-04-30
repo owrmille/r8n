@@ -8,3 +8,4 @@ export * from "@/lib/api/selectors";
 export * from "@/lib/api/shared";
 export * from "@/lib/api/subjects";
 export * from "@/lib/api/users";
+export * from "@/lib/api/migration";

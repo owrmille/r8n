@@ -109,6 +109,11 @@ export const usersKeys = {
   withRoles: () => ["users", "with-roles"] as const,
 };
 
+export const migrationKeys = {
+  all: ["migration"] as const,
+  exportStatus: () => ["migration", "export-status"] as const,
+};
+
 export const subjectsKeys = {
   all: ["subjects"] as const,
   find: (request: FindSubjectsRequestDto) => [
@@ -138,4 +143,5 @@ export const queryKeys = {
   referents: referentsKeys,
   subjects: subjectsKeys,
   users: usersKeys,
+  migration: migrationKeys,
 };
