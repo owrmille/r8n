@@ -1,8 +1,6 @@
 package com.r8n.backend.opinions.lists.service
 
-import com.r8n.backend.opinions.access.database.AccessRequestRepository
 import com.r8n.backend.opinions.access.domain.OpinionListPermissionEnum
-import com.r8n.backend.opinions.access.domain.RequestStatusEnum
 import com.r8n.backend.opinions.access.service.AccessService
 import com.r8n.backend.opinions.lists.database.OpinionListRepository
 import com.r8n.backend.opinions.lists.database.OpinionListSyncRepository
@@ -10,22 +8,13 @@ import com.r8n.backend.opinions.lists.database.OpinionsToOpinionListsRepository
 import com.r8n.backend.opinions.lists.domain.OpinionList
 import com.r8n.backend.opinions.lists.domain.OpinionListInfo
 import com.r8n.backend.opinions.lists.domain.OpinionListPrivacyEnum
-import com.r8n.backend.opinions.lists.domain.OpinionListSearchFilters
 import com.r8n.backend.opinions.lists.domain.OpinionSummary
 import com.r8n.backend.opinions.lists.persistence.OpinionListPersistence
-import com.r8n.backend.opinions.lists.persistence.OpinionListSyncPersistence
 import com.r8n.backend.opinions.lists.persistence.OpinionsToOpinionListsPersistence
 import com.r8n.backend.opinions.opinions.database.OpinionRepository
-import com.r8n.backend.opinions.opinions.database.OpinionSubjectRepository
-import com.r8n.backend.opinions.opinions.database.ReferentRepository
 import com.r8n.backend.opinions.opinions.domain.Opinion
 import com.r8n.backend.opinions.opinions.service.OpinionService
-import com.r8n.backend.users.integration.api.UsersInternalApi
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
-import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -39,10 +28,6 @@ class OpinionListService(
     private val opinionsAssignmentRepository: OpinionsToOpinionListsRepository,
     private val accessService: AccessService,
     private val syncRepository: OpinionListSyncRepository,
-    private val accessRequestRepository: AccessRequestRepository,
-    private val usersApi: UsersInternalApi,
-    private val referentRepository: ReferentRepository,
-    private val subjectRepository: OpinionSubjectRepository,
     private val opinionRepository: OpinionRepository,
 ) {
     @Transactional
@@ -62,59 +47,6 @@ class OpinionListService(
         return getList(saved.id!!, ownerId)
     }
 
-    fun syncWithOpinionList(
-        userId: UUID,
-        existingListId: UUID,
-        addedListId: UUID,
-        weight: Double = 1.0,
-    ): OpinionList {
-        if (!accessService.ownsOpinionList(userId, existingListId)) {
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't own the destination list")
-        }
-        val addedList =
-            opinionListRepository.findById(addedListId).orElseThrow {
-                ResponseStatusException(HttpStatus.NOT_FOUND)
-            }
-        if (!accessService.canAccessOpinionList(userId, addedListId, OpinionListPermissionEnum.VIEW)) {
-            // PRIVATE → 404 to hide existence; SEARCHABLE → 403 since existence is public.
-            if (addedList.privacy == OpinionListPrivacyEnum.PRIVATE) {
-                throw ResponseStatusException(HttpStatus.NOT_FOUND)
-            }
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't have access to the source list")
-        }
-
-        val existingSync = syncRepository.findByDestinationListAndSourceList(existingListId, addedListId)
-        if (existingSync != null) {
-            if (existingSync.weight != weight) {
-                existingSync.weight = weight
-                syncRepository.save(existingSync)
-            }
-        } else {
-            syncRepository.save(
-                OpinionListSyncPersistence(
-                    destinationList = existingListId,
-                    sourceList = addedListId,
-                    weight = weight,
-                ),
-            )
-        }
-        return getList(existingListId, userId)
-    }
-
-    @Transactional
-    fun unsyncWithOpinionList(
-        userId: UUID,
-        existingListId: UUID,
-        removedListId: UUID,
-    ): OpinionList {
-        if (!accessService.ownsOpinionList(userId, existingListId)) {
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't own the destination list")
-        }
-
-        syncRepository.deleteByDestinationListAndSourceList(existingListId, removedListId)
-        return getList(existingListId, userId)
-    }
-
     fun getListName(
         listId: UUID,
         userId: UUID,
@@ -130,50 +62,6 @@ class OpinionListService(
             throw ResponseStatusException(HttpStatus.NOT_FOUND)
         }
         return list.name
-    }
-
-    @Transactional
-    fun linkOpinion(
-        userId: UUID,
-        listId: UUID,
-        opinionId: UUID,
-        weight: Double,
-    ): OpinionList {
-        if (!accessService.ownsOpinionList(userId, listId)) {
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't own this list")
-        }
-        // check opinion access
-        opinionService.getOpinion(opinionId, userId)
-
-        val existing = opinionsAssignmentRepository.findAllByOpinionList(listId).find { it.opinion == opinionId }
-        if (existing != null) {
-            existing.weight = weight
-            opinionsAssignmentRepository.save(existing)
-        } else {
-            opinionsAssignmentRepository.save(
-                OpinionsToOpinionListsPersistence(
-                    opinionList = listId,
-                    opinion = opinionId,
-                    weight = weight,
-                ),
-            )
-        }
-        return getList(listId, userId)
-    }
-
-    @Transactional
-    fun unlinkOpinion(
-        userId: UUID,
-        listId: UUID,
-        opinionId: UUID,
-    ): OpinionList {
-        if (!accessService.ownsOpinionList(userId, listId)) {
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't own this list")
-        }
-        val assignments = opinionsAssignmentRepository.findAllByOpinionList(listId)
-        val toRemove = assignments.filter { it.opinion == opinionId }
-        opinionsAssignmentRepository.deleteAll(toRemove)
-        return getList(listId, userId)
     }
 
     @Transactional
@@ -235,47 +123,6 @@ class OpinionListService(
         return getList(listId, userId)
     }
 
-    @Transactional
-    fun moveOpinion(
-        userId: UUID,
-        fromListId: UUID,
-        toListId: UUID,
-        opinionId: UUID,
-        weight: Double = 1.0,
-    ): OpinionList {
-        if (fromListId == toListId) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "fromListId and toListId must differ")
-        }
-        if (!accessService.ownsOpinionList(userId, fromListId)) {
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't own the source list")
-        }
-        if (!accessService.ownsOpinionList(userId, toListId)) {
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't own the destination list")
-        }
-        // check opinion access
-        opinionService.getOpinion(opinionId, userId)
-
-        // Upsert into destination
-        val existingDest = opinionsAssignmentRepository.findAllByOpinionList(toListId).find { it.opinion == opinionId }
-        if (existingDest != null) {
-            existingDest.weight = weight
-            opinionsAssignmentRepository.save(existingDest)
-        } else {
-            opinionsAssignmentRepository.save(
-                OpinionsToOpinionListsPersistence(
-                    opinionList = toListId,
-                    opinion = opinionId,
-                    weight = weight,
-                ),
-            )
-        }
-        // Remove from source
-        val sourceAssignments = opinionsAssignmentRepository.findAllByOpinionList(fromListId)
-        opinionsAssignmentRepository.deleteAll(sourceAssignments.filter { it.opinion == opinionId })
-
-        return getList(toListId, userId)
-    }
-
     fun getList(
         listId: UUID,
         requesterId: UUID,
@@ -294,6 +141,37 @@ class OpinionListService(
 
         return toDomain(list, summaries)
     }
+
+    fun getMyVirtualList(ownerId: UUID): OpinionList {
+        val opinions =
+            opinionService
+                .getMyFullOpinions(ownerId, Pageable.unpaged())
+                .content
+                .map { it.copy(weight = 1.0) }
+
+        val summaries =
+            opinions.groupBy { it.subject }.map { (subject, ops) ->
+                calculateOwnSummary(subject, ops, ownerId)
+            }
+
+        return OpinionList(
+            id = null,
+            name = "[ALL]",
+            owner = ownerId,
+            opinionSummaries = summaries,
+            privacy = OpinionListPrivacyEnum.PRIVATE,
+        )
+    }
+
+    fun getMyVirtualListInfo(ownerId: UUID): OpinionListInfo =
+        OpinionListInfo(
+            id = null,
+            name = "[ALL]",
+            owner = ownerId,
+            privacy = OpinionListPrivacyEnum.PRIVATE,
+            opinionsCount = opinionRepository.countByOwner(ownerId),
+            grantedAccessCount = 0,
+        )
 
     private fun validateAccess(
         list: OpinionListPersistence,
@@ -356,7 +234,7 @@ class OpinionListService(
             }
         }
 
-    private fun countVisibleOpinions(
+    fun countVisibleOpinions(
         listId: UUID,
         requesterId: UUID,
     ): Long = fetchAndEnrichOpinions(resolveAllAssignments(listId), requesterId).size.toLong()

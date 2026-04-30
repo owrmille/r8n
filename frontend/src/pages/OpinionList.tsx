@@ -79,14 +79,16 @@ const OpinionListPage = () => {
   const [deleteListConfirmOpen, setDeleteListConfirmOpen] = useState(false);
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
 
-  const summaries = data?.opinionSummaries ?? [];
+  const summaries = data?.opinionSummaries || [];
 
   const handleAdjustWeight = useCallback((opinionId: Uuid, weight: number) => {
-    linkOpinion.mutate({ listId: listId!, opinionId, weight });
+    if (!listId || listId === "all") return;
+    linkOpinion.mutate({ listId, opinionId, weight });
   }, [linkOpinion, listId]);
 
   const handleUnlinkFromList = useCallback((opinionId: Uuid) => {
-    unlinkOpinion.mutate({ listId: listId!, opinionId });
+    if (!listId || listId === "all") return;
+    unlinkOpinion.mutate({ listId, opinionId });
   }, [unlinkOpinion, listId]);
 
   const handleDeleteForever = useCallback((opinionId: Uuid) => {
@@ -105,7 +107,9 @@ const OpinionListPage = () => {
       subjective: [subjective],
       objective: [objective],
     });
-    await linkOpinion.mutateAsync({ listId: listId!, opinionId: opinion.id });
+    if (listId && listId !== "all") {
+      await linkOpinion.mutateAsync({ listId, opinionId: opinion.id });
+    }
   }, [createOpinion, linkOpinion, listId]);
 
   return (
@@ -139,7 +143,7 @@ const OpinionListPage = () => {
               <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground font-body flex-1">
                 {!isListOwner && data?.ownerName ? `${data.ownerName} · ` : ""}{data?.listName}
               </h1>
-              {isListOwner && data && (
+              {isListOwner && data && listId !== "all" && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
@@ -197,7 +201,7 @@ const OpinionListPage = () => {
 
           <div className="flex flex-wrap items-center gap-2 mb-6">
             <Button variant="default" size="sm" className="rounded-lg text-xs" asChild>
-              <Link to={listId ? `/create?listId=${listId}` : "/create"}>
+              <Link to={listId && listId !== "all" ? `/create?listId=${listId}` : "/create"}>
                 <Plus className="mr-1 h-3 w-3" /> Write review
               </Link>
             </Button>
@@ -206,6 +210,7 @@ const OpinionListPage = () => {
               size="sm"
               className="rounded-lg text-xs"
               onClick={() => setLinkDialogOpen(true)}
+              disabled={listId === "all"}
             >
               <Link2 className="mr-1 h-3 w-3" /> Link existing
             </Button>
@@ -214,6 +219,7 @@ const OpinionListPage = () => {
               size="sm"
               className="rounded-lg text-xs"
               onClick={() => setSyncDialogOpen(true)}
+              disabled={listId === "all"}
             >
               <GitMerge className="mr-1 h-3 w-3" /> Sync list
             </Button>
@@ -265,8 +271,9 @@ const OpinionListPage = () => {
             isPending={moveOpinion.isPending}
             onClose={() => setMovingOpinion(null)}
             onSubmit={(opinionId, targetListId) => {
+              if (!listId || listId === "all") return;
               moveOpinion.mutate(
-                { fromListId: listId!, toListId: targetListId, opinionId },
+                { fromListId: listId, toListId: targetListId, opinionId },
                 { onSuccess: () => setMovingOpinion(null) },
               );
             }}
@@ -345,7 +352,7 @@ const OpinionListPage = () => {
                   {summaries.map((summary) => (
                     <ItemRow
                       key={summary.subject}
-                      listId={listId!}
+                      listId={listId || "all"}
                       summary={summary}
                       isExpanded={expandedItem === summary.subject}
                       onToggle={() => setExpandedItem(expandedItem === summary.subject ? null : summary.subject)}
@@ -372,6 +379,7 @@ const OpinionListPage = () => {
 };
 
 const ItemRow = ({
+  listId,
   summary,
   isExpanded,
   onToggle,
@@ -386,6 +394,7 @@ const ItemRow = ({
   onUnlink,
   onDeleteForever,
 }: {
+  listId: string;
   summary: OpinionSummaryDto;
   isExpanded: boolean;
   onToggle: () => void;
@@ -422,24 +431,27 @@ const ItemRow = ({
 
   return (
     <>
-      <tr
+    <tr
         className={cn(
           "border-b border-border last:border-0 cursor-pointer transition-colors hover:bg-muted/20",
           isExpanded && "bg-muted/20"
         )}
-        onClick={onToggle}
+        onClick={(e) => {
+          e.preventDefault();
+          onToggle();
+        }}
       >
         <td className="px-4 py-3 font-medium text-foreground">
-          {summary.subjectName}
-          {summary.referentName && (
+          {summary?.subjectName || "Unknown Subject"}
+          {summary?.referentName && (
             <span className="text-muted-foreground font-normal"> @ {summary.referentName}</span>
           )}
         </td>
         <td className="px-4 py-3 font-mono text-foreground">
-          {summary.ownMark !== null ? summary.ownMark.toFixed(1) : "—"}
+          {summary?.ownMark !== null && summary?.ownMark !== undefined ? summary.ownMark.toFixed(2) : "—"}
         </td>
         <td className="px-4 py-3 font-mono font-semibold text-foreground">
-          {summary.componentMark !== null ? summary.componentMark.toFixed(2) : "—"}
+          {summary?.componentMark !== null && summary?.componentMark !== undefined ? summary.componentMark.toFixed(2) : "—"}
         </td>
         <td className="px-4 py-3">
           <ChevronDown
@@ -451,7 +463,7 @@ const ItemRow = ({
         </td>
       </tr>
 
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         {isExpanded && (
           <tr>
             <td colSpan={4} className="p-0">
@@ -476,7 +488,7 @@ const ItemRow = ({
                     </div>
                   )}
 
-                  {summary.opinions.length > 0 && (
+                  {summary.opinions && summary.opinions.length > 0 && (
                     <div className="rounded-xl border border-border overflow-hidden bg-card">
                       <table className="w-full text-xs">
                         <thead>
@@ -491,10 +503,11 @@ const ItemRow = ({
                           </tr>
                         </thead>
                         <tbody>
-                          {summary.opinions.map((ref) => (
+                          {summary?.opinions?.map((ref) => (
                             <OpinionRow
                               key={ref.opinionId}
                               ref_={ref}
+                              listId={listId!}
                               onWeightChange={onAdjustWeight}
                               isAdjustingWeight={isAdjustingWeight}
                               currentUserId={currentUserId}
@@ -581,6 +594,7 @@ const ItemRow = ({
 
 const OpinionRow = ({
   ref_,
+  listId,
   onWeightChange,
   isAdjustingWeight,
   currentUserId,
@@ -591,6 +605,7 @@ const OpinionRow = ({
   onDeleteForever,
 }: {
   ref_: OpinionRowDto;
+  listId: string;
   onWeightChange: (opinionId: Uuid, weight: number) => void;
   isAdjustingWeight: boolean;
   currentUserId: Uuid | null;
@@ -610,30 +625,34 @@ const OpinionRow = ({
           {ref_.ownerName}
         </div>
       </td>
-      <td className="px-3 py-2.5 text-muted-foreground">{ref_.subjective.join(", ")}</td>
-      <td className="px-3 py-2.5 text-muted-foreground hidden sm:table-cell">{ref_.objective.join(", ")}</td>
+      <td className="px-3 py-2.5 text-muted-foreground">{(ref_.subjective || []).join(", ")}</td>
+      <td className="px-3 py-2.5 text-muted-foreground hidden sm:table-cell">{(ref_.objective || []).join(", ")}</td>
       <td className="px-3 py-2.5 font-mono font-medium text-foreground">
-        {ref_.mark !== null ? ref_.mark.toFixed(1) : "—"}
+        {ref_.mark !== null && ref_.mark !== undefined ? ref_.mark.toFixed(2) : "—"}
       </td>
       <td className="px-3 py-1.5 font-mono text-muted-foreground hidden md:table-cell">
-        <Input
-          type="number"
-          min={0}
-          max={1}
-          step={0.1}
-          key={ref_.weight}
-          defaultValue={ref_.weight}
-          disabled={isAdjustingWeight}
-          onChange={(e) => {
-            const val = parseFloat(e.target.value);
-            if (!isNaN(val)) onWeightChange(ref_.opinionId, Math.min(1, Math.max(0, val)));
-          }}
-          onClick={(e) => e.stopPropagation()}
-          className="h-7 w-16 px-2 text-xs font-mono bg-transparent border-border"
-        />
+        {listId !== "all" ? (
+          <Input
+            type="number"
+            min={0}
+            max={1}
+            step={0.1}
+            key={ref_.weight}
+            defaultValue={ref_.weight ?? 1.0}
+            disabled={isAdjustingWeight}
+            onChange={(e) => {
+              const val = parseFloat(e.target.value);
+              if (!isNaN(val)) onWeightChange(ref_.opinionId, Math.min(1, Math.max(0, val)));
+            }}
+            onClick={(e) => e.stopPropagation()}
+            className="h-7 w-20 px-2 text-xs font-mono bg-transparent border-border"
+          />
+        ) : (
+          <span className="px-2">{(ref_.weight ?? 1.0).toFixed(2)}</span>
+        )}
       </td>
       <td className="px-3 py-2.5 text-muted-foreground hidden lg:table-cell capitalize">
-        {ref_.status.toLowerCase().replace("_", " ")}
+        {ref_.status?.toLowerCase().replace("_", " ") || "Unknown"}
       </td>
       <td className="px-3 py-2.5 w-8">
         {showMenu && (
@@ -655,13 +674,13 @@ const OpinionRow = ({
                   Edit
                 </DropdownMenuItem>
               )}
-              {isListOwner && (
+              {isListOwner && listId !== "all" && (
                 <DropdownMenuItem onClick={() => onMove(ref_)}>
                   <FolderInput className="h-3.5 w-3.5 mr-2" />
                   Move to list…
                 </DropdownMenuItem>
               )}
-              {isListOwner && (
+              {isListOwner && listId !== "all" && (
                 <DropdownMenuItem onClick={() => onUnlink(ref_.opinionId)}>
                   <X className="h-3.5 w-3.5 mr-2" />
                   Remove from list

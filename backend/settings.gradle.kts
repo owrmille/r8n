@@ -21,8 +21,8 @@ include("users-api-integration", "users-sv/api-integration")
 include("users-client", "users-sv/client")
 include("users-sv", "users-sv/service")
 
-include("export-api", "export-sv/api")
-include("export-sv", "export-sv/service")
+include("migration-api", "migration-sv/api")
+include("migration-sv", "migration-sv/service")
 
 include("opinions-api", "opinions-sv/api")
 include("opinions-api-integration", "opinions-sv/api-integration")

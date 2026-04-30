@@ -23,22 +23,65 @@ spring:
               uri: http://localhost:8082
               predicates:
                 - Path=/api/auth/**
+            - id: opinions_v3_api_docs
+              uri: http://localhost:8081
+              predicates:
+                - Path=/api/opinions/v3/api-docs/**
+              filters:
+                - RewritePath=/api/opinions/v3/api-docs(?<segment>.*), /v3/api-docs$\{segment}
             - id: opinions
               uri: http://localhost:8081
               predicates:
                 - Path=/api/access-requests/**,/api/opinion-lists/**,/api/opinions/**,/api/subjects/**,/api/referents/**
+            - id: users_v3_api_docs
+              uri: http://localhost:8082
+              predicates:
+                - Path=/api/users/v3/api-docs/**
+              filters:
+                - RewritePath=/api/users/v3/api-docs(?<segment>.*), /v3/api-docs$\{segment}
             - id: users
               uri: http://localhost:8082
               predicates:
                 - Path=/api/users/**
-            - id: messaging
+            - id: admin
+              uri: http://localhost:8082
+              predicates:
+                - Path=/api/admin/**
+            - id: migration_v3_api_docs
               uri: http://localhost:8083
+              predicates:
+                - Path=/api/export/v3/api-docs/**,/api/import/v3/api-docs/**
+              filters:
+                - RewritePath=/api/export/v3/api-docs(?<segment>.*), /v3/api-docs$\{segment}
+            - id: migration
+              uri: http://localhost:8083
+              predicates:
+                - Path=/api/export/**,/api/import/**
+            - id: messaging_v3_api_docs
+              uri: http://localhost:8084
+              predicates:
+                - Path=/api/messaging/v3/api-docs/**
+              filters:
+                - RewritePath=/api/messaging/v3/api-docs(?<segment>.*), /v3/api-docs$\{segment}
+            - id: messaging
+              uri: http://localhost:8084
               predicates:
                 - Path=/api/messaging/**
             - id: mock
               uri: http://localhost:8090
               predicates:
                 - Path=/api/selectors/**
+            - id: public_opinions
+              uri: http://localhost:8081
+              predicates:
+                - Path=/api/public/opinions/**
+              filters:
+                - ApiKeyAuthenticationFilter
+                - name: RateLimitingFilter
+                  args:
+                    limit: 100
+                    durationSeconds: 60
+                - RewritePath=/api/public/opinions/(?<segment>.*), /api/opinions/$\{segment}
             - id: public_subjects
               uri: http://localhost:8081
               predicates:
@@ -50,9 +93,31 @@ spring:
                     limit: 100
                     durationSeconds: 60
                 - RewritePath=/api/public/subjects/?(?<segment>.*), /api/subjects/$\{segment}
+            - id: public_users
+              uri: http://localhost:8082
+              predicates:
+                - Path=/api/public/users/**
+              filters:
+                - ApiKeyAuthenticationFilter
+                - name: RateLimitingFilter
+                  args:
+                    limit: 100
+                    durationSeconds: 60
+                - RewritePath=/api/public/users/(?<segment>.*), /api/users/$\{segment}
+            - id: public_messaging
+              uri: http://localhost:8084
+              predicates:
+                - Path=/api/public/messaging/**
+              filters:
+                - ApiKeyAuthenticationFilter
+                - name: RateLimitingFilter
+                  args:
+                    limit: 100
+                    durationSeconds: 60
+                - RewritePath=/api/public/messaging/(?<segment>.*), /api/messaging/$\{segment}
 r8n:
   security:
-    public-paths: /api/auth/**
+    public-paths: /api/auth/**, /swagger-ui.html, /swagger-ui/**, /v3/api-docs/**, /api/*/v3/api-docs/**, /webjars/swagger-ui/**, /api/opinions/v3/api-docs/**, /api/users/v3/api-docs/**, /api/export/v3/api-docs/**, /api/messaging/v3/api-docs/**
     jwt:
       public-key: |
         -----BEGIN PUBLIC KEY-----

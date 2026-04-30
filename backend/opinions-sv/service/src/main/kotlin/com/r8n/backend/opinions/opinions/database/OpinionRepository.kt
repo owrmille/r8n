@@ -39,4 +39,11 @@ interface OpinionRepository : JpaRepository<OpinionPersistence, UUID> {
     fun findIdsByTimestampAfter(
         @Param("since") since: Instant,
     ): Set<UUID>
+
+    fun findAllByOwnerOrderByTimestampDesc(
+        owner: UUID,
+        pageable: Pageable,
+    ): Page<OpinionPersistence>
+
+    fun countByOwner(owner: UUID): Long
 }

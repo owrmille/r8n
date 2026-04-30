@@ -5,7 +5,7 @@ import java.util.UUID
 
 data class OpinionDto(
     val id: UUID,
-    val owner: UUID,
+    var owner: UUID,
     val ownerName: String,
     val subject: UUID,
     val subjectName: String,

@@ -3,6 +3,7 @@ import type {
   GetOutgoingAccessRequestsRequestDto,
 } from "@/lib/api/access-requests";
 import type {
+  GetMyOpinionListNamesRequestDto,
   GetDirectConversationMessagesRequestDto,
   GetDirectConversationSummariesRequestDto,
   GetSupportThreadMessagesRequestDto,
@@ -50,6 +51,11 @@ export const opinionsKeys = {
 export const opinionListsKeys = {
   all: ["opinion-lists"] as const,
   mine: (request: GetMyOpinionListsRequestDto) => ["opinion-lists", "mine", request.pageable] as const,
+  mineNames: (request: GetMyOpinionListNamesRequestDto) => [
+    "opinion-lists",
+    "mine-names",
+    request.pageable,
+  ] as const,
   summary: (request: GetOpinionListSummaryRequestDto) => [
     "opinion-lists",
     "summary",
@@ -143,6 +149,11 @@ export const usersKeys = {
   withRoles: () => ["users", "with-roles"] as const,
 };
 
+export const migrationKeys = {
+  all: ["migration"] as const,
+  exportStatus: () => ["migration", "export-status"] as const,
+};
+
 export const subjectsKeys = {
   all: ["subjects"] as const,
   find: (request: FindSubjectsRequestDto) => [
@@ -173,4 +184,5 @@ export const queryKeys = {
   referents: referentsKeys,
   subjects: subjectsKeys,
   users: usersKeys,
+  migration: migrationKeys,
 };

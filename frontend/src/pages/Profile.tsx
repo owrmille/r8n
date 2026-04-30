@@ -1,11 +1,15 @@
 import { motion } from "framer-motion";
-import { MapPin, Download, Settings } from "lucide-react";
+import { MapPin, Download, Settings, Upload } from "lucide-react";
 import { useParams, Link } from "react-router-dom";
+import { useRef } from "react";
 import UserAvatar from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { QueryState } from "@/components/server-state/QueryState";
-import { useMe, useUserProfile } from "@/lib/server-state/hooks/users";
+import { useMe, useUserProfile, useUpdateMyPublicProfileMutation } from "@/lib/server-state/hooks/users";
 import { useMyOpinionLists } from "@/lib/server-state/hooks/opinion-lists";
+import { useExportStatus, useStartExportMutation, useImportDataMutation } from "@/lib/server-state/hooks/migration";
+import { migrationApi } from "@/lib/api/migration";
+import { toast } from "sonner";
 
 const profileActionButtonClass = "inline-flex h-11 items-center justify-center rounded-xl px-4 py-0 leading-none";
 const profileActionIconButtonClass = `${profileActionButtonClass} gap-1.5`;
@@ -28,6 +32,60 @@ const Profile = () => {
     { pageable: { page: 0, size: 50 } },
     { enabled: isOwnProfile && !!me?.id },
   );
+
+  const updateProfileMutation = useUpdateMyPublicProfileMutation();
+  const startExportMutation = useStartExportMutation();
+  const importDataMutation = useImportDataMutation();
+
+  const { data: exportStatus } = useExportStatus({
+    enabled: isOwnProfile && !!me?.id,
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
+      return status === "PENDING" || status === "IN_PROGRESS" ? 2000 : false;
+    },
+  });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImportData = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    importDataMutation.mutate(file, {
+      onSuccess: () => {
+        toast.success("Data imported successfully");
+        refetch();
+      },
+      onSettled: () => {
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      },
+    });
+  };
+
+  const handleExportData = async () => {
+    if (exportStatus?.status === "COMPLETED") {
+      try {
+        const blob = await migrationApi.downloadExport();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `r8n-export-${new Date().toISOString().split("T")[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error("Download failed:", err);
+        toast.error("Failed to download export");
+      }
+    } else {
+      startExportMutation.mutate(undefined, {
+        onSuccess: () => {
+          toast.info("Export started. Please wait while we prepare your data.");
+        },
+      });
+    }
+  };
 
   const lists = listsPage?.items ?? [];
 
@@ -84,22 +142,35 @@ const Profile = () => {
                     <Button
                       variant="outline"
                       className={profileActionIconButtonClass}
-                      onClick={() => {
-                        const data = {
-                          profile,
-                          exportedAt: new Date().toISOString(),
-                        };
-                        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement("a");
-                        a.href = url;
-                        a.download = "my-r8n-data.json";
-                        a.click();
-                        URL.revokeObjectURL(url);
-                      }}
+                      onClick={handleExportData}
+                      disabled={
+                        startExportMutation.isPending ||
+                        exportStatus?.status === "PENDING" ||
+                        exportStatus?.status === "IN_PROGRESS"
+                      }
                     >
                       <Download className="h-3.5 w-3.5" />
-                      Export my data
+                      {exportStatus?.status === "PENDING" || exportStatus?.status === "IN_PROGRESS"
+                        ? "Preparing..."
+                        : exportStatus?.status === "COMPLETED"
+                        ? "Download data"
+                        : "Export my data"}
+                    </Button>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleImportData}
+                      accept=".json"
+                      className="hidden"
+                    />
+                    <Button
+                      variant="outline"
+                      className={profileActionIconButtonClass}
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={importDataMutation.isPending}
+                    >
+                      <Upload className="h-3.5 w-3.5" />
+                      {importDataMutation.isPending ? "Importing..." : "Import my data"}
                     </Button>
                   </div>
                 )}

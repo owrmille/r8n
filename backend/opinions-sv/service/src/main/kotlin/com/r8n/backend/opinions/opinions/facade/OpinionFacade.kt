@@ -41,6 +41,15 @@ class OpinionFacade(
         ownerId: UUID,
     ): OpinionDto = opinionMapper.toDto(opinionService.updateOpinion(opinionId, subjective, objective, mark, ownerId))
 
+    fun getMyFullOpinions(
+        ownerId: UUID,
+        pageable: PageRequestDto,
+    ): PageResponseDto<OpinionDto> =
+        opinionService
+            .getMyFullOpinions(ownerId, pageable.toPageable())
+            .map { opinionMapper.toDto(it) }
+            .toResponse()
+
     fun deleteOpinion(
         opinionId: UUID,
         ownerId: UUID,
@@ -93,4 +102,8 @@ class OpinionFacade(
         weight: Double,
         ownerId: UUID,
     ): OpinionDto = opinionMapper.toDto(opinionService.adjustComponentWeight(linkId, weight, ownerId))
+
+    fun restoreOpinion(dto: OpinionDto) {
+        opinionService.restoreOpinion(dto)
+    }
 }

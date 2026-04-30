@@ -3,12 +3,14 @@ import { opinionListsApi, opinionsApi } from "@/lib/api";
 import type {
   CreateOpinionListRequestDto,
   DeleteOpinionListRequestDto,
+  GetMyOpinionListNamesRequestDto,
   GetMyOpinionListsRequestDto,
   GetOpinionListRequestDto,
   GetOpinionListSummaryRequestDto,
   LinkOpinionToListRequestDto,
   MoveOpinionRequestDto,
   OpinionListDto,
+  OpinionListNameDto,
   OpinionListSummaryDto,
   RenameOpinionListRequestDto,
   SearchOpinionListsRequestDto,
@@ -37,6 +39,25 @@ export function useMyOpinionLists(
   return useAuthorizedQuery({
     queryKey: opinionListsKeys.mine(request),
     queryFn: () => opinionListsApi.getMine(request),
+    ...options,
+  });
+}
+
+export function useMyOpinionListNames(
+  request: GetMyOpinionListNamesRequestDto,
+  options?: Omit<
+    UseQueryOptions<
+      PageResponseDto<OpinionListNameDto>,
+      Error,
+      PageResponseDto<OpinionListNameDto>,
+      QueryKey
+    >,
+    "queryKey" | "queryFn"
+  >,
+) {
+  return useAuthorizedQuery({
+    queryKey: opinionListsKeys.mineNames(request),
+    queryFn: () => opinionListsApi.getMineNames(request),
     ...options,
   });
 }

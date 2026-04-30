@@ -12,6 +12,8 @@ import com.r8n.backend.opinions.api.lists.dto.OpinionListSearchFiltersDto
 import com.r8n.backend.opinions.api.lists.dto.OpinionListSummaryDto
 import com.r8n.backend.opinions.lists.domain.OpinionListPrivacyEnum
 import com.r8n.backend.opinions.lists.domain.OpinionListSearchFilters
+import com.r8n.backend.opinions.lists.service.OpinionListConnectionsService
+import com.r8n.backend.opinions.lists.service.OpinionListSearchService
 import com.r8n.backend.opinions.lists.service.OpinionListService
 import org.springframework.stereotype.Component
 import java.util.UUID
@@ -19,18 +21,30 @@ import java.util.UUID
 @Component
 class OpinionListFacade(
     private val opinionListService: OpinionListService,
+    private val opinionListConnectionsService: OpinionListConnectionsService,
+    private val opinionListSearchService: OpinionListSearchService,
     private val opinionListMapper: OpinionListMapper,
 ) {
     fun getListSummary(
-        listId: UUID,
+        listId: UUID?,
         requesterId: UUID,
-    ): OpinionListSummaryDto = opinionListMapper.toSummaryDto(opinionListService.getListInfo(listId, requesterId))
+    ): OpinionListSummaryDto =
+        if (listId == null) {
+            opinionListMapper.toDto(opinionListService.getMyVirtualListInfo(requesterId))
+        } else {
+            opinionListMapper.toSummaryDto(opinionListService.getListInfo(listId, requesterId))
+        }
 
     fun getList(
-        listId: UUID,
+        listId: UUID?,
         requesterId: UUID,
         publishedAfter: java.time.Instant? = null,
-    ): OpinionListDto = opinionListMapper.toDto(opinionListService.getList(listId, requesterId, publishedAfter))
+    ): OpinionListDto =
+        if (listId == null) {
+            opinionListMapper.toDto(opinionListService.getMyVirtualList(requesterId))
+        } else {
+            opinionListMapper.toDto(opinionListService.getList(listId, requesterId, publishedAfter))
+        }
 
     fun createList(
         ownerId: UUID,
@@ -49,7 +63,7 @@ class OpinionListFacade(
         ownerId: UUID,
         pageable: PageRequestDto,
     ): PageResponseDto<OpinionListSummaryDto> =
-        opinionListService
+        opinionListSearchService
             .getMine(ownerId, pageable.toPageable())
             .map { opinionListMapper.toSummaryDto(it) }
             .toResponse()
@@ -58,7 +72,7 @@ class OpinionListFacade(
         ownerId: UUID,
         pageable: PageRequestDto,
     ): PageResponseDto<OpinionListDto> =
-        opinionListService
+        opinionListSearchService
             .getListsFull(ownerId, pageable.toPageable())
             .map { opinionListMapper.toDto(it) }
             .toResponse()
@@ -75,7 +89,7 @@ class OpinionListFacade(
         val domainFilters = filters.toDomain()
 
         val page =
-            opinionListService.search(
+            opinionListSearchService.search(
                 requesterId = requesterId,
                 filters = domainFilters,
                 pageable = pageable.toPageable(),
@@ -91,7 +105,7 @@ class OpinionListFacade(
         requesterId: UUID,
         pageable: PageRequestDto,
     ): PageResponseDto<OpinionListNameAndOwnerDto> =
-        opinionListService
+        opinionListSearchService
             .getApprovedListsWithNamesAndOwners(requesterId, pageable.toPageable())
             .map { info -> opinionListMapper.toNameAndOwnerDto(info) }
             .toResponse()
@@ -100,8 +114,8 @@ class OpinionListFacade(
         ownerId: UUID,
         pageable: PageRequestDto,
     ): PageResponseDto<OpinionListNameDto> =
-        opinionListService
-            .getMine(ownerId, pageable.toPageable())
+        opinionListSearchService
+            .getMine(ownerId, pageable.toPageable(), false)
             .map { info -> opinionListMapper.toNameDto(info) }
             .toResponse()
 
@@ -111,27 +125,32 @@ class OpinionListFacade(
         addedListId: UUID,
         weight: Double,
     ): OpinionListDto =
-        opinionListMapper.toDto(opinionListService.syncWithOpinionList(userId, existingListId, addedListId, weight))
+        opinionListMapper.toDto(
+            opinionListConnectionsService.syncWithOpinionList(userId, existingListId, addedListId, weight),
+        )
 
     fun unsyncWithOpinionList(
         userId: UUID,
         existingListId: UUID,
         removedListId: UUID,
     ): OpinionListDto =
-        opinionListMapper.toDto(opinionListService.unsyncWithOpinionList(userId, existingListId, removedListId))
+        opinionListMapper.toDto(
+            opinionListConnectionsService.unsyncWithOpinionList(userId, existingListId, removedListId),
+        )
 
     fun linkOpinion(
         userId: UUID,
         listId: UUID,
         opinionId: UUID,
         weight: Double,
-    ): OpinionListDto = opinionListMapper.toDto(opinionListService.linkOpinion(userId, listId, opinionId, weight))
+    ): OpinionListDto =
+        opinionListMapper.toDto(opinionListConnectionsService.linkOpinion(userId, listId, opinionId, weight))
 
     fun unlinkOpinion(
         userId: UUID,
         listId: UUID,
         opinionId: UUID,
-    ): OpinionListDto = opinionListMapper.toDto(opinionListService.unlinkOpinion(userId, listId, opinionId))
+    ): OpinionListDto = opinionListMapper.toDto(opinionListConnectionsService.unlinkOpinion(userId, listId, opinionId))
 
     fun deleteList(
         userId: UUID,
@@ -159,7 +178,9 @@ class OpinionListFacade(
         opinionId: UUID,
         weight: Double,
     ): OpinionListDto =
-        opinionListMapper.toDto(opinionListService.moveOpinion(userId, fromListId, toListId, opinionId, weight))
+        opinionListMapper.toDto(
+            opinionListConnectionsService.moveOpinion(userId, fromListId, toListId, opinionId, weight),
+        )
 
     private companion object {
         fun OpinionListPrivacyEnumDto.toDomain() =
