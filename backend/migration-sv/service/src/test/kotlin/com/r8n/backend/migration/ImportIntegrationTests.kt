@@ -144,7 +144,7 @@ class ImportIntegrationTests {
         // We expect linkOpinion for A1, but NOT for B1 because it wasn't restored
 
         // Verify outgoing request is re-created as PENDING (implicitly by calling create)
-        verify(outgoingAccessRequestApi, times(1)).create(eq(LIST_B_ID))
+        verify(outgoingAccessRequestApi, times(1)).create(eq(LIST_B_ID), any(), anyOrNull())
     }
 
     private fun createOpinionDto(
