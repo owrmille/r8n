@@ -106,6 +106,7 @@ function mapDirectSummaryToThread(summary: DirectConversationSummaryDto): Messag
   return {
     id: summary.id,
     subject: `Conversation with ${summary.participantDisplayName}`,
+    participantUserId: summary.participantUserId,
     participantName: summary.participantDisplayName,
     participantLastSeenAt: null,
     participantRole: "User",
@@ -469,6 +470,7 @@ const ThreadListItem = ({ isActive, onSelect, thread }: ThreadListItemProps) => 
         </div>
       ) : (
         <UserAvatar
+          userId={thread.participantUserId}
           name={thread.participantName}
           lastSeenAt={thread.participantLastSeenAt}
           size="sm"
@@ -718,6 +720,7 @@ const ChatHeader = ({ thread, onDelete, isDeleting }: ChatHeaderProps) => {
         </div>
       ) : (
         <UserAvatar
+          userId={thread.participantUserId}
           name={thread.participantName}
           lastSeenAt={thread.participantLastSeenAt}
           size="md"

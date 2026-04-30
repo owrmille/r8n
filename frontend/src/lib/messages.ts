@@ -12,6 +12,7 @@ export interface ThreadMessage {
 export interface MessageThread {
   id: string;
   subject: string;
+  participantUserId?: string;
   participantName: string;
   participantLastSeenAt: string | null;
   participantRole: string;
