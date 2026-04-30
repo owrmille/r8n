@@ -4,11 +4,11 @@ import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.utils.toPageable
 import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.messaging.api.MessagingApi
-import com.r8n.backend.messaging.api.dto.messaging.CreateSupportMessageRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.CreateSupportThreadRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportMessageDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportThreadSummaryDto
 import com.r8n.backend.messaging.facade.SupportMessagingFacade
+import com.r8n.backend.messaging.integration.api.MessagingInternalApi
 import com.r8n.backend.messaging.persistence.SupportParticipantRoleEnumPersistence
 import com.r8n.backend.messaging.service.SupportActor
 import com.r8n.backend.security.Authority
@@ -22,7 +22,8 @@ import java.util.UUID
 @RestController
 class MessagingController(
     private val supportMessagingFacade: SupportMessagingFacade,
-) : MessagingApi {
+) : MessagingApi,
+    MessagingInternalApi {
     @PreAuthorize(IS_USER_OR_SUPPORT)
     override fun getSupportThreadSummaries(pageable: PageRequestDto) =
         supportMessagingFacade.getSupportThreadSummaries(getSupportActor(), pageable.toPageable()).toResponse()
@@ -37,10 +38,9 @@ class MessagingController(
         pageable: PageRequestDto,
     ) = supportMessagingFacade.getSupportThreadMessages(getSupportActor(), threadId, pageable.toPageable()).toResponse()
 
-    @PreAuthorize(IS_USER_OR_SUPPORT)
     override fun addSupportThreadMessage(
         threadId: UUID,
-        request: CreateSupportMessageRequestDto,
+        request: com.r8n.backend.messaging.api.dto.messaging.CreateSupportMessageRequestDto,
     ): SupportMessageDto = supportMessagingFacade.addSupportThreadMessage(getSupportActor(), threadId, request)
 
     override fun deleteAllUserDataForUser(userId: UUID) {
