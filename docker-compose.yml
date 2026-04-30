@@ -134,18 +134,18 @@ services:
         condition: service_healthy
     healthcheck: *jvm-service-healthcheck
 
-  export:
+  migration:
     build:
-      context: ./deployment/export
+      context: ./deployment/migration
       dockerfile: Dockerfile
     env_file:
       - ./deployment/config/docker.env
       - ./deployment/secrets/docker.secrets.env
     environment:
       <<: [*tls-common-env, *tls-client-common-env]
-      SERVICE_NAME: export
-      SERVER_SSL_KEY_STORE: /certs/keystore-export.p12
-      SERVICES_EXPORT_PORT: ${SERVICES_EXPORT_PORT:?}
+      SERVICE_NAME: migration
+      SERVER_SSL_KEY_STORE: /certs/keystore-migration.p12
+      SERVICES_MIGRATION_PORT: ${SERVICES_MIGRATION_PORT:?}
       INTERSERVICE_PROTOCOL: ${INTERSERVICE_PROTOCOL:?}
       SERVICES_USERS_HOST: ${SERVICES_USERS_HOST:?}
       SERVICES_USERS_PORT: ${SERVICES_USERS_PORT:?}
@@ -158,7 +158,7 @@ services:
     networks:
       - r8n_net
     volumes:
-      - ./deployment/export/logs:/var/log/r8n
+      - ./deployment/migration/logs:/var/log/r8n
       - ./deployment/certs/internal:/certs:ro
     depends_on:
       database:
@@ -195,8 +195,8 @@ services:
       SERVICES_MESSAGING_PORT: ${SERVICES_MESSAGING_PORT:?}
       SERVICES_USERS_HOST: ${SERVICES_USERS_HOST:?}
       SERVICES_USERS_PORT: ${SERVICES_USERS_PORT:?}
-      SERVICES_EXPORT_HOST: ${SERVICES_EXPORT_HOST:?}
-      SERVICES_EXPORT_PORT: ${SERVICES_EXPORT_PORT:?}
+      SERVICES_MIGRATION_HOST: ${SERVICES_MIGRATION_HOST:?}
+      SERVICES_MIGRATION_PORT: ${SERVICES_MIGRATION_PORT:?}
       LOGGING_FILE_NAME: ${LOGGING_FILE_NAME:?}
     ports:
       - "${GATEWAY_HOST_PORT:?}:${GATEWAY_CONTAINER_PORT:?}"
@@ -209,7 +209,7 @@ services:
         condition: service_healthy
       users:
         condition: service_healthy
-      export:
+      migration:
         condition: service_healthy
       database:
         condition: service_healthy

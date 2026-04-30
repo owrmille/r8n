@@ -130,6 +130,35 @@ class SubjectService(
 
     private fun String?.trimToNull(): String? = this?.trim()?.takeIf { it.isNotEmpty() }
 
+    @Transactional
+    fun restoreSubject(
+        id: UUID,
+        name: String,
+    ): SubjectDetails {
+        val existing = opinionSubjectRepository.findById(id).orElse(null)
+        if (existing != null) return existing.toModel()
+
+        val referent =
+            referentRepository.save(
+                ReferentPersistence(
+                    name = name,
+                    address = null,
+                    latitude = null,
+                    longitude = null,
+                    referentGroup = UUID.randomUUID(),
+                ),
+            )
+        val subject =
+            opinionSubjectRepository.save(
+                OpinionSubjectPersistence(
+                    id = id,
+                    name = name,
+                    referent = referent.id!!,
+                ),
+            )
+        return subject.toModel()
+    }
+
     private fun ReferentPersistence.toModel() =
         SubjectReferent(
             id = id!!,

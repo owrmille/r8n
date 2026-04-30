@@ -24,7 +24,7 @@ class OpinionsController(
     @PreAuthorize(IS_USER)
     override fun getOpinionFor(subjectId: UUID) = opinionFacade.getOpinionFor(subjectId, getCurrentUserId())
 
-    @PreAuthorize(IS_USER)
+    @PreAuthorize(IS_USER_OR_SERVICE)
     override fun createOpinion(
         subjectId: UUID,
         subjective: List<String>,

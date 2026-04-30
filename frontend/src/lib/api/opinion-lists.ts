@@ -10,6 +10,11 @@ import type { OpinionSummaryDto } from "@/lib/api/opinions";
 
 export type OpinionListPrivacyEnumDto = "PRIVATE" | "SEARCHABLE";
 
+export interface OpinionListNameDto {
+  id: Uuid;
+  name: string;
+}
+
 export interface OpinionListSummaryDto {
   grantedAccessCount: number;
   listId: Uuid;
@@ -96,6 +101,10 @@ export interface GetMyOpinionListsRequestDto {
   pageable: PageRequestDto;
 }
 
+export interface GetMyOpinionListNamesRequestDto {
+  pageable: PageRequestDto;
+}
+
 export interface CreateOpinionListRequestDto {
   name: string;
   privacy: OpinionListPrivacyEnumDto;
@@ -156,11 +165,26 @@ export function createOpinionListsApi(client: HttpClient = httpClient) {
       );
     },
 
+    getMineNames(
+      request: GetMyOpinionListNamesRequestDto,
+    ): Promise<PageResponseDto<OpinionListNameDto>> {
+      return client.get<PageResponseDto<OpinionListNameDto>>(
+        "/opinion-lists/mine/names",
+        {
+          auth: "required",
+          query: createPageQuery(request.pageable),
+        },
+      );
+    },
+
     getSummary(
       request: GetOpinionListSummaryRequestDto,
     ): Promise<OpinionListSummaryDto> {
+      const path = request.listId === "all"
+        ? "/opinion-lists/summary"
+        : `/opinion-lists/${request.listId}/summary`;
       return client.get<OpinionListSummaryDto>(
-        `/opinion-lists/${request.listId}/summary`,
+        path,
         {
           auth: "required",
         },
@@ -168,7 +192,10 @@ export function createOpinionListsApi(client: HttpClient = httpClient) {
     },
 
     getById(request: GetOpinionListRequestDto): Promise<OpinionListDto> {
-      return client.get<OpinionListDto>(`/opinion-lists/${request.listId}`, {
+      const path = request.listId === "all"
+        ? "/opinion-lists"
+        : `/opinion-lists/${request.listId}`;
+      return client.get<OpinionListDto>(path, {
         auth: "required",
         query: request.publishedAfter ? { publishedAfter: request.publishedAfter } : undefined,
       });

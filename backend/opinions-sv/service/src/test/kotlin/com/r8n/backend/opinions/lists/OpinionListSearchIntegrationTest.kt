@@ -85,14 +85,15 @@ class OpinionListSearchIntegrationTest {
                 .perform(
                     get("/api/opinion-lists/search")
                         .header("Authorization", annaToken)
-                        .param("nameSubstring", "l11")
+                        .param("nameSubstring", "l21")
                         .param("page", "0")
                         .param("size", "10"),
                 ).andExpect(status().isOk)
                 .andReturn()
 
         val page = objectMapper.readValue<PageResponseDto<OpinionListSummaryDto>>(result.response.contentAsString)
-        assertThat(page.items.map { it.listName }).contains("l11")
+        assertThat(page.items.map { it.listName }).contains("l21")
+        assertThat(page.items.map { it.listName }).doesNotContain("l11")
     }
 
     @Test
@@ -118,7 +119,8 @@ class OpinionListSearchIntegrationTest {
 
     @Test
     fun `pagination with filtering and multi-factor sorting works`() {
-        // 1. Pre-seed 10 lists
+        // 1. Pre-seed 10 lists by BOB
+        val bobToken = "Bearer " + serviceTokenService.generateAccessToken(BOB_ID, listOf("USER"))
         val prefix = "Alpha "
         for (i in 1..10) {
             val finalName = if (i <= 8) "$prefix$i" else "Beta $i"
@@ -126,7 +128,7 @@ class OpinionListSearchIntegrationTest {
             mockMvc
                 .perform(
                     post("/api/opinion-lists")
-                        .header("Authorization", annaToken)
+                        .header("Authorization", bobToken)
                         .param("name", finalName)
                         .param("privacy", "SEARCHABLE"),
                 ).andExpect(status().isOk)
@@ -171,21 +173,22 @@ class OpinionListSearchIntegrationTest {
 
     @Test
     fun `search by authorId works`() {
-        // Anna owns l11, l12, l13 (from seed data)
+        // Bernard owns l21, l22, l23 (from seed data)
+        val bernardId = UUID.fromString("10101010-1010-1010-1010-101010101010")
         val result =
             mockMvc
                 .perform(
                     get("/api/opinion-lists/search")
                         .header("Authorization", annaToken)
-                        .param("authorId", ANNA_ID.toString())
+                        .param("authorId", bernardId.toString())
                         .param("page", "0")
                         .param("size", "10"),
                 ).andExpect(status().isOk)
                 .andReturn()
 
         val page = objectMapper.readValue<PageResponseDto<OpinionListSummaryDto>>(result.response.contentAsString)
-        assertThat(page.items.map { it.listName }).contains("l11", "l12", "l13")
-        assertThat(page.items).allSatisfy { assertThat(it.owner).isEqualTo(ANNA_ID) }
+        assertThat(page.items.map { it.listName }).contains("l21", "l22", "l23")
+        assertThat(page.items).allSatisfy { assertThat(it.owner).isEqualTo(bernardId) }
     }
 
     @Test
@@ -214,30 +217,30 @@ class OpinionListSearchIntegrationTest {
 
     @Test
     fun `search with multiple filters (AND logic) works`() {
+        val bernardId = UUID.fromString("10101010-1010-1010-1010-101010101010")
         val result =
             mockMvc
                 .perform(
                     get("/api/opinion-lists/search")
                         .header("Authorization", annaToken)
-                        .param("nameSubstring", "l11")
-                        .param("authorId", ANNA_ID.toString())
+                        .param("nameSubstring", "l21")
+                        .param("authorId", bernardId.toString())
                         .param("page", "0")
                         .param("size", "10"),
                 ).andExpect(status().isOk)
                 .andReturn()
 
         val page = objectMapper.readValue<PageResponseDto<OpinionListSummaryDto>>(result.response.contentAsString)
-        assertThat(page.items.map { it.listName }).containsExactly("l11")
+        assertThat(page.items.map { it.listName }).containsExactly("l21")
     }
 
     @Test
     fun `search shows own private lists but hides others private lists`() {
-        // Seed data:
-        // l11, l12, l13 are SEARCHABLE, owned by Anna (20202020-...)
-        // l21, l22, l23 are SEARCHABLE, owned by Bernard (10101010-...)
-        // l24 is PRIVATE, owned by Bernard (10101010-...)
+        // This test assumed search shows own lists.
+        // After the change, search excludes ALL own lists, even private ones.
+        // It still hides others' private lists.
 
-        // a private list for Anna to test she can see it
+        // Anna's private list
         mockMvc
             .perform(
                 post("/api/opinion-lists")
@@ -261,7 +264,8 @@ class OpinionListSearchIntegrationTest {
         val page = objectMapper.readValue<PageResponseDto<OpinionListSummaryDto>>(result.response.contentAsString)
         val names = page.items.map { it.listName }
 
-        assertThat(names).contains("l11", "l12", "l13") // Anna's searchable lists
+        assertThat(names).doesNotContain("l11", "l12", "l13") // Anna's own searchable lists are now EXCLUDED
+        assertThat(names).doesNotContain("Anna's secret list") // Anna's own private list is now EXCLUDED
         assertThat(names).contains("l21", "l22", "l23") // Bernard's searchable lists
         assertThat(names).doesNotContain("l24") // Bernard's private list
     }
