@@ -654,7 +654,7 @@ const OpinionRow = ({
               if (!isNaN(val)) onWeightChange(ref_.opinionId, Math.min(1, Math.max(0, val)));
             }}
             onClick={(e) => e.stopPropagation()}
-            className="h-7 w-16 px-2 text-xs font-mono bg-transparent border-border"
+            className="h-7 w-20 px-2 text-xs font-mono bg-transparent border-border"
           />
         ) : (
           <span className="px-2">{(ref_.weight ?? 1.0).toFixed(2)}</span>

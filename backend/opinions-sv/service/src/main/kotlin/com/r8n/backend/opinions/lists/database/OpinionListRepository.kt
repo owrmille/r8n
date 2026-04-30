@@ -26,7 +26,7 @@ interface OpinionListRepository : JpaRepository<OpinionListPersistence, UUID> {
         WHERE (:nameSubstring IS NULL OR LOWER(ol.name) LIKE LOWER(CONCAT('%', CAST(:nameSubstring AS string), '%')))
         AND (:authorId IS NULL OR ol.owner = :authorId)
         AND (:authorIds IS NULL OR ol.owner IN :authorIds)
-        AND (ol.owner = :requesterId OR ol.privacy = :searchablePrivacy)
+        AND (ol.owner != :requesterId AND ol.privacy = :searchablePrivacy)
         """,
     )
     fun search(
@@ -44,7 +44,7 @@ interface OpinionListRepository : JpaRepository<OpinionListPersistence, UUID> {
         WHERE (:nameSubstring IS NULL OR LOWER(ol.name) LIKE LOWER(CONCAT('%', CAST(:nameSubstring AS string), '%')))
         AND (:authorId IS NULL OR ol.owner = :authorId)
         AND (:authorIds IS NULL OR ol.owner IN :authorIds)
-        AND (ol.owner = :requesterId OR ol.privacy = :searchablePrivacy)
+        AND (ol.owner != :requesterId AND ol.privacy = :searchablePrivacy)
         """,
     )
     fun searchIds(

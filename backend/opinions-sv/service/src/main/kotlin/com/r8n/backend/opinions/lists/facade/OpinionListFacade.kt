@@ -111,7 +111,7 @@ class OpinionListFacade(
         pageable: PageRequestDto,
     ): PageResponseDto<OpinionListNameDto> =
         opinionListSearchService
-            .getMine(ownerId, pageable.toPageable())
+            .getMine(ownerId, pageable.toPageable(), false)
             .map { info -> opinionListMapper.toNameDto(info) }
             .toResponse()
 

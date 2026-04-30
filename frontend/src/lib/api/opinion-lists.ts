@@ -10,6 +10,11 @@ import type { OpinionSummaryDto } from "@/lib/api/opinions";
 
 export type OpinionListPrivacyEnumDto = "PRIVATE" | "SEARCHABLE";
 
+export interface OpinionListNameDto {
+  id: Uuid;
+  name: string;
+}
+
 export interface OpinionListSummaryDto {
   grantedAccessCount: number;
   listId: Uuid;
@@ -96,6 +101,10 @@ export interface GetMyOpinionListsRequestDto {
   pageable: PageRequestDto;
 }
 
+export interface GetMyOpinionListNamesRequestDto {
+  pageable: PageRequestDto;
+}
+
 export interface CreateOpinionListRequestDto {
   name: string;
   privacy: OpinionListPrivacyEnumDto;
@@ -149,6 +158,18 @@ export function createOpinionListsApi(client: HttpClient = httpClient) {
     ): Promise<PageResponseDto<OpinionListSummaryDto>> {
       return client.get<PageResponseDto<OpinionListSummaryDto>>(
         "/opinion-lists/mine",
+        {
+          auth: "required",
+          query: createPageQuery(request.pageable),
+        },
+      );
+    },
+
+    getMineNames(
+      request: GetMyOpinionListNamesRequestDto,
+    ): Promise<PageResponseDto<OpinionListNameDto>> {
+      return client.get<PageResponseDto<OpinionListNameDto>>(
+        "/opinion-lists/mine/names",
         {
           auth: "required",
           query: createPageQuery(request.pageable),

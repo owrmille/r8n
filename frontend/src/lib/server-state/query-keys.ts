@@ -3,6 +3,7 @@ import type {
   GetOutgoingAccessRequestsRequestDto,
 } from "@/lib/api/access-requests";
 import type {
+  GetMyOpinionListNamesRequestDto,
   GetMyOpinionListsRequestDto,
   GetOpinionListRequestDto,
   GetOpinionListSummaryRequestDto,
@@ -44,6 +45,11 @@ export const opinionsKeys = {
 export const opinionListsKeys = {
   all: ["opinion-lists"] as const,
   mine: (request: GetMyOpinionListsRequestDto) => ["opinion-lists", "mine", request.pageable] as const,
+  mineNames: (request: GetMyOpinionListNamesRequestDto) => [
+    "opinion-lists",
+    "mine-names",
+    request.pageable,
+  ] as const,
   summary: (request: GetOpinionListSummaryRequestDto) => [
     "opinion-lists",
     "summary",

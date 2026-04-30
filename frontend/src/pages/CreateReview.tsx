@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useMyOpinionLists, useLinkOpinionToListMutation, useCreateOpinionListMutation } from "@/lib/server-state/hooks/opinion-lists";
+import { useMyOpinionListNames, useLinkOpinionToListMutation, useCreateOpinionListMutation } from "@/lib/server-state/hooks/opinion-lists";
 import type { OpinionListPrivacyEnumDto } from "@/lib/api/opinion-lists";
 import { useCreateOpinionMutation, useSubmitOpinionForModerationMutation } from "@/lib/server-state/hooks/opinions";
 import { useCreateSubjectMutation, useFindSubjects, useSetPrimaryReferentMutation } from "@/lib/server-state/hooks/subjects";
@@ -509,7 +509,7 @@ const CreateReview = () => {
   const [selectedList, setSelectedList] = useState("");
   const [createListDialogOpen, setCreateListDialogOpen] = useState(false);
 
-  const { data: listsData } = useMyOpinionLists({ pageable: { page: 0, size: 50 } });
+  const { data: listsData } = useMyOpinionListNames({ pageable: { page: 0, size: 50 } });
   const myLists = listsData?.items ?? [];
 
   const createOpinion = useCreateOpinionMutation();
@@ -708,7 +708,7 @@ const CreateReview = () => {
               >
                 <option value="">None</option>
                 {myLists.map((l) => (
-                  <option key={l.listId} value={l.listId}>{l.listName}</option>
+                  <option key={l.id} value={l.id}>{l.name}</option>
                 ))}
               </select>
               <Button

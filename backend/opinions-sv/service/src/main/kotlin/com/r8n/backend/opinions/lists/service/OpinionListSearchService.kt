@@ -40,6 +40,7 @@ class OpinionListSearchService(
     fun getMine(
         ownerId: UUID,
         pageable: Pageable,
+        includingVirtual: Boolean = true,
     ): Page<OpinionListInfo> {
         val lists = opinionListRepository.findByOwner(ownerId, pageable)
         val infoList =
@@ -55,7 +56,7 @@ class OpinionListSearchService(
                     )
                 }.toMutableList()
 
-        if (pageable.pageNumber == 0) {
+        if (includingVirtual && pageable.pageNumber == 0) {
             val allMyOpinions =
                 OpinionListInfo(
                     id = null,
@@ -71,18 +72,19 @@ class OpinionListSearchService(
         return PageImpl(
             infoList,
             pageable,
-            lists.totalElements + (if (pageable.pageNumber == 0 || lists.totalElements > 0) 1 else 0),
+            lists.totalElements + (if (includingVirtual && (pageable.pageNumber == 0 || lists.totalElements > 0)) 1 else 0),
         )
     }
 
     fun getListsFull(
         ownerId: UUID,
         pageable: Pageable,
+        includingVirtual: Boolean = true,
     ): Page<OpinionList> {
         val lists = opinionListRepository.findByOwner(ownerId, pageable)
         val fullLists = lists.content.map { opinionListService.getList(it.id!!, ownerId) }.toMutableList()
 
-        if (pageable.pageNumber == 0) {
+        if (includingVirtual && pageable.pageNumber == 0) {
             val allMyOpinions = opinionListService.getMyVirtualList(ownerId)
             fullLists.add(0, allMyOpinions)
         }
@@ -90,7 +92,7 @@ class OpinionListSearchService(
         return PageImpl(
             fullLists,
             pageable,
-            lists.totalElements + (if (pageable.pageNumber == 0 || lists.totalElements > 0) 1 else 0),
+            lists.totalElements + (if (includingVirtual && (pageable.pageNumber == 0 || lists.totalElements > 0)) 1 else 0),
         )
     }
 
