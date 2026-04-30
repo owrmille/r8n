@@ -44,6 +44,13 @@ interface UsersApi {
     )
     fun getMyName(): UsernameDto
 
+    @GetMapping("$ME_PATH/email")
+    @Operation(
+        summary = "Get my email",
+        description = "Returns the email address for the authenticated user.",
+    )
+    fun getMyEmail(): String
+
     @GetMapping(USER_PATH)
     @Operation(
         summary = "Get public user profile",

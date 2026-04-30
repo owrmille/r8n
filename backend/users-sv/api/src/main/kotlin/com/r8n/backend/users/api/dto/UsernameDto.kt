@@ -5,6 +5,4 @@ import java.util.UUID
 data class UsernameDto(
     val id: UUID,
     val name: String,
-    val email: String,
-    val roles: List<RoleEnumDto>,
 )

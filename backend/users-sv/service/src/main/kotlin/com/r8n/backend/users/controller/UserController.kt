@@ -32,6 +32,9 @@ class UserController(
     override fun getMyName(): UsernameDto = userFacade.getMyName(getCurrentUserId())
 
     @PreAuthorize(IS_USER)
+    override fun getMyEmail(): String = userFacade.getMyEmail(getCurrentUserId())
+
+    @PreAuthorize(IS_USER)
     override fun getUserProfile(id: UUID) = userFacade.getUserProfile(id)
 
     @PreAuthorize(IS_USER)
