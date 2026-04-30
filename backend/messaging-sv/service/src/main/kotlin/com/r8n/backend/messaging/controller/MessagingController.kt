@@ -4,6 +4,7 @@ import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.utils.toPageable
 import com.r8n.backend.core.utils.toResponse
 import com.r8n.backend.messaging.api.MessagingApi
+import com.r8n.backend.messaging.api.dto.messaging.CreateSupportMessageRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.CreateSupportThreadRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportMessageDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportThreadSummaryDto
@@ -38,9 +39,10 @@ class MessagingController(
         pageable: PageRequestDto,
     ) = supportMessagingFacade.getSupportThreadMessages(getSupportActor(), threadId, pageable.toPageable()).toResponse()
 
+    @PreAuthorize(IS_USER_OR_SUPPORT)
     override fun addSupportThreadMessage(
         threadId: UUID,
-        request: com.r8n.backend.messaging.api.dto.messaging.CreateSupportMessageRequestDto,
+        request: CreateSupportMessageRequestDto,
     ): SupportMessageDto = supportMessagingFacade.addSupportThreadMessage(getSupportActor(), threadId, request)
 
     @PreAuthorize(Authority.IS_SERVICE)

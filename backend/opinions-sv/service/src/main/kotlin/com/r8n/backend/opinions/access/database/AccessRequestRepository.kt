@@ -66,4 +66,6 @@ interface AccessRequestRepository : JpaRepository<AccessRequestPersistence, UUID
     ): Long
 
     fun deleteAllByRequester(requester: UUID)
+
+    fun deleteAllByListIn(listIds: Collection<UUID>)
 }

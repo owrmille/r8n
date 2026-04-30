@@ -2,7 +2,8 @@ package com.r8n.backend.messaging.integration
 
 import com.r8n.backend.messaging.integration.api.MessagingInternalApi
 import com.r8n.backend.messaging.integration.client.internal.MessagingInternalRestClient
-import com.r8n.backend.security.SecurityContextTokenInterceptor
+import com.r8n.backend.security.ServiceTokenInterceptor
+import com.r8n.backend.security.ServiceTokenService
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -15,12 +16,12 @@ class MessagingInternalRestClientConfiguration {
     @Qualifier("messagingInternalRestBaseClient")
     fun messagingInternalRestBaseClient(
         @Value("\${services.messaging.url}") baseUrl: String,
-        serviceTokenService: com.r8n.backend.security.ServiceTokenService,
+        serviceTokenService: ServiceTokenService,
     ): RestClient =
         RestClient
             .builder()
             .baseUrl(baseUrl)
-            .requestInterceptor(SecurityContextTokenInterceptor(serviceTokenService))
+            .requestInterceptor(ServiceTokenInterceptor(serviceTokenService))
             .build()
 
     @Bean

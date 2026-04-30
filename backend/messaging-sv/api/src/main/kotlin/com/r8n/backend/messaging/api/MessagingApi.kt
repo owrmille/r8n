@@ -2,6 +2,7 @@ package com.r8n.backend.messaging.api
 
 import com.r8n.backend.core.api.PageRequestDto
 import com.r8n.backend.core.api.PageResponseDto
+import com.r8n.backend.messaging.api.dto.messaging.CreateSupportMessageRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.CreateSupportThreadRequestDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportMessageDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportThreadSummaryDto
@@ -58,4 +59,18 @@ interface MessagingApi {
         @Valid
         pageable: PageRequestDto,
     ): PageResponseDto<SupportMessageDto>
+
+    @PostMapping(SUPPORT_THREAD_MESSAGES_PATH)
+    @Operation(
+        summary = "Add a support message",
+        description = "Adds a message to an existing support thread visible to the authenticated actor.",
+    )
+    fun addSupportThreadMessage(
+        @Parameter(description = "Support thread identifier.")
+        @PathVariable
+        threadId: UUID,
+        @Valid
+        @RequestBody
+        request: CreateSupportMessageRequestDto,
+    ): SupportMessageDto
 }

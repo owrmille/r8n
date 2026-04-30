@@ -118,7 +118,7 @@ class SupportMessagingIntegrationTests {
 
         mockMvc
             .perform(
-                post(addMessagePath(threadId))
+                post(messagesPath(threadId))
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""{"text":"   "}""")
                     .with(user(userAId.toString()).roles("USER"))
@@ -147,7 +147,7 @@ class SupportMessagingIntegrationTests {
 
         mockMvc
             .perform(
-                post(addMessagePath(threadId))
+                post(messagesPath(threadId))
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(mapOf("text" to oversizedMessage)))
                     .with(user(userAId.toString()).roles("USER"))
@@ -268,7 +268,7 @@ class SupportMessagingIntegrationTests {
     ) {
         mockMvc
             .perform(
-                post(addMessagePath(threadId))
+                post(messagesPath(threadId))
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""{"text":"$text"}""")
                     .with(user(authorId.toString()).roles(role))
@@ -277,6 +277,4 @@ class SupportMessagingIntegrationTests {
     }
 
     private fun messagesPath(threadId: UUID): String = "/api/messaging/support/threads/$threadId/messages"
-
-    private fun addMessagePath(threadId: UUID): String = "/api/internal/messaging/support/threads/$threadId/messages"
 }

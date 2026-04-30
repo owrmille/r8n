@@ -453,16 +453,24 @@ class OpinionListService(
             .findByOwner(ownerId, pageable)
             .map { getList(it.id!!, ownerId) }
 
+    @Transactional
     fun deleteAllUserDataForUser(userId: UUID) {
+        val userLists = opinionListRepository.findAllByOwner(userId)
+        val userListIds = userLists.mapNotNull { it.id }
+
         // Delete all opinions owned by the user
         opinionService.deleteAllOpinionsForUser(userId)
 
         // Delete all access requests where the user is the requester
         accessRequestRepository.deleteAllByRequester(userId)
 
+        // Delete all access requests targeting lists owned by the user
+        if (userListIds.isNotEmpty()) {
+            accessRequestRepository.deleteAllByListIn(userListIds)
+        }
+
         // Delete all opinion lists owned by the user
         // This will cascade to delete opinions-to-lists relationships and syncs
-        val userLists = opinionListRepository.findAllByOwner(userId)
         opinionListRepository.deleteAll(userLists)
     }
 
