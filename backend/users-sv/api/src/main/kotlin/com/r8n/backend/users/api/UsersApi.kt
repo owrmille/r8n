@@ -113,6 +113,12 @@ interface UsersApi {
     fun deleteMyAvatar(): ResponseEntity<Void>
 
     @PostMapping(DELETE_ACCOUNT_PATH)
+    @Operation(
+        summary = "Delete my account",
+        description =
+            "Permanently deletes the authenticated user's account after email confirmation " +
+                "and removes associated user data from downstream services.",
+    )
     fun requestAccountDeletion(
         @RequestBody
         request: AccountDeletionRequestDto,
