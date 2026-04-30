@@ -7,11 +7,11 @@ import com.r8n.backend.messaging.api.dto.SupportThreadDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportMessageDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportParticipantRoleEnumDto
 import com.r8n.backend.messaging.api.dto.messaging.SupportThreadSummaryDto
+import com.r8n.backend.messaging.api.dto.messaging.SupportThreadViewerRoleEnumDto
 import com.r8n.backend.migration.api.MigrationApi
 import com.r8n.backend.migration.api.dto.ExportStateDto
 import com.r8n.backend.migration.api.dto.ExportStatus
 import com.r8n.backend.migration.api.dto.UserCompleteDataDto
-import com.r8n.backend.messaging.api.dto.messaging.SupportThreadViewerRoleEnumDto
 import com.r8n.backend.opinions.api.access.IncomingAccessRequestApi
 import com.r8n.backend.opinions.api.access.OutgoingAccessRequestApi
 import com.r8n.backend.opinions.api.access.dto.AccessRequestDto
@@ -84,7 +84,7 @@ class ExportIntegrationTests {
         val opinions = OpinionListTestDataFactory.getList()
         val incomingAccessRequests = AccessRequestsTestDataFactory.get()
         val outgoingAccessRequests = AccessRequestsTestDataFactory.get()
-        val supportThreadId = UUID.fromString("00000000-0000-0000-0000-000000000001")
+        val supportThreadId: UUID = UUID.fromString("00000000-0000-0000-0000-000000000001")
         val supportMessages =
             SupportThreadDto(
                 supportThreadId,
