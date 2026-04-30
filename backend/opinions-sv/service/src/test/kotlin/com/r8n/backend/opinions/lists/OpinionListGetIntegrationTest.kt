@@ -206,11 +206,13 @@ class OpinionListGetIntegrationTest {
 
     @Test
     fun `search returns only accessible lists matching name substring`() {
+        val user2Id = UUID.fromString("40404040-4040-4040-4040-404040404040")
+        val user2Token = "Bearer " + serviceTokenService.generateAccessToken(user2Id, listOf("USER"))
         val result =
             mockMvc
                 .perform(
                     get("/api/opinion-lists/search")
-                        .header("Authorization", annaToken)
+                        .header("Authorization", user2Token)
                         .param("nameSubstring", "l11")
                         .param("page", "0")
                         .param("size", "20"),
