@@ -48,6 +48,7 @@ const MyLists = () => {
             {lists.map((list) => (
               <Link key={list.listId ?? "all"} to={`/list/${list.listId ?? "all"}`}>
                 <OpinionListCard
+                  id={list.listId}
                   title={list.listName}
                   description=""
                   reviewCount={list.opinionsCount}

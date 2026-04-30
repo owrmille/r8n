@@ -125,8 +125,10 @@ class OpinionListGetIntegrationTest {
                 .andReturn()
 
         val page = objectMapper.readValue<PageResponseDto<OpinionListSummaryDto>>(result.response.contentAsString)
-        // Anna owns 5 lists in seed data + 1 virtual list
-        assertThat(page.items.map { it.listName }).contains("[ALL]", "l11", "l12", "l13")
+        // Anna owns l11, l12, l13 plus two lists from other seed changesets plus virtual ALL
+        assertThat(page.total).isEqualTo(6)
+        assertThat(page.items.map { it.listName }).contains("l11", "l12", "l13")
+        assertThat(page.items.single { it.listId == ANNA_L11_ID }.opinionsCount).isEqualTo(5)
         val virtualList = page.items.find { it.listName == "[ALL]" }
         assertThat(virtualList).isNotNull
         assertThat(virtualList?.listId).isNull()
@@ -186,7 +188,6 @@ class OpinionListGetIntegrationTest {
         assertThat(virtualList?.id).isNull()
         assertThat(virtualList?.opinionSummaries).isNotEmpty
     }
-
     @Test
     fun `getListSummary returns correct opinion count and list metadata`() {
         val result =
@@ -200,8 +201,8 @@ class OpinionListGetIntegrationTest {
         val summary = objectMapper.readValue<OpinionListSummaryDto>(result.response.contentAsString)
         assertThat(summary.listId).isEqualTo(ANNA_L11_ID)
         assertThat(summary.listName).isEqualTo("l11")
-        // l11 has 2 directly linked opinions (r11, r12)
-        assertThat(summary.opinionsCount).isEqualTo(2)
+        // l11 has 2 direct reviews plus 3 visible synced reviews.
+        assertThat(summary.opinionsCount).isEqualTo(5)
     }
 
     @Test
