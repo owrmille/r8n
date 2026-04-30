@@ -34,3 +34,6 @@ r8n:
     jwt:
       public-key: ${JWT_PUBLIC_KEY}
       issuer: r8n
+  services:
+    users:
+      url: ${INTERSERVICE_PROTOCOL}://${SERVICES_USERS_HOST}:${SERVICES_USERS_PORT}

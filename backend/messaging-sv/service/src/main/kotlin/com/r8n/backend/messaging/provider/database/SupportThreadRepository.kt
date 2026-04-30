@@ -12,6 +12,8 @@ import java.util.UUID
 interface SupportThreadRepository : JpaRepository<SupportThreadPersistence, UUID> {
     fun findAllByOwnerUserId(ownerUserId: UUID): List<SupportThreadPersistence>
 
+    fun findFirstByOwnerUserId(ownerUserId: UUID): SupportThreadPersistence?
+
     @Query(
         """
         SELECT thread
