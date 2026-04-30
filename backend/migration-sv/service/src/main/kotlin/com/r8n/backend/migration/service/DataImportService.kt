@@ -155,13 +155,11 @@ class DataImportService(
     }
 
     private fun sendRequests(
-        userId: UUID,
         data: UserCompleteDataDto,
     ) {
         // Re-create Outgoing Access Requests as PENDING
         data.outgoingRequests.items.forEach { request ->
             try {
-                request.requester = userId
                 outgoingAccessRequestClient.create(request.opinionListId, AccessRequestIntentDto.COPY, null)
             } catch (e: Exception) {
                 logger.error(
@@ -192,7 +190,7 @@ class DataImportService(
             personal(userId, data)
             val subjectToOpinionId = opinions(userId, data)
             opinionLists(userId, subjectToOpinionId, data)
-            sendRequests(userId, data)
+            sendRequests(data)
         } catch (e: Exception) {
             logger.error("Data import failed for user {}: {}", userId, e.message)
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Data import failed: ${e.message}", e)
