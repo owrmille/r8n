@@ -2,7 +2,7 @@ package com.r8n.backend.users
 
 import com.r8n.backend.opinions.api.access.IncomingAccessRequestApi
 import com.r8n.backend.opinions.api.access.OutgoingAccessRequestApi
-import com.r8n.backend.opinions.integration.api.OpinionListsDeletionInternalApi
+import com.r8n.backend.opinions.integration.api.OpinionListsInternalApi
 import com.r8n.backend.users.persistence.RefreshTokenPersistence
 import com.r8n.backend.users.provider.database.RefreshTokenRepository
 import com.r8n.backend.users.service.TokenService
@@ -30,7 +30,7 @@ import java.util.UUID
     types = [
         IncomingAccessRequestApi::class,
         OutgoingAccessRequestApi::class,
-        OpinionListsDeletionInternalApi::class,
+        OpinionListsInternalApi::class,
     ],
 )
 class TokenCleanupIntegrationTest {
