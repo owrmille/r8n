@@ -3,12 +3,20 @@ import type {
   GetOutgoingAccessRequestsRequestDto,
 } from "@/lib/api/access-requests";
 import type {
+  GetDirectConversationMessagesRequestDto,
+  GetDirectConversationSummariesRequestDto,
+  GetSupportThreadMessagesRequestDto,
+  GetSupportThreadSummariesRequestDto,
+} from "@/lib/api/messaging";
+import type {
   GetMyOpinionListsRequestDto,
   GetOpinionListRequestDto,
   GetOpinionListSummaryRequestDto,
   SearchOpinionListsRequestDto,
 } from "@/lib/api/opinion-lists";
 import type {
+  GetModerationDecisionsRequestDto,
+  GetModerationOpinionsRequestDto,
   GetOpinionByIdRequestDto,
   GetOpinionForSubjectRequestDto,
 } from "@/lib/api/opinions";
@@ -16,6 +24,8 @@ import type {
   GetSelectorsForSubjectRequestDto,
   GetSelectorsForUrlRequestDto,
 } from "@/lib/api/selectors";
+import type { FindSubjectsRequestDto } from "@/lib/api/subjects";
+import type { FindReferentsRequestDto } from "@/lib/api/referents";
 
 export const opinionsKeys = {
   all: ["opinions"] as const,
@@ -24,6 +34,16 @@ export const opinionsKeys = {
     "opinions",
     "for-subject",
     request.subjectId,
+  ] as const,
+  moderation: (request: GetModerationOpinionsRequestDto) => [
+    "opinions",
+    "moderation",
+    request.pageable,
+  ] as const,
+  moderationDecisions: (request: GetModerationDecisionsRequestDto) => [
+    "opinions",
+    "moderation-decisions",
+    request.pageable,
   ] as const,
 };
 
@@ -39,6 +59,7 @@ export const opinionListsKeys = {
     "opinion-lists",
     "detail",
     request.listId,
+    request.publishedAfter ?? null,
   ] as const,
   search: (request: SearchOpinionListsRequestDto) => [
     "opinion-lists",
@@ -80,17 +101,76 @@ export const selectorsKeys = {
   ] as const,
 };
 
+export const messagingKeys = {
+  all: ["messaging"] as const,
+  unreadCount: () => ["messaging", "unread-count"] as const,
+  directConversations: (request: GetDirectConversationSummariesRequestDto) => [
+    "messaging",
+    "direct",
+    "conversations",
+    request.pageable,
+  ] as const,
+  directConversationMessages: (request: GetDirectConversationMessagesRequestDto) => [
+    "messaging",
+    "direct",
+    "conversations",
+    request.conversationId,
+    "messages",
+    request.pageable,
+  ] as const,
+  supportThreads: (request: GetSupportThreadSummariesRequestDto) => [
+    "messaging",
+    "support",
+    "threads",
+    request.pageable,
+  ] as const,
+  supportThreadMessages: (request: GetSupportThreadMessagesRequestDto) => [
+    "messaging",
+    "support",
+    "threads",
+    request.threadId,
+    "messages",
+    request.pageable,
+  ] as const,
+};
+
 export const usersKeys = {
   all: ["users"] as const,
   me: () => ["users", "me"] as const,
   detail: (id: string) => ["users", "detail", id] as const,
+  search: (query: string) => ["users", "search", query] as const,
   avatar: (id: string) => ["users", "avatar", id] as const,
+  withRoles: () => ["users", "with-roles"] as const,
+};
+
+export const subjectsKeys = {
+  all: ["subjects"] as const,
+  find: (request: FindSubjectsRequestDto) => [
+    "subjects",
+    "find",
+    request.query ?? null,
+    request.referentId ?? null,
+    request.pageable,
+  ] as const,
+};
+
+export const referentsKeys = {
+  all: ["referents"] as const,
+  find: (request: FindReferentsRequestDto) => [
+    "referents",
+    "find",
+    request.query,
+    request.pageable,
+  ] as const,
 };
 
 export const queryKeys = {
   opinions: opinionsKeys,
   opinionLists: opinionListsKeys,
   accessRequests: accessRequestsKeys,
+  messaging: messagingKeys,
   selectors: selectorsKeys,
+  referents: referentsKeys,
+  subjects: subjectsKeys,
   users: usersKeys,
 };

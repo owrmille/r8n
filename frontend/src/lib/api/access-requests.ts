@@ -14,6 +14,8 @@ export type RequestStatusEnumDto =
   | "HIDDEN"
   | "CANCELLED";
 
+export type AccessRequestIntentDto = "NONE" | "COPY" | "MERGE";
+
 export interface AccessRequestDto {
   id: Uuid;
   opinionListId: Uuid;
@@ -24,6 +26,8 @@ export interface AccessRequestDto {
   requesterName: string;
   status: RequestStatusEnumDto;
   timestamp: string;
+  intent?: AccessRequestIntentDto;
+  targetListId?: Uuid | null;
 }
 
 export interface AccessRequestsFiltersDto {
@@ -48,6 +52,8 @@ export interface AccessRequestActionRequestDto {
 
 export interface CreateOutgoingAccessRequestRequestDto {
   listId: Uuid;
+  intent?: AccessRequestIntentDto;
+  targetListId?: Uuid;
 }
 
 export function createAccessRequestsApi(client: HttpClient = httpClient) {
@@ -66,7 +72,7 @@ export function createAccessRequestsApi(client: HttpClient = httpClient) {
     cancelOutgoing(
       request: AccessRequestActionRequestDto,
     ): Promise<AccessRequestDto> {
-      return client.get<AccessRequestDto>(
+      return client.post<AccessRequestDto>(
         `/access-requests/outgoing/cancel/${request.requestId}`,
         {
           auth: "required",
@@ -77,10 +83,14 @@ export function createAccessRequestsApi(client: HttpClient = httpClient) {
     createOutgoing(
       request: CreateOutgoingAccessRequestRequestDto,
     ): Promise<AccessRequestDto> {
-      return client.get<AccessRequestDto>(
+      return client.post<AccessRequestDto>(
         `/access-requests/outgoing/create/${request.listId}`,
         {
           auth: "required",
+          query: {
+            ...(request.intent ? { intent: request.intent } : {}),
+            ...(request.targetListId ? { targetListId: request.targetListId } : {}),
+          },
         },
       );
     },

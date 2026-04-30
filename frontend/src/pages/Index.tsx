@@ -13,6 +13,7 @@ function getGreeting() {
   return "Good evening";
 }
 
+// TODO #195: Dashboard is not connected — hidden from the sidebar nav until implementation is complete
 const Dashboard = () => {
   const { data, isLoading, isError, error, refetch } = useMyOpinionLists({
     pageable: { page: 0, size: 3 },
@@ -78,6 +79,7 @@ const Dashboard = () => {
             {lists.map((list) => (
               <Link key={list.listId} to={`/list/${list.listId}`}>
                 <OpinionListCard
+                  id={list.listId}
                   title={list.listName}
                   description=""
                   reviewCount={list.opinionsCount}

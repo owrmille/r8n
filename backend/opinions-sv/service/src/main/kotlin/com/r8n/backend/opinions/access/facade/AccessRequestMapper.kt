@@ -1,12 +1,15 @@
 package com.r8n.backend.opinions.access.facade
 
 import com.r8n.backend.opinions.access.domain.AccessRequest
+import com.r8n.backend.opinions.access.domain.AccessRequestIntent
 import com.r8n.backend.opinions.access.domain.RequestStatusEnum
 import com.r8n.backend.opinions.api.access.dto.AccessRequestDto
+import com.r8n.backend.opinions.api.access.dto.AccessRequestIntentDto
 import com.r8n.backend.opinions.api.access.dto.RequestStatusEnumDto
 import com.r8n.backend.opinions.lists.service.OpinionListService
 import com.r8n.backend.users.integration.api.UsersInternalApi
 import org.springframework.stereotype.Component
+import java.util.UUID
 
 @Component
 class AccessRequestMapper(
@@ -32,14 +35,31 @@ class AccessRequestMapper(
             RequestStatusEnum.CANCELLED -> RequestStatusEnumDto.CANCELLED
         }
 
-    fun toDto(request: AccessRequest): AccessRequestDto =
+    fun toDomain(intent: AccessRequestIntentDto): AccessRequestIntent =
+        when (intent) {
+            AccessRequestIntentDto.NONE -> AccessRequestIntent.NONE
+            AccessRequestIntentDto.COPY -> AccessRequestIntent.COPY
+            AccessRequestIntentDto.MERGE -> AccessRequestIntent.MERGE
+        }
+
+    fun AccessRequestIntent.toDto(): AccessRequestIntentDto =
+        when (this) {
+            AccessRequestIntent.NONE -> AccessRequestIntentDto.NONE
+            AccessRequestIntent.COPY -> AccessRequestIntentDto.COPY
+            AccessRequestIntent.MERGE -> AccessRequestIntentDto.MERGE
+        }
+
+    fun toDto(
+        request: AccessRequest,
+        viewerId: UUID,
+    ): AccessRequestDto =
         with(request) {
             AccessRequestDto(
                 id = id!!,
                 opinionListId = listId,
                 opinionListName =
                     try {
-                        opinionListService.getListName(listId, requesterId)
+                        opinionListService.getListName(listId, viewerId)
                     } catch (_: Exception) {
                         "UNKNOWN"
                     },
@@ -59,6 +79,8 @@ class AccessRequestMapper(
                     },
                 timestamp = updatedAt,
                 status = status.toDto(),
+                intent = intent.toDto(),
+                targetListId = targetListId,
             )
         }
 }

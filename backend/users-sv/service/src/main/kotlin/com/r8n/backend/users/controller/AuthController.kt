@@ -3,8 +3,12 @@ package com.r8n.backend.users.controller
 import com.r8n.backend.users.api.AuthApi
 import com.r8n.backend.users.api.dto.AuthenticationTokenDto
 import com.r8n.backend.users.api.dto.LoginRequestDto
+import com.r8n.backend.users.api.dto.RegisterRequestDto
 import com.r8n.backend.users.security.RefreshTokenCookieFactory
 import com.r8n.backend.users.service.AuthService
+import com.r8n.backend.users.service.LoginAuditContext
+import com.r8n.backend.users.service.RegistrationAuditContext
+import com.r8n.backend.users.service.UserAgentOperatingSystemParser
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseCookie
 import org.springframework.web.bind.annotation.RestController
@@ -16,6 +20,7 @@ import java.util.UUID
 class AuthController(
     private val authService: AuthService,
     private val refreshTokenCookieFactory: RefreshTokenCookieFactory,
+    private val userAgentOperatingSystemParser: UserAgentOperatingSystemParser,
 ) : AuthApi {
     override fun csrf() {
         currentResponse().addHeader(
@@ -25,11 +30,32 @@ class AuthController(
     }
 
     override fun login(request: LoginRequestDto): AuthenticationTokenDto {
-        val tokens = authService.login(request)
+        val tokens =
+            authService.login(
+                request = request,
+                auditContext =
+                    LoginAuditContext(
+                        ip = currentClientIp(),
+                        userAgent = currentUserAgent(),
+                        operatingSystem = userAgentOperatingSystemParser.parse(currentUserAgent()),
+                    ),
+            )
         addRefreshTokenCookie(tokens.refreshToken)
         return AuthenticationTokenDto(
             accessToken = tokens.accessToken,
             expiresInMilliseconds = tokens.expiresInMilliseconds,
+        )
+    }
+
+    override fun register(request: RegisterRequestDto) {
+        authService.register(
+            request = request,
+            auditContext =
+                RegistrationAuditContext(
+                    ip = currentClientIp(),
+                    userAgent = currentUserAgent(),
+                    operatingSystem = userAgentOperatingSystemParser.parse(currentUserAgent()),
+                ),
         )
     }
 
@@ -70,6 +96,14 @@ class AuthController(
             .build()
 
     private fun currentRequest() = currentRequestAttributes().request
+
+    private fun currentUserAgent() = currentRequest().getHeader(HttpHeaders.USER_AGENT) ?: "Unknown"
+
+    private fun currentClientIp(): String {
+        val forwardedFor = currentRequest().getHeader("X-Forwarded-For")
+        val candidate = forwardedFor?.substringBefore(",")?.trim()?.takeIf { it.isNotEmpty() }
+        return candidate?.takeIf { it.length <= 45 } ?: currentRequest().remoteAddr
+    }
 
     private fun currentResponse() =
         currentRequestAttributes().response
