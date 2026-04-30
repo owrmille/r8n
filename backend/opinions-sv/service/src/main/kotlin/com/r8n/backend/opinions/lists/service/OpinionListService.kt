@@ -1,6 +1,8 @@
 package com.r8n.backend.opinions.lists.service
 
+import com.r8n.backend.opinions.access.database.AccessRequestRepository
 import com.r8n.backend.opinions.access.domain.OpinionListPermissionEnum
+import com.r8n.backend.opinions.access.domain.RequestStatusEnum
 import com.r8n.backend.opinions.access.service.AccessService
 import com.r8n.backend.opinions.lists.database.OpinionListRepository
 import com.r8n.backend.opinions.lists.database.OpinionListSyncRepository
@@ -8,13 +10,22 @@ import com.r8n.backend.opinions.lists.database.OpinionsToOpinionListsRepository
 import com.r8n.backend.opinions.lists.domain.OpinionList
 import com.r8n.backend.opinions.lists.domain.OpinionListInfo
 import com.r8n.backend.opinions.lists.domain.OpinionListPrivacyEnum
+import com.r8n.backend.opinions.lists.domain.LocationFilter
+import com.r8n.backend.opinions.lists.domain.OpinionListSearchFilters
 import com.r8n.backend.opinions.lists.domain.OpinionSummary
 import com.r8n.backend.opinions.lists.persistence.OpinionListPersistence
 import com.r8n.backend.opinions.lists.persistence.OpinionsToOpinionListsPersistence
 import com.r8n.backend.opinions.opinions.database.OpinionRepository
+import com.r8n.backend.opinions.opinions.database.OpinionSubjectRepository
+import com.r8n.backend.opinions.opinions.database.ReferentRepository
 import com.r8n.backend.opinions.opinions.domain.Opinion
 import com.r8n.backend.opinions.opinions.service.OpinionService
+import com.r8n.backend.users.integration.api.UsersInternalApi
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -28,6 +39,10 @@ class OpinionListService(
     private val opinionsAssignmentRepository: OpinionsToOpinionListsRepository,
     private val accessService: AccessService,
     private val syncRepository: OpinionListSyncRepository,
+    private val accessRequestRepository: AccessRequestRepository,
+    private val usersApi: UsersInternalApi,
+    private val referentRepository: ReferentRepository,
+    private val subjectRepository: OpinionSubjectRepository,
     private val opinionRepository: OpinionRepository,
 ) {
     @Transactional
@@ -559,7 +574,7 @@ class OpinionListService(
         if (!authorNameSubstring.isNullOrBlank()) {
             usersApi
                 .findUsersByNameSubstring(authorNameSubstring)
-                .map { it.id }
+                .mapNotNull { it.id }
                 .toSet()
                 .ifEmpty { null }
         } else {
@@ -588,7 +603,7 @@ class OpinionListService(
 
     private fun filterByLocationRadius(
         resultIds: MutableSet<UUID>,
-        filter: com.r8n.backend.opinions.lists.domain.LocationFilter?,
+        filter: LocationFilter?,
     ) {
         val lat = filter?.latitude
         val lng = filter?.longitude
