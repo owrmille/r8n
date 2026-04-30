@@ -35,7 +35,6 @@ class AuthService(
         const val NAME_MAX_LENGTH = 255
         const val PASSWORD_MIN_LENGTH = 12
         const val PASSWORD_MAX_LENGTH = 128
-        const val REGISTRATION_CONSENT_SESSION_OS = "Unknown"
         val REGISTRATION_CONSENT_SESSION_DURATION: Duration = Duration.ofDays(1)
     }
 
@@ -69,7 +68,7 @@ class AuthService(
             Timestamp.from(now.plus(tokenService.getRefreshTokenExpiration())),
             auditContext.ip,
             auditContext.userAgent,
-            "Unknown",
+            auditContext.operatingSystem,
         )
 
         return AuthenticationTokens(
@@ -130,7 +129,7 @@ class AuthService(
                 Timestamp.from(now.plus(REGISTRATION_CONSENT_SESSION_DURATION)),
                 auditContext.ip,
                 auditContext.userAgent,
-                REGISTRATION_CONSENT_SESSION_OS,
+                auditContext.operatingSystem,
             )
 
             jdbcTemplate.update(

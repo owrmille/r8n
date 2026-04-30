@@ -81,6 +81,10 @@ class AuthIntegrationTest {
         const val EMAIL = "test@test.test"
         const val PASSWORD = "1234"
         const val REGISTRATION_PASSWORD = "long-enough-password"
+        const val MACOS_USER_AGENT =
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15"
+        const val IOS_USER_AGENT =
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1"
     }
 
     @Autowired
@@ -162,7 +166,7 @@ class AuthIntegrationTest {
                     post(LOGIN_PATH)
                         .with(csrf())
                         .header("X-Forwarded-For", "198.51.100.42, 198.51.100.43")
-                        .header(HttpHeaders.USER_AGENT, "Login Test Agent")
+                        .header(HttpHeaders.USER_AGENT, MACOS_USER_AGENT)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)),
                 ).andExpect(status().isOk)
@@ -216,8 +220,8 @@ class AuthIntegrationTest {
         assertTrue(!session.created.isBefore(beforeLogin), "session should be created during login")
         assertTrue(session.expires.isAfter(session.created), "session expiry should be after creation")
         assertEquals("198.51.100.42", session.ip)
-        assertEquals("Login Test Agent", session.userAgent)
-        assertEquals("Unknown", session.os)
+        assertEquals(MACOS_USER_AGENT, session.userAgent)
+        assertEquals("macOS", session.os)
     }
 
     @Test
@@ -258,7 +262,7 @@ class AuthIntegrationTest {
                     post(REGISTER_PATH)
                         .with(csrf())
                         .header("X-Forwarded-For", "203.0.113.10")
-                        .header(HttpHeaders.USER_AGENT, "Registration Test Agent")
+                        .header(HttpHeaders.USER_AGENT, IOS_USER_AGENT)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerRequest)),
                 ).andExpect(status().isCreated)
@@ -296,7 +300,7 @@ class AuthIntegrationTest {
         val session =
             jdbcTemplate.queryForMap(
                 """
-                SELECT s.ip, s.user_agent
+                SELECT s.ip, s.user_agent, s.os
                 FROM users.sessions s
                 JOIN users.consents c ON c.session = s.id
                 WHERE c.user_id = ?
@@ -305,7 +309,8 @@ class AuthIntegrationTest {
                 userId,
             )
         assertEquals("203.0.113.10", session["ip"])
-        assertEquals("Registration Test Agent", session["user_agent"])
+        assertEquals(IOS_USER_AGENT, session["user_agent"])
+        assertEquals("iOS", session["os"])
     }
 
     @Test

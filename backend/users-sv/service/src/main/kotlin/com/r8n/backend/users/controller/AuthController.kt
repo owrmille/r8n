@@ -8,6 +8,7 @@ import com.r8n.backend.users.security.RefreshTokenCookieFactory
 import com.r8n.backend.users.service.AuthService
 import com.r8n.backend.users.service.LoginAuditContext
 import com.r8n.backend.users.service.RegistrationAuditContext
+import com.r8n.backend.users.service.UserAgentOperatingSystemParser
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseCookie
 import org.springframework.web.bind.annotation.RestController
@@ -19,6 +20,7 @@ import java.util.UUID
 class AuthController(
     private val authService: AuthService,
     private val refreshTokenCookieFactory: RefreshTokenCookieFactory,
+    private val userAgentOperatingSystemParser: UserAgentOperatingSystemParser,
 ) : AuthApi {
     override fun csrf() {
         currentResponse().addHeader(
@@ -34,7 +36,8 @@ class AuthController(
                 auditContext =
                     LoginAuditContext(
                         ip = currentClientIp(),
-                        userAgent = currentRequest().getHeader(HttpHeaders.USER_AGENT) ?: "Unknown",
+                        userAgent = currentUserAgent(),
+                        operatingSystem = userAgentOperatingSystemParser.parse(currentUserAgent()),
                     ),
             )
         addRefreshTokenCookie(tokens.refreshToken)
@@ -50,7 +53,8 @@ class AuthController(
             auditContext =
                 RegistrationAuditContext(
                     ip = currentClientIp(),
-                    userAgent = currentRequest().getHeader(HttpHeaders.USER_AGENT) ?: "Unknown",
+                    userAgent = currentUserAgent(),
+                    operatingSystem = userAgentOperatingSystemParser.parse(currentUserAgent()),
                 ),
         )
     }
@@ -92,6 +96,8 @@ class AuthController(
             .build()
 
     private fun currentRequest() = currentRequestAttributes().request
+
+    private fun currentUserAgent() = currentRequest().getHeader(HttpHeaders.USER_AGENT) ?: "Unknown"
 
     private fun currentClientIp(): String {
         val forwardedFor = currentRequest().getHeader("X-Forwarded-For")
