@@ -1,11 +1,13 @@
 import { motion } from "framer-motion";
-import { MapPin, Download, Settings } from "lucide-react";
+import { MapPin, Download, Settings, Upload } from "lucide-react";
 import { useParams, Link } from "react-router-dom";
+import { useRef } from "react";
 import UserAvatar from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { QueryState } from "@/components/server-state/QueryState";
-import { useMe, useUserProfile } from "@/lib/server-state/hooks/users";
+import { useMe, useUserProfile, useUpdateMyPublicProfileMutation } from "@/lib/server-state/hooks/users";
 import { useMyOpinionLists } from "@/lib/server-state/hooks/opinion-lists";
+import { toast } from "sonner";
 
 const profileActionButtonClass = "inline-flex h-11 items-center justify-center rounded-xl px-4 py-0 leading-none";
 const profileActionIconButtonClass = `${profileActionButtonClass} gap-1.5`;
@@ -28,6 +30,42 @@ const Profile = () => {
     { pageable: { page: 0, size: 50 } },
     { enabled: isOwnProfile && !!me?.id },
   );
+
+  const updateProfileMutation = useUpdateMyPublicProfileMutation();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImportData = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const content = e.target?.result as string;
+        const data = JSON.parse(content);
+
+        if (!data.profile || typeof data.profile.name !== "string") {
+          throw new Error("Invalid data format");
+        }
+
+        await updateProfileMutation.mutateAsync({
+          name: data.profile.name,
+          about: data.profile.about ?? null,
+          location: data.profile.location ?? null,
+        });
+
+        toast.success("Profile updated successfully from imported data");
+      } catch (err) {
+        console.error("Import failed:", err);
+        toast.error("Failed to import data. Please ensure the file is valid.");
+      } finally {
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      }
+    };
+    reader.readAsText(file);
+  };
 
   const lists = listsPage?.items ?? [];
 
@@ -100,6 +138,22 @@ const Profile = () => {
                     >
                       <Download className="h-3.5 w-3.5" />
                       Export my data
+                    </Button>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleImportData}
+                      accept=".json"
+                      className="hidden"
+                    />
+                    <Button
+                      variant="outline"
+                      className={profileActionIconButtonClass}
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={updateProfileMutation.isPending}
+                    >
+                      <Upload className="h-3.5 w-3.5" />
+                      {updateProfileMutation.isPending ? "Importing..." : "Import my data"}
                     </Button>
                   </div>
                 )}
