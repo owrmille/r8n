@@ -188,6 +188,7 @@ class OpinionListGetIntegrationTest {
         assertThat(virtualList?.id).isNull()
         assertThat(virtualList?.opinionSummaries).isNotEmpty
     }
+
     @Test
     fun `getListSummary returns correct opinion count and list metadata`() {
         val result =
