@@ -72,7 +72,8 @@ class OpinionListSearchService(
         return PageImpl(
             infoList,
             pageable,
-            lists.totalElements + (if (includingVirtual && (pageable.pageNumber == 0 || lists.totalElements > 0)) 1 else 0),
+            lists.totalElements +
+                (if (includingVirtual && (pageable.pageNumber == 0 || lists.totalElements > 0)) 1 else 0),
         )
     }
 
@@ -92,7 +93,8 @@ class OpinionListSearchService(
         return PageImpl(
             fullLists,
             pageable,
-            lists.totalElements + (if (includingVirtual && (pageable.pageNumber == 0 || lists.totalElements > 0)) 1 else 0),
+            lists.totalElements +
+                (if (includingVirtual && (pageable.pageNumber == 0 || lists.totalElements > 0)) 1 else 0),
         )
     }
 

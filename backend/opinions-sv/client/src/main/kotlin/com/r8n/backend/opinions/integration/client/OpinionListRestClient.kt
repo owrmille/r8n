@@ -42,8 +42,10 @@ class OpinionListRestClient(
         restClient
             .get()
             .uri { uriBuilder ->
-                val builder = uriBuilder.path(GET_PATH)
-                    .queryParamIfPresent("publishedAfter", Optional.ofNullable(publishedAfter))
+                val builder =
+                    uriBuilder
+                        .path(GET_PATH)
+                        .queryParamIfPresent("publishedAfter", Optional.ofNullable(publishedAfter))
                 if (listId != null) {
                     builder.build(listId)
                 } else {

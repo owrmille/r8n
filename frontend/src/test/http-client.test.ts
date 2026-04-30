@@ -110,6 +110,26 @@ describe("httpClient", () => {
     );
   });
 
+  it("returns exactly 'Did not match username/password' for 401 responses", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ message: "Some other message" }), {
+        headers: { "Content-Type": "application/json" },
+        status: 401,
+      }),
+    );
+    const client = createHttpClient({
+      baseUrl: "/api",
+      fetchFn: fetchMock,
+    });
+
+    await expect(client.get("/any")).rejects.toEqual(
+      expect.objectContaining({
+        message: "Did not match username/password",
+        status: 401,
+      }),
+    );
+  });
+
   it("parses blob responses when requested", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response("avatar-bytes", {
