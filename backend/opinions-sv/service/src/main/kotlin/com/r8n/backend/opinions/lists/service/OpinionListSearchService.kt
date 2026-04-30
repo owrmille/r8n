@@ -51,7 +51,7 @@ class OpinionListSearchService(
                         name = list.name,
                         owner = list.owner,
                         privacy = list.privacy,
-                        opinionsCount = opinionsAssignmentRepository.countByOpinionList(list.id!!),
+                        opinionsCount = opinionListService.countVisibleOpinions(list.id!!, ownerId),
                         grantedAccessCount = accessService.countAcceptedForList(list.id!!),
                     )
                 }.toMutableList()
@@ -123,7 +123,7 @@ class OpinionListSearchService(
                         name = list.name,
                         owner = list.owner,
                         privacy = list.privacy,
-                        opinionsCount = opinionsAssignmentRepository.countByOpinionList(list.id!!),
+                        opinionsCount = opinionListService.countVisibleOpinions(list.id!!, requesterId),
                         grantedAccessCount = accessService.countAcceptedForList(list.id!!),
                     )
                 } else {

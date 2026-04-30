@@ -2,6 +2,7 @@ package com.r8n.backend.migration.service
 
 import com.r8n.backend.migration.api.dto.UserCompleteDataDto
 import com.r8n.backend.opinions.api.access.OutgoingAccessRequestApi
+import com.r8n.backend.opinions.api.access.dto.AccessRequestIntentDto
 import com.r8n.backend.opinions.api.lists.OpinionListsApi
 import com.r8n.backend.opinions.api.opinions.OpinionsApi
 import com.r8n.backend.users.api.dto.UserStatusEnumDto
@@ -161,7 +162,7 @@ class DataImportService(
         data.outgoingRequests.items.forEach { request ->
             try {
                 request.requester = userId
-                outgoingAccessRequestClient.create(request.opinionListId)
+                outgoingAccessRequestClient.create(request.opinionListId, AccessRequestIntentDto.COPY, null)
             } catch (e: Exception) {
                 logger.error(
                     "Could not re-create outgoing access request for list {}: {}",

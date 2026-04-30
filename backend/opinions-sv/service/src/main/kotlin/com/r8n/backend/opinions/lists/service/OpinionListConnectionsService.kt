@@ -38,10 +38,12 @@ class OpinionListConnectionsService(
             opinionListRepository.findById(addedListId).orElseThrow {
                 ResponseStatusException(HttpStatus.NOT_FOUND)
             }
-        if (addedList.privacy == OpinionListPrivacyEnum.PRIVATE) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND)
-        }
+
         if (!accessService.canAccessOpinionList(userId, addedListId, OpinionListPermissionEnum.VIEW)) {
+            // PRIVATE → 404 to hide existence; SEARCHABLE → 403 since existence is public.
+            if (addedList.privacy == OpinionListPrivacyEnum.PRIVATE) {
+                throw ResponseStatusException(HttpStatus.NOT_FOUND)
+            }
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "You don't have access to the source list")
         }
 
