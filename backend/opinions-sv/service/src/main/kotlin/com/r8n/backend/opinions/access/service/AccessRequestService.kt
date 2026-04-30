@@ -18,6 +18,15 @@ class AccessRequestService(
     private val repository: AccessRequestRepository,
     private val accessService: AccessService,
 ) {
+    private companion object {
+        val ACTIVE_REQUEST_STATUSES =
+            listOf(
+                RequestStatusEnum.SENT,
+                RequestStatusEnum.HIDDEN,
+                RequestStatusEnum.ACCEPTED,
+            )
+    }
+
     fun getRequests(
         listId: UUID?,
         requesterId: UUID?,
@@ -59,7 +68,11 @@ class AccessRequestService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Owner cannot request access to their own list")
         }
 
-        val existing = getRequests(listId, requesterId, null, null, null, Pageable.unpaged()).firstOrNull()
+        val existing =
+            repository
+                .findByRequesterAndListAndStatusIn(requesterId, listId, ACTIVE_REQUEST_STATUSES)
+                .firstOrNull()
+                ?.toDomain()
         if (existing != null) {
             return existing
         }

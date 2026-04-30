@@ -39,6 +39,17 @@ spring:
               uri: http://localhost:8090
               predicates:
                 - Path=/api/selectors/**
+            - id: public_subjects
+              uri: http://localhost:8081
+              predicates:
+                - Path=/api/public/subjects,/api/public/subjects/**
+              filters:
+                - ApiKeyAuthenticationFilter
+                - name: RateLimitingFilter
+                  args:
+                    limit: 100
+                    durationSeconds: 60
+                - RewritePath=/api/public/subjects/?(?<segment>.*), /api/subjects/$\{segment}
 r8n:
   security:
     public-paths: /api/auth/**
