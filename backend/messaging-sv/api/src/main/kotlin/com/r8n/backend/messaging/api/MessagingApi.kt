@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.ResponseStatus
 import java.util.UUID
 
-@Tag(name = "Support messaging", description = "Support conversations between users and the support team.")
+@Tag(name = "Messaging", description = "Direct conversations between users and support conversations with the support team.")
 interface MessagingApi {
     companion object {
         private const val ROOT_PATH = "/api/messaging"
