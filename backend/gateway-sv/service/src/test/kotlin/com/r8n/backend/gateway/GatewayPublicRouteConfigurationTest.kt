@@ -41,7 +41,8 @@ class GatewayPublicRouteConfigurationTest {
                 Path.of("src/test/resources/application-test-e2e.yml"),
             )
 
-        val docRoutes = listOf("opinions_v3_api_docs", "users_v3_api_docs", "migration_v3_api_docs", "messaging_v3_api_docs")
+        val docRoutes =
+            listOf("opinions_v3_api_docs", "users_v3_api_docs", "migration_v3_api_docs", "messaging_v3_api_docs")
 
         gatewayConfigs.forEach { config ->
             val content = Files.readString(config)
