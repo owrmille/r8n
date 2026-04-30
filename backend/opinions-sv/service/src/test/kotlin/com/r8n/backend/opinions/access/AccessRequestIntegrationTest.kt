@@ -26,6 +26,7 @@ import com.r8n.backend.opinions.opinions.persistence.ReferentPersistence
 import com.r8n.backend.security.ServiceTokenService
 import com.r8n.backend.users.integration.api.UsersInternalApi
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
@@ -222,6 +223,19 @@ class AccessRequestIntegrationTest {
         val request: AccessRequestDto = objectMapper.readValue(createResult.response.contentAsString)
         val requestId = request.id
 
+        // Step 2b: Sending again while the request is active returns the existing request
+        val duplicateCreateResult =
+            mockMvc
+                .perform(
+                    post("/api/access-requests/outgoing/create/$listId")
+                        .header("Authorization", "Bearer $requesterToken")
+                        .with(csrf()),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val duplicateRequest: AccessRequestDto = objectMapper.readValue(duplicateCreateResult.response.contentAsString)
+        assertEquals(requestId, duplicateRequest.id)
+
         // Step 3: Requester tries to access the opinion again and fails (still 403 Forbidden)
         mockMvc
             .perform(
@@ -301,6 +315,20 @@ class AccessRequestIntegrationTest {
                     .header("Authorization", "Bearer $requesterToken")
                     .with(csrf()),
             ).andExpect(status().isForbidden)
+
+        // Step 10: Requester can send a fresh request after rejection
+        val resendResult =
+            mockMvc
+                .perform(
+                    post("/api/access-requests/outgoing/create/$listId")
+                        .header("Authorization", "Bearer $requesterToken")
+                        .with(csrf()),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val resentRequest: AccessRequestDto = objectMapper.readValue(resendResult.response.contentAsString)
+        assertNotEquals(requestId, resentRequest.id)
+        assertEquals(RequestStatusEnumDto.SENT, resentRequest.status)
     }
 
     @Test

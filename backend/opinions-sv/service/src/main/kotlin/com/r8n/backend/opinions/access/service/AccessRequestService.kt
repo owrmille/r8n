@@ -22,6 +22,15 @@ class AccessRequestService(
     private val accessService: AccessService,
     private val opinionListService: OpinionListService,
 ) {
+    private companion object {
+        val ACTIVE_REQUEST_STATUSES =
+            listOf(
+                RequestStatusEnum.SENT,
+                RequestStatusEnum.HIDDEN,
+                RequestStatusEnum.ACCEPTED,
+            )
+    }
+
     fun getRequests(
         listId: UUID?,
         requesterId: UUID?,
