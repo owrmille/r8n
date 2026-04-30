@@ -12,30 +12,30 @@ import java.time.Instant
 import java.util.UUID
 
 @Entity
-@Table(schema = "messaging", name = "support_messages")
-class SupportMessagePersistence(
+@Table(schema = "messaging", name = "messages")
+class MessagePersistence(
     @Id
     @GeneratedValue
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
     var id: UUID? = null,
-    @Column(name = "thread_id", nullable = false)
-    var threadId: UUID,
+    @Column(name = "conversation_id", nullable = false)
+    var conversationId: UUID,
     @Column(name = "author_user_id", nullable = false)
     var authorUserId: UUID,
-    @Column(name = "author_role", nullable = false)
+    @Column(name = "author_display_name_snapshot", nullable = false)
+    var authorDisplayNameSnapshot: String,
+    @Column(name = "author_role_snapshot", nullable = false)
     @Enumerated(EnumType.STRING)
-    var authorRole: SupportParticipantRoleEnumPersistence,
+    var authorRoleSnapshot: MessageAuthorRoleEnumPersistence,
     @Column(name = "text", nullable = false)
     var text: String,
     @Column(name = "created_at", nullable = false)
     var createdAt: Instant,
-    @Column(name = "read_by_support_at")
-    var readBySupportAt: Instant? = null,
-    @Column(name = "read_by_support_user_id")
-    var readBySupportUserId: UUID? = null,
 )
 
-enum class SupportParticipantRoleEnumPersistence {
+enum class MessageAuthorRoleEnumPersistence {
     USER,
+    MODERATOR,
     SUPPORT,
+    ADMIN,
 }
