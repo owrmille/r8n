@@ -95,7 +95,8 @@ class DataImportService(
                                     weight = component.weight,
                                 )
                             } catch (e: Exception) {
-                                logger.warn("Could not restore component link: {}", e.message)
+                                logger.error("Could not restore component link: {}", e.message)
+                                throw e
                             }
                         }
                     }
@@ -114,28 +115,39 @@ class DataImportService(
     ) {
         // Create opinion lists (skipping the virtual one at index 0)
         data.opinions.items.drop(1).forEach { listDto ->
-            try {
-                val createdList =
+            val createdList =
+                try {
                     opinionListsClient.createList(
                         name = listDto.listName,
                         privacy = listDto.privacy,
                     )
+                } catch (e: Exception) {
+                    logger.error("Error restoring opinion list {}: {}", listDto.listName, e.message)
+                    throw e
+                }
 
-                // Link opinions to the newly created list
-                listDto.opinionSummaries.forEach { summary ->
-                    val opinionId = subjectToOpinionId[summary.subject]
-                    if (opinionId != null) {
-                        summary.opinions.forEach { opinionRow ->
+            // Link opinions to the newly created list
+            listDto.opinionSummaries.forEach { summary ->
+                val opinionId = subjectToOpinionId[summary.subject]
+                if (opinionId != null) {
+                    summary.opinions.forEach { opinionRow ->
+                        try {
                             opinionListsClient.linkOpinion(
                                 listId = createdList.id!!,
                                 opinionId = opinionId,
                                 weight = opinionRow.weight,
                             )
+                        } catch (e: Exception) {
+                            logger.error(
+                                "Error linking opinion {} to list {}: {}",
+                                opinionId,
+                                createdList.id,
+                                e.message,
+                            )
+                            throw e
                         }
                     }
                 }
-            } catch (e: Exception) {
-                logger.error("Error restoring opinion list {}: {}", listDto.listName, e.message)
             }
         }
         logger.debug("Opinion lists restored for user: {}", userId)
@@ -151,11 +163,12 @@ class DataImportService(
                 request.requester = userId
                 outgoingAccessRequestClient.create(request.opinionListId)
             } catch (e: Exception) {
-                logger.warn(
+                logger.error(
                     "Could not re-create outgoing access request for list {}: {}",
                     request.opinionListId,
                     e.message,
                 )
+                throw e
             }
         }
     }
@@ -174,10 +187,15 @@ class DataImportService(
             } catch (e: Exception) {
                 throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file format", e)
             }
-        personal(userId, data)
-        val subjectToOpinionId = opinions(userId, data)
-        opinionLists(userId, subjectToOpinionId, data)
-        sendRequests(userId, data)
+        try {
+            personal(userId, data)
+            val subjectToOpinionId = opinions(userId, data)
+            opinionLists(userId, subjectToOpinionId, data)
+            sendRequests(userId, data)
+        } catch (e: Exception) {
+            logger.error("Data import failed for user {}: {}", userId, e.message)
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Data import failed: ${e.message}", e)
+        }
         logger.info("Data import completed for user: {}", userId)
     }
 }

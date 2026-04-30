@@ -10,7 +10,11 @@ import { Slider } from "@/components/ui/slider";
 
 const Discover = () => {
   const [query, setQuery] = useState("");
+  const [tempQuery, setTempQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  
+  // Sync temp state with main state when main state is reset (e.g. clearFilters)
+  useEffect(() => { setTempQuery(query); }, [query]);
   
   // Pagination & Sorting state
   const [page, setPage] = useState(0);
@@ -24,6 +28,18 @@ const Discover = () => {
   const [subject, setSubject] = useState("");
   const [location, setLocation] = useState("");
   const [youngerThan, setYoungerThan] = useState("");
+
+  // Temporary state for inputs to avoid refreshing while typing
+  const [tempAuthorName, setTempAuthorName] = useState("");
+  const [tempSubject, setTempSubject] = useState("");
+  const [tempLocation, setTempLocation] = useState("");
+  const [tempYoungerThan, setTempYoungerThan] = useState("");
+
+  // Sync temp state with main state when main state is reset (e.g. clearFilters)
+  useEffect(() => { setTempAuthorName(authorName); }, [authorName]);
+  useEffect(() => { setTempSubject(subject); }, [subject]);
+  useEffect(() => { setTempLocation(location); }, [location]);
+  useEffect(() => { setTempYoungerThan(youngerThan); }, [youngerThan]);
 
   // Lat-Long-Radius filters state
   const [latitude, setLatitude] = useState<number | "">("");
@@ -66,6 +82,7 @@ const Discover = () => {
   const totalPages = Math.ceil(total / pageSize);
 
   const clearFilters = () => {
+    setQuery("");
     setAuthorName("");
     setSubject("");
     setLocation("");
@@ -141,8 +158,15 @@ const Discover = () => {
           <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            value={tempQuery}
+            onChange={(e) => setTempQuery(e.target.value)}
+            onBlur={() => setQuery(tempQuery)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                setQuery(tempQuery);
+                (e.target as HTMLInputElement).blur();
+              }
+            }}
             placeholder="Search everything..."
             className="w-full rounded-xl border border-border bg-card py-3 pl-11 pr-4 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
           />
@@ -176,8 +200,10 @@ const Discover = () => {
                 </label>
                 <input
                   type="text"
-                  value={authorName}
-                  onChange={(e) => setAuthorName(e.target.value)}
+                  value={tempAuthorName}
+                  onChange={(e) => setTempAuthorName(e.target.value)}
+                  onBlur={() => setAuthorName(tempAuthorName)}
+                  onKeyDown={(e) => e.key === "Enter" && setAuthorName(tempAuthorName)}
                   placeholder="e.g. Alex"
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
@@ -188,8 +214,10 @@ const Discover = () => {
                 </label>
                 <input
                   type="text"
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
+                  value={tempSubject}
+                  onChange={(e) => setTempSubject(e.target.value)}
+                  onBlur={() => setSubject(tempSubject)}
+                  onKeyDown={(e) => e.key === "Enter" && setSubject(tempSubject)}
                   placeholder="e.g. Coffee"
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
@@ -200,8 +228,10 @@ const Discover = () => {
                 </label>
                 <input
                   type="text"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
+                  value={tempLocation}
+                  onChange={(e) => setTempLocation(e.target.value)}
+                  onBlur={() => setLocation(tempLocation)}
+                  onKeyDown={(e) => e.key === "Enter" && setLocation(tempLocation)}
                   placeholder="e.g. Berlin"
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
@@ -212,8 +242,10 @@ const Discover = () => {
                 </label>
                 <input
                   type="date"
-                  value={youngerThan}
-                  onChange={(e) => setYoungerThan(e.target.value)}
+                  value={tempYoungerThan}
+                  onChange={(e) => setTempYoungerThan(e.target.value)}
+                  onBlur={() => setYoungerThan(tempYoungerThan)}
+                  onKeyDown={(e) => e.key === "Enter" && setYoungerThan(tempYoungerThan)}
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
