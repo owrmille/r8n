@@ -6,6 +6,7 @@ import com.r8n.backend.users.api.dto.UpdateMyPublicProfileRequestDto
 import com.r8n.backend.users.api.dto.UserProfileDto
 import com.r8n.backend.users.api.dto.UserStatusEnumDto
 import com.r8n.backend.users.api.dto.UserWithRolesDto
+import com.r8n.backend.users.api.dto.UsernameAndEmailDto
 import com.r8n.backend.users.api.dto.UsernameDto
 import com.r8n.backend.users.domain.Consent
 import com.r8n.backend.users.domain.UserProfile
@@ -33,7 +34,11 @@ class UserFacade(
 
     fun getMyEmail(userId: UUID): String = userService.getMyName(userId).email
 
+    fun getMyUsernameAndEmail(userId: UUID): UsernameAndEmailDto = userService.getMyName(userId).toUsernameAndEmailDto()
+
     private fun Username.toDto() = UsernameDto(id, name)
+
+    private fun Username.toUsernameAndEmailDto() = UsernameAndEmailDto(id, name, email)
 
     fun listUsersWithRoles(): List<UserWithRolesDto> = userService.listUsersWithRoles().map { it.toDto() }
 

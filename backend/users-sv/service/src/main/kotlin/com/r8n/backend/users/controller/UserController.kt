@@ -8,6 +8,7 @@ import com.r8n.backend.users.api.dto.AccountDeletionRequestDto
 import com.r8n.backend.users.api.dto.AssignRoleRequestDto
 import com.r8n.backend.users.api.dto.RoleEnumDto
 import com.r8n.backend.users.api.dto.UpdateMyPublicProfileRequestDto
+import com.r8n.backend.users.api.dto.UsernameAndEmailDto
 import com.r8n.backend.users.api.dto.UsernameDto
 import com.r8n.backend.users.facade.UserFacade
 import com.r8n.backend.users.service.UserAvatarService
@@ -33,6 +34,9 @@ class UserController(
 
     @PreAuthorize(IS_USER)
     override fun getMyEmail(): String = userFacade.getMyEmail(getCurrentUserId())
+
+    @PreAuthorize(IS_USER)
+    override fun getMyUsernameAndEmail(): UsernameAndEmailDto = userFacade.getMyUsernameAndEmail(getCurrentUserId())
 
     @PreAuthorize(IS_USER)
     override fun getUserProfile(id: UUID) = userFacade.getUserProfile(id)

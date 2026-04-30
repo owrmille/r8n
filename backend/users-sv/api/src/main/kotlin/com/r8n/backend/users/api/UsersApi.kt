@@ -5,6 +5,7 @@ import com.r8n.backend.users.api.dto.AssignRoleRequestDto
 import com.r8n.backend.users.api.dto.UpdateMyPublicProfileRequestDto
 import com.r8n.backend.users.api.dto.UserProfileDto
 import com.r8n.backend.users.api.dto.UserWithRolesDto
+import com.r8n.backend.users.api.dto.UsernameAndEmailDto
 import com.r8n.backend.users.api.dto.UsernameDto
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -50,6 +51,13 @@ interface UsersApi {
         description = "Returns the email address for the authenticated user.",
     )
     fun getMyEmail(): String
+
+    @GetMapping("$ME_PATH/username-and-email")
+    @Operation(
+        summary = "Get my username and email",
+        description = "Returns the username and email address for the authenticated user.",
+    )
+    fun getMyUsernameAndEmail(): UsernameAndEmailDto
 
     @GetMapping(USER_PATH)
     @Operation(
