@@ -2,11 +2,14 @@ package com.r8n.backend.opinions.integration.configuration
 
 import com.r8n.backend.opinions.api.lists.OpinionListsApi
 import com.r8n.backend.opinions.api.lists.OpinionListsSearchApi
+import com.r8n.backend.opinions.integration.api.OpinionListsDeletionInternalApi
 import com.r8n.backend.opinions.integration.api.OpinionListsInternalApi
+import com.r8n.backend.opinions.integration.client.OpinionListDeletionInternalRestClient
 import com.r8n.backend.opinions.integration.client.OpinionListInternalRestClient
 import com.r8n.backend.opinions.integration.client.OpinionListRestClient
 import com.r8n.backend.opinions.integration.client.OpinionListSearchRestClient
 import com.r8n.backend.security.SecurityContextTokenInterceptor
+import com.r8n.backend.security.ServiceTokenInterceptor
 import com.r8n.backend.security.ServiceTokenService
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
@@ -29,6 +32,18 @@ class OpinionListsRestClientConfiguration {
             .build()
 
     @Bean
+    @Qualifier("opinionListsDeletionInternalRestBaseClient")
+    fun opinionListsDeletionInternalRestBaseClient(
+        @Value("\${services.opinions.url}") baseUrl: String,
+        serviceTokenService: ServiceTokenService,
+    ): RestClient =
+        RestClient
+            .builder()
+            .baseUrl(baseUrl)
+            .requestInterceptor(ServiceTokenInterceptor(serviceTokenService))
+            .build()
+
+    @Bean
     fun opinionListRestClient(
         @Qualifier("opinionListsRestBaseClient") opinionListsRestBaseClient: RestClient,
     ): OpinionListsApi = OpinionListRestClient(opinionListsRestBaseClient)
@@ -37,6 +52,12 @@ class OpinionListsRestClientConfiguration {
     fun opinionListInternalRestClient(
         @Qualifier("opinionListsRestBaseClient") opinionListsRestBaseClient: RestClient,
     ): OpinionListsInternalApi = OpinionListInternalRestClient(opinionListsRestBaseClient)
+
+    @Bean
+    fun opinionListDeletionInternalRestClient(
+        @Qualifier("opinionListsDeletionInternalRestBaseClient") opinionListsInternalRestBaseClient: RestClient,
+    ): OpinionListsDeletionInternalApi =
+        OpinionListDeletionInternalRestClient(opinionListsInternalRestBaseClient)
 
     @Bean
     fun opinionListSearchRestClient(
