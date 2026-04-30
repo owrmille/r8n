@@ -83,6 +83,17 @@ spring:
                     limit: 100
                     durationSeconds: 60
                 - RewritePath=/api/public/opinions/(?<segment>.*), /api/opinions/$\{segment}
+            - id: public_subjects
+              uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_OPINIONS_HOST}:${SERVICES_OPINIONS_PORT}
+              predicates:
+                - Path=/api/public/subjects,/api/public/subjects/**
+              filters:
+                - ApiKeyAuthenticationFilter
+                - name: RateLimitingFilter
+                  args:
+                    limit: 100
+                    durationSeconds: 60
+                - RewritePath=/api/public/subjects/?(?<segment>.*), /api/subjects/$\{segment}
             - id: public_users
               uri: ${INTERSERVICE_PROTOCOL}://${SERVICES_USERS_HOST}:${SERVICES_USERS_PORT}
               predicates:
