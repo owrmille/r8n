@@ -38,7 +38,13 @@ class UserFacade(
 
     private fun Username.toDto() = UsernameDto(id, name)
 
-    private fun Username.toUsernameAndEmailDto() = UsernameAndEmailDto(id, name, email)
+    private fun Username.toUsernameAndEmailDto() =
+        UsernameAndEmailDto(
+            id,
+            name,
+            email,
+            roles.mapNotNull { roleStr -> runCatching { RoleEnumDto.valueOf(roleStr) }.getOrNull() },
+        )
 
     fun listUsersWithRoles(): List<UserWithRolesDto> = userService.listUsersWithRoles().map { it.toDto() }
 

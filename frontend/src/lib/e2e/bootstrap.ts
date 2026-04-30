@@ -1,7 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import type { ModerationDecisionDto, OpinionDto } from "@/lib/api/opinions";
 import type { PageResponseDto } from "@/lib/api/shared";
-import type { UsernameDto } from "@/lib/api/users";
+import type { UsernameAndEmailDto } from "@/lib/api/users";
 import { setSession } from "@/lib/auth/session";
 import { opinionsKeys, usersKeys } from "@/lib/server-state/query-keys";
 
@@ -15,9 +15,10 @@ const E2E_MODERATION_REQUEST = {
 
 export const E2E_PENDING_OPINION_ID = "e2e-opinion-pending";
 
-const e2eModerator: UsernameDto = {
+const e2eModerator: UsernameAndEmailDto = {
   id: "e2e-moderator",
   name: "E2E Moderator",
+  email: "e2e-moderator@example.com",
   roles: ["ADMIN"],
 };
 

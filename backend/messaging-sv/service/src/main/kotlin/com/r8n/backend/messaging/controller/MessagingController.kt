@@ -43,6 +43,7 @@ class MessagingController(
         request: com.r8n.backend.messaging.api.dto.messaging.CreateSupportMessageRequestDto,
     ): SupportMessageDto = supportMessagingFacade.addSupportThreadMessage(getSupportActor(), threadId, request)
 
+    @PreAuthorize(Authority.IS_SERVICE)
     override fun deleteAllUserDataForUser(userId: UUID) {
         supportMessagingFacade.deleteAllUserDataForUser(userId)
     }
