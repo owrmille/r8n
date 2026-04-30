@@ -1,7 +1,7 @@
 package com.r8n.backend.users
 
 import com.r8n.backend.core.web.WebCoreConfiguration
-import com.r8n.backend.messaging.integration.MessagingRestClientConfiguration
+import com.r8n.backend.messaging.integration.MessagingInternalRestClientConfiguration
 import com.r8n.backend.opinions.integration.configuration.OpinionListsRestClientConfiguration
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
@@ -12,7 +12,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
 @EnableScheduling
 @Import(
     WebCoreConfiguration::class,
-    MessagingRestClientConfiguration::class,
+    MessagingInternalRestClientConfiguration::class,
     OpinionListsRestClientConfiguration::class,
 )
 class UserApplication

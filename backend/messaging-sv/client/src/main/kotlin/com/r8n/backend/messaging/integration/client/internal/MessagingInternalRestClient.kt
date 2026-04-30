@@ -4,6 +4,7 @@ import com.r8n.backend.messaging.api.dto.messaging.CreateSupportMessageRequestDt
 import com.r8n.backend.messaging.api.dto.messaging.SupportMessageDto
 import com.r8n.backend.messaging.integration.api.MessagingInternalApi
 import com.r8n.backend.messaging.integration.api.MessagingInternalApi.Companion.SUPPORT_THREAD_MESSAGES_PATH
+import com.r8n.backend.messaging.integration.api.MessagingInternalApi.Companion.USER_PATH
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.body
 import java.util.UUID
@@ -21,4 +22,12 @@ class MessagingInternalRestClient(
             .body(request)
             .retrieve()
             .body<SupportMessageDto>()!!
+
+    override fun deleteAllUserDataForUser(userId: UUID) {
+        restClient
+            .delete()
+            .uri(USER_PATH, userId)
+            .retrieve()
+            .toBodilessEntity()
+    }
 }
