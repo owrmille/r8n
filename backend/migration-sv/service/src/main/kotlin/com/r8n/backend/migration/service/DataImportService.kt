@@ -154,9 +154,7 @@ class DataImportService(
         logger.debug("Opinion lists restored for user: {}", userId)
     }
 
-    private fun sendRequests(
-        data: UserCompleteDataDto,
-    ) {
+    private fun sendRequests(data: UserCompleteDataDto) {
         // Re-create Outgoing Access Requests as PENDING
         data.outgoingRequests.items.forEach { request ->
             try {
