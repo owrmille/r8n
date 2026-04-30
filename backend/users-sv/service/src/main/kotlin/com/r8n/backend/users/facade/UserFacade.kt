@@ -38,11 +38,12 @@ class UserFacade(
 
     fun getMyUsernameAndEmail(userId: UUID): UsernameAndEmailDto = userService.getMyName(userId).toUsernameAndEmailDto()
 
-    private fun Username.toDto() = UsernameDto(
-        id,
-        name,
-        roles.mapNotNull { roleStr -> runCatching { RoleEnumDto.valueOf(roleStr) }.getOrNull() },
-    )
+    private fun Username.toDto() =
+        UsernameDto(
+            id,
+            name,
+            roles.mapNotNull { roleStr -> runCatching { RoleEnumDto.valueOf(roleStr) }.getOrNull() },
+        )
 
     private fun Username.toUsernameAndEmailDto() =
         UsernameAndEmailDto(
