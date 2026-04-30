@@ -5,6 +5,8 @@ import com.r8n.backend.opinions.access.domain.AccessRequest
 import com.r8n.backend.opinions.access.domain.AccessRequestIntent
 import com.r8n.backend.opinions.access.domain.RequestStatusEnum
 import com.r8n.backend.opinions.access.persistence.AccessRequestPersistence
+import com.r8n.backend.opinions.lists.domain.OpinionListPrivacyEnum
+import com.r8n.backend.opinions.lists.service.OpinionListService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
@@ -18,6 +20,7 @@ import java.util.UUID
 class AccessRequestService(
     private val repository: AccessRequestRepository,
     private val accessService: AccessService,
+    private val opinionListService: OpinionListService,
 ) {
     fun getRequests(
         listId: UUID?,
@@ -75,12 +78,17 @@ class AccessRequestService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "targetListId is only valid for MERGE intent")
         }
 
-        // Idempotent: an existing SENT request is returned as-is. Terminal states
-        // (CANCELLED, REJECTED) and ACCEPTED do not block creating a new SENT row.
+        // Idempotent for the pending row, but keep the requester's latest intent.
+        // Terminal states (CANCELLED, REJECTED) and ACCEPTED do not block creating a new SENT row.
         val existingSent =
-            getRequests(listId, requesterId, null, null, RequestStatusEnum.SENT, Pageable.unpaged()).firstOrNull()
+            repository.findFirstByRequesterAndListAndStatus(requesterId, listId, RequestStatusEnum.SENT)
         if (existingSent != null) {
-            return existingSent
+            if (existingSent.intent != intent || existingSent.targetListId != targetListId) {
+                existingSent.intent = intent
+                existingSent.targetListId = targetListId
+                existingSent.updatedAt = Instant.now()
+            }
+            return repository.save(existingSent).toDomain()
         }
 
         val now = Instant.now()
@@ -140,7 +148,41 @@ class AccessRequestService(
 
         request.status = RequestStatusEnum.ACCEPTED
         request.updatedAt = Instant.now()
-        return repository.save(request).toDomain()
+        val acceptedRequest = repository.save(request)
+        executeAcceptedIntent(acceptedRequest)
+        return acceptedRequest.toDomain()
+    }
+
+    private fun executeAcceptedIntent(request: AccessRequestPersistence) {
+        when (request.intent) {
+            AccessRequestIntent.NONE -> Unit
+            AccessRequestIntent.COPY -> {
+                val sourceName = opinionListService.getListName(request.list, request.requester)
+                val copiedList =
+                    opinionListService.createList(
+                        ownerId = request.requester,
+                        name = "Copy of $sourceName",
+                        privacy = OpinionListPrivacyEnum.PRIVATE,
+                    )
+                opinionListService.syncWithOpinionList(
+                    userId = request.requester,
+                    existingListId = copiedList.id,
+                    addedListId = request.list,
+                    weight = 1.0,
+                )
+            }
+            AccessRequestIntent.MERGE -> {
+                val targetListId =
+                    request.targetListId
+                        ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "MERGE intent requires targetListId")
+                opinionListService.syncWithOpinionList(
+                    userId = request.requester,
+                    existingListId = targetListId,
+                    addedListId = request.list,
+                    weight = 1.0,
+                )
+            }
+        }
     }
 
     @Transactional

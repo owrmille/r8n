@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Clock, XCircle, Eye, EyeOff, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UserAvatar from "@/components/UserAvatar";
 import { QueryState } from "@/components/server-state/QueryState";
-import { toast } from "@/hooks/use-toast";
 import {
   useIncomingAccessRequests,
   useOutgoingAccessRequests,
@@ -13,32 +12,7 @@ import {
   useHideIncomingAccessRequestMutation,
   useCancelOutgoingAccessRequestMutation,
 } from "@/lib/server-state/hooks/access-requests";
-import {
-  useCreateOpinionListMutation,
-  useSyncOpinionListsMutation,
-} from "@/lib/server-state/hooks/opinion-lists";
 import type { AccessRequestDto, RequestStatusEnumDto } from "@/lib/api/access-requests";
-
-const STORAGE_KEY_PROCESSED_INTENTS = "r8n.access-requests.processed-intents";
-
-const loadProcessedIds = (): Set<string> => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY_PROCESSED_INTENTS);
-    if (!raw) return new Set();
-    const arr = JSON.parse(raw);
-    return Array.isArray(arr) ? new Set(arr) : new Set();
-  } catch {
-    return new Set();
-  }
-};
-
-const saveProcessedIds = (ids: Set<string>) => {
-  try {
-    localStorage.setItem(STORAGE_KEY_PROCESSED_INTENTS, JSON.stringify([...ids]));
-  } catch {
-    // localStorage unavailable — just in-memory for this session
-  }
-};
 
 function formatRelativeTime(timestamp: string): string {
   const diff = Date.now() - new Date(timestamp).getTime();
@@ -86,68 +60,11 @@ const Requests = () => {
   const decline = useDeclineIncomingAccessRequestMutation();
   const hide = useHideIncomingAccessRequestMutation();
   const cancel = useCancelOutgoingAccessRequestMutation();
-  const createList = useCreateOpinionListMutation();
-  const syncLists = useSyncOpinionListsMutation();
 
   const incomingItems = incoming.data?.items ?? [];
   const hiddenItems = hiddenIncoming.data?.items ?? [];
   const approvedItems = approvedIncoming.data?.items ?? [];
-  const outgoingItems = useMemo(() => outgoing.data?.items ?? [], [outgoing.data]);
-
-  // Auto-execute the requester's stored intent (COPY/MERGE) once per accepted row.
-  // Persisted in localStorage so reopening /requests doesn't re-run.
-  const processedIdsRef = useRef<Set<string>>(loadProcessedIds());
-  const inFlightRef = useRef<Set<string>>(new Set());
-
-  useEffect(() => {
-    const acceptedActionable = outgoingItems.filter(
-      (req) =>
-        req.status === "ACCEPTED"
-        && req.intent
-        && req.intent !== "NONE"
-        && !processedIdsRef.current.has(req.id)
-        && !inFlightRef.current.has(req.id),
-    );
-    if (acceptedActionable.length === 0) return;
-
-    acceptedActionable.forEach(async (req) => {
-      inFlightRef.current.add(req.id);
-      try {
-        if (req.intent === "COPY") {
-          const newList = await createList.mutateAsync({
-            name: `Copy of ${req.opinionListName}`,
-            privacy: "PRIVATE",
-          });
-          await syncLists.mutateAsync({
-            existingListId: newList.id,
-            addedListId: req.opinionListId,
-            weight: 1.0,
-          });
-          toast({
-            title: "Copied",
-            description: `Created "Copy of ${req.opinionListName}".`,
-          });
-        } else if (req.intent === "MERGE" && req.targetListId) {
-          await syncLists.mutateAsync({
-            existingListId: req.targetListId,
-            addedListId: req.opinionListId,
-            weight: 1.0,
-          });
-          toast({
-            title: "Merged",
-            description: `${req.opinionListName} now feeds into your selected list.`,
-          });
-        }
-        processedIdsRef.current.add(req.id);
-        saveProcessedIds(processedIdsRef.current);
-      } catch {
-        // mutation meta errorTitle already showed an error toast.
-        // Don't mark processed — let the next /requests visit retry.
-      } finally {
-        inFlightRef.current.delete(req.id);
-      }
-    });
-  }, [outgoingItems, createList, syncLists]);
+  const outgoingItems = outgoing.data?.items ?? [];
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 md:px-8 md:py-12">

@@ -356,6 +356,11 @@ class OpinionListService(
             }
         }
 
+    private fun countVisibleOpinions(
+        listId: UUID,
+        requesterId: UUID,
+    ): Long = fetchAndEnrichOpinions(resolveAllAssignments(listId), requesterId).size.toLong()
+
     private fun calculateSummaries(
         list: OpinionListPersistence,
         opinions: List<Opinion>,
@@ -426,7 +431,7 @@ class OpinionListService(
             name = list.name,
             owner = list.owner,
             privacy = list.privacy,
-            opinionsCount = opinionsAssignmentRepository.countByOpinionList(list.id!!),
+            opinionsCount = countVisibleOpinions(list.id!!, requesterId),
             grantedAccessCount = accessService.countAcceptedForList(list.id!!),
         )
     }
@@ -441,7 +446,7 @@ class OpinionListService(
                 name = list.name,
                 owner = list.owner,
                 privacy = list.privacy,
-                opinionsCount = opinionsAssignmentRepository.countByOpinionList(list.id!!),
+                opinionsCount = countVisibleOpinions(list.id!!, ownerId),
                 grantedAccessCount = accessService.countAcceptedForList(list.id!!),
             )
         }
@@ -479,7 +484,7 @@ class OpinionListService(
                         name = list.name,
                         owner = list.owner,
                         privacy = list.privacy,
-                        opinionsCount = opinionsAssignmentRepository.countByOpinionList(list.id!!),
+                        opinionsCount = countVisibleOpinions(list.id!!, requesterId),
                         grantedAccessCount = accessService.countAcceptedForList(list.id!!),
                     )
                 } else {
