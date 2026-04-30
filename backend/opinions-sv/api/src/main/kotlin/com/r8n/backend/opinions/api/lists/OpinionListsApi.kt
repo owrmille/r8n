@@ -48,7 +48,7 @@ interface OpinionListsApi {
         @PathVariable(required = false) listId: UUID?,
     ): OpinionListSummaryDto
 
-    @GetMapping(GET_PATH, "$ROOT_PATH/{listId}")
+    @GetMapping(GET_PATH, "$GET_PATH/{listId}")
     @Operation(
         summary = "Get opinion list",
         description = "Returns an opinion list visible to the authenticated user.",

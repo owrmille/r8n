@@ -159,8 +159,11 @@ export function createOpinionListsApi(client: HttpClient = httpClient) {
     getSummary(
       request: GetOpinionListSummaryRequestDto,
     ): Promise<OpinionListSummaryDto> {
+      const path = request.listId === "all"
+        ? "/opinion-lists/summary"
+        : `/opinion-lists/${request.listId}/summary`;
       return client.get<OpinionListSummaryDto>(
-        `/opinion-lists/${request.listId}/summary`,
+        path,
         {
           auth: "required",
         },
@@ -168,7 +171,10 @@ export function createOpinionListsApi(client: HttpClient = httpClient) {
     },
 
     getById(request: GetOpinionListRequestDto): Promise<OpinionListDto> {
-      return client.get<OpinionListDto>(`/opinion-lists/${request.listId}`, {
+      const path = request.listId === "all"
+        ? "/opinion-lists"
+        : `/opinion-lists/${request.listId}`;
+      return client.get<OpinionListDto>(path, {
         auth: "required",
         query: request.publishedAfter ? { publishedAfter: request.publishedAfter } : undefined,
       });

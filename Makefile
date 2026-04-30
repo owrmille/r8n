@@ -25,14 +25,14 @@ frontend_npx() { if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NOD
     $(addprefix local-run-,$(SERVICES)) \
     $(addprefix local-stop-,$(SERVICES)) \
     $(addprefix docker-logs-,$(SERVICES)) \
-    prebuild-jars prepare-artifacts verify-artifacts docker-build docker-up \
+    prebuild-jars prepare-artifacts verify-artifacts docker-build docker-up build-% restart-% \
     docker-certs docker-certs-force internal-certs internal-certs-force internal-certs-clean docker-certs-clean docker-secrets-clean docker-secrets-init edge-certs edge-certs-force \
     docker-down docker-logs clean-artifacts ensure-log-dirs clean-logs \
     get-token refresh-token logout routed-request-opinion routed-request-mock routed-request-user-profile routed-request-gdpr routed-import-gdpr routed-request-messaging-threads direct-request-opinion direct-request-mock \
     direct-request-swagger public-request-user routed-request-opinion-approved routed-request-opinion-forbidden routed-request-opinion-mine \
     routed-request-moderation-approve-flow routed-request-moderation-reject-flow routed-request-moderation-decisions \
     docker-database-create-data-folder docker-database-drop-volume-personal docker-database-drop-volume-campus docker-database-run docker-database-connect \
-    build-opinions who-ate-all-the-space clean-the-fuck-out-of-this-campus-machine \
+    who-ate-all-the-space clean-the-fuck-out-of-this-campus-machine \
     frontend-install frontend-install-all frontend-check-node frontend-dev frontend-build frontend-lint \
     frontend-test frontend-test-unit frontend-test-e2e frontend-test-e2e-ui frontend-test-e2e-api frontend-clean frontend-clean-all frontend-cert frontend-cert-clean \
     lint-backend test-backend test-frontend-prepare test-frontend test-e2e routed-request-opinion-list \
@@ -42,6 +42,18 @@ frontend_npx() { if command -v nvm >/dev/null 2>&1; then nvm exec $(FRONTEND_NOD
 ##@ Docker
 docker-up: docker-build ensure-log-dirs docker-certs ## Start local Docker stack (builds images, ensures logs, generates certs)
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml up -d
+
+build-%: ## Rebuild only one docker node (e.g. build-frontend, build-opinions)
+	@if [ "$*" = "frontend" ]; then \
+		$(MAKE) frontend-build; \
+	elif echo "$(SERVICES)" | grep -qw "$*"; then \
+		$(MAKE) gradle-$*-bootJar; \
+		$(MAKE) verify-artifacts; \
+	fi
+	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml build $*
+
+restart-%: build-% ## Rebuild and restart one docker node (e.g. restart-frontend, restart-opinions)
+	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml up -d $*
 
 docker-down: ## Stop Docker stack
 	docker compose $(DOCKER_COMPOSE_ENV_ARGS) -f docker-compose.yml down
@@ -492,6 +504,23 @@ routed-request-opinion-forbidden: ## failing gateway request to opinions (ENV=lo
 	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
 	curl $$curl_args "$$protocol://$$host:$$port/api/opinions/30000000-0000-0000-0000-000000000003" -H "Authorization: Bearer $$(cat .access_token)"
 
+routed-request-opinion-list: ## Gateway request to opinions for my list (ENV=local|docker)
+	@if [ ! -f .access_token ]; then $(MAKE) get-token ENV=$(ENV); fi
+	@if [ "$(ENV)" = "docker" ]; then \
+		$(LOAD_DOCKER_ENV) \
+		protocol=https; \
+		host=localhost; \
+		port=8080; \
+	else \
+		$(LOAD_LOCAL_ENV) \
+		protocol=$${INTERSERVICE_PROTOCOL:-http}; \
+		host=$${GATEWAY_HOST:-localhost}; \
+		port=$${GATEWAY_PORT:-8080}; \
+	fi; \
+	curl_args="-i"; \
+	if [ "$$protocol" = "https" ]; then curl_args="$$curl_args -k"; fi; \
+	curl $$curl_args "$$protocol://$$host:$$port/api/opinion-lists/70000000-0000-0000-0000-000000000002" -H "Authorization: Bearer $$(cat .access_token)"
+
 routed-request-opinion-mine: ## Gateway request to opinions (ENV=local|docker)
 	@if [ ! -f .access_token ]; then $(MAKE) get-token ENV=$(ENV); fi
 	@if [ "$(ENV)" = "docker" ]; then \
@@ -641,7 +670,7 @@ routed-import-gdpr: ## Gateway GDPR import request (ENV=local|docker)
 		-F "file=@export_clean.json"; \
 	rm export_clean.json
 
-routed-request-opinion-list: ## Gateway request to smoke test opinion list (ENV=local|docker)
+routed-request-opinion-list-1: ## Gateway request to smoke test opinion list (ENV=local|docker)
 	@if [ ! -f .access_token ]; then $(MAKE) get-token ENV=$(ENV); fi
 	@if [ "$(ENV)" = "docker" ]; then \
 		$(LOAD_DOCKER_ENV) \

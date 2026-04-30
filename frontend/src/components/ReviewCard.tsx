@@ -64,7 +64,7 @@ const ReviewCard = ({
           {weightedRating !== undefined && (
             <div className="flex items-center gap-1 text-[11px] text-muted-foreground" title={`Weighted average from ${networkCount ?? 0} network reviews`}>
               <Users className="h-3 w-3" />
-              <span className="font-mono font-medium">{weightedRating.toFixed(1)}</span>
+              <span className="font-mono font-medium">{weightedRating.toFixed(2)}</span>
               {networkCount !== undefined && (
                 <span className="text-muted-foreground/60">({networkCount})</span>
               )}
