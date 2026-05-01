@@ -893,6 +893,8 @@ This project is created as part of the 42 curriculum and follows the school's gu
 
 - **42 School** - Curriculum and educational framework
 - **Anthropic (Claude Code)** - AI assistant for documentation and problem-solving
+- **OpenAI (Codex/ChatGPT)** - AI coding assistant
+- **JetBrains (Junie)** - AI coding assistant
 - **Spring Team** - Spring Boot framework
 - **React Team** - React library and ecosystem
 - **Docker Team** - Containerization platform
