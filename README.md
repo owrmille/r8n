@@ -42,6 +42,15 @@ _This project has been created as part of the 42 curriculum by dbisko, iatopchu,
 **Version Control:**
 - Git
 
+> **⚠️ 42 Campus machines:** Campus machines do not have enough disk space to build or deploy this project directly from your home directory.
+>
+> **Setup steps for campus:**
+> 1. Clone the repository into `/sgoinfre/<your_login>/` — not into `$HOME`
+> 2. Run `make move-caches-to-goinfre` to move Docker and Gradle caches out of `$HOME` to `/goinfre`
+> 3. Proceed with the regular setup below — `make docker-up` will handle the rest
+>
+> Required disk space. Check current usage with `make who-ate-all-the-space`.
+
 ### Installation
 
 **1. Clone the repository:**
@@ -126,20 +135,63 @@ Use the make rules to test API endpoints (documented in Make Commands Reference 
 
 ### Make Commands Reference
 
-**Service Management:**
+**Docker:**
+- `make docker-up` - Build and start all containers (builds images, generates certs)
+- `make docker-down` - Stop Docker stack
+- `make docker-build` - Build all Docker images without starting
+- `make build-<service>` - Rebuild one Docker service (e.g. `make build-opinions`)
+- `make restart-<service>` - Rebuild and restart one service
+- `make docker-logs` - Tail logs for all services
+
+**Local Backend:**
 - `make local-run-all` - Start all backend services locally (opinions, users, messaging, migration, mock, gateway)
-- `make local-stop-all` - Stop all services
-- `make docker-up` - Build and start all containers
-- `make docker-down` - Stop and remove containers
-- `make build-<service>` - Rebuild a single Docker service (e.g. `make build-opinions`)
+- `make local-stop-all` - Stop all local services
+
+**Frontend:**
+- `make frontend-dev` - Start Vite dev server
+- `make frontend-build` - Build frontend dist
+- `make frontend-lint` - Run linter
+- `make frontend-test-unit` - Run unit tests
+- `make frontend-test-e2e` - Run Playwright E2E tests
+- `make frontend-clean` - Remove build output and cache
 
 **Database:**
-- `make docker-database-run` - Start only the database
+- `make docker-database-run` - Start only the database container
 - `make docker-database-connect` - Connect to database with psql
+- `make docker-database-drop-volume-personal` - Delete local DB volume (personal machine)
+- `make docker-database-drop-volume-campus` - Delete local DB volume (campus machine)
 
-**Testing:**
+**Certificates:**
+- `make docker-certs` - Generate TLS certs (skips if valid)
+- `make docker-certs-force` - Force regenerate all TLS certs
+- `make edge-certs` - Generate frontend HTTPS certs
+- `make generate-jwt-keys-<env>` - Generate RSA JWT keypair (e.g. `make generate-jwt-keys-local`)
+
+**Artifacts:**
+- `make prebuild-jars` - Build all backend bootJar artifacts
+- `make prepare-artifacts` - Copy JARs into deployment folders
+- `make gradle-<service>-bootJar` - Build one service JAR
+
+**Smoke Tests:**
+- `make get-token` - Obtain JWT token (ENV=local|docker)
+- `make refresh-token` - Refresh JWT token
+- `make logout` - Logout and clear cookies
+- `make routed-request-opinion` - Test opinion endpoint via gateway
 - `make direct-request-opinion` - Test opinions service directly
-- `make routed-request-opinion` - Test via gateway
+- `make routed-request-user-profile` - Test users endpoint
+- `make routed-request-messaging-threads` - Test messaging endpoint
+- `make routed-request-gdpr` - Test GDPR export
+- `make routed-import-gdpr` - Test GDPR import
+
+**Cleanup:**
+- `make clean` - Remove backend artifacts, logs, and frontend cache
+- `make fclean` - Full clean including node_modules and certs
+- `make re` - Full rebuild (clean + docker-build)
+
+**42 Campus Utilities:**
+- `make move-caches-to-goinfre` - Move Docker/Gradle caches to `/goinfre`
+- `make who-ate-all-the-space` - Show top-level disk usage
+- `make clean-the-fuck-out-of-this-campus-machine` - Remove large local caches
 
 ## Resources
 
