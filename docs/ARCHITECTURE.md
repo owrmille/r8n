@@ -62,10 +62,9 @@ backend/
 ├── platform/                     # Platform-wide BOM (dependency versions)
 ├── core/                         # Shared libraries
 │   ├── api/                      # Common API types (pagination, etc.)
-│   ├── security/                 # Security abstractions
 │   ├── security-common/          # Shared security utilities
-│   ├── security-reactive/        # Reactive (WebFlux) security
-│   ├── security-servlet/         # Servlet security
+│   ├── security-reactive/        # Reactive (WebFlux) security — used by gateway
+│   ├── security-servlet/         # Servlet security — used by data services
 │   ├── utils/                    # Common utilities
 │   └── web/                      # Shared web config
 │
@@ -151,7 +150,7 @@ backend/
 - **Local Port**: 8090 (HTTP)
 - **Docker Port**: 8080 (HTTPS internally)
 - **Role**: Provides stub/test data for development and testing
-- **Mocks**: AccessRequests, OpinionLists, Selectors, Recommendations, Messaging
+- **Mocks**: Selectors, Recommendations
 - **HTTP/HTTPS**: Uses `INTERSERVICE_PROTOCOL` (http=local, https=Docker)
 - **Packages**: `api/`, `client/` for API contracts and REST clients
 
@@ -214,7 +213,7 @@ opinions-sv/
 ### Design Patterns Used
 
 1. **API-First**: Separate API contracts from implementation
-2. **Facade Pattern**: Merges domain models with DTOs from other microservices and converts everything into the service's DTOs. Calls the service layer which creates domain entities, implements business logic (calculating data relying only on objects owned by the current service). The repository+persistence layer handles database interaction without modifying objects.
+2. **Facade Pattern**: Merges domain models with DTOs from other microservices and converts everything into the service's DTOs. Calls the service layer which creates domain entities and implements business logic (calculating data relying only on objects owned by the current service). The repository+persistence layer handles database interaction without modifying objects.
 3. **Repository Pattern**: Data access abstraction
 4. **Dependency Injection**: Via Spring Framework
 5. **DTO Pattern**: Separate API models from domain entities
