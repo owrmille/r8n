@@ -90,6 +90,8 @@ jobs:
 
       - name: Start backend
         run: |
+          cp deployment/config/.env.example deployment/config/docker.env
+          make generate-jwt-keys-docker
           export TLS_KEYSTORE_PASSWORD=password
           export TLS_TRUSTSTORE_PASSWORD=password
           export SPRING_PROFILES_ACTIVE=test-e2e
@@ -102,8 +104,14 @@ jobs:
 
       - name: Show docker logs
         if: failure()
-        run: docker compose --env-file deployment/config/docker.env --env-file deployment/secrets/docker.secrets.env -f docker-compose.yml logs --tail=100
+        run: |
+          [ -f deployment/config/docker.env ] || cp deployment/config/.env.example deployment/config/docker.env
+          [ -f deployment/secrets/docker.secrets.env ] || { export TLS_KEYSTORE_PASSWORD=password; export TLS_TRUSTSTORE_PASSWORD=password; make docker-secrets-init; }
+          docker compose --env-file deployment/config/docker.env --env-file deployment/secrets/docker.secrets.env -f docker-compose.yml logs --tail=100
 
       - name: Stop backend
         if: always()
-        run: make docker-down
+        run: |
+          [ -f deployment/config/docker.env ] || cp deployment/config/.env.example deployment/config/docker.env
+          [ -f deployment/secrets/docker.secrets.env ] || { export TLS_KEYSTORE_PASSWORD=password; export TLS_TRUSTSTORE_PASSWORD=password; make docker-secrets-init; }
+          make docker-down
