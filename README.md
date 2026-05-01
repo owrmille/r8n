@@ -477,14 +477,13 @@ messaging schema:
 **2. Allow users to interact with other users**
 
 - **Points**: 2 points (Major module)
-- **Description**: A basic chat system (send/receive messages between users), a profile system (view user information), and a friends system (add/remove friends, see friends list)
+- **Description**: A basic chat system (send/receive messages between users) and a profile system (view user information)
 - **Justification**: User interaction features are essential for building a social platform where users can connect, share opinions, and build trusted networks. These features enable the core value proposition of r8n - connecting people with trusted reviewers.
 - **Implementation**:
-  - **Profile System**: User profiles with personal information, opinion history, and network connections
-  - **Friends System**: Add/remove friends functionality, friends list display, and network visualization
+  - **Profile System**: User profiles with personal information
   - **Chat System**: Basic messaging capabilities for direct communication between users
   - **User Management**: User service handles authentication, profile data, and relationship management
-  - **Frontend Integration**: React components for profile views, friend management, and messaging interfaces
+  - **Frontend Integration**: React components for profile views and messaging interfaces
 - **Team Members**: mkulikov, iatopchu
 
 **3. A public API to interact with the database with a secured API key, rate limiting, documentation, and at least 5 endpoints**
@@ -497,47 +496,35 @@ messaging schema:
   - **Security**: API key-based authentication with Spring Security
   - **Rate Limiting**: Request rate limiting to prevent API abuse
   - **Documentation**: OpenAPI/Swagger documentation for all endpoints
-  - **Endpoints**: 5+ RESTful endpoints covering CRUD operations:
-    - GET /api/opinions - Retrieve opinions
-    - POST /api/opinions - Create new opinions
-    - PUT /api/opinions/{id} - Update opinions
-    - DELETE /api/opinions/{id} - Delete opinions
-    - GET /api/users/{id} - Retrieve user profiles
+  - **Endpoints**: 5+ RESTful endpoints under `/api/public/`:
+    - GET /api/public/opinions/{id} - Retrieve opinion by ID
+    - GET /api/public/opinions - Retrieve opinions for a subject
+    - POST /api/public/opinions - Create new opinion
+    - PATCH /api/public/opinions/{id} - Update opinion
+    - DELETE /api/public/opinions/{id} - Delete opinion
+    - GET /api/public/users/{id} - Retrieve user profile
+    - GET /api/public/subjects - Retrieve subjects
+    - GET /api/public/messaging - Retrieve messaging threads
 - **Team Members**: inikulin
 
 **4. Standard user management and authentication**
 
 - **Points**: 2 points (Major module)
-- **Description**: Users can update their profile information, upload an avatar (with a default avatar if none provided), add other users as friends and see their online status, and have a profile page displaying their information
-- **Justification**: Comprehensive user management and authentication are fundamental to any social platform. These features enable user identity, personalization, social connections, and engagement - all core to the r8n platform's value proposition of building trusted reviewer networks.
+- **Description**: Users can update their profile information, upload an avatar, see other users' online status, and have a profile page displaying their information
+- **Justification**: Comprehensive user management and authentication are fundamental to any social platform. These features enable user identity, personalization, and engagement - all core to the r8n platform's value proposition of building trusted reviewer networks.
 - **Implementation**:
   - **Profile Management**:
     - User profile creation and editing
-    - Personal information updates (name, bio, location, interests)
-    - Profile visibility settings
-    - Profile completion tracking
+    - Personal information updates (name, about, location)
   - **Avatar System**:
-    - Avatar upload functionality with image validation
-    - Default avatar generation for users without custom avatars
-    - Avatar resizing and optimization
-    - Avatar display across the platform
-  - **Friends System**:
-    - Add/remove friends functionality
-    - Friend request management (send, accept, reject)
-    - Friends list display with search and filtering
-    - Friend relationship status tracking
+    - Avatar upload with JPEG/PNG/WebP validation
+    - Replace or delete current avatar
   - **Online Status**:
-    - Real-time online status tracking
-    - Last seen timestamps
-    - Status indicators (online, offline, away)
-    - Presence notifications for friends
+    - Last seen timestamp per user
   - **Profile Pages**:
     - Public profile pages with user information
-    - Opinion history and activity feed
-    - Friend network visualization
-    - Profile customization options
-  - **Backend**: User service with Spring Security, profile data management, relationship tracking
-  - **Frontend**: React profile components, avatar upload interface, friends management UI
+  - **Backend**: User service with Spring Security and profile data management
+  - **Frontend**: React profile components and avatar upload interface
 - **Team Members**: inikulin, mkulikov
 
 **5. Advanced permissions system**
@@ -550,33 +537,20 @@ messaging schema:
     - View user list with filtering and search
     - Edit user information and settings
     - Delete users with proper confirmation and data cleanup
-    - User status management (active, suspended, banned)
+    - User status management (active, suspended, deletion pending, deleted)
   - **Roles Management**:
-    - Role definitions: Admin, Moderator, User, Guest
-    - Role assignment and modification
-    - Role hierarchy and inheritance
-    - Custom role creation for future extensibility
-  - **Permission System**:
-    - Granular permissions for each role
-    - Permission groups for easier management
-    - Dynamic permission checking
-    - Permission inheritance and overrides
-  - **Role-Based Views**:
-    - Admin dashboard with full system control
-    - Moderator interface for content moderation
-    - Standard user view with basic features
-    - Guest view with limited functionality
+    - Role definitions: Admin, Moderator, AI_Moderator, User, Support
+    - Role assignment and modification via dedicated UI page
   - **Access Control**:
-    - Method-level security with Spring Security annotations
+    - Method-level security with `@PreAuthorize` Spring Security annotations
     - URL-based access control
-    - Resource-level permissions
-    - API endpoint protection
-  - **Audit Logging**:
-    - Track all permission changes
-    - Log administrative actions
-    - User activity monitoring
-  - **Backend**: Spring Security with custom UserDetails, Role-based access control, Permission service
-  - **Frontend**: Role-aware React components, conditional rendering based on permissions, Admin dashboard
+    - API endpoint protection per role
+  - **Role-Based Views**:
+    - Opinion moderation interface for moderators
+    - Role assignment page for admins
+    - Conditional UI rendering based on user role
+  - **Backend**: Spring Security with role-based access control in `users-sv`
+  - **Frontend**: Role-aware React components, `OpinionModeration` and `RoleAssignment` pages
 - **Team Members**: inikulin
 
 **6. Backend as microservices**
@@ -596,30 +570,21 @@ messaging schema:
     - Clear service boundaries with well-defined interfaces
     - API contracts using OpenAPI specifications
     - DTOs for data transfer between services
-    - Event-driven communication for async operations
   - **Communication**:
-    - REST APIs for synchronous communication
-    - HTTP/HTTPS with TLS encryption
+    - REST APIs over HTTPS with TLS encryption
     - JSON for data serialization
-    - Future: Message queues for async events
   - **Single Responsibility**:
     - Each service handles one business domain
-    - Separate databases per service
-    - Independent deployment and scaling
+    - Separate PostgreSQL schemas per service (opinions, users, messaging)
     - Service-specific business logic
-  - **Service Discovery**:
-    - Service registration and discovery
-    - Health checks and monitoring
-    - Load balancing across service instances
   - **Infrastructure**:
     - Docker containerization for each service
     - Docker Compose for orchestration
     - Separate configuration per service
-    - Service-specific logging and monitoring
+    - Service-specific logging
   - **Development**:
     - Independent service development
-    - Service-specific testing strategies
-    - API versioning for backward compatibility
+    - Service-specific integration tests
     - Gradle multi-module project structure
 - **Team Members**: inikulin, iatopchu, lshapkin
 
@@ -645,7 +610,7 @@ messaging schema:
 - **Justification**: Backend frameworks provide robust foundations for building scalable, maintainable server-side applications with built-in patterns for routing, middleware, and database integration. Spring Boot was chosen for its comprehensive ecosystem, strong Kotlin support, and production-ready features.
 - **Implementation**:
   - Spring Boot 4.0.4 with Kotlin 2.2.21 for backend services
-  - Spring Cloud Gateway for API routing and load balancing
+  - Spring Cloud Gateway for API routing and authentication
   - Spring Data JPA for database abstraction and ORM
   - Gradle with Kotlin DSL for build automation
   - Microservices architecture with separate services (Gateway, Opinions, Users, Messaging, Migration, Mock)
@@ -662,7 +627,7 @@ messaging schema:
   - **Entity Mapping**: Kotlin data classes mapped to database tables
   - **Repository Pattern**: Spring Data repositories for CRUD operations
   - **Query Methods**: Derived query methods and custom JPQL queries
-  - **Schema Management**: Automatic schema generation and migration support
+  - **Schema Management**: Hibernate validates schema on startup (`ddl-auto: validate`); schema is managed by Liquibase
 - **Team Members**: iatopchu, inikulin
 
 **4. Custom-made design system with reusable components, including a proper color palette, typography, and icons (minimum: 10 reusable components)**
@@ -671,20 +636,15 @@ messaging schema:
 - **Description**: Custom-made design system with reusable components, including a proper color palette, typography, and icons (minimum: 10 reusable components)
 - **Justification**: A custom design system ensures visual consistency across the application, improves development efficiency through reusable components, and creates a cohesive user experience. It establishes design standards that scale with the project.
 - **Implementation**:
-  - **Color Palette**: Comprehensive color system with primary, secondary, accent, and neutral colors
-  - **Typography**: Consistent font family, sizes, weights, and line heights for headings and body text
-  - **Icon System**: Custom icon set using SVG icons for scalability and performance
-  - **Reusable Components** (10+):
-    - Button components (primary, secondary, outline variants)
-    - Input components (text, email, password with validation)
-    - Card components for content display
-    - Modal/Dialog components
-    - Navigation components (header, sidebar, breadcrumbs)
-    - Form components with validation
-    - Badge/Tag components
-    - Avatar components
-    - Loading/Spinner components
-    - Alert/Notification components
+  - **Color Palette**: Custom CSS variables for primary, secondary, accent, muted, and neutral colors (light/dark modes)
+  - **Typography**: Geist Sans (UI text) and Instrument Serif (display) with defined weights
+  - **Icon System**: lucide-react icon library
+  - **Component Library**: shadcn/ui components (Radix UI primitives) with custom theme applied, included in source code (10+):
+    - Button, Input, Textarea, Select, Checkbox
+    - Card, Badge, Avatar
+    - Dialog, Alert Dialog, Drawer, Sheet
+    - Navigation, Sidebar, Breadcrumb
+    - Form with validation, Toast/Sonner notifications
   - **Design Tokens**: Centralized design variables for consistency
   - **Component Documentation**: Usage guidelines and examples
 - **Team Members**: mkulikov, dbisko
@@ -695,26 +655,14 @@ messaging schema:
 - **Description**: Implement advanced search functionality with filters, sorting, and pagination
 - **Justification**: Advanced search capabilities are essential for users to efficiently find relevant content in large datasets. Filters, sorting, and pagination improve user experience by allowing precise control over search results and manageable data presentation.
 - **Implementation**:
-  - **Search Functionality**: Full-text search across opinions, users, and subjects
-  - **Filter System**: Multiple filter criteria including:
-    - Content type filters (opinions, users, subjects)
-    - Date range filters
-    - Status filters (draft, published, archived)
-    - Category filters
-    - User relationship filters (friends, network)
-  - **Sorting Options**: Multiple sort orders including:
-    - Relevance score
-    - Date (newest/oldest)
-    - Popularity (most viewed/most referenced)
-    - Rating/quality score
-  - **Pagination**: Efficient pagination with:
-    - Configurable page sizes
-    - Page navigation controls
-    - Total result count display
-    - Cursor-based pagination for large datasets
-  - **Backend Implementation**: Spring Data JPA specifications for complex queries
-  - **Frontend Integration**: React components for search interface, filter controls, and result display
-  - **Performance Optimization**: Database indexing for search fields, query optimization
+  - **Search**: User search by name and status
+  - **Filter System**:
+    - Opinions: filter by subject, opinion list, status, and date (`since`)
+    - Access requests: filter by list, status, and time
+  - **Sorting**: Configurable sort by property with ASC/DESC direction
+  - **Pagination**: Page-based pagination with configurable page size
+  - **Backend**: Custom `@Query` JPQL queries in Spring Data repositories
+  - **Frontend**: React components for search interface, filter controls, and result display
 - **Team Members**: inikulin
 
 **6. Avatar upload and management**
@@ -726,7 +674,7 @@ messaging schema:
   - **Supported Types**: JPEG, PNG, WebP
   - **Client-side Validation**: file type and size validation before upload
   - **Server-side Validation**: MIME type verification, size and dimension limits
-  - **Secure Storage**: access control based on user identity, stored under `deployment/avatars/`
+  - **Secure Storage**: access control based on user identity, stored under `/var/lib/r8n/uploads/avatars`
   - **File Management**: replace or delete current avatar
   - **Backend**: Spring Boot multipart file handling in `users-sv`
   - **Frontend**: React avatar upload component with preview
@@ -738,32 +686,16 @@ messaging schema:
 - **Description**: Allow users to request their data, delete their account with confirmation, and export user data in JSON format
 - **Justification**: GDPR compliance is essential for any platform handling user data, especially in European markets. These features demonstrate commitment to data protection, user privacy rights, and legal compliance, building trust with users and avoiding regulatory penalties.
 - **Implementation**:
-  - **Data Request System**:
-    - User data request interface
-    - Data collection from all services
-    - Data compilation and formatting
-    - Request status tracking
-  - **Data Deletion**:
-    - Account deletion functionality
-    - Confirmation by entering email address in the UI
-    - Data removal from all services
   - **Data Export**:
-    - Export user data in JSON format
-    - Comprehensive data export including profiles, opinions, relationships
-    - Structured data organization
-    - Download functionality with expiration
-  - **Compliance Features**:
-    - Data processing records
-    - Consent management
-    - Data retention policies
-    - Right to be forgotten implementation
-  - **Security**:
-    - Secure data handling and storage
-    - Encrypted data exports
-    - Access logging for data operations
-    - Verification of data ownership
-  - **Backend**: Migration service for data export/import, User service for data management
-  - **Frontend**: React components for data requests, deletion confirmation, export interface
+    - Async export: request generation → check status (PENDING/READY) → download JSON
+    - Exported data includes: profile (PII), opinions, access requests (incoming/outgoing), messages, consents, account status
+    - Data import from previously exported JSON
+  - **Data Deletion**:
+    - Account deletion with confirmation by entering email address in the UI
+    - Data removal across all services
+  - **Consent Tracking**: User consents stored and included in data export
+  - **Backend**: Migration service for export/import, User service for account deletion
+  - **Frontend**: React components for export request, status polling, and deletion confirmation
 - **Team Members**: lshapkin, inikulin
 
 
