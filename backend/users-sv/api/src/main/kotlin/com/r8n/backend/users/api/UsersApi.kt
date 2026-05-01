@@ -74,7 +74,12 @@ interface UsersApi {
     ): UserProfileDto
 
     @GetMapping(USER_SEARCH_PATH)
+    @Operation(
+        summary = "Search users",
+        description = "Returns a list of users matching the search query.",
+    )
     fun searchUsers(
+        @Parameter(description = "Search query string.")
         @RequestParam
         query: String,
     ): List<UserSearchResultDto>
