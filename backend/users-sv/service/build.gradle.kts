@@ -13,4 +13,7 @@ dependencies {
     implementation(project(":opinions-api"))
     implementation(project(":opinions-api-integration"))
     implementation(project(":opinions-client"))
+    implementation(project(":messaging-api"))
+    implementation(project(":messaging-api-integration"))
+    implementation(project(":messaging-client"))
 }

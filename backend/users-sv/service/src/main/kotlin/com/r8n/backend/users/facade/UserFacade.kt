@@ -7,6 +7,7 @@ import com.r8n.backend.users.api.dto.UserProfileDto
 import com.r8n.backend.users.api.dto.UserSearchResultDto
 import com.r8n.backend.users.api.dto.UserStatusEnumDto
 import com.r8n.backend.users.api.dto.UserWithRolesDto
+import com.r8n.backend.users.api.dto.UsernameAndEmailDto
 import com.r8n.backend.users.api.dto.UsernameDto
 import com.r8n.backend.users.domain.Consent
 import com.r8n.backend.users.domain.UserProfile
@@ -33,10 +34,22 @@ class UserFacade(
 ) {
     fun getMyName(userId: UUID): UsernameDto = userService.getMyName(userId).toDto()
 
+    fun getMyEmail(userId: UUID): String = userService.getMyName(userId).email
+
+    fun getMyUsernameAndEmail(userId: UUID): UsernameAndEmailDto = userService.getMyName(userId).toUsernameAndEmailDto()
+
     private fun Username.toDto() =
         UsernameDto(
             id,
             name,
+            roles.mapNotNull { roleStr -> runCatching { RoleEnumDto.valueOf(roleStr) }.getOrNull() },
+        )
+
+    private fun Username.toUsernameAndEmailDto() =
+        UsernameAndEmailDto(
+            id,
+            name,
+            email,
             roles.mapNotNull { roleStr -> runCatching { RoleEnumDto.valueOf(roleStr) }.getOrNull() },
         )
 

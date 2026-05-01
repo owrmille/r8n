@@ -19,7 +19,7 @@ test("sidebar and quick actions navigate through key routes without browser cons
   await page.getByRole("link", { name: /open .*profile/i }).click();
   await expect(page).toHaveURL(/\/profile$/);
 
-  await page.getByRole("link", { name: "Settings" }).click();
+  await page.getByRole("link", { name: "Settings" }).first().click();
   await expect(page).toHaveURL(/\/settings$/);
 
   await page.getByRole("link", { name: "Write Review" }).click();

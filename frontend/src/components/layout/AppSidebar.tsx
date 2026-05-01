@@ -1,4 +1,4 @@
-import { Home, Search, List, Bell, PenLine, ListPlus, LogOut, ShieldCheck, MessageSquare, Users } from "lucide-react";
+import { Home, Search, List, Bell, PenLine, ListPlus, LogOut, ShieldCheck, MessageSquare, Settings, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { NavLink } from "@/components/NavLink";
@@ -140,15 +140,26 @@ export function AppSidebar() {
                   </NavLink>
                 </SidebarMenuButton>
                 {!collapsed && (
-                  <button
-                    onClick={() => logoutMutation.mutate()}
-                    disabled={logoutMutation.isPending}
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-muted-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground disabled:opacity-50"
-                    title="Log out"
-                    aria-label="Log out"
-                  >
-                    <LogOut className="h-4 w-4" />
-                  </button>
+                  <>
+                    <NavLink
+                      to="/settings"
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-muted-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                      activeClassName="bg-sidebar-accent text-sidebar-foreground"
+                      title="Settings"
+                      aria-label="Settings"
+                    >
+                      <Settings className="h-4 w-4" />
+                    </NavLink>
+                    <button
+                      onClick={() => logoutMutation.mutate()}
+                      disabled={logoutMutation.isPending}
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-muted-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground disabled:opacity-50"
+                      title="Log out"
+                      aria-label="Log out"
+                    >
+                      <LogOut className="h-4 w-4" />
+                    </button>
+                  </>
                 )}
               </SidebarMenuItem>
             </SidebarMenu>

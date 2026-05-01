@@ -26,7 +26,7 @@ export interface OpinionListSummaryDto {
 }
 
 export interface OpinionListDto {
-  id: Uuid;
+  id: Uuid | null;
   listName: string;
   opinionSummaries: OpinionSummaryDto[];
   owner: Uuid;

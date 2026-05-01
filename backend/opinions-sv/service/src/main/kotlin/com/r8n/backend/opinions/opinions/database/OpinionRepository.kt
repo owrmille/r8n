@@ -26,6 +26,10 @@ interface OpinionRepository : JpaRepository<OpinionPersistence, UUID> {
         owner: UUID,
     ): Boolean
 
+    fun findAllByOwner(owner: UUID): List<OpinionPersistence>
+
+    fun deleteAllByOwner(owner: UUID)
+
     @Query("SELECT o.id FROM OpinionPersistence o WHERE o.subject IN :subjectIds")
     fun findIdsBySubjectIn(
         @Param("subjectIds") subjectIds: Collection<UUID>,
