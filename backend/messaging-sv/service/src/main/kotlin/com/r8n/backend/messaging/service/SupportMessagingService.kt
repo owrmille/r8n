@@ -233,6 +233,14 @@ class SupportMessagingService(
         return thread
     }
 
+    @Transactional
+    fun deleteAllUserDataForUser(userId: UUID) {
+        // Delete all support threads owned by the user
+        // This will cascade to delete messages due to foreign key constraints
+        val userThreads = supportThreadRepository.findAllByOwnerUserId(userId)
+        supportThreadRepository.deleteAll(userThreads)
+    }
+
     private fun SupportActor.readsAsSupportTeam(thread: SupportThreadPersistence): Boolean =
         readsAsSupportTeam(thread.ownerUserId)
 

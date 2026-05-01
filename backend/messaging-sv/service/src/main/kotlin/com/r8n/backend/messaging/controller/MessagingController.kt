@@ -14,6 +14,7 @@ import com.r8n.backend.messaging.api.dto.messaging.SupportThreadSummaryDto
 import com.r8n.backend.messaging.api.dto.messaging.UnreadMessagesCountDto
 import com.r8n.backend.messaging.facade.DirectMessagingFacade
 import com.r8n.backend.messaging.facade.SupportMessagingFacade
+import com.r8n.backend.messaging.integration.api.MessagingInternalApi
 import com.r8n.backend.messaging.persistence.MessageAuthorRoleEnumPersistence
 import com.r8n.backend.messaging.persistence.SupportParticipantRoleEnumPersistence
 import com.r8n.backend.messaging.service.DirectActor
@@ -30,7 +31,8 @@ import java.util.UUID
 class MessagingController(
     private val directMessagingFacade: DirectMessagingFacade,
     private val supportMessagingFacade: SupportMessagingFacade,
-) : MessagingApi {
+) : MessagingApi,
+    MessagingInternalApi {
     @PreAuthorize(IS_EXPLICIT_USER_OR_MODERATOR_OR_SUPPORT_OR_ADMIN)
     override fun getUnreadMessagesCount(): UnreadMessagesCountDto {
         val directActor = getDirectActor()
@@ -93,6 +95,11 @@ class MessagingController(
         threadId: UUID,
         request: CreateSupportMessageRequestDto,
     ): SupportMessageDto = supportMessagingFacade.addSupportThreadMessage(getSupportActor(), threadId, request)
+
+    @PreAuthorize(Authority.IS_SERVICE)
+    override fun deleteAllUserDataForUser(userId: UUID) {
+        supportMessagingFacade.deleteAllUserDataForUser(userId)
+    }
 
     private fun getSupportActor(): SupportActor {
         val isSupport =

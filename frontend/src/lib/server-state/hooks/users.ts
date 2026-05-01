@@ -16,6 +16,7 @@ import type {
   UserProfileDto,
   UserSearchResultDto,
   UserWithRolesDto,
+  UsernameAndEmailDto,
 } from "@/lib/api/users";
 import { usersKeys } from "@/lib/server-state/query-keys";
 import type { ApiErrorMeta } from "@/lib/server-state/query-client";
@@ -24,7 +25,7 @@ import type { Uuid } from "@/lib/api/shared";
 export function useMe() {
   return useAuthorizedQuery({
     queryKey: usersKeys.me(),
-    queryFn: () => usersApi.getMe(),
+    queryFn: () => usersApi.getMyUsernameAndEmail(),
   });
 }
 

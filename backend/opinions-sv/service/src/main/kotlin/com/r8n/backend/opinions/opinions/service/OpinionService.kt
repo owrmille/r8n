@@ -120,6 +120,11 @@ class OpinionService(
     }
 
     @Transactional
+    fun deleteAllOpinionsForUser(userId: UUID) {
+        opinionRepository.deleteAllByOwner(userId)
+    }
+
+    @Transactional
     fun submitOpinionForModeration(
         opinionId: UUID,
         requesterId: UUID,

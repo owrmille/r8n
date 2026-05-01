@@ -77,6 +77,10 @@ class OpinionListFacade(
             .map { opinionListMapper.toDto(it) }
             .toResponse()
 
+    fun deleteAllUserDataForUser(userId: UUID) {
+        opinionListService.deleteAllUserDataForUser(userId)
+    }
+
     fun search(
         requesterId: UUID,
         filters: OpinionListSearchFiltersDto,

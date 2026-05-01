@@ -110,9 +110,12 @@ class UserService(
     }
 
     fun getMyName(userId: UUID): Username {
+        val pii =
+            piiRepository.findByIdOrNull(userId)
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "PII for user $userId not found")
         val dbRoles = userRoleAssignmentRepository.findAllByUser(userId).map { it.role.name }
         val roles = (listOf("USER") + dbRoles).distinct()
-        return Username(userId, getName(userId), roles)
+        return Username(userId, pii.name, pii.email, roles)
     }
 
     fun listUsersWithRoles(): List<UserWithRoles> =

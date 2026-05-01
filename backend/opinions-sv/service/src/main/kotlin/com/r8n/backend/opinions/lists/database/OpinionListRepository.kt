@@ -20,6 +20,13 @@ interface OpinionListRepository : JpaRepository<OpinionListPersistence, UUID> {
         pageable: Pageable,
     ): Page<OpinionListPersistence>
 
+    fun findAllByOwner(owner: UUID): List<OpinionListPersistence>
+
+    fun findByNameContainingIgnoreCase(
+        name: String,
+        pageable: Pageable,
+    ): Page<OpinionListPersistence>
+
     @Query(
         """
         SELECT ol.id FROM OpinionListPersistence ol

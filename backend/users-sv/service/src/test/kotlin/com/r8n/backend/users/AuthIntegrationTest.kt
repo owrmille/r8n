@@ -2,7 +2,7 @@ package com.r8n.backend.users
 
 import com.r8n.backend.opinions.api.access.IncomingAccessRequestApi
 import com.r8n.backend.opinions.api.access.OutgoingAccessRequestApi
-import com.r8n.backend.opinions.integration.api.OpinionListsInternalApi
+import com.r8n.backend.opinions.integration.api.OpinionListsDeletionInternalApi
 import com.r8n.backend.users.api.AuthApi.Companion.REFRESH_TOKEN_COOKIE_NAME
 import com.r8n.backend.users.api.dto.LoginRequestDto
 import com.r8n.backend.users.api.dto.RegisterRequestDto
@@ -58,7 +58,7 @@ private data class LoginSessionAudit(
     types = [
         IncomingAccessRequestApi::class,
         OutgoingAccessRequestApi::class,
-        OpinionListsInternalApi::class,
+        OpinionListsDeletionInternalApi::class,
     ],
 )
 class AuthIntegrationTest {

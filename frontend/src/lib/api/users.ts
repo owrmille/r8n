@@ -7,6 +7,12 @@ export type RoleDto = "USER" | "MODERATOR" | "SUPPORT" | "ADMIN";
 export interface UsernameDto {
   id: Uuid;
   name: string;
+}
+
+export interface UsernameAndEmailDto {
+  id: Uuid;
+  name: string;
+  email: string;
   roles: RoleDto[];
 }
 
@@ -35,6 +41,10 @@ export interface UploadMyAvatarRequestDto {
   file: File;
 }
 
+export interface AccountDeletionRequestDto {
+  email: string;
+}
+
 export interface UpdateMyPublicProfileRequestDto {
   about: string | null;
   location: string | null;
@@ -55,6 +65,14 @@ export function createUsersApi(client: HttpClient = httpClient) {
   return {
     getMe(): Promise<UsernameDto> {
       return client.get<UsernameDto>("/users/me", { auth: "required" });
+    },
+
+    getMyEmail(): Promise<string> {
+      return client.get<string>("/users/me/email", { auth: "required" });
+    },
+
+    getMyUsernameAndEmail(): Promise<UsernameAndEmailDto> {
+      return client.get<UsernameAndEmailDto>("/users/me/username-and-email", { auth: "required" });
     },
 
     getUser(id: Uuid): Promise<UserProfileDto> {
@@ -98,6 +116,13 @@ export function createUsersApi(client: HttpClient = httpClient) {
 
     deleteMyAvatar(): Promise<void> {
       return client.delete<void>("/users/me/avatar", { auth: "required" });
+    },
+
+    requestAccountDeletion(request: AccountDeletionRequestDto): Promise<void> {
+      return client.post<void, AccountDeletionRequestDto>("/users/me/delete", {
+        auth: "required",
+        body: request,
+      });
     },
 
     listUsersWithRoles(): Promise<UserWithRolesDto[]> {

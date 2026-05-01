@@ -1,10 +1,12 @@
 package com.r8n.backend.users.api
 
+import com.r8n.backend.users.api.dto.AccountDeletionRequestDto
 import com.r8n.backend.users.api.dto.AssignRoleRequestDto
 import com.r8n.backend.users.api.dto.UpdateMyPublicProfileRequestDto
 import com.r8n.backend.users.api.dto.UserProfileDto
 import com.r8n.backend.users.api.dto.UserSearchResultDto
 import com.r8n.backend.users.api.dto.UserWithRolesDto
+import com.r8n.backend.users.api.dto.UsernameAndEmailDto
 import com.r8n.backend.users.api.dto.UsernameDto
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -32,6 +34,7 @@ interface UsersApi {
         const val MY_PUBLIC_PROFILE_PATH = "$ME_PATH/public-profile"
         const val MY_AVATAR_PATH = "$ME_PATH/avatar"
         const val USER_AVATAR_PATH = "$USER_PATH/avatar"
+        const val DELETE_ACCOUNT_PATH = "$ME_PATH/delete"
         private const val ADMIN_ROOT_PATH = "/api/admin/users"
         const val ADMIN_USERS_PATH = ADMIN_ROOT_PATH
         const val ADMIN_USER_ROLES_PATH = "$ADMIN_ROOT_PATH/{userId}/roles"
@@ -44,6 +47,20 @@ interface UsersApi {
         description = "Returns the display username for the authenticated user.",
     )
     fun getMyName(): UsernameDto
+
+    @GetMapping("$ME_PATH/email")
+    @Operation(
+        summary = "Get my email",
+        description = "Returns the email address for the authenticated user.",
+    )
+    fun getMyEmail(): String
+
+    @GetMapping("$ME_PATH/username-and-email")
+    @Operation(
+        summary = "Get my username and email",
+        description = "Returns the username and email address for the authenticated user.",
+    )
+    fun getMyUsernameAndEmail(): UsernameAndEmailDto
 
     @GetMapping(USER_PATH)
     @Operation(
@@ -103,6 +120,18 @@ interface UsersApi {
         description = "Removes the authenticated user's stored avatar image.",
     )
     fun deleteMyAvatar(): ResponseEntity<Void>
+
+    @PostMapping(DELETE_ACCOUNT_PATH)
+    @Operation(
+        summary = "Delete my account",
+        description =
+            "Permanently deletes the authenticated user's account after email confirmation " +
+                "and removes associated user data from downstream services.",
+    )
+    fun requestAccountDeletion(
+        @RequestBody
+        request: AccountDeletionRequestDto,
+    ): ResponseEntity<Void>
 
     @GetMapping(ADMIN_USERS_PATH)
     @Operation(

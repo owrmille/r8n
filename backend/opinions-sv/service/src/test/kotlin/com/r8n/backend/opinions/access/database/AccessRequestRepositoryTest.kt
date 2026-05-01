@@ -5,7 +5,10 @@ import com.r8n.backend.opinions.access.persistence.AccessRequestPersistence
 import com.r8n.backend.opinions.lists.database.OpinionListRepository
 import com.r8n.backend.opinions.lists.domain.OpinionListPrivacyEnum
 import com.r8n.backend.opinions.lists.persistence.OpinionListPersistence
+import com.r8n.backend.opinions.lists.service.OpinionListService
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -40,6 +43,9 @@ class AccessRequestRepositoryTest {
 
     @Autowired
     lateinit var opinionListRepository: OpinionListRepository
+
+    @Autowired
+    lateinit var opinionListService: OpinionListService
 
     @Test
     fun `findAllByFilters filters by ownerId correctly`() {
@@ -138,5 +144,66 @@ class AccessRequestRepositoryTest {
 
         assertEquals(1, requests.totalElements)
         assertEquals(newerRequest.id, requests.content.single().id)
+    }
+
+    @Test
+    fun `deleteAllUserDataForUser removes requests made by user and requests for owned lists`() {
+        val owner = UUID.randomUUID()
+        val requester = UUID.randomUUID()
+        val otherOwner = UUID.randomUUID()
+
+        val ownedList =
+            opinionListRepository.save(
+                OpinionListPersistence(
+                    owner = owner,
+                    name = "Owned list",
+                    privacy = OpinionListPrivacyEnum.SEARCHABLE,
+                ),
+            )
+        val otherList =
+            opinionListRepository.save(
+                OpinionListPersistence(
+                    owner = otherOwner,
+                    name = "Other list",
+                    privacy = OpinionListPrivacyEnum.SEARCHABLE,
+                ),
+            )
+
+        val requestForOwnedList =
+            repository.save(
+                AccessRequestPersistence(
+                    list = ownedList.id!!,
+                    requester = requester,
+                    status = RequestStatusEnum.SENT,
+                    createdAt = Instant.now(),
+                    updatedAt = Instant.now(),
+                ),
+            )
+        val requestByDeletedUser =
+            repository.save(
+                AccessRequestPersistence(
+                    list = otherList.id!!,
+                    requester = owner,
+                    status = RequestStatusEnum.SENT,
+                    createdAt = Instant.now(),
+                    updatedAt = Instant.now(),
+                ),
+            )
+        val unrelatedRequest =
+            repository.save(
+                AccessRequestPersistence(
+                    list = otherList.id!!,
+                    requester = requester,
+                    status = RequestStatusEnum.SENT,
+                    createdAt = Instant.now(),
+                    updatedAt = Instant.now(),
+                ),
+            )
+
+        opinionListService.deleteAllUserDataForUser(owner)
+
+        assertFalse(repository.findById(requestForOwnedList.id!!).isPresent)
+        assertFalse(repository.findById(requestByDeletedUser.id!!).isPresent)
+        assertTrue(repository.findById(unrelatedRequest.id!!).isPresent)
     }
 }
