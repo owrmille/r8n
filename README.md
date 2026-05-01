@@ -275,10 +275,9 @@ AI was used throughout the development process as an active coding assistant, no
 - Container registry: Local Registry
 
 ### Branch Strategy
-- Main branch: `master` (production-ready)
-- Development branch: `develop` (integration)
-- Feature branches: `feature/[feature-name]` (individual features)
-- PR-based workflow with code reviews
+- Main branch: `master`
+- Feature branches: created per GitHub issue, named `<issue-number>-<short-description>`
+- Workflow: create issue → branch → implement → open PR → code review → merge to master
 
 ## Technical Stack
 
