@@ -14,15 +14,15 @@ _This project has been created as part of the 42 curriculum by dbisko, iatopchu,
 - Demonstrate microservices architecture patterns
 - Implement API-first design methodology
 - Create a feature-rich, interactive web application
-- Apply modern development practices (CI/CD, containerization, feature-sliced frontend)
+- Apply modern development practices (CI/CD, containerization, component-organized frontend)
 - Fulfill 42 curriculum requirements for web development
 
 ### Key Features
-- **Multi-service Backend**: Gateway, Opinions, Users, Export, and Mock services with clear separation of concerns
+- **Multi-service Backend**: Gateway, Opinions, Users, Messaging, Migration, and Mock services with clear separation of concerns
 - **API-First Design**: Separate API contracts from implementation for clear service boundaries
 - **Secure Communication**: TLS/SSL encryption between services
 - **Database Management**: PostgreSQL with isolated schemas per service
-- **Modern Frontend**: Feature-Sliced Design (FSD) React application with TypeScript
+- **Modern Frontend**: React application with TypeScript, TanStack Query for server state
 - **Containerized Deployment**: Docker Compose setup for easy local development and production
 - **Developer Experience**: Makefile targets for common operations, IDE setup guides
 
@@ -97,7 +97,7 @@ make docker-up
 ```
 
 **Access:**
-- Frontend: https://localhost:5173
+- Frontend: https://localhost (Nginx on port 443)
 - Gateway API: https://localhost:8080
 - Other services: Internal only (HTTPS)
 
@@ -127,11 +127,11 @@ Use the make rules to test API endpoints (documented in Make Commands Reference 
 ### Make Commands Reference
 
 **Service Management:**
-- `make local-run-all` - Start all services locally
+- `make local-run-all` - Start all backend services locally (opinions, users, messaging, migration, mock, gateway)
 - `make local-stop-all` - Stop all services
 - `make docker-up` - Build and start all containers
 - `make docker-down` - Stop and remove containers
-- `make build-opinions` - Build the opinions service
+- `make build-<service>` - Rebuild a single Docker service (e.g. `make build-opinions`)
 
 **Database:**
 - `make docker-database-run` - Start only the database
@@ -150,7 +150,7 @@ Use the make rules to test API endpoints (documented in Make Commands Reference 
 - [Docker Documentation](https://docs.docker.com/)
 
 ### Tutorials & Guides
-- [Feature-Sliced Design (FSD) Architecture](https://feature-sliced.design/)
+- [TanStack Query Documentation](https://tanstack.com/query/latest)
 - [API-First Design Pattern](https://swagger.io/resources/articles/adopting-an-api-first-approach/)
 - [Microservices Patterns](https://microservices.io/patterns/)
 
@@ -172,7 +172,7 @@ Use the make rules to test API endpoints (documented in Make Commands Reference 
 
 **Human work:**
 - Core backend implementation (Kotlin + Spring Boot microservices)
-- Frontend implementation (React + TypeScript with FSD architecture)
+- Frontend implementation (React + TypeScript)
 - Database design and schema implementation
 - Git repository management
 - Build system configuration (Gradle, Make)
@@ -194,7 +194,7 @@ Use the make rules to test API endpoints (documented in Make Commands Reference 
 
 **Frontend Team:**
 - **mkulikov** - Frontend Lead, UI/UX Developer
-  - Frontend architecture (FSD), React development, design system
+  - Frontend architecture, React development, design system
 - **dbisko** - Frontend Developer
   - React component development, API integration
 
@@ -207,7 +207,7 @@ Use the make rules to test API endpoints (documented in Make Commands Reference 
 - Individual ownership of services (Gateway, Opinions, Frontend)
 
 **Meeting Structure:**
-- Weekly team meetings for progress review
+- Ad-hoc sync sessions as needed
 - Technical review sessions for architecture decisions
 
 ### Tools Used
@@ -215,7 +215,6 @@ Use the make rules to test API endpoints (documented in Make Commands Reference 
 **Project Management:**
 - GitHub repository for version control
 - GitHub Issues for task tracking
-- Project Management Tool: GitHub Issues
 
 **Communication:**
 - Primary channel: Slack
@@ -238,9 +237,9 @@ Use the make rules to test API endpoints (documented in Make Commands Reference 
 ### Backend Technologies
 
 **Language & Framework:**
-- **Kotlin** (primary language) - Modern, concise, null-safe
-- **Spring Boot 3.x** - Microservice framework
-- **Gradle with Kotlin DSL** - Build automation
+- **Kotlin 2.2.21** - Modern, concise, null-safe
+- **Spring Boot 4.0.4** - Microservice framework
+- **Gradle 9.3.0 with Kotlin DSL** - Build automation
 
 **Justification:**
 - Kotlin provides excellent interop with Java ecosystem
@@ -260,7 +259,7 @@ Use the make rules to test API endpoints (documented in Make Commands Reference 
 
 **Security:**
 - **TLS 1.2+** - Transport layer encryption
-- **JWT tokens** - Authorization
+- **JWT tokens** - Authentication
 - **Spring Security** - Security framework
 
 **Communication:**
@@ -271,24 +270,22 @@ Use the make rules to test API endpoints (documented in Make Commands Reference 
 ### Frontend Technologies
 
 **Language & Framework:**
-- **TypeScript** - Type-safe JavaScript
-- **React 18** - Component library
-- **Vite** - Build tool and dev server
-- **Feature-Sliced Design (FSD)** - Architecture pattern
+- **TypeScript 5.8.3** - Type-safe JavaScript
+- **React 18.3.1** - Component library
+- **Vite 8.0.1** - Build tool and dev server
 
 **Justification:**
 - TypeScript catches errors at compile time
 - React provides excellent ecosystem and performance
 - Vite offers fast HMR and optimized builds
-- FSD provides scalable frontend architecture
 
 **Styling:**
 - **Custom CSS/SASS** - Design system implementation
-- **Component-based styling** - Scoped to FSD structure
+- **Component-scoped styling**
 
 **State Management:**
 - **React hooks** - Local component state
-- **Context API** (if needed) - Cross-component state
+- **TanStack Query 5** - Server state, caching, and data fetching
 
 ### Infrastructure & DevOps
 
@@ -313,62 +310,63 @@ Use the make rules to test API endpoints (documented in Make Commands Reference 
 
 ### PostgreSQL Structure
 
-```sql
-r8n_database/
-└── opinions (schema)
-    ├── opinions (table)
-    │   ├── id (uuid)
-    │   ├── title (varchar)
-    │   ├── content (text)
-    │   ├── status (enum)
-    │   ├── created_at (timestamp)
-    │   └── updated_at (timestamp)
-    │
-    ├── opinion_subjects (table)
-    │   ├── id (uuid)
-    │   ├── name (varchar)
-    │   └── description (text)
-    │
-    ├── referents (table)
-    │   ├── id (uuid)
-    │   ├── type (enum)
-    │   └── value (jsonb)
-    │
-    ├── opinion_notes (table)
-    │   ├── id (uuid)
-    │   ├── opinion_id (uuid, fk)
-    │   ├── content (text)
-    │   └── created_at (timestamp)
-    │
-    └── weighted_opinion_references (table)
-        ├── id (uuid)
-        ├── opinion_id (uuid, fk)
-        ├── referent_id (uuid, fk)
-        └── weight (decimal)
+Database: `r8n`, three schemas:
+
+```
+opinions schema:
+  opinions                    (id uuid PK, owner uuid, subject uuid→subjects, mark double, status varchar, timestamp timestamptz)
+  subjects                    (id uuid PK, name varchar, referent uuid→referents)
+  referents                   (id uuid PK, name varchar, address text, latitude double, longitude double, referent_group uuid)
+  opinion_notes               (id uuid PK, opinion_id uuid→opinions, type varchar, description text)
+  weighted_opinion_references (id uuid PK, parent_opinion uuid→opinions, child_opinion uuid→opinions, weight double)
+
+users schema:
+  users                 (id uuid PK, status varchar, status_timestamp timestamptz, password_hash varchar)
+  pii                   (user_id uuid PK→users, name varchar, email varchar, phone varchar)
+  sessions              (id uuid PK, user_id uuid→users, created timestamptz, expires timestamptz, ip varchar, user_agent text)
+  consents              (id uuid PK, user_id uuid→users, type varchar, accepted timestamptz, session uuid→sessions)
+  users_role_assignments (id uuid PK, user uuid→users, role varchar, granted_by uuid→users, timestamp timestamptz)
+  refresh_tokens        (id uuid PK, token_id uuid, user_id uuid→users, parent_id uuid, issued_at timestamptz, expires_at timestamptz, revoked boolean, used boolean)
+
+messaging schema:
+  support_threads            (id uuid PK, owner_user_id uuid)
+  support_messages           (id uuid PK, thread_id uuid→support_threads, author_user_id uuid, author_role varchar, text text, created_at timestamptz)
+  conversations              (id uuid PK, type varchar, created_by_user_id uuid, created_at timestamptz, last_message_at timestamptz)
+  conversation_participants  (id uuid PK, conversation_id uuid→conversations, user_id uuid, participant_role varchar, joined_at timestamptz, archived_at timestamptz, last_read_at timestamptz)
 ```
 
 ### Relationships
 
-- **opinions** → **opinion_notes**: One-to-Many (one opinion has many notes)
-- **opinions** → **weighted_opinion_references**: Many-to-Many via join table
-- **referents** → **weighted_opinion_references**: Many-to-Many via join table
-- **opinion_subjects** → **opinions**: Many-to-Many (future extension)
+**opinions schema:**
+- **opinions** → **subjects**: Many-to-One (each opinion has one subject)
+- **subjects** → **referents**: Many-to-One (each subject links to one referent — e.g. a restaurant)
+- **opinions** → **opinion_notes**: One-to-Many
+- **opinions** → **weighted_opinion_references**: One-to-Many (as parent and as child — opinions reference other opinions with a weight)
+
+**users schema:**
+- **users** → **pii**: One-to-One
+- **users** → **sessions**: One-to-Many
+- **users** → **refresh_tokens**: One-to-Many
+- **users** → **users_role_assignments**: One-to-Many
+
+**messaging schema:**
+- **support_threads** → **support_messages**: One-to-Many
+- **conversations** → **conversation_participants**: One-to-Many
 
 ### Index Strategy
-- Primary keys: UUID (time-ordered UUID v7)
-- Foreign key indexes on `opinion_id`, `referent_id`
-- Composite indexes on common query patterns
+- Primary keys: UUID v7 (`@UuidGenerator(style = VERSION_7)`)
+- Foreign key indexes on join columns
 
 ### Migration Management
-- Schema migrations via initialization scripts in `deployment/database/init/`
-- Manual migration approach (Liquibase available for future use)
+- Managed per-service via **Liquibase** (changelogs in `backend/<service>/service/src/main/resources/db/changelog/`)
+- Each service owns its own schema and migrations independently
 
 ## Features List
 
 ### Implemented Features
 
 **Authentication & Authorization:**
-- JWT token-based authentication (stub implementation)
+- JWT token-based authentication
 - Authorization header validation
 - Basic security middleware
 
@@ -395,21 +393,10 @@ r8n_database/
 - Docker HTTPS production mode
 
 **Frontend:**
-- Feature-Sliced Design React application
+- Component-organized React application
 - Responsive UI components
-- API integration layer
-- State management with React hooks
-
-### Distribution by Team Member
-
-**Backend Team:**
-- ✅ inikulin: Gateway service implementation, Opinions service core logic, Database schema design, API contract definitions
-- ✅ iatopchu: Backend service development, business logic
-- ✅ lshapkin: Backend service development, testing
-
-**Frontend Team:**
-- ✅ mkulikov: React application structure (FSD), UI component development, Frontend build configuration, API client integration
-- ✅ dbisko: React component development, API integration
+- API integration layer (per-domain functions in `lib/api/`)
+- Server state management with TanStack Query
 
 ## Modules
 
@@ -423,8 +410,8 @@ r8n_database/
 - **Description**: Use a frontend framework (React, Vue, Angular, Svelte, etc.) and a backend framework (Express, NestJS, Django, Flask, Ruby on Rails, etc.)
 - **Justification**: Frameworks provide structured, maintainable codebases with built-in best practices, reducing development time and ensuring consistency across the project. Using established frameworks allows the team to focus on business logic rather than reinventing the wheel.
 - **Implementation**:
-  - **Frontend**: React 18 with TypeScript, Vite as build tool, and Feature-Sliced Design (FSD) architecture pattern
-  - **Backend**: Spring Boot 3.x with Kotlin, using Spring Cloud Gateway for API routing and Spring Data JPA for database access
+  - **Frontend**: React 18.3.1 with TypeScript 5.8.3, Vite 8.0.1 as build tool
+  - **Backend**: Spring Boot 4.0.4 with Kotlin 2.2.21, using Spring Cloud Gateway for API routing and Spring Data JPA for database access
   - Both frameworks chosen for their strong ecosystems, type safety, and industry adoption
 - **Team Members**: All team members (dbisko, iatopchu, inikulin, lshapkin, mkulikov)
 
@@ -543,7 +530,8 @@ r8n_database/
     - Gateway Service: API routing, load balancing, authentication
     - Opinions Service: Core business logic for opinions management
     - Users Service: User management, authentication, profiles
-    - Export Service: Data export and reporting functionality
+    - Migration Service: Data export and import (GDPR data portability)
+    - Messaging Service: User messaging and thread management
     - Mock Service: Testing and development support
   - **Loose Coupling**:
     - Clear service boundaries with well-defined interfaces
@@ -586,10 +574,9 @@ r8n_database/
 - **Description**: Use a frontend framework (React, Vue, Angular, Svelte, etc.)
 - **Justification**: Frontend frameworks provide structured, component-based architecture that improves code maintainability, reusability, and developer experience. React was chosen for its large ecosystem, strong TypeScript support, and industry adoption.
 - **Implementation**:
-  - React 18 with TypeScript for type safety
-  - Vite as build tool for fast development and optimized production builds
-  - Feature-Sliced Design (FSD) architecture for scalable frontend structure
-  - Component-based UI with custom design system
+  - React 18.3.1 with TypeScript 5.8.3 for type safety
+  - Vite 8.0.1 as build tool for fast development and optimized production builds
+  - Component-organized structure with custom design system
 - **Team Members**: mkulikov, dbisko
 
 **2. Use a backend framework (Express, Fastify, NestJS, Django, etc.)**
@@ -598,11 +585,11 @@ r8n_database/
 - **Description**: Use a backend framework (Express, Fastify, NestJS, Django, etc.)
 - **Justification**: Backend frameworks provide robust foundations for building scalable, maintainable server-side applications with built-in patterns for routing, middleware, and database integration. Spring Boot was chosen for its comprehensive ecosystem, strong Kotlin support, and production-ready features.
 - **Implementation**:
-  - Spring Boot 3.x with Kotlin for backend services
+  - Spring Boot 4.0.4 with Kotlin 2.2.21 for backend services
   - Spring Cloud Gateway for API routing and load balancing
   - Spring Data JPA for database abstraction and ORM
   - Gradle with Kotlin DSL for build automation
-  - Microservices architecture with separate services (Gateway, Opinions, Users, Export)
+  - Microservices architecture with separate services (Gateway, Opinions, Users, Messaging, Migration, Mock)
 - **Team Members**: iatopchu, inikulin
 
 **3. Use an ORM for the database**
@@ -671,41 +658,19 @@ r8n_database/
   - **Performance Optimization**: Database indexing for search fields, query optimization
 - **Team Members**: inikulin
 
-**6. File upload and management system**
+**6. Avatar upload and management**
 
 - **Points**: 1 point (Minor module)
-- **Description**: Support multiple file types (images, documents, etc.), client-side and server-side validation (type, size, format), secure file storage with proper access control, file preview functionality where applicable, progress indicators for uploads, and ability to delete uploaded files
-- **Justification**: File upload capabilities are essential for rich content sharing, document management, and user-generated content. A robust file management system ensures security, performance, and good user experience for file operations.
+- **Description**: Support avatar uploads with client-side and server-side validation, secure storage with proper access control, and the ability to replace or delete the current avatar
+- **Justification**: Avatar upload is needed for profile personalization. Scope is intentionally narrow to reduce privacy and storage risk.
 - **Implementation**:
-  - **Multiple File Types**: Support for images (JPEG, PNG, GIF), documents (PDF, DOCX), and other common formats
-  - **Client-side Validation**: 
-    - File type validation before upload
-    - File size limits with user feedback
-    - Format validation using file signatures
-  - **Server-side Validation**:
-    - Comprehensive security checks on uploaded files
-    - Virus scanning integration
-    - File type verification using MIME types
-    - Size and dimension validation
-  - **Secure File Storage**:
-    - Encrypted storage for sensitive files
-    - Access control based on user permissions
-    - File ownership and sharing permissions
-    - Secure file URLs with expiration tokens
-  - **File Preview Functionality**:
-    - Image thumbnails and previews
-    - Document preview for supported formats
-    - Video/audio preview capabilities
-  - **Progress Indicators**:
-    - Real-time upload progress bars
-    - Upload speed and time remaining estimates
-    - Batch upload progress tracking
-  - **File Management**:
-    - Delete functionality with confirmation
-    - File organization and folder structure
-    - File metadata and versioning
-  - **Backend**: Spring Boot multipart file handling, storage service integration
-  - **Frontend**: React upload components with drag-and-drop support
+  - **Supported Types**: JPEG, PNG, WebP
+  - **Client-side Validation**: file type and size validation before upload
+  - **Server-side Validation**: MIME type verification, size and dimension limits
+  - **Secure Storage**: access control based on user identity, stored under `deployment/avatars/`
+  - **File Management**: replace or delete current avatar
+  - **Backend**: Spring Boot multipart file handling in `users-sv`
+  - **Frontend**: React avatar upload component with preview
 - **Team Members**: mkulikov
 
 **7. Support for additional browsers**
@@ -776,7 +741,7 @@ r8n_database/
     - Encrypted data exports
     - Access logging for data operations
     - Verification of data ownership
-  - **Backend**: Export service for data compilation, User service for data management, Email service for notifications
+  - **Backend**: Migration service for data export/import, User service for data management, Email service for notifications
   - **Frontend**: React components for data requests, deletion confirmation, export interface
 - **Team Members**: lshapkin, inikulin
 
@@ -851,14 +816,14 @@ r8n_database/
 - User experience optimization
 
 **Technical Contributions:**
-- **FSD Architecture**: Implemented Feature-Sliced Design structure
+- **Frontend Architecture**: Component-organized React application structure
 - **React Application**: Core component development
 - **Design System**: Custom reusable components (buttons, inputs, layouts)
 - **API Integration**: HTTP client setup and integration
 - **Styling**: CSS/SASS design system with color palette and typography
 
 **Key Challenges Overcome:**
-- Learned and implemented FSD architecture pattern
+- Designed component-organized frontend structure
 - Designed responsive component system
 - Integrated with backend microservices APIs
 - Managed TypeScript configuration and types
@@ -879,7 +844,7 @@ r8n_database/
 
 ### Known Limitations
 
-1. **Authentication**: Currently uses stub JWT tokens; production should implement OAuth 2.0
+1. **Authentication**: JWT-based; production should implement OAuth 2.0
 2. **Monitoring**: ELK stack and Prometheus/Grafana are planned but not fully implemented
 3. **File Upload**: Infrastructure ready but not yet implemented
 4. **i18n**: Planned but pending implementation

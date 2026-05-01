@@ -31,7 +31,7 @@ HTTP/HTTPS Configuration:
 ### Tech Stack
 
 - **Language**: Kotlin 2.2.21
-- **Framework**: Spring Boot 4.0.2
+- **Framework**: Spring Boot 4.0.4
 - **Build Tool**: Gradle 9.3.0 with Kotlin DSL
 - **Database**: PostgreSQL 15
 - **Security**: TLS 1.2+, JWT tokens (when SSL enabled)
@@ -45,38 +45,72 @@ The backend is organized as a Gradle multi-module project with the following str
 backend/
 ├── settings.gradle.kts          # Module definitions
 ├── build.gradle.kts             # Root build configuration
-├── platform/                     # Platform-wide configurations
-├── core/                         # Shared core modules
-│   ├── api/                      # Common API contracts (pagination, etc.)
-│   ├── security/                 # Security utilities
-│   └── utils/                    # Common utilities
+├── build-logic/                  # Gradle convention plugins
+├── platform/                     # Platform-wide BOM (dependency versions)
+├── core/                         # Shared libraries
+│   ├── api/                      # Common API types (pagination, etc.)
+│   ├── security/                 # Security abstractions
+│   ├── security-common/          # Shared security utilities
+│   ├── security-reactive/        # Reactive (WebFlux) security
+│   ├── security-servlet/         # Servlet security
+│   ├── utils/                    # Common utilities
+│   └── web/                      # Shared web config
 │
 ├── gateway-sv/                   # API Gateway Service
-│   └── service/                  # Gateway implementation
-│       └── src/main/kotlin/.../gateway/
-│           ├── GatewayApplication.kt
-│           └── config/           # Routing configuration
+│   └── service/
 │
 ├── opinions-sv/                  # Opinions Service
-│   ├── api/                      # API contracts & DTOs
-│   │   └── opinions/api/         # OpinionApi, DTOs
-│   └── service/                  # Business logic implementation
+│   ├── api/                      # Public API contracts & DTOs
+│   ├── api-integration/          # Internal contracts (for other services)
+│   ├── client/                   # REST clients for other services
+│   └── service/
 │       └── src/main/kotlin/.../opinions/
-│           ├── OpinionsApplication.kt
-│           ├── controller/       # REST controllers
-│           ├── facade/           # Business logic layer
-│           ├── persistence/      # Data persistence layer
-│           ├── provider/         # Data providers/repositories
-│           └── domain/           # Domain entities
+│           ├── access/           # Access control domain
+│           │   ├── controller/
+│           │   ├── database/
+│           │   ├── domain/
+│           │   ├── facade/
+│           │   ├── persistence/
+│           │   └── service/
+│           ├── lists/            # Opinion lists domain
+│           │   ├── controller/
+│           │   ├── controllerInternal/
+│           │   ├── database/
+│           │   ├── domain/
+│           │   ├── facade/
+│           │   ├── persistence/
+│           │   └── service/
+│           └── opinions/         # Core opinions domain
+│               ├── controller/
+│               ├── database/
+│               ├── domain/
+│               ├── facade/
+│               ├── persistence/
+│               └── service/
 │
-└── mock-sv/                      # Mock Service
+├── users-sv/                     # Users Service
+│   ├── api/                      # Public API contracts & DTOs
+│   ├── api-integration/          # Internal contracts
+│   ├── client/                   # REST clients
+│   └── service/
+│
+├── messaging-sv/                 # Messaging Service
+│   ├── api/                      # Public API contracts & DTOs
+│   ├── api-integration/          # Internal contracts
+│   ├── client/                   # REST clients
+│   └── service/
+│
+├── migration-sv/                 # Migration Service (GDPR export/import)
+│   ├── api/                      # Public API contracts & DTOs
+│   └── service/
+│
+└── mock-sv/                      # Mock/Support Service
     ├── api/                      # Mock API contracts
-    │   └── mock/api/             # Stub APIs
-    ├── client/                   # HTTP Clients (future use)
-    └── service/                  # Stub implementations
+    ├── api-integration/          # Internal contracts
+    ├── client/                   # HTTP clients
+    └── service/
         └── src/main/kotlin/.../mock/
-            ├── MockApplication.kt
-            ├── controller/       # Mock controllers (Stub*)
+            ├── controller/       # Stub controllers
             └── stub/             # Test data factories
 ```
 
@@ -86,7 +120,7 @@ backend/
 - **Local Port**: 8080 (HTTP)
 - **Docker Port**: 8080 (HTTPS with TLS)
 - **Role**: API Gateway, routing, TLS termination
-- **Routes requests to**: opinions-sv, mock-sv, users-sv, export-sv
+- **Routes requests to**: opinions-sv, users-sv, messaging-sv, migration-sv, mock-sv
 - **HTTP/HTTPS**: Configured via `SERVER_SSL_ENABLED` environment variable
   - Local: `false` (HTTP only)
   - Docker: `true` (HTTPS only)
@@ -117,12 +151,21 @@ backend/
 - **HTTP/HTTPS**: Uses `INTERSERVICE_PROTOCOL` (http=local, https=Docker)
 - **Packages**: `api/`, `api-integration/`, `client/` for API contracts and REST clients
 
-#### 5. Export Service (`export-sv`)
+#### 5. Migration Service (`migration-sv`)
 - **Local Port**: 8083 (HTTP)
 - **Docker Port**: 8080 (HTTPS internally)
-- **Role**: Data export functionality, async job processing
-- **Database**: PostgreSQL `export` schema
-- **Key Features**: Export jobs, data generation, async processing
+- **Role**: Data export and import (GDPR data portability), async job processing
+- **Database**: none (orchestrates data from other services)
+- **Key Features**: Data export jobs, data import, user data compilation
+- **HTTP/HTTPS**: Uses `INTERSERVICE_PROTOCOL` (http=local, https=Docker)
+- **Packages**: `api/` for public contracts, `service/` for implementation
+
+#### 6. Messaging Service (`messaging-sv`)
+- **Local Port**: 8084 (HTTP)
+- **Docker Port**: 8080 (HTTPS internally)
+- **Role**: User messaging and thread management
+- **Database**: PostgreSQL `messaging` schema
+- **Key Features**: Message threads, direct messaging between users
 - **HTTP/HTTPS**: Uses `INTERSERVICE_PROTOCOL` (http=local, https=Docker)
 - **Packages**: `api/`, `api-integration/`, `client/` for API contracts and REST clients
 
@@ -166,20 +209,33 @@ opinions-sv/
 ### Database Architecture
 
 **PostgreSQL with Multi-Schema Design:**
-```sql
+```
 r8n_db/
 ├── opinions (schema)
-│   ├── opinions (table)
-│   ├── opinion_subjects (table)
-│   ├── referents (table)
-│   ├── opinion_notes (table)
-│   └── weighted_opinion_references (table)
-└── -- future services/schemas
+│   ├── opinions              (id, owner, subject, mark, status, timestamp)
+│   ├── subjects              (id, name, referent)
+│   ├── referents             (id, name, address, latitude, longitude, referent_group)
+│   ├── opinion_notes         (id, opinion_id, type, description)
+│   └── weighted_opinion_references (id, parent_opinion, child_opinion, weight)
+│
+├── users (schema)
+│   ├── users                 (id, status, status_timestamp, password_hash)
+│   ├── pii                   (user_id, name, email, phone)
+│   ├── sessions              (id, user_id, created, expires, ip, user_agent)
+│   ├── consents              (id, user_id, type, accepted, session)
+│   ├── users_role_assignments (id, user, role, granted_by, timestamp)
+│   └── refresh_tokens        (id, token_id, user_id, parent_id, issued_at, expires_at, revoked, used)
+│
+└── messaging (schema)
+    ├── support_threads       (id, owner_user_id)
+    ├── support_messages      (id, thread_id, author_user_id, author_role, text, created_at)
+    ├── conversations         (id, type, created_by_user_id, created_at, last_message_at)
+    └── conversation_participants (id, conversation_id, user_id, participant_role, joined_at, archived_at, last_read_at)
 ```
 
 **Database Configuration:**
 - Connection pooling via HikariCP
-- Liquibase or manual migrations (see `deployment/database/init/`)
+- Liquibase migrations per service (`backend/<service>/service/src/main/resources/db/changelog/`)
 - Separate schemas per service for isolation
 - Connection via environment variables
 
@@ -187,7 +243,7 @@ r8n_db/
 
 1. **TLS/SSL** in Docker: All inter-service communication encrypted (TLS 1.2+)
 2. **HTTP** in local deployments: Plain HTTP for simplicity
-3. **Authentication**: JWT Bearer tokens (stub tokens in development)
+3. **Authentication**: JWT Bearer tokens
 4. **Certificate Generation**: TLS certificates generated on build machine before Docker deployment
 
 ### Port & Protocol Configuration
@@ -197,7 +253,7 @@ r8n_db/
   ```
   INTERSERVICE_PROTOCOL=http
   SERVER_SSL_ENABLED=false
-  Ports: 8080, 8081, 8082, 8083, 8090
+  Ports: 8080, 8081, 8082, 8083, 8084, 8090
   ```
 
 - **Docker (make docker-up)**: HTTPS only
@@ -213,39 +269,29 @@ r8n_db/
 
 - **Language**: TypeScript 5.8.3
 - **Framework**: Vite 8.0.1 + React 18.3.1
-- **Architecture**: Feature-Sliced Design (FSD)
+- **Architecture**: Component/feature-organized structure
 - **Styling**: CSS/SASS (custom design system)
 
-### Feature-Sliced Design Structure
+### Directory Structure
 
 ```
 frontend/
 └── src/
-    ├── app/                  # Application layer
-    │   └── App.tsx          # Root app component
-    │
-    ├── pages/                # Page components
-    │   └── e.g., HomePage.tsx
-    │
-    ├── widgets/              # Complex reusable UI components
-    │   └── e.g., HeaderWidget/
-    │
-    ├── features/             # Feature-specific business logic
-    │   └── e.g., opinion/
-    │       └── api/          # Feature API client
-    │       └── model/        # Business logic
-    │       └── ui/           # Feature UI components
-    │
-    ├── entities/             # Business entities
-    │   ├── api/             # Domain API clients
-    │   └── model/           # Domain models
-    │
-    └── shared/               # Foundation layer
-        ├── ui/               # UI kit components (buttons, inputs, etc.)
-        ├── api/              # Base HTTP client
-        ├── lib/              # Pure utilities
-        ├── types/            # Common TypeScript types
-        └── styles/           # Global styles
+    ├── assets/               # Static assets (images, fonts, icons)
+    ├── components/           # Reusable UI components
+    │   ├── auth/             # Auth-related components
+    │   ├── layout/           # Layout components (AppSidebar, etc.)
+    │   ├── server-state/     # Data-fetching wrapper components
+    │   └── ui/               # Generic UI primitives
+    ├── hooks/                # Custom React hooks
+    ├── lib/                  # Utilities and integrations
+    │   ├── api/              # API client functions per domain
+    │   ├── auth/             # Authentication logic
+    │   ├── e2e/              # E2E test bootstrap helpers
+    │   └── server-state/     # TanStack Query setup
+    │       └── hooks/        # Query/mutation hooks per domain
+    ├── pages/                # Page components (route targets)
+    └── test/                 # Unit and component tests
 ```
 
 ## Infrastructure
@@ -254,42 +300,67 @@ frontend/
 
 **Services (docker-compose.yml):**
 1. **database** (PostgreSQL 15)
-   - Port: 5432
-   - Volume: postgres_data (stored in repository folder)
+   - Port: 5432 (exposed to host)
+   - Volume: `postgres_data` (stored in repository folder under `deployment/database/data/`)
 
-2. **gateway** (Spring Boot)
-   - Ports: 8080 (HTTPS, externally accessible)
-   - TLS certificates: /certs/keystore-gateway.p12
-   - Intra-service: HTTPS to opinions/mock
-
-3. **opinions** (Spring Boot)
+2. **opinions** (Spring Boot)
    - Port: 8080 (internal HTTPS only)
-   - TLS certificates: /certs/keystore-opinions.p12
-   - Internal service only
+   - TLS: `/certs/keystore-opinions.p12`
+   - Depends on: database
 
-4. **mock** (Spring Boot)
+3. **mock** (Spring Boot)
    - Port: 8080 (internal HTTPS only)
-   - TLS certificates: /certs/keystore-mock.p12
-   - Internal service only
+   - TLS: `/certs/keystore-mock.p12`
+
+4. **messaging** (Spring Boot)
+   - Port: 8080 (internal HTTPS only)
+   - TLS: `/certs/keystore-messaging.p12`
+   - Depends on: database
+
+5. **users** (Spring Boot)
+   - Port: 8080 (internal HTTPS only)
+   - TLS: `/certs/keystore-users.p12`
+   - Depends on: database
+
+6. **migration** (Spring Boot)
+   - Port: 8080 (internal HTTPS only)
+   - TLS: `/certs/keystore-migration.p12`
+   - Depends on: database + all services (healthy)
+
+7. **gateway** (Spring Boot)
+   - Port: `GATEWAY_HOST_PORT` → `GATEWAY_CONTAINER_PORT` (HTTPS, externally accessible)
+   - TLS: `/certs/keystore-gateway.p12`
+   - Routes to all backend services
+   - Depends on: all services (healthy)
+
+8. **frontend** (Nginx)
+   - Ports: `FRONTEND_HTTP_HOST_PORT` → 80, `FRONTEND_HTTPS_HOST_PORT` → 443
+   - Serves the React application, proxies `/api/**` to gateway
+   - Depends on: gateway (healthy)
 
 ### Docker Port Mapping Summary
 
 ```
-Host            ⇄  Container
-────────────────────────────────
-localhost:8080  ⇄  gateway:8080 (HTTPS)
-localhost:5432  ⇄  database:5432 (PostgreSQL)
+Host                        ⇄  Container
+────────────────────────────────────────────────
+FRONTEND_HTTP_HOST_PORT     ⇄  frontend:80
+FRONTEND_HTTPS_HOST_PORT    ⇄  frontend:443
+GATEWAY_HOST_PORT           ⇄  gateway:GATEWAY_CONTAINER_PORT (HTTPS)
+localhost:5432              ⇄  database:5432 (PostgreSQL)
 
 Internal only (not exposed to host):
-  gateway → opinions:8080 (HTTPS)
-  gateway → mock:8080 (HTTPS)
+  gateway → opinions:8080   (HTTPS)
+  gateway → users:8080      (HTTPS)
+  gateway → messaging:8080  (HTTPS)
+  gateway → migration:8080  (HTTPS)
+  gateway → mock:8080       (HTTPS)
 ```
 
 ### Local Development
 
 **Without Docker:**
 ```bash
-make local-run-all  # Starts gateway, opinions, mock via HTTP
+make local-run-all  # Starts all backend services (opinions, users, messaging, migration, mock, gateway) via HTTP
 make local-stop-all # Stops all services
 ```
 
@@ -311,10 +382,12 @@ make docker-down # Stop and remove containers
 - All services connect via Docker network `r8n_net`
 - Internal service resolution via service names
 - Gateway routes:
-  - `/api/opinions/**` → opinions-sv:8080
-  - `/api/auth/**`, `/api/users/**` → users-sv:8080
-- `/api/export/**` → export-sv:8080
-- `/api/access-requests/**`, `/api/opinion-lists/**`, `/api/selectors/**` → mock-sv:8080
+  - `/api/auth/**` → users-sv
+  - `/api/opinions/**`, `/api/access-requests/**`, `/api/opinion-lists/**`, `/api/subjects/**`, `/api/referents/**` → opinions-sv
+  - `/api/users/**`, `/api/admin/**` → users-sv
+  - `/api/messaging/**` → messaging-sv
+  - `/api/export/**`, `/api/import/**` → migration-sv
+  - `/api/selectors/**` → mock-sv
 
 ### Make Targets
 
@@ -330,7 +403,7 @@ make docker-down # Stop and remove containers
 - `make direct-request-mock` - Test mock service directly
 
 **Database:**
-- `make docker-run-database` - Start only database
+- `make docker-database-run` - Start only database
 - `make docker-database-connect` - Connect to DB with psql
 
 ## Communication Patterns
@@ -362,7 +435,7 @@ Gateway (Port 8080)
 
 1. Client includes JWT token: `Authorization: Bearer <token>`
 2. Gateway validates token or passes through
-3. Services accept stub tokens in development
+3. Services validate JWT tokens; integration with OAuth2/Auth0 planned for production
 4. Production: integrate with OAuth2/Auth0
 
 ### API Examples
@@ -390,9 +463,9 @@ make https-routed-request-mock     # Opinions list via Gateway (HTTPS)
 4. **OpinionFacade** → Orchestrates this service with other services (merges DTOs, converts to service DTOs), prepares response DTO
 5. **Controller** → Returns data to Gateway → Client
 
-### Mock Flow: Get Opinion List Summary
+### Mock Flow: Get Selectors
 
-1. **Client** → GET `/opinion-lists/{id}/summary` to **Gateway**
+1. **Client** → GET `/selectors` to **Gateway**
 2. **Gateway** → Routes to **Mock Service** (TLS in Docker, plaintext in local)
 3. **Mock Controller** → Returns stub data from **Data Factory**
 4. **Response** → Returns static/test data
