@@ -28,6 +28,8 @@ spring:
 springdoc:
   packages-to-scan: com.r8n.backend.users.controller
 services:
+  opinions:
+    url: ${INTERSERVICE_PROTOCOL}://${SERVICES_OPINIONS_HOST}:${SERVICES_OPINIONS_PORT}
   messaging:
     url: ${INTERSERVICE_PROTOCOL}://${SERVICES_MESSAGING_HOST}:${SERVICES_MESSAGING_PORT}
 r8n:
