@@ -244,7 +244,7 @@ AI was used throughout the development process as an active coding assistant, no
 ### Team Structure
 
 **Backend Team:**
-- **inikulin** - Tech Lead, Backend Developer
+- **inikulin** - Project Owner, Tech Lead, Backend Developer
   - Led architecture design, implemented Gateway and Opinions services
   - Database design, API contracts
 - **iatopchu** - Backend Developer
@@ -253,7 +253,7 @@ AI was used throughout the development process as an active coding assistant, no
   - Backend service development, testing
 
 **Frontend Team:**
-- **mkulikov** - Frontend Lead, UI/UX Developer
+- **mkulikov** - Project Manager, Frontend Lead, UI/UX Developer
   - Frontend architecture, React development, design system
 - **dbisko** - Frontend Developer
   - React component development, API integration
