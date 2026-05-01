@@ -73,16 +73,16 @@ interface OpinionsApi {
         subjectId: UUID,
         @Parameter(description = "Subjective opinion statements.")
         @RequestParam(required = false, defaultValue = "")
-        @field:Size(max = 10)
+        @Size(max = 10)
         subjective: List<@Size(max = 2000) String>,
         @Parameter(description = "Objective supporting statements.")
         @RequestParam(required = false, defaultValue = "")
-        @field:Size(max = 10)
+        @Size(max = 10)
         objective: List<@Size(max = 2000) String>,
         @Parameter(description = "Optional numeric mark.")
         @RequestParam(required = false)
-        @field:DecimalMin("0.0")
-        @field:DecimalMax("10.0")
+        @DecimalMin("0.0")
+        @DecimalMax("10.0")
         mark: Double?,
     ): OpinionDto
 
@@ -96,16 +96,16 @@ interface OpinionsApi {
         @PathVariable opinionId: UUID,
         @Parameter(description = "Replacement subjective opinion statements.")
         @RequestParam(required = false, defaultValue = "")
-        @field:Size(max = 10)
+        @Size(max = 10)
         subjective: List<@Size(max = 2000) String>,
         @Parameter(description = "Replacement objective supporting statements.")
         @RequestParam(required = false, defaultValue = "")
-        @field:Size(max = 10)
+        @Size(max = 10)
         objective: List<@Size(max = 2000) String>,
         @Parameter(description = "Replacement numeric mark.")
         @RequestParam(required = false)
-        @field:DecimalMin("0.0")
-        @field:DecimalMax("10.0")
+        @DecimalMin("0.0")
+        @DecimalMax("10.0")
         mark: Double?,
     ): OpinionDto
 
