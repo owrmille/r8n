@@ -31,6 +31,11 @@ const CreateList = () => {
       return;
     }
 
+    if (title.trim().length > 255) {
+      toast({ title: "Title too long", description: "List name must be 255 characters or fewer." });
+      return;
+    }
+
     if (IS_E2E_AUTH_BYPASS_ENABLED) {
       toast({ title: "List created", description: `"${title.trim()}" has been created.` });
       navigate("/lists");

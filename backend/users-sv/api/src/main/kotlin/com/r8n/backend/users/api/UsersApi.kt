@@ -11,6 +11,7 @@ import com.r8n.backend.users.api.dto.UsernameDto
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.Valid
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -90,6 +91,7 @@ interface UsersApi {
         description = "Updates public profile fields for the authenticated user.",
     )
     fun updateMyPublicProfile(
+        @Valid
         @RequestBody
         request: UpdateMyPublicProfileRequestDto,
     ): UserProfileDto

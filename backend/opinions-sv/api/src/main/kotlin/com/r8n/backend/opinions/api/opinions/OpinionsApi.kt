@@ -9,6 +9,10 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import jakarta.validation.constraints.DecimalMax
+import jakarta.validation.constraints.DecimalMin
+import jakarta.validation.constraints.Size
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -18,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import java.util.UUID
 
+@Validated
 @Tag(name = "Opinions", description = "Opinion authoring, component linking, and moderation endpoints.")
 interface OpinionsApi {
     companion object {
@@ -68,12 +73,16 @@ interface OpinionsApi {
         subjectId: UUID,
         @Parameter(description = "Subjective opinion statements.")
         @RequestParam(required = false, defaultValue = "")
-        subjective: List<String>,
+        @field:Size(max = 10)
+        subjective: List<@Size(max = 2000) String>,
         @Parameter(description = "Objective supporting statements.")
         @RequestParam(required = false, defaultValue = "")
-        objective: List<String>,
+        @field:Size(max = 10)
+        objective: List<@Size(max = 2000) String>,
         @Parameter(description = "Optional numeric mark.")
         @RequestParam(required = false)
+        @field:DecimalMin("0.0")
+        @field:DecimalMax("10.0")
         mark: Double?,
     ): OpinionDto
 
@@ -87,12 +96,16 @@ interface OpinionsApi {
         @PathVariable opinionId: UUID,
         @Parameter(description = "Replacement subjective opinion statements.")
         @RequestParam(required = false, defaultValue = "")
-        subjective: List<String>,
+        @field:Size(max = 10)
+        subjective: List<@Size(max = 2000) String>,
         @Parameter(description = "Replacement objective supporting statements.")
         @RequestParam(required = false, defaultValue = "")
-        objective: List<String>,
+        @field:Size(max = 10)
+        objective: List<@Size(max = 2000) String>,
         @Parameter(description = "Replacement numeric mark.")
         @RequestParam(required = false)
+        @field:DecimalMin("0.0")
+        @field:DecimalMax("10.0")
         mark: Double?,
     ): OpinionDto
 
