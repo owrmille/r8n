@@ -720,38 +720,7 @@ messaging schema:
   - **Frontend**: React avatar upload component with preview
 - **Team Members**: mkulikov
 
-**7. Support for additional browsers**
-
-- **Points**: 1 point (Minor module)
-- **Description**: Full compatibility with at least 2 additional browsers (Firefox, Safari, Edge, etc.), test and fix all features in each browser, document any browser-specific limitations, and ensure consistent UI/UX across all supported browsers
-- **Justification**: Cross-browser compatibility ensures the application is accessible to all users regardless of their preferred browser. Testing across multiple browsers identifies and fixes compatibility issues, providing a consistent experience for all users.
-- **Implementation**:
-  - **Browser Support**: Full compatibility with Chrome (primary), Firefox, Safari, and Edge
-  - **Testing Strategy**:
-    - Comprehensive testing across all supported browsers
-    - Automated cross-browser testing with tools like Selenium or Playwright
-    - Manual testing for UI/UX consistency
-    - Feature-by-feature validation in each browser
-  - **Compatibility Fixes**:
-    - CSS vendor prefixes and fallbacks
-    - JavaScript polyfills for older browser versions
-    - Responsive design testing across different browser viewports
-    - API compatibility handling
-  - **Documentation**:
-    - Browser-specific limitations documented
-    - Minimum browser version requirements specified
-    - Known issues and workarounds listed
-    - Feature compatibility matrix maintained
-  - **Consistent UI/UX**:
-    - Design system tested across all browsers
-    - Component rendering consistency verified
-    - Performance optimization for each browser
-    - Accessibility features validated across browsers
-  - **Development Tools**: Browser-specific debugging tools and dev environments
-  - **Continuous Testing**: Integration with CI/CD for automated cross-browser testing
-- **Team Members**: mkulikov, dbisko
-
-**8. GDPR compliance features**
+**7. GDPR compliance features**
 
 - **Points**: 1 point (Minor module)
 - **Description**: Allow users to request their data, data deletion with confirmation, export user data in a readable format, and confirmation emails for data operations
@@ -796,15 +765,15 @@ messaging schema:
 
 ### Module Point Calculation
 
-**Total Points**: 20 points (6 Major modules, 8 Minor modules)
+**Total Points**: 19 points (6 Major modules, 7 Minor modules)
 **Minimum Required**: 14 points
 
-**Implemented**: 20 points ✅ (Exceeds minimum requirement by 6 points)
+**Implemented**: 19 points ✅ (Exceeds minimum requirement by 5 points)
 **Planned**: Additional modules for enhanced functionality
 
 **Distribution:**
 - Major modules completed: 6 * 2 = 12 points
-- Minor modules completed: 8 * 1 = 8 points
+- Minor modules completed: 7 * 1 = 7 points
 
 ## Individual Contributions
 
