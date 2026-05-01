@@ -7,24 +7,37 @@ This document describes the high-level architecture of the r8n application, a mi
 r8n is structured as a **microservices architecture** with 5 backend services, a PostgreSQL database, and a React frontend. All services communicate via HTTP or HTTPS depending on the environment.
 
 ```
-┌─────────────┐         ┌──────────────┐         ┌─────────────┐
-│   Frontend  │────────▶│   Gateway    │────────▶│   Opinions  │
-│  (React)    │  HTTPS  │    -sv       │  HTTPS  │     -sv     │
-│ (Port 5173) │(Docker) │ (Port 8080)  │         │ (Port 8081) │
-└─────────────┘         └──────────────┘         └─────────────┘
-                                 │                          │
-                                 │                          │
-                                 ▼                          ▼
-                           ┌──────────────┐         ┌─────────────┐
-                           │    Mock      │         │  PostgreSQL │
-                           │     -sv      │         │ (Port 5432) │
-                           │ (Port 8090)  │         └─────────────┘
-                           └──────────────┘
-
-HTTP/HTTPS Configuration:
-- Local deployment: HTTP only (ports 8080, 8081, 8090)
-- Docker/Production: HTTPS only (port 8080 with TLS certificates)
+                              ┌─────────────────────────────────────────────────┐
+                              │                  Gateway-sv                     │
+  Frontend (Nginx/Vite)  ───▶ │              local: 8080 / docker: 8080         │
+  local:  http://5173         └──────┬──────────┬──────────┬──────────┬─────────┘
+  docker: https://80,443             │          │          │          │
+                                     ▼          ▼          ▼          ▼
+                              opinions-sv   users-sv  messaging-sv  migration-sv
+                              :8081         :8082     :8084          :8083
+                                     │          │
+                                     ▼          ▼
+                              mock-sv        PostgreSQL
+                              :8090          :5432
+                                             (schemas: opinions, users, messaging)
 ```
+
+**Ports (local HTTP / Docker internal HTTPS):**
+
+| Service       | Local port | Docker port |
+|---------------|-----------|-------------|
+| gateway-sv    | 8080      | 8080 (exposed to host) |
+| opinions-sv   | 8081      | 8080 (internal) |
+| users-sv      | 8082      | 8080 (internal) |
+| migration-sv  | 8083      | 8080 (internal) |
+| messaging-sv  | 8084      | 8080 (internal) |
+| mock-sv       | 8090      | 8080 (internal) |
+| database      | 5432      | 5432 (exposed to host) |
+| frontend      | 5173 (Vite) | 80 / 443 (Nginx) |
+
+**Protocol:**
+- Local: HTTP for all services (`SERVER_SSL_ENABLED=false`)
+- Docker: HTTPS with TLS for all services (`SERVER_SSL_ENABLED=true`)
 
 ## Backend Architecture
 
