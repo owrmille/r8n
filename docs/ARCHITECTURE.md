@@ -384,7 +384,7 @@ make docker-down # Stop and remove containers
 
 ### Environment Configuration
 
-**Key Environment Files:**
+**Key Environment Files** (not committed to the repository — must be created locally):
 - `deployment/config/docker.env` - Docker environment (HTTPS)
 - `deployment/config/local.env` - Local development (HTTP)
 - `deployment/secrets/docker.secrets.env` - Secrets (TLS passwords)
