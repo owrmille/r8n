@@ -47,7 +47,19 @@ _This project has been created as part of the 42 curriculum by dbisko, iatopchu,
 > **Setup steps for campus:**
 > 1. Clone the repository into `/sgoinfre/<your_login>/` — not into `$HOME`
 > 2. Run `make move-caches-to-goinfre` to move Docker and Gradle caches out of `$HOME` to `/goinfre`
-> 3. Proceed with the regular setup below — `make docker-up` will handle the rest
+> 3. Copy the env template and set your database password:
+>    ```bash
+>    cp deployment/config/.env.example deployment/config/docker.env
+>    # Edit docker.env and replace the database password with your own
+>    ```
+> 4. Generate JWT keys:
+>    ```bash
+>    make generate-jwt-keys-docker
+>    ```
+> 5. Start the project:
+>    ```bash
+>    make
+>    ```
 >
 > Check required disk space with `make who-ate-all-the-space`.
 
