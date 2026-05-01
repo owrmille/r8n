@@ -49,7 +49,7 @@ _This project has been created as part of the 42 curriculum by dbisko, iatopchu,
 > 2. Run `make move-caches-to-goinfre` to move Docker and Gradle caches out of `$HOME` to `/goinfre`
 > 3. Proceed with the regular setup below — `make docker-up` will handle the rest
 >
-> Required disk space. Check current usage with `make who-ate-all-the-space`.
+> Check required disk space with `make who-ate-all-the-space`.
 
 ### Installation
 
@@ -212,24 +212,20 @@ Use the make rules to test API endpoints (documented in Make Commands Reference 
 
 ### AI Usage Documentation
 
-**AI assistance was used for the following tasks:**
+AI was used throughout the development process as an active coding assistant, not just for documentation.
+
+**Development workflow:**
+1. Ask AI to propose an idiomatic solution for a given problem
+2. Read, understand, and make design choices
+3. Implement a vertical stack manually, defining all layers
+4. Ask AI for code review and suggestions
+5. Iterate on the implementation
+6. Ask AI to apply the same pattern to other components
+
+**Specific tasks where AI assistance was used:**
 - **Architecture documentation**: Analysis of multi-module structure, creation of ARCHITECTURE.md
-- **Git workflow recovery**: Assistance in removing accidentally committed binary database files
+- **Git workflow recovery**: Removing accidentally committed binary database files
 - **README restructuring**: Restructuring and expansion to meet 42 curriculum requirements
-
-**Specific AI contributions:**
-- Documentation content generation based on codebase analysis
-- Git command recommendations for reset and cleanup operations
-- Structure and organization suggestions for technical documentation
-
-**Human work:**
-- Core backend implementation (Kotlin + Spring Boot microservices)
-- Frontend implementation (React + TypeScript)
-- Database design and schema implementation
-- Git repository management
-- Build system configuration (Gradle, Make)
-- Docker deployment setup
-- Service implementation (Opinions, Gateway)
 
 ## Team Information
 
