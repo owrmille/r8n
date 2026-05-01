@@ -84,7 +84,8 @@ interface RecommendationApi {
     @GetMapping(HIDDEN_LISTS_PATH)
     @Operation(
         summary = "List hidden opinion lists",
-        description = "Returns paged opinion lists that have been hidden from recommendations by the authenticated user.",
+        description =
+            "Returns paged opinion lists that have been hidden from recommendations by the authenticated user.",
     )
     fun getHiddenOpinionLists(
         @Valid
