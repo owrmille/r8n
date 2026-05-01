@@ -735,7 +735,7 @@ messaging schema:
 **7. GDPR compliance features**
 
 - **Points**: 1 point (Minor module)
-- **Description**: Allow users to request their data, data deletion with confirmation, export user data in a readable format, and confirmation emails for data operations
+- **Description**: Allow users to request their data, delete their account with confirmation, and export user data in JSON format
 - **Justification**: GDPR compliance is essential for any platform handling user data, especially in European markets. These features demonstrate commitment to data protection, user privacy rights, and legal compliance, building trust with users and avoiding regulatory penalties.
 - **Implementation**:
   - **Data Request System**:
@@ -745,20 +745,13 @@ messaging schema:
     - Request status tracking
   - **Data Deletion**:
     - Account deletion functionality
-    - Multi-step confirmation process
+    - Confirmation by entering email address in the UI
     - Data removal from all services
-    - Anonymous data retention where required
-    - Deletion confirmation and verification
   - **Data Export**:
-    - Export user data in readable formats (JSON, CSV, PDF)
+    - Export user data in JSON format
     - Comprehensive data export including profiles, opinions, relationships
     - Structured data organization
     - Download functionality with expiration
-  - **Confirmation Emails**:
-    - Email notifications for data requests
-    - Confirmation emails for data deletion
-    - Export completion notifications
-    - Data operation history emails
   - **Compliance Features**:
     - Data processing records
     - Consent management
@@ -769,7 +762,7 @@ messaging schema:
     - Encrypted data exports
     - Access logging for data operations
     - Verification of data ownership
-  - **Backend**: Migration service for data export/import, User service for data management, Email service for notifications
+  - **Backend**: Migration service for data export/import, User service for data management
   - **Frontend**: React components for data requests, deletion confirmation, export interface
 - **Team Members**: lshapkin, inikulin
 
