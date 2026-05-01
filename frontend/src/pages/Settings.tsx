@@ -27,13 +27,13 @@ const Settings = () => {
   const email = me?.email ?? "";
 
   // Privacy state
-  const [profileSearchable, setProfileSearchable] = useState(true);
+  const [profileSearchable, setProfileSearchable] = useState(false);
   const [defaultListVisibility, setDefaultListVisibility] = useState<"private" | "searchable">("private");
 
   // Notification state
-  const [notifyAccessRequests, setNotifyAccessRequests] = useState(true);
-  const [notifyNewReviews, setNotifyNewReviews] = useState(true);
-  const [notifyAccessApproved, setNotifyAccessApproved] = useState(true);
+  const [notifyAccessRequests, setNotifyAccessRequests] = useState(false);
+  const [notifyNewReviews, setNotifyNewReviews] = useState(false);
+  const [notifyAccessApproved, setNotifyAccessApproved] = useState(false);
 
   // Account deletion state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -184,10 +184,10 @@ const Settings = () => {
                       <h3 className="text-sm font-medium text-foreground">Profile searchable</h3>
                       <p className="text-xs text-muted-foreground mt-0.5">Allow others to find your profile by name.</p>
                     </div>
-                    <Switch checked={profileSearchable} onCheckedChange={setProfileSearchable} />
+                    <Switch checked={profileSearchable} onCheckedChange={setProfileSearchable} disabled />
                   </div>
 
-                  <div className="border-t border-border pt-5">
+                  <div className="border-t border-border pt-5 opacity-60 pointer-events-none">
                     <h3 className="text-sm font-medium text-foreground mb-2">Default list visibility</h3>
                     <p className="text-xs text-muted-foreground mb-3">New lists will use this visibility by default.</p>
                     <div className="grid grid-cols-2 gap-3">
@@ -198,6 +198,7 @@ const Settings = () => {
                         <button
                           key={value}
                           type="button"
+                          disabled
                           onClick={() => setDefaultListVisibility(value)}
                           className={cn(
                             "flex flex-col items-start rounded-xl border p-3 text-left transition-all",
@@ -214,7 +215,7 @@ const Settings = () => {
                   </div>
                 </div>
 
-                <Button onClick={handleSave} className="rounded-xl px-8">Save changes</Button>
+                <Button onClick={handleSave} className="rounded-xl px-8" disabled>Save changes</Button>
               </motion.div>
             )}
 
@@ -226,7 +227,7 @@ const Settings = () => {
                       <h3 className="text-sm font-medium text-foreground">Access requests</h3>
                       <p className="text-xs text-muted-foreground mt-0.5">When someone requests access to your lists.</p>
                     </div>
-                    <Switch checked={notifyAccessRequests} onCheckedChange={setNotifyAccessRequests} />
+                    <Switch checked={notifyAccessRequests} onCheckedChange={setNotifyAccessRequests} disabled />
                   </div>
 
                   <div className="flex items-center justify-between border-t border-border pt-5">
@@ -234,7 +235,7 @@ const Settings = () => {
                       <h3 className="text-sm font-medium text-foreground">New reviews in network</h3>
                       <p className="text-xs text-muted-foreground mt-0.5">When someone in your network posts a new review.</p>
                     </div>
-                    <Switch checked={notifyNewReviews} onCheckedChange={setNotifyNewReviews} />
+                    <Switch checked={notifyNewReviews} onCheckedChange={setNotifyNewReviews} disabled />
                   </div>
 
                   <div className="flex items-center justify-between border-t border-border pt-5">
@@ -242,11 +243,11 @@ const Settings = () => {
                       <h3 className="text-sm font-medium text-foreground">Access approved</h3>
                       <p className="text-xs text-muted-foreground mt-0.5">When your access request to a list is approved.</p>
                     </div>
-                    <Switch checked={notifyAccessApproved} onCheckedChange={setNotifyAccessApproved} />
+                    <Switch checked={notifyAccessApproved} onCheckedChange={setNotifyAccessApproved} disabled />
                   </div>
                 </div>
 
-                <Button onClick={handleSave} className="rounded-xl px-8">Save changes</Button>
+                <Button onClick={handleSave} className="rounded-xl px-8" disabled>Save changes</Button>
               </motion.div>
             )}
           </div>

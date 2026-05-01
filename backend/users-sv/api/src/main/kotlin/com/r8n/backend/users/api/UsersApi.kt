@@ -11,6 +11,9 @@ import com.r8n.backend.users.api.dto.UsernameDto
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.Valid
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -74,8 +77,15 @@ interface UsersApi {
     ): UserProfileDto
 
     @GetMapping(USER_SEARCH_PATH)
+    @Operation(
+        summary = "Search users",
+        description = "Returns a list of users matching the search query.",
+    )
     fun searchUsers(
+        @Parameter(description = "Search query string.")
         @RequestParam
+        @NotBlank
+        @Size(min = 1, max = 255)
         query: String,
     ): List<UserSearchResultDto>
 
@@ -85,6 +95,7 @@ interface UsersApi {
         description = "Updates public profile fields for the authenticated user.",
     )
     fun updateMyPublicProfile(
+        @Valid
         @RequestBody
         request: UpdateMyPublicProfileRequestDto,
     ): UserProfileDto
@@ -129,6 +140,7 @@ interface UsersApi {
                 "and removes associated user data from downstream services.",
     )
     fun requestAccountDeletion(
+        @Valid
         @RequestBody
         request: AccountDeletionRequestDto,
     ): ResponseEntity<Void>

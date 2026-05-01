@@ -17,19 +17,23 @@ import {
 const MAX_AVATAR_SIZE_BYTES = readPositiveIntegerEnv(
   "VITE_AVATAR_MAX_SIZE_BYTES",
   import.meta.env.VITE_AVATAR_MAX_SIZE_BYTES,
+  2097152,
 );
 const MAX_AVATAR_SIZE_LABEL = formatFileSize(MAX_AVATAR_SIZE_BYTES);
 const PROFILE_NAME_MAX_LENGTH = readPositiveIntegerEnv(
   "VITE_PROFILE_NAME_MAX_LENGTH",
   import.meta.env.VITE_PROFILE_NAME_MAX_LENGTH,
+  255,
 );
 const PROFILE_ABOUT_MAX_LENGTH = readPositiveIntegerEnv(
   "VITE_PROFILE_ABOUT_MAX_LENGTH",
   import.meta.env.VITE_PROFILE_ABOUT_MAX_LENGTH,
+  255,
 );
 const PROFILE_LOCATION_MAX_LENGTH = readPositiveIntegerEnv(
   "VITE_PROFILE_LOCATION_MAX_LENGTH",
   import.meta.env.VITE_PROFILE_LOCATION_MAX_LENGTH,
+  255,
 );
 const ALLOWED_AVATAR_TYPES = new Set([
   "image/jpeg",
@@ -37,10 +41,17 @@ const ALLOWED_AVATAR_TYPES = new Set([
   "image/webp",
 ]);
 
-function readPositiveIntegerEnv(name: string, value: string | undefined): number {
+function readPositiveIntegerEnv(
+  name: string,
+  value: string | undefined,
+  defaultValue?: number,
+): number {
   const parsedValue = Number(value);
 
   if (!Number.isInteger(parsedValue) || parsedValue <= 0) {
+    if (defaultValue !== undefined) {
+      return defaultValue;
+    }
     throw new Error(`${name} must be a positive integer.`);
   }
 

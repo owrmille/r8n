@@ -418,6 +418,18 @@ const ItemRow = ({
 
   const handleSubmit = async () => {
     if (!subjective.trim() || !objective.trim() || rating === null) return;
+    if (subjective.trim().length > 2000) {
+      toast({ title: "Comment too long", description: "Subjective opinion must be 2000 characters or fewer." });
+      return;
+    }
+    if (objective.trim().length > 2000) {
+      toast({ title: "Comment too long", description: "Objective facts must be 2000 characters or fewer." });
+      return;
+    }
+    if (rating < 0 || rating > 10) {
+      toast({ title: "Invalid rating", description: "Rating must be between 0 and 10." });
+      return;
+    }
     try {
       await onAddReview(summary.subject, rating, subjective.trim(), objective.trim());
       setShowForm(false);

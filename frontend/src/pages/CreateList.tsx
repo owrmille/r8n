@@ -31,6 +31,11 @@ const CreateList = () => {
       return;
     }
 
+    if (title.trim().length > 255) {
+      toast({ title: "Title too long", description: "List name must be 255 characters or fewer." });
+      return;
+    }
+
     if (IS_E2E_AUTH_BYPASS_ENABLED) {
       toast({ title: "List created", description: `"${title.trim()}" has been created.` });
       navigate("/lists");
@@ -98,6 +103,7 @@ const CreateList = () => {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What's this list about? Help others understand your curation..."
               rows={3}
+              maxLength={2000}
               className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all resize-none leading-relaxed"
             />
           </div>
