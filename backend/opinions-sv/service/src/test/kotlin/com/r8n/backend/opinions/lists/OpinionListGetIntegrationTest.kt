@@ -113,7 +113,7 @@ class OpinionListGetIntegrationTest {
     }
 
     @Test
-    fun `getMine returns all lists owned by the authenticated user`() {
+    fun `getMine returns all lists owned by the authenticated user including virtual list`() {
         val result =
             mockMvc
                 .perform(
@@ -125,10 +125,68 @@ class OpinionListGetIntegrationTest {
                 .andReturn()
 
         val page = objectMapper.readValue<PageResponseDto<OpinionListSummaryDto>>(result.response.contentAsString)
-        // Anna owns l11, l12, l13 plus two lists from other seed changesets
-        assertThat(page.total).isEqualTo(5)
+        // Anna owns l11, l12, l13 plus two lists from other seed changesets plus virtual ALL
+        assertThat(page.total).isEqualTo(6)
         assertThat(page.items.map { it.listName }).contains("l11", "l12", "l13")
         assertThat(page.items.single { it.listId == ANNA_L11_ID }.opinionsCount).isEqualTo(5)
+        val virtualList = page.items.find { it.listName == "[ALL]" }
+        assertThat(virtualList).isNotNull
+        assertThat(virtualList?.listId).isNull()
+        // Anna has multiple opinions in seed data (r11, r12, r21, r22, r31, etc.)
+        assertThat(virtualList?.opinionsCount).isGreaterThan(0)
+    }
+
+    @Test
+    fun `getList with null listId returns virtual list`() {
+        val result =
+            mockMvc
+                .perform(
+                    get("/api/opinion-lists")
+                        .header("Authorization", annaToken),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val list = objectMapper.readValue<OpinionListDto>(result.response.contentAsString)
+        assertThat(list.listName).isEqualTo("[ALL]")
+        assertThat(list.id).isNull()
+        assertThat(list.owner).isEqualTo(ANNA_ID)
+    }
+
+    @Test
+    fun `getListSummary with null listId returns virtual list summary`() {
+        val result =
+            mockMvc
+                .perform(
+                    get("/api/opinion-lists/summary")
+                        .header("Authorization", annaToken),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val summary = objectMapper.readValue<OpinionListSummaryDto>(result.response.contentAsString)
+        assertThat(summary.listName).isEqualTo("[ALL]")
+        assertThat(summary.listId).isNull()
+        assertThat(summary.owner).isEqualTo(ANNA_ID)
+    }
+
+    @Test
+    fun `getListsFull returns all lists with full details including virtual list`() {
+        val result =
+            mockMvc
+                .perform(
+                    get("/api/internal/opinion-lists/mine/full")
+                        .header("Authorization", annaToken)
+                        .param("page", "0")
+                        .param("size", "20"),
+                ).andExpect(status().isOk)
+                .andReturn()
+
+        val page = objectMapper.readValue<PageResponseDto<OpinionListDto>>(result.response.contentAsString)
+        // Anna owns 5 lists in seed data + 1 virtual list
+        assertThat(page.items.map { it.listName }).contains("[ALL]", "l11", "l12", "l13")
+        val virtualList = page.items.find { it.listName == "[ALL]" }
+        assertThat(virtualList).isNotNull
+        assertThat(virtualList?.id).isNull()
+        assertThat(virtualList?.opinionSummaries).isNotEmpty
     }
 
     @Test
@@ -150,11 +208,13 @@ class OpinionListGetIntegrationTest {
 
     @Test
     fun `search returns only accessible lists matching name substring`() {
+        val user2Id = UUID.fromString("40404040-4040-4040-4040-404040404040")
+        val user2Token = "Bearer " + serviceTokenService.generateAccessToken(user2Id, listOf("USER"))
         val result =
             mockMvc
                 .perform(
                     get("/api/opinion-lists/search")
-                        .header("Authorization", annaToken)
+                        .header("Authorization", user2Token)
                         .param("nameSubstring", "l11")
                         .param("page", "0")
                         .param("size", "20"),

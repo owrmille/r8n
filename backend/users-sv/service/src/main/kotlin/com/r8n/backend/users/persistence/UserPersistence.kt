@@ -5,7 +5,6 @@ import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
-import jakarta.persistence.GeneratedValue
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.hibernate.annotations.UuidGenerator
@@ -16,7 +15,6 @@ import java.util.UUID
 @Table(schema = "users", name = "users")
 class UserPersistence(
     @Id
-    @GeneratedValue
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
     var id: UUID,
 //

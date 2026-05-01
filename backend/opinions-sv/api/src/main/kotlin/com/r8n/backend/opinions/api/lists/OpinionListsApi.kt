@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
+import java.time.Instant
 import java.util.UUID
 
 @Validated
@@ -24,8 +25,8 @@ import java.util.UUID
 interface OpinionListsApi {
     companion object {
         private const val ROOT_PATH = "/api/opinion-lists"
-        const val SUMMARY_PATH = "$ROOT_PATH/{listId}/summary"
-        const val GET_PATH = "$ROOT_PATH/{listId}"
+        const val SUMMARY_PATH = "$ROOT_PATH/summary"
+        const val GET_PATH = ROOT_PATH
         const val CREATE_PATH = ROOT_PATH
         const val RENAME_PATH = "$ROOT_PATH/{listId}/rename"
         const val SET_PRIVACY_PATH = "$ROOT_PATH/{listId}/set-privacy"
@@ -37,26 +38,26 @@ interface OpinionListsApi {
         const val MOVE_OPINION_PATH = "$ROOT_PATH/{fromListId}/move-opinion"
     }
 
-    @GetMapping(SUMMARY_PATH)
+    @GetMapping(SUMMARY_PATH, "$ROOT_PATH/{listId}/summary")
     @Operation(
         summary = "Get opinion list summary",
         description = "Returns summary information for an opinion list visible to the authenticated user.",
     )
     fun getListSummary(
-        @Parameter(description = "Opinion list identifier.")
-        @PathVariable listId: UUID,
+        @Parameter(description = "Opinion list identifier. If null, returns virtual 'All opinions' list.")
+        @PathVariable(required = false) listId: UUID?,
     ): OpinionListSummaryDto
 
-    @GetMapping(GET_PATH)
+    @GetMapping(GET_PATH, "$GET_PATH/{listId}")
     @Operation(
         summary = "Get opinion list",
         description = "Returns an opinion list visible to the authenticated user.",
     )
     fun getList(
-        @Parameter(description = "Opinion list identifier.")
-        @PathVariable listId: UUID,
+        @Parameter(description = "Opinion list identifier. If null, returns virtual 'All opinions' list.")
+        @PathVariable(required = false) listId: UUID?,
         @Parameter(description = "Only include opinions published after this timestamp.")
-        @RequestParam(required = false) publishedAfter: java.time.Instant?,
+        @RequestParam(required = false) publishedAfter: Instant?,
     ): OpinionListDto
 
     @PostMapping(CREATE_PATH)

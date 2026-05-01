@@ -67,10 +67,10 @@ interface OpinionsApi {
         @RequestParam(required = true)
         subjectId: UUID,
         @Parameter(description = "Subjective opinion statements.")
-        @RequestParam(required = false)
+        @RequestParam(required = false, defaultValue = "")
         subjective: List<String>,
         @Parameter(description = "Objective supporting statements.")
-        @RequestParam(required = false)
+        @RequestParam(required = false, defaultValue = "")
         objective: List<String>,
         @Parameter(description = "Optional numeric mark.")
         @RequestParam(required = false)
@@ -86,10 +86,10 @@ interface OpinionsApi {
         @Parameter(description = "Opinion identifier.")
         @PathVariable opinionId: UUID,
         @Parameter(description = "Replacement subjective opinion statements.")
-        @RequestParam(required = false)
+        @RequestParam(required = false, defaultValue = "")
         subjective: List<String>,
         @Parameter(description = "Replacement objective supporting statements.")
-        @RequestParam(required = false)
+        @RequestParam(required = false, defaultValue = "")
         objective: List<String>,
         @Parameter(description = "Replacement numeric mark.")
         @RequestParam(required = false)

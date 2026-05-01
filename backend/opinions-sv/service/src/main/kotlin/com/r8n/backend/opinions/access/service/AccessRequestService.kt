@@ -6,6 +6,7 @@ import com.r8n.backend.opinions.access.domain.AccessRequestIntent
 import com.r8n.backend.opinions.access.domain.RequestStatusEnum
 import com.r8n.backend.opinions.access.persistence.AccessRequestPersistence
 import com.r8n.backend.opinions.lists.domain.OpinionListPrivacyEnum
+import com.r8n.backend.opinions.lists.service.OpinionListConnectionsService
 import com.r8n.backend.opinions.lists.service.OpinionListService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -21,6 +22,7 @@ class AccessRequestService(
     private val repository: AccessRequestRepository,
     private val accessService: AccessService,
     private val opinionListService: OpinionListService,
+    private val opinionListConnectionsService: OpinionListConnectionsService,
 ) {
     private companion object {
         val ACTIVE_REQUEST_STATUSES =
@@ -173,9 +175,9 @@ class AccessRequestService(
                         name = "Copy of $sourceName",
                         privacy = OpinionListPrivacyEnum.PRIVATE,
                     )
-                opinionListService.syncWithOpinionList(
+                opinionListConnectionsService.syncWithOpinionList(
                     userId = request.requester,
-                    existingListId = copiedList.id,
+                    existingListId = copiedList.id!!,
                     addedListId = request.list,
                     weight = 1.0,
                 )
@@ -184,7 +186,7 @@ class AccessRequestService(
                 val targetListId =
                     request.targetListId
                         ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "MERGE intent requires targetListId")
-                opinionListService.syncWithOpinionList(
+                opinionListConnectionsService.syncWithOpinionList(
                     userId = request.requester,
                     existingListId = targetListId,
                     addedListId = request.list,

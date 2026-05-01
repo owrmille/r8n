@@ -21,7 +21,7 @@ const RatingBadge = ({ value, locked = false, className }: RatingBadgeProps) => 
         className
       )}
     >
-      {locked ? "•••" : `${value}/10`}
+      {locked ? "•••" : `${value.toFixed(2)}/10`}
     </div>
   );
 };

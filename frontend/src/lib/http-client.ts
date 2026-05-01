@@ -388,6 +388,10 @@ function isJsonContentType(contentType: string): boolean {
 }
 
 function getErrorMessage(status: number, responseBody: unknown): string {
+  if (status === 401) {
+    return "Did not match username/password";
+  }
+
   if (status >= 500) {
     return "Server error";
   }

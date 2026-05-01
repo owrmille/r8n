@@ -210,7 +210,7 @@ class OpinionListAdminIntegrationTest {
                 ).andExpect(status().isOk)
                 .andReturn()
                 .response.contentAsString
-        return objectMapper.readValue<OpinionListDto>(response).id
+        return objectMapper.readValue<OpinionListDto>(response).id!!
     }
 
     private fun getList(

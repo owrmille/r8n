@@ -54,6 +54,7 @@ import java.util.UUID
 class OpinionListNewFiltersIntegrationTest {
     private companion object {
         val USER_ID: UUID = UUID.fromString("40404040-4040-4040-4040-404040404040")
+        val OTHER_USER_ID: UUID = UUID.fromString("50505050-5050-5050-5050-505050505050")
 
         @Suppress("unused")
         @Container
@@ -125,7 +126,7 @@ class OpinionListNewFiltersIntegrationTest {
         val opinion =
             opinionRepository.save(
                 OpinionPersistence(
-                    owner = USER_ID,
+                    owner = OTHER_USER_ID,
                     subject = subject.id!!,
                     mark = 5.0,
                     status = OpinionStatusEnum.PUBLISHED,
@@ -135,7 +136,7 @@ class OpinionListNewFiltersIntegrationTest {
         val list =
             opinionListRepository.save(
                 OpinionListPersistence(
-                    owner = USER_ID,
+                    owner = OTHER_USER_ID,
                     name = "Berlin Lists",
                     privacy = OpinionListPrivacyEnum.SEARCHABLE,
                 ),
@@ -182,7 +183,7 @@ class OpinionListNewFiltersIntegrationTest {
         val opinion =
             opinionRepository.save(
                 OpinionPersistence(
-                    owner = USER_ID,
+                    owner = OTHER_USER_ID,
                     subject = subject.id!!,
                     status = OpinionStatusEnum.PUBLISHED,
                     timestamp = Instant.now(),
@@ -192,7 +193,7 @@ class OpinionListNewFiltersIntegrationTest {
         val list =
             opinionListRepository.save(
                 OpinionListPersistence(
-                    owner = USER_ID,
+                    owner = OTHER_USER_ID,
                     name = "Sushi List",
                     privacy = OpinionListPrivacyEnum.SEARCHABLE,
                 ),
@@ -233,7 +234,7 @@ class OpinionListNewFiltersIntegrationTest {
         val oldOpinion =
             opinionRepository.save(
                 OpinionPersistence(
-                    owner = USER_ID,
+                    owner = OTHER_USER_ID,
                     subject = subject.id!!,
                     status = OpinionStatusEnum.PUBLISHED,
                     timestamp = Instant.now().minus(10, ChronoUnit.DAYS),
@@ -243,7 +244,7 @@ class OpinionListNewFiltersIntegrationTest {
         val newOpinion =
             opinionRepository.save(
                 OpinionPersistence(
-                    owner = USER_ID,
+                    owner = OTHER_USER_ID,
                     subject = subject.id!!,
                     status = OpinionStatusEnum.PUBLISHED,
                     timestamp = Instant.now().minus(1, ChronoUnit.DAYS),
@@ -253,11 +254,19 @@ class OpinionListNewFiltersIntegrationTest {
 
         val oldList =
             opinionListRepository.save(
-                OpinionListPersistence(owner = USER_ID, name = "Old List", privacy = OpinionListPrivacyEnum.SEARCHABLE),
+                OpinionListPersistence(
+                    owner = OTHER_USER_ID,
+                    name = "Old List",
+                    privacy = OpinionListPrivacyEnum.SEARCHABLE,
+                ),
             )
         val newList =
             opinionListRepository.save(
-                OpinionListPersistence(owner = USER_ID, name = "New List", privacy = OpinionListPrivacyEnum.SEARCHABLE),
+                OpinionListPersistence(
+                    owner = OTHER_USER_ID,
+                    name = "New List",
+                    privacy = OpinionListPrivacyEnum.SEARCHABLE,
+                ),
             )
 
         opinionsAssignmentRepository.save(
@@ -287,7 +296,11 @@ class OpinionListNewFiltersIntegrationTest {
     fun `findThisTextInAnyOfTheAbove works`() {
         // 1. Matches list name
         opinionListRepository.save(
-            OpinionListPersistence(owner = USER_ID, name = "FindMe List", privacy = OpinionListPrivacyEnum.SEARCHABLE),
+            OpinionListPersistence(
+                owner = OTHER_USER_ID,
+                name = "FindMe List",
+                privacy = OpinionListPrivacyEnum.SEARCHABLE,
+            ),
         )
 
         // 2. Matches subject name
@@ -308,7 +321,7 @@ class OpinionListNewFiltersIntegrationTest {
         val opinionS =
             opinionRepository.save(
                 OpinionPersistence(
-                    owner = USER_ID,
+                    owner = OTHER_USER_ID,
                     subject = subject.id!!,
                     status = OpinionStatusEnum.PUBLISHED,
                     timestamp = Instant.now(),
@@ -317,7 +330,11 @@ class OpinionListNewFiltersIntegrationTest {
             )
         val listS =
             opinionListRepository.save(
-                OpinionListPersistence(owner = USER_ID, name = "S List", privacy = OpinionListPrivacyEnum.SEARCHABLE),
+                OpinionListPersistence(
+                    owner = OTHER_USER_ID,
+                    name = "S List",
+                    privacy = OpinionListPrivacyEnum.SEARCHABLE,
+                ),
             )
         opinionsAssignmentRepository.save(
             OpinionsToOpinionListsPersistence(opinionList = listS.id!!, opinion = opinionS.id!!, weight = 1.0),
@@ -338,7 +355,7 @@ class OpinionListNewFiltersIntegrationTest {
         val opinionA =
             opinionRepository.save(
                 OpinionPersistence(
-                    owner = USER_ID,
+                    owner = OTHER_USER_ID,
                     subject = subjectA.id!!,
                     status = OpinionStatusEnum.PUBLISHED,
                     timestamp = Instant.now(),
@@ -347,7 +364,11 @@ class OpinionListNewFiltersIntegrationTest {
             )
         val listA =
             opinionListRepository.save(
-                OpinionListPersistence(owner = USER_ID, name = "A List", privacy = OpinionListPrivacyEnum.SEARCHABLE),
+                OpinionListPersistence(
+                    owner = OTHER_USER_ID,
+                    name = "A List",
+                    privacy = OpinionListPrivacyEnum.SEARCHABLE,
+                ),
             )
         opinionsAssignmentRepository.save(
             OpinionsToOpinionListsPersistence(opinionList = listA.id!!, opinion = opinionA.id!!, weight = 1.0),
@@ -407,7 +428,7 @@ class OpinionListNewFiltersIntegrationTest {
         val tokyoOpinion =
             opinionRepository.save(
                 OpinionPersistence(
-                    owner = USER_ID,
+                    owner = OTHER_USER_ID,
                     subject = tokyoSubject.id!!,
                     status = OpinionStatusEnum.PUBLISHED,
                     timestamp = Instant.now(),
@@ -417,7 +438,7 @@ class OpinionListNewFiltersIntegrationTest {
         val yokohamaOpinion =
             opinionRepository.save(
                 OpinionPersistence(
-                    owner = USER_ID,
+                    owner = OTHER_USER_ID,
                     subject = yokohamaSubject.id!!,
                     status = OpinionStatusEnum.PUBLISHED,
                     timestamp = Instant.now(),
@@ -428,7 +449,7 @@ class OpinionListNewFiltersIntegrationTest {
         val tokyoList =
             opinionListRepository.save(
                 OpinionListPersistence(
-                    owner = USER_ID,
+                    owner = OTHER_USER_ID,
                     name = "Tokyo List",
                     privacy = OpinionListPrivacyEnum.SEARCHABLE,
                 ),
@@ -436,7 +457,7 @@ class OpinionListNewFiltersIntegrationTest {
         val yokohamaList =
             opinionListRepository.save(
                 OpinionListPersistence(
-                    owner = USER_ID,
+                    owner = OTHER_USER_ID,
                     name = "Yokohama List",
                     privacy = OpinionListPrivacyEnum.SEARCHABLE,
                 ),

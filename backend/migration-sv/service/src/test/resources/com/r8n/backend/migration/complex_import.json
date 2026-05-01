@@ -1,0 +1,142 @@
+{
+  "id": "10000000-0000-0000-0000-000000000000",
+  "status": "ACTIVE",
+  "statusTimestamp": "2026-04-29T22:59:00Z",
+  "consents": { "items": [], "total": 0, "page": 0, "size": 0 },
+  "personalIdentifiableInformation": {
+    "name": "User A",
+    "email": "a@test.test",
+    "sessions": { "items": [], "total": 0, "page": 0, "size": 0 }
+  },
+  "opinions": {
+    "items": [
+      {
+        "id": null,
+        "listName": "Virtual",
+        "owner": "10000000-0000-0000-0000-000000000000",
+        "ownerName": "User A",
+        "opinionSummaries": [
+          {
+            "subject": "51000000-0000-0000-0000-000000000000",
+            "subjectName": "Subject 1",
+            "ownMark": 4.0,
+            "opinions": [
+              {
+                "opinionId": "1a000000-0000-0000-0000-000000000001",
+                "owner": "10000000-0000-0000-0000-000000000000",
+                "ownerName": "User A",
+                "subjective": ["Good"],
+                "objective": ["Proven"],
+                "mark": 4.0,
+                "status": "PUBLISHED",
+                "timestamp": "2026-04-29T22:59:00Z",
+                "weight": 1.0,
+                "components": [
+                  { "id": "33000000-0000-0000-0000-000000000000", "opinion": "1a000000-0000-0000-0000-000000000002", "weight": 0.5 }
+                ]
+              }
+            ]
+          },
+          {
+            "subject": "52000000-0000-0000-0000-000000000000",
+            "subjectName": "Subject 2",
+            "ownMark": 5.0,
+            "opinions": [
+              {
+                "opinionId": "1a000000-0000-0000-0000-000000000002",
+                "owner": "10000000-0000-0000-0000-000000000000",
+                "ownerName": "User A",
+                "subjective": ["Great"],
+                "objective": [],
+                "mark": 5.0,
+                "status": "PUBLISHED",
+                "timestamp": "2026-04-29T22:59:00Z",
+                "weight": 1.0
+              }
+            ]
+          },
+          {
+            "subject": "53000000-0000-0000-0000-000000000000",
+            "subjectName": "Subject 3 (External)",
+            "ownMark": null,
+            "opinions": [
+              {
+                "opinionId": "2b000000-0000-0000-0000-000000000001",
+                "owner": "20000000-0000-0000-0000-000000000000",
+                "ownerName": "User B",
+                "subjective": ["External Opinion"],
+                "objective": [],
+                "mark": 3.0,
+                "status": "PUBLISHED",
+                "timestamp": "2026-04-29T22:59:00Z",
+                "weight": 1.0,
+                "components": []
+              }
+            ]
+          }
+        ],
+        "privacy": "PRIVATE"
+      },
+      {
+        "id": "11000000-0000-0000-0000-000000000000",
+        "listName": "My List A",
+        "owner": "10000000-0000-0000-0000-000000000000",
+        "ownerName": "User A",
+        "opinionSummaries": [
+           { 
+             "subject": "51000000-0000-0000-0000-000000000000", 
+             "subjectName": "Subject 1",
+             "opinions": [ 
+               { 
+                 "opinionId": "1a000000-0000-0000-0000-000000000001", 
+                 "weight": 1.0, 
+                 "owner": "10000000-0000-0000-0000-000000000000",
+                 "ownerName": "User A",
+                 "subjective": [],
+                 "objective": [],
+                 "status": "PUBLISHED",
+                 "timestamp": "2026-04-29T22:59:00Z"
+               } 
+             ] 
+           },
+           { 
+             "subject": "53000000-0000-0000-0000-000000000000", 
+             "subjectName": "Subject 3",
+             "opinions": [ 
+               { 
+                 "opinionId": "2b000000-0000-0000-0000-000000000001", 
+                 "weight": 1.0, 
+                 "owner": "20000000-0000-0000-0000-000000000000",
+                 "ownerName": "User B",
+                 "subjective": [],
+                 "objective": [],
+                 "status": "PUBLISHED",
+                 "timestamp": "2026-04-29T22:59:00Z"
+               } 
+             ] 
+           }
+        ],
+        "privacy": "PRIVATE"
+      }
+    ],
+    "total": 2, "page": 0, "size": 2
+  },
+  "outgoingRequests": {
+    "items": [
+      {
+        "id": "44000000-0000-0000-0000-000000000000",
+        "opinionListId": "21000000-0000-0000-0000-000000000000",
+        "opinionListName": "List B",
+        "owner": "20000000-0000-0000-0000-000000000000",
+        "ownerName": "User B",
+        "requester": "10000000-0000-0000-0000-000000000000",
+        "requesterName": "User A",
+        "timestamp": "2026-04-29T22:59:00Z",
+        "status": "ACCEPTED"
+      }
+    ],
+    "total": 1, "page": 0, "size": 1
+  },
+  "incomingRequests": { "items": [], "total": 0, "page": 0, "size": 0 },
+  "messages": { "items": [], "total": 0, "page": 0, "size": 0 }
+}
