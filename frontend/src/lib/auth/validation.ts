@@ -3,18 +3,22 @@ import { z } from "zod";
 export const AUTH_EMAIL_MAX_LENGTH = readPositiveIntegerEnv(
   "VITE_AUTH_EMAIL_MAX_LENGTH",
   import.meta.env.VITE_AUTH_EMAIL_MAX_LENGTH,
+  254,
 );
 export const AUTH_PASSWORD_MAX_LENGTH = readPositiveIntegerEnv(
   "VITE_AUTH_PASSWORD_MAX_LENGTH",
   import.meta.env.VITE_AUTH_PASSWORD_MAX_LENGTH,
+  128,
 );
 export const REGISTRATION_PASSWORD_MIN_LENGTH = readPositiveIntegerEnv(
   "VITE_REGISTRATION_PASSWORD_MIN_LENGTH",
   import.meta.env.VITE_REGISTRATION_PASSWORD_MIN_LENGTH,
+  12,
 );
 export const PROFILE_NAME_MAX_LENGTH = readPositiveIntegerEnv(
   "VITE_PROFILE_NAME_MAX_LENGTH",
   import.meta.env.VITE_PROFILE_NAME_MAX_LENGTH,
+  255,
 );
 
 export type AuthFieldErrors = Partial<
@@ -152,10 +156,17 @@ function isAuthField(field: string): field is keyof AuthFieldErrors {
   );
 }
 
-function readPositiveIntegerEnv(name: string, value: string | undefined): number {
+function readPositiveIntegerEnv(
+  name: string,
+  value: string | undefined,
+  defaultValue?: number,
+): number {
   const parsedValue = Number(value);
 
   if (!Number.isInteger(parsedValue) || parsedValue <= 0) {
+    if (defaultValue !== undefined) {
+      return defaultValue;
+    }
     throw new Error(`${name} must be a positive integer.`);
   }
 

@@ -10,7 +10,8 @@ frontend/node_modules
 frontend/dist
 frontend/test-results/
 deployment/certs/
-deployment/config/docker.local.env
+deployment/config/docker.env
+deployment/config/local.env
 deployment/database/data
 deployment/*/logs/
 deployment/*/avatar-storage/

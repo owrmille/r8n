@@ -587,6 +587,7 @@ const CreateReview = () => {
               value={subjectName}
               onChange={(e) => setSubjectName(e.target.value)}
               placeholder="e.g., Flat White, Dyson V15 Detect, Margherita Pizza..."
+              maxLength={255}
               className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
             />
           </div>
@@ -629,6 +630,7 @@ const CreateReview = () => {
                 onChange={(e) => setObjectiveText(e.target.value)}
                 placeholder="Factual observations: quality, speed, price, materials..."
                 rows={3}
+                maxLength={2000}
                 className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all resize-none leading-relaxed"
               />
             </div>
@@ -650,6 +652,7 @@ const CreateReview = () => {
                 onChange={(e) => setSubjectiveText(e.target.value)}
                 placeholder="Your personal feelings, experience, and honest opinion..."
                 rows={4}
+                maxLength={2000}
                 className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all resize-none leading-relaxed"
               />
             </div>

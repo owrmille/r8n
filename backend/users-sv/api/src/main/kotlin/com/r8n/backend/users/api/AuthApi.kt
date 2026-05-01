@@ -6,6 +6,7 @@ import com.r8n.backend.users.api.dto.RegisterRequestDto
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.CookieValue
 import org.springframework.web.bind.annotation.GetMapping
@@ -38,7 +39,9 @@ interface AuthApi {
         description = "Authenticates a user, returns an access token, and sets the refresh token cookie.",
     )
     fun login(
-        @RequestBody request: LoginRequestDto,
+        @Valid
+        @RequestBody
+        request: LoginRequestDto,
     ): AuthenticationTokenDto
 
     @PostMapping(REGISTER_PATH)
@@ -48,7 +51,9 @@ interface AuthApi {
         description = "Creates a new user account and records minimal registration audit context.",
     )
     fun register(
-        @RequestBody request: RegisterRequestDto,
+        @Valid
+        @RequestBody
+        request: RegisterRequestDto,
     )
 
     @PostMapping(LOGOUT_PATH)

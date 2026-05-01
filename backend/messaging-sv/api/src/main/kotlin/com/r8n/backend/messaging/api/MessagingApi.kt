@@ -51,12 +51,20 @@ interface MessagingApi {
     fun getUnreadMessagesCount(): UnreadMessagesCountDto
 
     @GetMapping(DIRECT_CONVERSATIONS_PATH)
+    @Operation(
+        summary = "List direct conversations",
+        description = "Returns direct conversation summaries for the authenticated actor.",
+    )
     fun getDirectConversationSummaries(
         @Valid
         pageable: PageRequestDto,
     ): PageResponseDto<DirectConversationSummaryDto>
 
     @PostMapping(DIRECT_CONVERSATIONS_PATH)
+    @Operation(
+        summary = "Create direct conversation",
+        description = "Starts a new direct conversation with another user.",
+    )
     fun createDirectConversation(
         @Valid
         @RequestBody
@@ -64,7 +72,12 @@ interface MessagingApi {
     ): DirectConversationSummaryDto
 
     @GetMapping(DIRECT_CONVERSATION_MESSAGES_PATH)
+    @Operation(
+        summary = "List direct conversation messages",
+        description = "Returns paged messages for a direct conversation visible to the authenticated actor.",
+    )
     fun getDirectConversationMessages(
+        @Parameter(description = "Direct conversation identifier.")
         @PathVariable
         conversationId: UUID,
         @Valid
@@ -72,7 +85,12 @@ interface MessagingApi {
     ): PageResponseDto<DirectMessageDto>
 
     @PostMapping(DIRECT_CONVERSATION_MESSAGES_PATH)
+    @Operation(
+        summary = "Add direct conversation message",
+        description = "Adds a message to an existing direct conversation visible to the authenticated actor.",
+    )
     fun addDirectConversationMessage(
+        @Parameter(description = "Direct conversation identifier.")
         @PathVariable
         conversationId: UUID,
         @Valid
@@ -82,7 +100,12 @@ interface MessagingApi {
 
     @PostMapping(DIRECT_CONVERSATION_READ_PATH)
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(
+        summary = "Mark direct conversation as read",
+        description = "Updates the read status for all messages in the specified direct conversation.",
+    )
     fun markDirectConversationAsRead(
+        @Parameter(description = "Direct conversation identifier.")
         @PathVariable
         conversationId: UUID,
     )
@@ -123,7 +146,12 @@ interface MessagingApi {
 
     @DeleteMapping(SUPPORT_THREAD_PATH)
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(
+        summary = "Delete support thread",
+        description = "Removes a support thread and its messages for the authenticated actor.",
+    )
     fun deleteSupportThread(
+        @Parameter(description = "Support thread identifier.")
         @PathVariable
         threadId: UUID,
     )

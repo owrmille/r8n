@@ -252,7 +252,7 @@ class AuthIntegrationTest {
 
     @Test
     fun `register creates active user with hashed password and consent audit records`() {
-        val email = "  New.User@Example.Test  "
+        val email = "New.User@Example.Test"
         val normalizedEmail = "new.user@example.test"
         val registerRequest = validRegisterRequest(email, name = "  New Reviewer  ")
 
@@ -328,7 +328,7 @@ class AuthIntegrationTest {
                 post(REGISTER_PATH)
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(validRegisterRequest(" DUPLICATE@example.test "))),
+                    .content(objectMapper.writeValueAsString(validRegisterRequest("DUPLICATE@example.test"))),
             ).andExpect(status().isConflict)
     }
 
